@@ -1572,55 +1572,55 @@ describe('StringProcessors.isHash', () => {
     });
 });
 
-describe('StringProcessors.meetsComplexity', () => {
+describe('StringProcessors.complex', () => {
     it('should pass for a string meeting all default complexity requirements', () => {
-        const result = StringProcessors.meetsComplexity('Abcdef1!');
+        const result = StringProcessors.complex('Abcdef1!');
         expect(result.pass).toBe(true);
     });
 
     it('should fail for a string that is too short', () => {
-        const result = StringProcessors.meetsComplexity('Ab1!');
+        const result = StringProcessors.complex('Ab1!');
         expect(result.pass).toBe(false);
     });
 
     it('should fail for a string with not enough uppercase letters', () => {
-        const result = StringProcessors.meetsComplexity('abcdef1!');
+        const result = StringProcessors.complex('abcdef1!');
         expect(result.pass).toBe(false);
     });
 
     it('should fail for a string with not enough lowercase letters', () => {
-        const result = StringProcessors.meetsComplexity('ABCDEF1!');
+        const result = StringProcessors.complex('ABCDEF1!');
         expect(result.pass).toBe(false);
     });
 
     it('should fail for a string with not enough digits', () => {
-        const result = StringProcessors.meetsComplexity('Abcdefgh!');
+        const result = StringProcessors.complex('Abcdefgh!');
         expect(result.pass).toBe(false);
     });
 
     it('should fail for a string with not enough special characters', () => {
-        const result = StringProcessors.meetsComplexity('Abcdef12');
+        const result = StringProcessors.complex('Abcdef12');
         expect(result.pass).toBe(false);
     });
 
     it('should fail for a string with too many repeated characters', () => {
-        const result = StringProcessors.meetsComplexity('AAAbbb111!!!');
+        const result = StringProcessors.complex('AAAbbb111!!!');
         expect(result.pass).toBe(false);
     });
 
     it('should pass for a string with custom min/max length', () => {
-        const result = StringProcessors.meetsComplexity('Abc1!xyz', { minLen: 5, maxLen: 10 });
+        const result = StringProcessors.complex('Abc1!xyz', { minLen: 5, maxLen: 10 });
         expect(result.pass).toBe(true);
     });
 
     it('should fail for a string exceeding maxLen', () => {
         const longStr = 'A1!a'.repeat(30); // 120 chars
-        const result = StringProcessors.meetsComplexity(longStr, { maxLen: 100 });
+        const result = StringProcessors.complex(longStr, { maxLen: 100 });
         expect(result.pass).toBe(false);
     });
 
     it('should fail for a string with custom minUppercase and minSpecialChars', () => {
-        const result = StringProcessors.meetsComplexity('AAbc1!!', { minUppercase: 3, minSpecialChars: 2 });
+        const result = StringProcessors.complex('AAbc1!!', { minUppercase: 3, minSpecialChars: 2 });
         expect(result.pass).toBe(false);
     });
 });

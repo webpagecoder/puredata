@@ -17,10 +17,13 @@
   "license": "MIT",
   "devDependencies": {
     "npm-watch": "^0.13.0",
-    "jest": "^30"
+    "run-when-changed": "^2.1.0"
   },
   "watch": {
     "misc": "{lib,_misc}/**/*.js",
     "misc2": "{lib,_misc}/**/*.js"
+  },
+  "dependencies": {
+    "jest": "^30"
   }
 }
