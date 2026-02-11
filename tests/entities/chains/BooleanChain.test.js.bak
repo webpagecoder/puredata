@@ -1,0 +1,71 @@
+// const BooleanChain = require('../../../lib/entities/chains/BooleanChain');
+// const GlobalConfig = require('../../../lib/GlobalConfig');
+
+// describe('BooleanChain', () => {
+//     beforeEach(() => {
+//         GlobalConfig.boolean.ignoreCase = true;
+//         GlobalConfig.boolean.truthyValues = ['true', 1];
+//         GlobalConfig.boolean.falsyValues = ['false', 0];
+//     });
+
+//     describe('base tests', () => {
+//         it('should return booleans unchanged', () => {
+//             const chain = new BooleanChain();
+//             const result = chain.filter(true);
+//             expect(result.pass).toBe(true);
+//         });
+
+//         it('should return certain non-booleans changed', () => {
+//             const chain = BooleanChain.create(GlobalConfig);
+//             expect(chain.filter('true').pass).toBe(true);
+//             expect(chain.filter(123).pass).toBe(false);
+//         });
+//     });
+
+//     describe('addTruthy', () => {
+//         it('should add truthy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).addTruthy('maybe', 'maybe2');
+//             expect(chain.filter('MAYBe').pass).toBe(true);
+//             expect(chain.filter('maybe2').pass).toBe(true);
+//         });
+
+//         it('should not affect falsy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).addTruthy('maybe');
+//             expect(chain.filter('no').pass).toBe(false);
+//         });
+//     });
+
+//     describe('addFalsy', () => {
+//         it('should add falsy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).addFalsy('never');
+//             expect(chain.filter('never').pass).toBe(true);
+//         });
+
+//         it('should not affect truthy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).addFalsy('never');
+//             expect(chain.filter('yes').pass).toBe(false);
+//         });
+//     });
+
+//     describe('falsy', () => {
+//         it('should return false for falsy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).falsy();
+//             expect(chain.filter(0).pass).toBe(true);
+//         });
+//         it('should not affect truthy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).falsy();
+//             expect(chain.filter(1).pass).toBe(false);
+//         });
+//     });
+
+//     describe('truthy', () => {
+//         it('should return true for truthy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).truthy();
+//             expect(chain.filter('true').pass).toBe(true);
+//         });
+//         it('should not affect falsy values', () => {
+//             const chain = BooleanChain.create(GlobalConfig).truthy();
+//             expect(chain.filter('false').pass).toBe(false);
+//         });
+//     });
+// });

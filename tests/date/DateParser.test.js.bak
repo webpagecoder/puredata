@@ -1,0 +1,637 @@
+const DateUtils = require('../../lib/date/DateUtils');
+
+describe('DateUtils.parseIsoOrdinal', () => {
+    it('should parse valid basic ISO ordinal date', () => {
+        const result = DateUtils.parseIsoOrdinal('2024123');
+        expect(result).toEqual({
+            YYYY: 2024,
+            DDD: 123,
+            dash: undefined,
+            isExtended: false
+        });
+    });
+
+    it('should parse valid extended ISO ordinal date', () => {
+        const result = DateUtils.parseIsoOrdinal('2024-123');
+        expect(result).toEqual({
+            YYYY: 2024,
+            DDD: 123,
+            dash: '-',
+            isExtended: true
+        });
+    });
+
+    it('should return null for invalid format', () => {
+        expect(DateUtils.parseIsoOrdinal('2024/123')).toBeNull();
+        expect(DateUtils.parseIsoOrdinal('24-123')).toBeNull();
+        expect(DateUtils.parseIsoOrdinal('2024-')).toBeNull();
+    });
+
+    it('should return null for out-of-range day', () => {
+        expect(DateUtils.parseIsoOrdinal('2024-367')).toBeNull();
+        expect(DateUtils.parseIsoOrdinal('2023-366')).toBeNull(); // 2023 is not a leap year
+    });
+
+    it('should parse leap year day 366', () => {
+        const result = DateUtils.parseIsoOrdinal('2024-366');
+        expect(result).toEqual({
+            YYYY: 2024,
+            DDD: 366,
+            dash: '-',
+            isExtended: true
+        });
+    });
+
+});
+
+describe('DateUtils.parseIsoWeek', () => {
+    it('should parse valid basic ISO week date', () => {
+        const result = DateUtils.parseIsoWeek('2024W12');
+        expect(result).toEqual({
+            YYYY: 2024,
+            ww: 12,
+            D: 1,
+            dash: undefined,
+            isExtended: false
+        });
+    });
+
+    it('should parse valid extended ISO week date', () => {
+        const result = DateUtils.parseIsoWeek('2024-W12');
+        expect(result).toEqual({
+            YYYY: 2024,
+            ww: 12,
+            D: 1,
+            dash: '-',
+            isExtended: true
+        });
+    });
+
+    it('should parse valid extended ISO week date with day', () => {
+        const result = DateUtils.parseIsoWeek('2024-W12-3');
+        expect(result).toEqual({
+            YYYY: 2024,
+            ww: 12,
+            D: 3,
+            dash: '-',
+            isExtended: true
+        });
+    });
+
+    it('should return null for invalid format', () => {
+        expect(DateUtils.parseIsoWeek('2024/W12')).toBeNull();
+        expect(DateUtils.parseIsoWeek('24-W12')).toBeNull();
+        expect(DateUtils.parseIsoWeek('2024-W')).toBeNull();
+    });
+
+    it('should return null for out-of-range week', () => {
+        expect(DateUtils.parseIsoWeek('2024-W54')).toBeNull();
+    });
+
+    it('should return null for week 53 in year without 53 ISO weeks', () => {
+        expect(DateUtils.parseIsoWeek('2021-W53')).toBeNull(); // 2021 does not have 53 ISO weeks
+    });
+
+    it('should parse week 53 in year with 53 ISO weeks', () => {
+        const result = DateUtils.parseIsoWeek('2020-W53');
+        expect(result).toEqual({
+            YYYY: 2020,
+            ww: 53,
+            D: 1,
+            dash: '-',
+            isExtended: true
+        });
+    });
+
+});
+
+describe('DateUtils.parseIso', () => {
+    it('should parse extended ISO date', () => {
+        const result = DateUtils.parseIso('2024-07-20');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should parse basic ISO date', () => {
+        const result = DateUtils.parseIso('20240720');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+            Z: undefined,
+            isExtended: false
+        });
+    });
+
+    it('should parse ISO date with time', () => {
+        const result = DateUtils.parseIso('2024-07-20T15:30:45.123');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: 123,
+            HHOffset: undefined,
+            mmOffset: undefined,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should parse ISO date with UTC offset', () => {
+        const result = DateUtils.parseIso('2024-07-20T15:30:45+02:00');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: undefined,
+            HHOffset: 2,
+            mmOffset: 0,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should parse ISO date with Zulu time', () => {
+        const result = DateUtils.parseIso('2024-07-20T15:30:45Z');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+            Z: 'Z',
+            isExtended: true
+        });
+    });
+
+    it('should return null for invalid date', () => {
+        expect(DateUtils.parseIso('2024-02-30')).toBeNull();
+        expect(DateUtils.parseIso('not-a-date')).toBeNull();
+    });
+
+    it('should return null for out-of-range month', () => {
+        expect(DateUtils.parseIso('2024-13-01')).toBeNull();
+    });
+
+    it('should return null for out-of-range day', () => {
+        expect(DateUtils.parseIso('2024-04-31')).toBeNull(); // April has 30 days
+    });
+
+    it('should handle leap year correctly', () => {
+        const result = DateUtils.parseIso('2024-02-29');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 2,
+            DD: 29,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should parse ISO date with fractional seconds', () => {
+        const result = DateUtils.parseIso('2024-07-20T15:30:45.123');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: 123,
+            HHOffset: undefined,
+            mmOffset: undefined,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should parse ISO date with negative UTC offset', () => {
+        const result = DateUtils.parseIso('2024-07-20T15:30:45-02:00');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: undefined,
+            HHOffset: -2,
+            mmOffset: 0,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should parse ISO date with time zone designator', () => {
+        const result = DateUtils.parseIso('2024-07-20T15:30:45+00:00');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: undefined,
+            HHOffset: 0,
+            mmOffset: 0,
+            Z: undefined,
+            isExtended: true
+        });
+    });
+
+    it('should return null for invalid time zone designator', () => {
+        expect(DateUtils.parseIso('2024-07-20T15:30:45+25:00')).toBeNull();
+    });
+
+    it('should return null for invalid UTC offset', () => {
+        expect(DateUtils.parseIso('2024-07-20T15:30:45+02:61')).toBeNull();
+    });
+
+    it('should return null for invalid date with time zone', () => {
+        expect(DateUtils.parseIso('2024-02-30T15:30:45+02:00')).toBeNull();
+    });
+
+    it('should return null for invalid ISO date with week number', () => {
+        expect(DateUtils.parseIso('2024-W12-8')).toBeNull();
+    });
+
+    it('should return null for invalid ISO date with ordinal date', () => {
+        expect(DateUtils.parseIso('2024-366')).toBeNull();
+    });
+
+});
+
+describe('DateUtils.parseHuman', () => {
+    it('should parse "July 20 2024"', () => {
+        const result = DateUtils.parseHuman('July 20 2024');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse "20 July 2024"', () => {
+        const result = DateUtils.parseHuman('20 July 2024');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse "2024 July 20"', () => {
+        const result = DateUtils.parseHuman('2024 July 20');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse "Tue August 06 2024"', () => {
+        const result = DateUtils.parseHuman('Tue August 06 2024');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 8,
+            DD: 6,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse "2024 07 20"', () => {
+        const result = DateUtils.parseHuman('2024 07 20');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse "07 20 2024" with monthBeforeDay true', () => {
+        const result = DateUtils.parseHuman('07 20 2024', { monthBeforeDay: true });
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse "20 07 2024" with monthBeforeDay false', () => {
+        const result = DateUtils.parseHuman('20 07 2024', { monthBeforeDay: false });
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse with time portion', () => {
+        const result = DateUtils.parseHuman('July 20 2024 15:30:45.123');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 15,
+            mm: 30,
+            ss: 45,
+            sss: 123,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with AM time', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7:15:30.123 AM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 7,
+            mm: 15,
+            ss: 30,
+            sss: 123,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with PM time', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7:15:30.123 PM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 19,
+            mm: 15,
+            ss: 30,
+            sss: 123,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with AM time and no microseconds', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7:15:30 AM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 7,
+            mm: 15,
+            ss: 30,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with PM time and 2-digit microseconds', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7:15:30.12 PM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 19,
+            mm: 15,
+            ss: 30,
+            sss: 12,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with AM time and 1-digit microseconds', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7:15:30.1 AM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 7,
+            mm: 15,
+            ss: 30,
+            sss: 1,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with PM time and no seconds', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7:15 PM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 19,
+            mm: 15,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should parse date with AM time and only hour', () => {
+        const result = DateUtils.parseHuman('July 20 2024 7 AM');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 7,
+            DD: 20,
+            HH: 7,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should return null for invalid format', () => {
+        expect(DateUtils.parseHuman('not-a-date')).toBeNull();
+        expect(DateUtils.parseHuman('')).toBeNull();
+    });
+
+    it('should return null for out-of-range month', () => {
+        expect(DateUtils.parseHuman('2024-13-01')).toBeNull();
+    });
+
+    it('should return null for out-of-range day', () => {
+        expect(DateUtils.parseHuman('2024-04-31')).toBeNull(); // April has 30 days
+    });
+
+    it('should handle leap year correctly', () => {
+        const result = DateUtils.parseHuman('2024-02-29');
+        expect(result).toEqual({
+            YYYY: 2024,
+            MM: 2,
+            DD: 29,
+            HH: undefined,
+            mm: undefined,
+            ss: undefined,
+            sss: undefined,
+            HHOffset: undefined,
+            mmOffset: undefined,
+        });
+    });
+
+    it('should return null for invalid date with time zone', () => {
+        expect(DateUtils.parseHuman('2024-02-30T15:30:45+02:00')).toBeNull();
+    });
+
+    it('should return null for invalid date', () => {
+        expect(DateUtils.parseHuman('2024-02-30')).toBeNull();
+        expect(DateUtils.parseHuman('not-a-date')).toBeNull();
+    });
+
+    it('should return null for invalid UTC offset', () => {
+        expect(DateUtils.parseHuman('2024-07-20T15:30:45+02:61')).toBeNull();
+    });
+
+    it('should return null for invalid time zone designator', () => {
+        expect(DateUtils.parseHuman('2024-07-20T15:30:45+25:00')).toBeNull();
+    });
+
+    it('should return null for invalid ISO date with week number', () => {
+        expect(DateUtils.parseHuman('2024-W12-8')).toBeNull();
+    });
+
+    it('should return null for invalid ISO date with ordinal date', () => {
+        expect(DateUtils.parseHuman('2024-366')).toBeNull();
+    });
+
+});
+
+describe('DateUtils.parse', () => {
+    it('should return null for empty string', () => {
+        expect(DateUtils.parse('')).toBeNull();
+    });
+
+    it('should return current date for "now"', () => {
+        const result = DateUtils.parse('now');
+        expect(result).toBeInstanceOf(Date);
+        expect(Math.abs(result.getTime() - Date.now())).toBeLessThan(1000);
+    });
+
+    it('should parse extended ISO date', () => {
+        const result = DateUtils.parse('2024-07-20');
+        expect(result).toBeInstanceOf(Date);
+        expect(result.getUTCFullYear()).toBe(2024);
+        expect(result.getUTCMonth()).toBe(6); // July is 6 (0-based)
+        expect(result.getUTCDate()).toBe(20);
+    });
+
+    it('should parse basic ISO date', () => {
+        const result = DateUtils.parse('20240720');
+        expect(result).toBeInstanceOf(Date);
+        expect(result.getUTCFullYear()).toBe(2024);
+        expect(result.getUTCMonth()).toBe(6);
+        expect(result.getUTCDate()).toBe(20);
+    });
+
+    it('should parse ISO week date', () => {
+        const result = DateUtils.parse('2024-W29-1');
+        expect(result).toBeInstanceOf(Date);
+        // Monday of week 29, 2024 is July 15, 2024
+        expect(result.getUTCFullYear()).toBe(2024);
+        expect(result.getUTCMonth()).toBe(6);
+        expect(result.getUTCDate()).toBe(15);
+    });
+
+    it('should parse ISO ordinal date', () => {
+        const result = DateUtils.parse('2024-201');
+        expect(result).toBeInstanceOf(Date);
+        // 201st day of 2024 is July 19, 2024
+        expect(result.getUTCFullYear()).toBe(2024);
+        expect(result.getUTCMonth()).toBe(6);
+        expect(result.getUTCDate()).toBe(19);
+    });
+
+    it('should parse various formats', () => {
+        const result = DateUtils.parse('July 20 2024');
+        expect(result).toBeInstanceOf(Date);
+        expect(result.getUTCFullYear()).toBe(2024);
+        expect(result.getUTCMonth()).toBe(6);
+        expect(result.getUTCDate()).toBe(20);
+    });
+
+    it('should return null for invalid date', () => {
+        expect(DateUtils.parse('not-a-date')).toBeNull();
+        expect(DateUtils.parse('2024-02-30')).toBeNull();
+    });
+
+});
+
