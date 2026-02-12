@@ -1,9 +1,5 @@
 {
     "default": "{label} is invalid",
-    "any": {
-        "required": "{label} is required",
-        "forbidden": "{label} is not permitted"
-    },
     "immutable": {
         "notEquals": "{label} must equal: {value}"
     },
@@ -14,6 +10,7 @@
         "defined": "{label} must be defined (not undefined)",
         "equals": "{label} must equal {comparison}",
         "falsy": "{label} must be falsy",
+        "forbidden": "{label} is not permitted",
         "notDefined": "{label} must be undefined",
         "notEquals": "{label} must not equal {comparison}",
         "notNull": "{label} must not be null",
@@ -23,6 +20,7 @@
         "nullOrUndefined": "{label} must be null or undefined",
         "oneOf": "{label} must be one of {allowedValues}",
         "primitive": "{label} must be a primitive value, but was {actualType}",
+        "required": "{label} is required",
         "truthy": "{label} must be truthy"
     },
     "object": {
@@ -53,7 +51,7 @@
         "allOf": "{label} must contain all of these values: {requiredValues}. Missing: {missingValue}",
         "dimensions": "{label} must have dimensions of {dimensions}",
         "empty": "{label} must be empty. Current length: {length}",
-        "exactly": "{label} must contain exactly these values: {requiredValues}. Missing: {missingValue}",
+        "exactly": "{label} must contain exactly these values: {requiredValues}",
         "length": "{label} must have a length of {requiredLength}. Current length: {length}",
         "lengthBetween": "{label} must have a length between {min} and {max}. Current length: {length}",
         "maxLength": "{label} contains more than {max} items. Current length: {length}",
