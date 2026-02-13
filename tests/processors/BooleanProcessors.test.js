@@ -1,7 +1,7 @@
 'use strict';
 
-const BooleanProcessors = require('../../lib/processors/BooleanProcessors');
-const GenericProcessors = require('../../lib/processors/GenericProcessors');
+import BooleanProcessors  from '../../lib/processors/BooleanProcessors.js';
+import GenericProcessors  from '../../lib/processors/GenericProcessors.js';
 
 
 describe('BooleanProcessors.truthy', () => {

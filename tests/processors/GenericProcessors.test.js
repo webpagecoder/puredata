@@ -1,6 +1,6 @@
 'use strict';
 
-const GenericProcessors = require('../../lib/processors/GenericProcessors.js');
+import GenericProcessors  from '../../lib/processors/GenericProcessors.js';
 
 
 

@@ -1,5 +1,5 @@
-// const BooleanChain = require('../../../lib/entities/chains/BooleanChain');
-// const GlobalConfig = require('../../../lib/GlobalConfig');
+// import BooleanChain  from '../../../lib/entities/chains/BooleanChain.js';
+// import GlobalConfig  from '../../../lib/GlobalConfig.js';
 
 // describe('BooleanChain', () => {
 //     beforeEach(() => {

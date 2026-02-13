@@ -1,7 +1,7 @@
 'use strict';
 
-const ObjectProcessors = require('../../lib/processors/ObjectProcessors.js');
-const Path = require('../../lib/path/PathFactory.js');
+import ObjectProcessors  from '../../lib/processors/ObjectProcessors.js';
+import Path  from '../../lib/path/Path.js';
 
 // Note: ObjectProcessors does not have an isObject method
 // Use GenericProcessors.isPrimitive(value, 'object') for type checking

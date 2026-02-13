@@ -1,7 +1,7 @@
 'use strict';
 
-const StringProcessors = require('../../lib/processors/StringProcessors.js');
-const Presence = require('../../lib/Presence.js');
+import StringProcessors  from '../../lib/processors/StringProcessors.js';
+import Presence  from '../../lib/Presence.js';
 const { optional, required, forbidden } = Presence;
 
 describe('StringProcessors.hasMaxLength', () => {

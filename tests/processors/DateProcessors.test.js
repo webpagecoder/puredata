@@ -1,6 +1,6 @@
 'use strict';
 
-const DateProcessors = require('../../lib/processors/DateProcessors');
+import DateProcessors  from '../../lib/processors/DateProcessors.js';
 
 describe('DateProcessors.isIso', () => {
     it('should pass for valid extended ISO date', () => {

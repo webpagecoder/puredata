@@ -1,7 +1,7 @@
 'use strict';
 
-const NumberProcessors = require('../../lib/processors/NumberProcessors');
-const GenericProcessors = require('../../lib/processors/GenericProcessors');
+import NumberProcessors  from '../../lib/processors/NumberProcessors.js';
+import GenericProcessors  from '../../lib/processors/GenericProcessors.js';
 
 describe('GenericProcessors.isPrimitive (number type)', () => {
     it('should pass for a number', () => {

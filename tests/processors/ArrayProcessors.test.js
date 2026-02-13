@@ -1,8 +1,8 @@
 'use strict';
 
-const ArrayProcessors = require('../../lib/processors/ArrayProcessors.js');
-const Path = require('../../lib/path/PathFactory.js');
-const pd = require('../../lib/pd.js');
+import ArrayProcessors  from '../../lib/processors/ArrayProcessors.js';
+import Path  from '../../lib/path/Path.js';
+import pd  from '../../lib/pd.js';
 
 describe('ArrayProcessors.keepOnly', () => {
     it('should keep only allowed values', () => {

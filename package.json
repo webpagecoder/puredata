@@ -2,6 +2,7 @@
   "name": "puredata",
   "version": "0.1.0",
   "description": "comprehensive javascript validation and transformation library",
+  "type": "module",
   "main": "val.js",
   "scripts": {
     "test": "jest",
