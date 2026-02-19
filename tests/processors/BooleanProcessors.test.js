@@ -1,96 +1,96 @@
 'use strict';
 
-import BooleanProcessors  from '../../lib/processors/BooleanProcessors.js';
-import GenericProcessors  from '../../lib/processors/GenericProcessors.js';
+import BooleanHandler  from '../../lib/processors/BooleanHandler.js';
+import GenericHandler  from '../../lib/processors/GenericHandler.js';
 
 
-describe('BooleanProcessors.truthy', () => {
+describe('BooleanHandler.truthy', () => {
     it('should pass for boolean true', () => {
-        const result = BooleanProcessors.truthy(true);
+        const result = BooleanHandler.truthy(true);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(true);
     });
 
     it('should fail for boolean false', () => {
-        const result = BooleanProcessors.truthy(false);
+        const result = BooleanHandler.truthy(false);
         expect(result.pass).toBe(false);
         expect(result.value).toBe(false);
     });
 
     it('should pass for truthyValues value', () => {
-        const result = BooleanProcessors.truthy('yes', ['yes']);
+        const result = BooleanHandler.truthy('yes', ['yes']);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('yes');
     });
 
     it('should fail for non-truthy value', () => {
-        const result = BooleanProcessors.truthy('no', ['yes']);
+        const result = BooleanHandler.truthy('no', ['yes']);
         expect(result.pass).toBe(false);
         expect(result.value).toBe('no');
     });
 });
 
-describe('BooleanProcessors.falsy', () => {
+describe('BooleanHandler.falsy', () => {
     it('should pass for boolean false', () => {
-        const result = BooleanProcessors.falsy(false);
+        const result = BooleanHandler.falsy(false);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(false);
     });
 
     it('should fail for boolean true', () => {
-        const result = BooleanProcessors.falsy(true);
+        const result = BooleanHandler.falsy(true);
         expect(result.pass).toBe(false);
         expect(result.value).toBe(true);
     });
 
     it('should pass for falsyValues value', () => {
-        const result = BooleanProcessors.falsy('no', ['no']);
+        const result = BooleanHandler.falsy('no', ['no']);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('no');
     });
 
     it('should fail for non-falsy value', () => {
-        const result = BooleanProcessors.falsy('yes', ['no']);
+        const result = BooleanHandler.falsy('yes', ['no']);
         expect(result.pass).toBe(false);
         expect(result.value).toBe('yes');
     });
 });
 
-describe('BooleanProcessors.invert', () => {
+describe('BooleanHandler.invert', () => {
     it('should invert boolean true to false', () => {
-        const result = BooleanProcessors.invert(true);
+        const result = BooleanHandler.invert(true);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(false);
     });
 
     it('should invert boolean false to true', () => {
-        const result = BooleanProcessors.invert(false);
+        const result = BooleanHandler.invert(false);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(true);
     });
 
     it('should invert truthy value using boolish pairs', () => {
         const boolishPairs = [['yes', 'no'], ['on', 'off']];
-        const result = BooleanProcessors.invert('yes', boolishPairs);
+        const result = BooleanHandler.invert('yes', boolishPairs);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('no');
     });
 
     it('should invert falsy value using boolish pairs', () => {
         const boolishPairs = [['yes', 'no'], ['on', 'off']];
-        const result = BooleanProcessors.invert('no', boolishPairs);
+        const result = BooleanHandler.invert('no', boolishPairs);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('yes');
     });
 
     it('should fail for non-boolean value without boolish pairs', () => {
-        const result = BooleanProcessors.invert('maybe');
+        const result = BooleanHandler.invert('maybe');
         expect(result.pass).toBe(false);
     });
 
     it('should handle numeric boolish pairs', () => {
         const boolishPairs = [[1, 0], ['true', 'false']];
-        expect(BooleanProcessors.invert(1, boolishPairs).value).toBe(0);
-        expect(BooleanProcessors.invert(0, boolishPairs).value).toBe(1);
+        expect(BooleanHandler.invert(1, boolishPairs).value).toBe(0);
+        expect(BooleanHandler.invert(0, boolishPairs).value).toBe(1);
     });
 });
