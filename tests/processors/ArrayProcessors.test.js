@@ -1,7 +1,7 @@
 'use strict';
 
 import ArrayProcessors  from '../../lib/processors/ArrayProcessors.js';
-import Path  from '../../lib/path/Path.js';
+import Path  from '../../lib/Path.js';
 import pd  from '../../lib/pd.js';
 
 describe('ArrayProcessors.keepOnly', () => {

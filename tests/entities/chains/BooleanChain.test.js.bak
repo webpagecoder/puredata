@@ -1,4 +1,4 @@
-// import BooleanChain  from '../../../lib/entities/chains/BooleanChain.js';
+// import BooleanChain  from '../../../lib/fields/chains/BooleanChain.js';
 // import GlobalConfig  from '../../../lib/GlobalConfig.js';
 
 // describe('BooleanChain', () => {

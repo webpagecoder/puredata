@@ -1,7 +1,7 @@
 'use strict';
 
 import ObjectProcessors  from '../../lib/processors/ObjectProcessors.js';
-import Path  from '../../lib/path/Path.js';
+import Path  from '../../lib/Path.js';
 
 // Note: ObjectProcessors does not have an isObject method
 // Use GenericProcessors.isPrimitive(value, 'object') for type checking
