@@ -1,18 +1,18 @@
 {
   "name": "puredata",
   "version": "0.1.0",
-  "description": "comprehensive javascript validation and transformation library",
+  "description": "A comprehensive javascript validation and transformation library",
   "type": "module",
   "main": "val.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "push": "npm version patch && git push",
     "push-minor": "npm version minor && git push",
     "push-major": "npm version major && git push",
     "misc": "node ./_misc/misc.js",
     "misc2": "node ./_misc/misc2.js",
     "watch": "npm-watch",
-    "test:unit": "jest --testPathPattern=tests/"
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=tests/"
   },
   "author": "j0hnc0des",
   "license": "MIT",

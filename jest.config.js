@@ -5,6 +5,15 @@
 
 /** @type {import('jest').Config} */
 const config = {
+  // Use node --experimental-vm-modules
+  runner: 'jest-runner',
+  
+  // Transform configuration for ES modules
+  transform: {},
+  
+  // Module file extensions
+  moduleFileExtensions: ['js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'json', 'node'],
+
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
