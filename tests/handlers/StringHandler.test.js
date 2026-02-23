@@ -2715,6 +2715,12 @@ describe('StringHandler.collapseRepeats', () => {
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('heeello world');
 	});
+
+	test('should collapse repeated regex-special character safely', () => {
+		const result = StringHandler.collapseRepeats('v1....2..3', '.');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('v1.2.3');
+	});
 });
 
 describe('StringHandler.collapseSpacing', () => {
@@ -2911,6 +2917,12 @@ describe('StringHandler.toCamelCase', () => {
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('fooBarBaz');
 	});
+
+	test('should trim surrounding delimiters before camel-casing', () => {
+		const result = StringHandler.toCamelCase('__FOO__bar__', '_');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('fooBar');
+	});
 });
 
 describe('StringHandler.toDelimited', () => {
@@ -2932,6 +2944,38 @@ describe('StringHandler.toDelimited', () => {
 		});
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('one-two-THREE-FOUR');
+	});
+
+	test('should return empty string for input containing only delimiters', () => {
+		const result = StringHandler.toDelimited(' -__.. ');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('');
+	});
+
+	test('should use default delimiter and identity transformer when options are omitted', () => {
+		const result = StringHandler.toDelimited('One two_three');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('One-two-three');
+	});
+
+	test('should apply transformer2 to all words when switchIndex is zero', () => {
+		const result = StringHandler.toDelimited('a b c', {
+			switchIndex: 0,
+			transformer1: word => `[${word}]`,
+			transformer2: word => word.toUpperCase()
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('A-B-C');
+	});
+
+	test('should support regex-special custom delimiters', () => {
+		const result = StringHandler.toDelimited('alpha|beta+gamma', {
+			allowedDelims: '|+',
+			delim: ':',
+			transformer: word => word.toLowerCase()
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('alpha:beta:gamma');
 	});
 });
 
@@ -2989,6 +3033,12 @@ describe('StringHandler.toSentenceCase', () => {
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('Foo bar baz');
 	});
+
+	test('should sentence-case a single word using first-word transformer', () => {
+		const result = StringHandler.toSentenceCase('hELLO');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('Hello');
+	});
 });
 
 describe('StringHandler.toSnakeCase', () => {
@@ -3042,6 +3092,12 @@ describe('StringHandler.trim', () => {
 
 	test('should trim custom characters from both sides', () => {
 		const result = StringHandler.trim('__hello--', '_-');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('hello');
+	});
+
+	test('should trim regex-special custom characters', () => {
+		const result = StringHandler.trim('..[hello]..', '.[]');
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('hello');
 	});
