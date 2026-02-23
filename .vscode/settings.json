@@ -1,5 +1,5 @@
 {
-    "jest.jestCommandLine": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "jest.jestCommandLine": "npm test --",
     "jest.autoRun": "off",
     "jest.runMode": "on-demand",
     "jest.nodeEnv": {
