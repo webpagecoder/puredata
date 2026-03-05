@@ -106,6 +106,22 @@ describe('BooleanHandler.falsy', () => {
         expect(result.value).toBe(undefined);
     });
 
+    test('should pass when value is false even with falsyValues array', () => {
+        const bool = false;
+        const result = BooleanHandler.falsy(bool, ['no', 0, null]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe(false);
+    });
+
+    test('should pass when value is false with falsy value in array', () => {
+        const bool = false;
+        const result = BooleanHandler.falsy(false, [false, 0, '']);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe(false);
+    });
+
 });
 
 describe('BooleanHandler.truthy', () => {
@@ -214,6 +230,22 @@ describe('BooleanHandler.truthy', () => {
         
         expect(result.pass).toBe(true);
         expect(result.value).toBe('on');
+    });
+
+    test('should pass when value is true even with truthyValues array', () => {
+        const bool = true;
+        const result = BooleanHandler.truthy(bool, ['yes', 'on', 1]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe(true);
+    });
+
+    test('should pass when value is true with true in truthyValues array', () => {
+        const bool = true;
+        const result = BooleanHandler.truthy(true, [true, 'yes', 1]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe(true);
     });
 
 });
@@ -376,6 +408,54 @@ describe('BooleanHandler.invert', () => {
         
         expect(result.pass).toBe(true);
         expect(result.value).toBe('No');
+    });
+
+    test('should invert when value is 0 and paired with 1', () => {
+        const bool = 0;
+        const result = BooleanHandler.invert(bool, [[0, 1]]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe(1);
+    });
+
+    test('should invert when value is null and paired with a string', () => {
+        const bool = null;
+        const result = BooleanHandler.invert(bool, [[null, 'active']]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe('active');
+    });
+
+    test('should invert when value is empty string and paired with non-empty', () => {
+        const bool = '';
+        const result = BooleanHandler.invert(bool, [['', 'filled']]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe('filled');
+    });
+
+    test('should invert back from empty string to non-empty', () => {
+        const bool = 'filled';
+        const result = BooleanHandler.invert(bool, [['', 'filled']]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe('');
+    });
+
+    test('should handle false as falsy in pair', () => {
+        const bool = 0;
+        const result = BooleanHandler.invert(bool, [[1, 0]]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toBe(1);
+    });
+
+    test('should fail when value is falsy (null) with no matching pair', () => {
+        const bool = undefined;
+        const result = BooleanHandler.invert(bool, [['yes', 'no']]);
+        
+        expect(result.pass).toBe(false);
+        expect(result.value).toBe(undefined);
     });
 
 });

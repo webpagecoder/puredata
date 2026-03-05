@@ -18,6 +18,16 @@ describe('NumberHandler.approx', () => {
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('number/approx');
     });
+
+    test('should use default tolerance when omitted', () => {
+        const result = NumberHandler.approx(1, 1 + Number.EPSILON / 2);
+        expect(result.pass).toBe(true);
+    });
+
+    test('should fail when difference equals tolerance', () => {
+        const result = NumberHandler.approx(1.5, 1, 0.5);
+        expect(result.pass).toBe(false);
+    });
 });
 
 describe('NumberHandler.between', () => {
@@ -30,6 +40,16 @@ describe('NumberHandler.between', () => {
         const result = NumberHandler.between(11, 1, 10);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('number/between');
+    });
+
+    test('should pass when number equals lower bound', () => {
+        const result = NumberHandler.between(1, 1, 10);
+        expect(result.pass).toBe(true);
+    });
+
+    test('should pass when number equals upper bound', () => {
+        const result = NumberHandler.between(10, 1, 10);
+        expect(result.pass).toBe(true);
     });
 });
 
@@ -48,6 +68,17 @@ describe('NumberHandler.decimal', () => {
     test('should fail for decimal place count outside range', () => {
         const result = NumberHandler.decimal(1.2345, { maxDecimalPlaces: 2 });
         expect(result.pass).toBe(false);
+    });
+
+    test('should fail when decimal places are below minimum', () => {
+        const result = NumberHandler.decimal(1.2, { minDecimalPlaces: 2, maxDecimalPlaces: 4 });
+        expect(result.pass).toBe(false);
+        expect([...result.errors][0].key).toBe('number/decimal');
+    });
+
+    test('should handle scientific notation branch without decimal point', () => {
+        const result = NumberHandler.decimal(1e-7, { minDecimalPlaces: 0, maxDecimalPlaces: 0 });
+        expect(result.pass).toBe(true);
     });
 });
 
@@ -86,6 +117,11 @@ describe('NumberHandler.factor', () => {
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('number/factor');
     });
+
+    test('should pass for negative factor values', () => {
+        const result = NumberHandler.factor(-3, 12);
+        expect(result.pass).toBe(true);
+    });
 });
 
 describe('NumberHandler.finite', () => {
@@ -97,6 +133,16 @@ describe('NumberHandler.finite', () => {
         const result = NumberHandler.finite(Infinity);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('number/finite');
+    });
+
+    test('should fail for -Infinity', () => {
+        const result = NumberHandler.finite(-Infinity);
+        expect(result.pass).toBe(false);
+    });
+
+    test('should fail for NaN', () => {
+        const result = NumberHandler.finite(NaN);
+        expect(result.pass).toBe(false);
     });
 });
 
@@ -182,6 +228,10 @@ describe('NumberHandler.multiple', () => {
     test('should fail when number is not a multiple of factor', () => {
         expect(NumberHandler.multiple(10, 3).pass).toBe(false);
     });
+
+    test('should pass when number is zero', () => {
+        expect(NumberHandler.multiple(0, 3).pass).toBe(true);
+    });
 });
 
 describe('NumberHandler.negative', () => {
@@ -266,6 +316,10 @@ describe('NumberHandler.safe', () => {
     test('should fail for values above MAX_SAFE_INTEGER', () => {
         expect(NumberHandler.safe(Number.MAX_SAFE_INTEGER + 1).pass).toBe(false);
     });
+
+    test('should fail for values below MIN_SAFE_INTEGER', () => {
+        expect(NumberHandler.safe(Number.MIN_SAFE_INTEGER - 1).pass).toBe(false);
+    });
 });
 
 describe('NumberHandler.safeInteger', () => {
@@ -301,6 +355,14 @@ describe('NumberHandler.unsigned', () => {
         const result = NumberHandler.unsigned('-1');
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('number/unsigned');
+    });
+
+    test('should fail when plus sign exists and include sign arg', () => {
+        const result = NumberHandler.unsigned('+1');
+        expect(result.pass).toBe(false);
+        const errors = [...result.errors];
+        expect(errors[0].key).toBe('number/unsigned');
+        expect(errors[0].args).toEqual({ sign: '+' });
     });
 });
 
@@ -409,6 +471,14 @@ describe('NumberHandler.toScale', () => {
 
     test('should scale lower bound to lower bound', () => {
         expect(NumberHandler.toScale(0, 0, 10, 0, 100).value).toBe(0);
+    });
+
+    test('should scale upper bound to upper bound', () => {
+        expect(NumberHandler.toScale(10, 0, 10, 0, 100).value).toBe(100);
+    });
+
+    test('should scale to negative destination range', () => {
+        expect(NumberHandler.toScale(5, 0, 10, -1, 1).value).toBe(0);
     });
 });
 

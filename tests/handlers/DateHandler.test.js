@@ -98,6 +98,19 @@ describe('DateHandler.before', () => {
         expect(result.pass).toBe(true);
     });
 
+    test('should fail with invalid beforeDate', () => {
+        const date = new Date('2024-01-10');
+        const beforeDate = 'invalid';
+        const result = DateHandler.before(date, beforeDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: beforeDate });
+    });
+
 });
 
 describe('DateHandler.between', () => {
@@ -161,6 +174,34 @@ describe('DateHandler.between', () => {
         const result = DateHandler.between(date, minDate, maxDate);
         
         expect(result.pass).toBe(true);
+    });
+
+    test('should fail with invalid minDate', () => {
+        const date = new Date('2024-01-15');
+        const minDate = 'invalid';
+        const maxDate = new Date('2024-01-20');
+        const result = DateHandler.between(date, minDate, maxDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: minDate });
+    });
+
+    test('should fail with invalid maxDate', () => {
+        const date = new Date('2024-01-15');
+        const minDate = new Date('2024-01-10');
+        const maxDate = 'invalid';
+        const result = DateHandler.between(date, minDate, maxDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: maxDate });
     });
 
 });
@@ -299,6 +340,19 @@ describe('DateHandler.future', () => {
         expect(result.pass).toBe(true);
     });
 
+    test('should fail with invalid referenceDate', () => {
+        const date = new Date('2024-01-20');
+        const referenceDate = 'invalid';
+        const result = DateHandler.future(date, referenceDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: referenceDate });
+    });
+
 });
 
 describe('DateHandler.human', () => {
@@ -354,6 +408,27 @@ describe('DateHandler.human', () => {
         expect(result.pass).toBe(false);
     });
 
+    test('should fail when required options are missing from a valid parse', () => {
+        const dateString = 'January 15, 2024';
+        const result = DateHandler.human(dateString, {
+            required: ['YYYY', 'MM', 'DD', 'HH']
+        });
+
+        expect(result.pass).toBe(false);
+        expect([...result.errors][0].key).toBe('date/human');
+    });
+
+    test('should parse day-before-month when monthBeforeDay is false', () => {
+        const dateString = '15 January 2024';
+        const result = DateHandler.human(dateString, {
+            monthBeforeDay: false,
+            required: ['YYYY', 'MM', 'DD']
+        });
+
+        expect(result.pass).toBe(true);
+        expect(result.value).toBeInstanceOf(Date);
+    });
+
 });
 
 describe('DateHandler.iso', () => {
@@ -405,6 +480,16 @@ describe('DateHandler.iso', () => {
         });
         
         expect(result.pass).toBe(false);
+    });
+
+    test('should fail when forbidden parsed options are present', () => {
+        const dateString = '2024-01-15T10:30:00Z';
+        const result = DateHandler.iso(dateString, {
+            forbidden: ['HH']
+        });
+
+        expect(result.pass).toBe(false);
+        expect([...result.errors][0].key).toBe('date/iso');
     });
 
 });
@@ -596,6 +681,19 @@ describe('DateHandler.max', () => {
         expect(result.pass).toBe(true);
     });
 
+    test('should fail with invalid maxDate', () => {
+        const date = new Date('2024-01-10');
+        const maxDate = 'invalid';
+        const result = DateHandler.max(date, maxDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: maxDate });
+    });
+
 });
 
 describe('DateHandler.min', () => {
@@ -636,6 +734,19 @@ describe('DateHandler.min', () => {
         const result = DateHandler.min(date, minDate);
         
         expect(result.pass).toBe(true);
+    });
+
+    test('should fail with invalid minDate', () => {
+        const date = new Date('2024-01-15');
+        const minDate = 'invalid';
+        const result = DateHandler.min(date, minDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: minDate });
     });
 
 });
@@ -711,6 +822,19 @@ describe('DateHandler.minAge', () => {
         expect(result.pass).toBe(false);
     });
 
+    test('should fail with invalid referenceDate', () => {
+        const birthDate = '2000-01-15';
+        const referenceDate = 'invalid';
+        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: referenceDate });
+    });
+
 });
 
 describe('DateHandler.past', () => {
@@ -758,6 +882,19 @@ describe('DateHandler.past', () => {
         const result = DateHandler.past(date, referenceDate);
         
         expect(result.pass).toBe(true);
+    });
+
+    test('should fail with invalid referenceDate', () => {
+        const date = new Date('2024-01-10');
+        const referenceDate = 'invalid';
+        const result = DateHandler.past(date, referenceDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: referenceDate });
     });
 
 });
@@ -841,6 +978,19 @@ describe('DateHandler.recent', () => {
         expect(result.pass).toBe(true);
     });
 
+    test('should fail with invalid referenceDate', () => {
+        const date = new Date('2024-01-10');
+        const referenceDate = 'invalid';
+        const result = DateHandler.recent(date, 30, referenceDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: referenceDate });
+    });
+
 });
 
 describe('DateHandler.timestamp', () => {
@@ -893,6 +1043,15 @@ describe('DateHandler.timestamp', () => {
         expect(result.pass).toBe(false);
     });
 
+    test('should pass with negative timestamp', () => {
+        const timestamp = -86400000; // Dec 31, 1969 UTC
+        const result = DateHandler.timestamp(timestamp);
+
+        expect(result.pass).toBe(true);
+        expect(result.value).toBeInstanceOf(Date);
+        expect(result.value.toISOString()).toBe('1969-12-31T00:00:00.000Z');
+    });
+
 });
 
 describe('DateHandler.today', () => {
@@ -941,6 +1100,19 @@ describe('DateHandler.today', () => {
         const result = DateHandler.today(date, todaysDate);
         
         expect(result.pass).toBe(true);
+    });
+
+    test('should fail with invalid todaysDate', () => {
+        const date = new Date('2024-01-15');
+        const todaysDate = 'invalid';
+        const result = DateHandler.today(date, todaysDate);
+
+        expect(result.pass).toBe(false);
+
+        const errors = [...result.errors];
+        expect(errors).toHaveLength(1);
+        expect(errors[0].key).toBe('date/base');
+        expect(errors[0].args).toEqual({ date: todaysDate });
     });
 
 });

@@ -1,7 +1,7 @@
 'use strict';
 
 import DefaultLanguage from '../../../lib/config/DefaultLanguage.js';
-import Processor from '../../../lib/fields/processors/Processor.js';
+import Processor from '../../../lib/processors/Processor.js';
 import Path from '../../../lib/Path.js';
 
 Path.delims({ separator: '/', self: '.', up: '..' });

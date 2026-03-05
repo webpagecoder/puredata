@@ -202,6 +202,42 @@ describe('StringHandler.base64Encode', () => {
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('SGVsbG8=');
 	});
+
+	test('should encode via btoa branch when Buffer is unavailable', () => {
+		const originalBuffer = globalThis.Buffer;
+		const originalBtoa = globalThis.btoa;
+
+		try {
+			globalThis.Buffer = undefined;
+			globalThis.btoa = (value) => value === 'Hello' ? 'SGVsbG8=' : '';
+
+			const result = StringHandler.base64Encode('Hello');
+			expect(result.pass).toBe(true);
+			expect(result.value).toBe('SGVsbG8=');
+		}
+		finally {
+			globalThis.Buffer = originalBuffer;
+			globalThis.btoa = originalBtoa;
+		}
+	});
+
+	test('should fail when neither Buffer nor btoa is available', () => {
+		const originalBuffer = globalThis.Buffer;
+		const originalBtoa = globalThis.btoa;
+
+		try {
+			globalThis.Buffer = undefined;
+			globalThis.btoa = undefined;
+
+			const result = StringHandler.base64Encode('Hello');
+			expect(result.pass).toBe(false);
+			expect(getFirstError(result).key).toBe('string/base64Encode');
+		}
+		finally {
+			globalThis.Buffer = originalBuffer;
+			globalThis.btoa = originalBtoa;
+		}
+	});
 });
 
 describe('StringHandler.base64Decode', () => {
@@ -209,6 +245,42 @@ describe('StringHandler.base64Decode', () => {
 		const result = StringHandler.base64Decode('SGVsbG8=');
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('Hello');
+	});
+
+	test('should decode via atob branch when Buffer is unavailable', () => {
+		const originalBuffer = globalThis.Buffer;
+		const originalAtob = globalThis.atob;
+
+		try {
+			globalThis.Buffer = undefined;
+			globalThis.atob = (value) => value === 'SGVsbG8=' ? 'Hello' : '';
+
+			const result = StringHandler.base64Decode('SGVsbG8=');
+			expect(result.pass).toBe(true);
+			expect(result.value).toBe('Hello');
+		}
+		finally {
+			globalThis.Buffer = originalBuffer;
+			globalThis.atob = originalAtob;
+		}
+	});
+
+	test('should fail when neither Buffer nor atob is available', () => {
+		const originalBuffer = globalThis.Buffer;
+		const originalAtob = globalThis.atob;
+
+		try {
+			globalThis.Buffer = undefined;
+			globalThis.atob = undefined;
+
+			const result = StringHandler.base64Decode('SGVsbG8=');
+			expect(result.pass).toBe(false);
+			expect(getFirstError(result).key).toBe('string/base64Decode');
+		}
+		finally {
+			globalThis.Buffer = originalBuffer;
+			globalThis.atob = originalAtob;
+		}
 	});
 });
 
@@ -654,6 +726,13 @@ describe('StringHandler.email', () => {
 		expect(result.pass).toBe(false);
 		expect(getFirstError(result).key).toBe('string/email');
 	});
+
+	test('should preserve case when normalize is false', () => {
+		const value = 'User.Name+Tag@Example.COM';
+		const result = StringHandler.email(value, { normalize: false });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe(value);
+	});
 });
 
 describe('StringHandler.empty', () => {
@@ -971,6 +1050,138 @@ describe('StringHandler.imei', () => {
 	});
 });
 
+describe('StringHandler.ip', () => {
+	test('should pass for valid IPv4 address', () => {
+		const result = StringHandler.ip('10.0.0.1');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('10.0.0.1');
+	});
+
+	test('should pass for valid IPv6 address', () => {
+		const result = StringHandler.ip('2001:db8::1');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('2001:db8::1');
+	});
+
+	test('should normalize uppercase IPv6 when normalize is true', () => {
+		const result = StringHandler.ip('2001:DB8::ABCD', { normalize: true });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('2001:db8::abcd');
+	});
+
+	test('should preserve original case when normalize is false', () => {
+		const result = StringHandler.ip('2001:DB8::ABCD', { normalize: false });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('2001:DB8::ABCD');
+	});
+
+	test('should fail when string is neither valid IPv4 nor IPv6', () => {
+		const result = StringHandler.ip('not-an-ip');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ip');
+	});
+
+	test('should preserve case for IPv4 when normalize is false', () => {
+		const result = StringHandler.ip('192.168.1.1', { normalize: false });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('192.168.1.1');
+	});
+});
+
+describe('StringHandler.ipCidr', () => {
+	test('should pass for valid IPv4 CIDR', () => {
+		const result = StringHandler.ipCidr('172.16.0.1/16');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('172.16.0.1/16');
+	});
+
+	test('should pass for valid IPv6 CIDR', () => {
+		const result = StringHandler.ipCidr('2001:db8::1/64');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('2001:db8::1/64');
+	});
+
+	test('should fail for invalid CIDR string', () => {
+		const result = StringHandler.ipCidr('invalid/24');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidr');
+	});
+});
+
+describe('StringHandler.ipCidrV4', () => {
+	test('should pass for valid IPv4 CIDR', () => {
+		const result = StringHandler.ipCidrV4('192.168.1.10/24');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('192.168.1.10/24');
+	});
+
+	test('should pass for boundary masks /0 and /32', () => {
+		expect(StringHandler.ipCidrV4('10.0.0.1/0').pass).toBe(true);
+		expect(StringHandler.ipCidrV4('10.0.0.1/32').pass).toBe(true);
+	});
+
+	test('should fail when slash portion is missing', () => {
+		const result = StringHandler.ipCidrV4('192.168.1.10');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV4');
+	});
+
+	test('should fail when mask is out of range', () => {
+		const result = StringHandler.ipCidrV4('192.168.1.10/33');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV4');
+	});
+
+	test('should fail when IPv4 portion is invalid', () => {
+		const result = StringHandler.ipCidrV4('999.168.1.10/24');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV4');
+	});
+
+	test('should fail when mask is not numeric', () => {
+		const result = StringHandler.ipCidrV4('192.168.1.10/abc');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV4');
+	});
+});
+
+describe('StringHandler.ipCidrV6', () => {
+	test('should pass for valid IPv6 CIDR', () => {
+		const result = StringHandler.ipCidrV6('2001:db8::1/64');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('2001:db8::1/64');
+	});
+
+	test('should pass for boundary masks /0 and /128', () => {
+		expect(StringHandler.ipCidrV6('2001:db8::1/0').pass).toBe(true);
+		expect(StringHandler.ipCidrV6('2001:db8::1/128').pass).toBe(true);
+	});
+
+	test('should fail when slash portion is missing', () => {
+		const result = StringHandler.ipCidrV6('2001:db8::1');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV6');
+	});
+
+	test('should fail when mask is out of range', () => {
+		const result = StringHandler.ipCidrV6('2001:db8::1/129');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV6');
+	});
+
+	test('should fail when IPv6 portion is invalid', () => {
+		const result = StringHandler.ipCidrV6('2001::db8::1/64');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV6');
+	});
+
+	test('should fail when mask is not numeric', () => {
+		const result = StringHandler.ipCidrV6('2001:db8::1/abc');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/ipCidrV6');
+	});
+});
+
 describe('StringHandler.ipV4', () => {
 	test('should pass for a valid IPv4 address', () => {
 		const result = StringHandler.ipV4('192.168.1.1');
@@ -1005,6 +1216,12 @@ describe('StringHandler.ipV4', () => {
 		const result = StringHandler.ipV4('01.2.3.4');
 		expect(result.pass).toBe(false);
 		expect(getFirstError(result).key).toBe('string/ipV4');
+	});
+
+	test('should preserve original value when normalize is false', () => {
+		const result = StringHandler.ipV4('192.168.1.1', { normalize: false });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('192.168.1.1');
 	});
 });
 
@@ -1061,120 +1278,6 @@ describe('StringHandler.ipV6', () => {
 		const result = StringHandler.ipV6('1:2:3:4:5:6:7:8:9');
 		expect(result.pass).toBe(false);
 		expect(getFirstError(result).key).toBe('string/ipV6');
-	});
-});
-
-describe('StringHandler.ip', () => {
-	test('should pass for valid IPv4 address', () => {
-		const result = StringHandler.ip('10.0.0.1');
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('10.0.0.1');
-	});
-
-	test('should pass for valid IPv6 address', () => {
-		const result = StringHandler.ip('2001:db8::1');
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('2001:db8::1');
-	});
-
-	test('should normalize uppercase IPv6 when normalize is true', () => {
-		const result = StringHandler.ip('2001:DB8::ABCD', { normalize: true });
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('2001:db8::abcd');
-	});
-
-	test('should preserve original case when normalize is false', () => {
-		const result = StringHandler.ip('2001:DB8::ABCD', { normalize: false });
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('2001:DB8::ABCD');
-	});
-
-	test('should fail when string is neither valid IPv4 nor IPv6', () => {
-		const result = StringHandler.ip('not-an-ip');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ip');
-	});
-});
-
-describe('StringHandler.ipCidrV4', () => {
-	test('should pass for valid IPv4 CIDR', () => {
-		const result = StringHandler.ipCidrV4('192.168.1.10/24');
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('192.168.1.10/24');
-	});
-
-	test('should pass for boundary masks /0 and /32', () => {
-		expect(StringHandler.ipCidrV4('10.0.0.1/0').pass).toBe(true);
-		expect(StringHandler.ipCidrV4('10.0.0.1/32').pass).toBe(true);
-	});
-
-	test('should fail when slash portion is missing', () => {
-		const result = StringHandler.ipCidrV4('192.168.1.10');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidrV4');
-	});
-
-	test('should fail when mask is out of range', () => {
-		const result = StringHandler.ipCidrV4('192.168.1.10/33');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidrV4');
-	});
-
-	test('should fail when IPv4 portion is invalid', () => {
-		const result = StringHandler.ipCidrV4('999.168.1.10/24');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidrV4');
-	});
-});
-
-describe('StringHandler.ipCidrV6', () => {
-	test('should pass for valid IPv6 CIDR', () => {
-		const result = StringHandler.ipCidrV6('2001:db8::1/64');
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('2001:db8::1/64');
-	});
-
-	test('should pass for boundary masks /0 and /128', () => {
-		expect(StringHandler.ipCidrV6('2001:db8::1/0').pass).toBe(true);
-		expect(StringHandler.ipCidrV6('2001:db8::1/128').pass).toBe(true);
-	});
-
-	test('should fail when slash portion is missing', () => {
-		const result = StringHandler.ipCidrV6('2001:db8::1');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidrV6');
-	});
-
-	test('should fail when mask is out of range', () => {
-		const result = StringHandler.ipCidrV6('2001:db8::1/129');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidrV6');
-	});
-
-	test('should fail when IPv6 portion is invalid', () => {
-		const result = StringHandler.ipCidrV6('2001::db8::1/64');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidrV6');
-	});
-});
-
-describe('StringHandler.ipCidr', () => {
-	test('should pass for valid IPv4 CIDR', () => {
-		const result = StringHandler.ipCidr('172.16.0.1/16');
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('172.16.0.1/16');
-	});
-
-	test('should pass for valid IPv6 CIDR', () => {
-		const result = StringHandler.ipCidr('2001:db8::1/64');
-		expect(result.pass).toBe(true);
-		expect(result.value).toBe('2001:db8::1/64');
-	});
-
-	test('should fail for invalid CIDR string', () => {
-		const result = StringHandler.ipCidr('invalid/24');
-		expect(result.pass).toBe(false);
-		expect(getFirstError(result).key).toBe('string/ipCidr');
 	});
 });
 
@@ -2042,6 +2145,143 @@ describe('StringHandler.numeric', () => {
 			'string/numeric/max',
 		]));
 	});
+
+	test('should fail with base key when numeric composition yields NaN', () => {
+		const result = StringHandler.numeric('+-1', {
+			plus: optional,
+			minus: optional
+		});
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/numeric/base');
+	});
+
+	test('should parse integral with no thousands delimiter when thousandsDelim is empty', () => {
+		const result = StringHandler.numeric('1234567', {
+			thousandsDelim: ''
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('1234567');
+	});
+
+	test('should allow empty integral when decimal is required and leadingZero is optional', () => {
+		const result = StringHandler.numeric('.5', {
+			decimal: required,
+			leadingZero: optional
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('.5');
+	});
+});
+
+describe('StringHandler.octal', () => {
+	test('should pass for valid octal string', () => {
+		const result = StringHandler.octal('701234');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('701234');
+	});
+
+	test('should fail when contains 8 or 9', () => {
+		const result = StringHandler.octal('128');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/octal');
+	});
+
+	test('should fail for empty string', () => {
+		const result = StringHandler.octal('');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/octal');
+	});
+});
+
+describe('StringHandler.onlyChars', () => {
+	test('should pass when all characters are allowed', () => {
+		const result = StringHandler.onlyChars('abcabc', 'abc');
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('abcabc');
+	});
+
+	test('should pass with case-insensitive matching when ignoreCase is true', () => {
+		const result = StringHandler.onlyChars('AbCaBc', 'abc', { ignoreCase: true });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('AbCaBc');
+	});
+
+	test('should fail with case mismatch when ignoreCase is false', () => {
+		const result = StringHandler.onlyChars('AbC', 'abc', { ignoreCase: false });
+		expect(result.pass).toBe(false);
+		const error = getFirstError(result);
+		expect(error.key).toBe('string/onlyChars');
+		expect(error.args).toMatchObject({ chars: 'abc' });
+	});
+
+	test('should fail when disallowed character appears', () => {
+		const result = StringHandler.onlyChars('abcxyz', 'abc');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/onlyChars');
+	});
+});
+
+describe('StringHandler.path', () => {
+	test('should pass for valid unix path', () => {
+		const result = StringHandler.path('/usr/local/bin/node', { style: 'unix' });
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('/usr/local/bin/node');
+	});
+
+	test('should pass and normalize for win-drive path', () => {
+		const result = StringHandler.path('C:\\Users\\John\\File.TXT', {
+			style: 'win-drive',
+			fileExtensions: ['TXT'],
+			normalize: true
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('c:\\users\\john\\file.txt');
+	});
+
+	test('should pass for win-unc path', () => {
+		const result = StringHandler.path('\\\\SERVER\\Share\\folder\\report.log', {
+			style: 'win-unc',
+			fileExtensions: ['log']
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('\\\\SERVER\\Share\\folder\\report.log');
+	});
+
+	test('should fail when extension is not allowed', () => {
+		const result = StringHandler.path('/tmp/file.json', {
+			style: 'unix',
+			fileExtensions: ['txt']
+		});
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/path');
+	});
+
+	test('should fail when windows path contains forbidden characters', () => {
+		const result = StringHandler.path('C:\\bad|name\\file.txt', {
+			style: 'win-drive',
+			fileExtensions: ['txt']
+		});
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/path');
+	});
+
+	test('should pass when fileExtensions is wildcard any file', () => {
+		const result = StringHandler.path('/var/log/syslog.log', {
+			style: 'unix',
+			fileExtensions: '.*'
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('/var/log/syslog.log');
+	});
+
+	test('should pass directory path when fileExtensions is empty', () => {
+		const result = StringHandler.path('/usr/local/bin/', {
+			style: 'unix',
+			fileExtensions: []
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('/usr/local/bin/');
+	});
 });
 
 
@@ -2163,6 +2403,16 @@ describe('StringHandler.repetition', () => {
 		const result = StringHandler.repetition('a+b a+b', 'a+b', { min: 2, ignoreCase: false });
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('a+b a+b');
+	});
+
+	test('should pass strict repetition with ignoreCase true', () => {
+		const result = StringHandler.repetition('ABabAB', 'ab', {
+			min: 2,
+			otherText: false,
+			ignoreCase: true
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('ABabAB');
 	});
 });
 
@@ -2526,6 +2776,78 @@ describe('StringHandler.url', () => {
 		const result = StringHandler.url('http://exa mple.com');
 		expect(result.pass).toBe(false);
 		expect(getFirstError(result).key).toBe('string/url');
+	});
+
+	test('should fail when URL does not match parser regex', () => {
+		const result = StringHandler.url('http://example.com|bad');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/url');
+	});
+
+	test('should fail parser when IPv6 host bracket is not closed', () => {
+		const result = StringHandler.url('http://[2001:db8::1/path');
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/url');
+	});
+
+	test('should pass for host label when label is required and rootRelative is false', () => {
+		const result = StringHandler.url('http://localhost/path', {
+			label: required,
+			domain: forbidden,
+			ip: forbidden,
+			rootRelative: false
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('http://localhost/path');
+	});
+
+	test('should fail when protocol exists but is not in allowedProtocols with protocols optional', () => {
+		const result = StringHandler.url('ftp://example.com', {
+			protocols: optional,
+			allowedProtocols: ['http', 'https']
+		});
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/url');
+	});
+
+	test('should fail root-relative URL when rootRelative is false and no valid address exists', () => {
+		const result = StringHandler.url('/only/path', { rootRelative: false });
+		expect(result.pass).toBe(false);
+		expect(getFirstError(result).key).toBe('string/url');
+	});
+
+	test('should pass when label is explicitly optional', () => {
+		const result = StringHandler.url('http://localhost', {
+			label: optional,
+			domain: optional,
+			ip: optional
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('http://localhost');
+	});
+
+	test('should pass when port is optional and omitted', () => {
+		const result = StringHandler.url('https://example.com/path', {
+			port: optional
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('https://example.com/path');
+	});
+
+	test('should pass when port is optional and valid', () => {
+		const result = StringHandler.url('https://example.com:443/path', {
+			port: optional
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('https://example.com:443/path');
+	});
+
+	test('should pass when port is forbidden and omitted', () => {
+		const result = StringHandler.url('https://example.com/path', {
+			port: forbidden
+		});
+		expect(result.pass).toBe(true);
+		expect(result.value).toBe('https://example.com/path');
 	});
 });
 

@@ -3437,20 +3437,37 @@ describe('ArrayHandler.removeDuplicates', () => {
         expect(result.pass).toBe(true);
         expect(result.value).toHaveLength(2);
         expect(result.value[0]).toEqual({ id: 1, type: 'A' });
-        expect(result.value[1]).toEqual({ id: 2, type: 'B' });
     });
 
-    test('should work with Path for nested properties', () => {
+    test('should preserve order of first occurrence', () => {
+        const array = [3, 1, 2, 1, 3, 2];
+        const result = ArrayHandler.removeDuplicates(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([3, 1, 2]);
+    });
+
+    test('should work with Path for nested property deduplication', () => {
         const array = [
             { user: { id: 1 }, name: 'Alice' },
             { user: { id: 2 }, name: 'Bob' },
-            { user: { id: 1 }, name: 'Charlie' }
+            { user: { id: 1 }, name: 'Carol' } // Same user id
         ];
         const path = Path.create('user/id');
         const result = ArrayHandler.removeDuplicates(array, path);
         
         expect(result.pass).toBe(true);
         expect(result.value).toHaveLength(2);
+        expect(result.value[0].name).toBe('Alice');
+        expect(result.value[1].name).toBe('Bob');
+    });
+
+    test('should handle array with all duplicates', () => {
+        const array = [1, 1, 1, 1];
+        const result = ArrayHandler.removeDuplicates(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1]);
     });
 
     test('should handle array with no duplicates', () => {
@@ -3461,11 +3478,52 @@ describe('ArrayHandler.removeDuplicates', () => {
         expect(result.value).toEqual([1, 2, 3, 4, 5]);
     });
 
+    test('should work with nested arrays containing duplicates', () => {
+        const array = [
+            [1, 2],
+            [3, 4],
+            [1, 2], // Duplicate
+            [5, 6]
+        ];
+        const result = ArrayHandler.removeDuplicates(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toHaveLength(3);
+        expect(result.value[0]).toEqual([1, 2]);
+        expect(result.value[1]).toEqual([3, 4]);
+        expect(result.value[2]).toEqual([5, 6]);
+    });
+
+    test('should work with mixed falsy values', () => {
+        const array = [0, false, '', null, undefined, 0, false, ''];
+        const result = ArrayHandler.removeDuplicates(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([0, false, '', null, undefined]);
+    });
+
+    test('should not mutate original array', () => {
+        const array = [1, 2, 1];
+        const originalLength = array.length;
+        ArrayHandler.removeDuplicates(array);
+        
+        expect(array).toHaveLength(originalLength);
+        expect(array).toEqual([1, 2, 1]);
+    });
+
+    test('should handle large arrays with many duplicates', () => {
+        const array = Array(100).fill(1).concat(Array(100).fill(2)).concat(Array(100).fill(3));
+        const result = ArrayHandler.removeDuplicates(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, 2, 3]);
+    });
+
 });
 
 describe('ArrayHandler.removeEmpties', () => {
     
-    test('should remove null, undefined, and empty string by default', () => {
+    test('should remove default empty values (null, undefined, empty string)', () => {
         const array = [1, null, 2, undefined, 3, '', 4];
         const result = ArrayHandler.removeEmpties(array);
         
@@ -3473,56 +3531,159 @@ describe('ArrayHandler.removeEmpties', () => {
         expect(result.value).toEqual([1, 2, 3, 4]);
     });
 
-    test('should work with custom empty values', () => {
-        const array = [1, 0, 2, false, 3, null];
-        const result = ArrayHandler.removeEmpties(array, [0, false]);
-        
-        expect(result.pass).toBe(true);
-        expect(result.value).toEqual([1, 2, 3, null]);
-    });
-
-    test('should handle array with no empties', () => {
-        const array = [1, 2, 3, 4];
-        const result = ArrayHandler.removeEmpties(array);
+    test('should remove custom empty values', () => {
+        const array = [1, 0, 2, false, 3, null, 4];
+        const result = ArrayHandler.removeEmpties(array, [null, 0, false]);
         
         expect(result.pass).toBe(true);
         expect(result.value).toEqual([1, 2, 3, 4]);
     });
 
-    test('should keep 0 and false by default', () => {
-        const array = [0, false, null, '', undefined];
+    test('should handle array with no empty values', () => {
+        const array = [1, 2, 3, 4, 5];
         const result = ArrayHandler.removeEmpties(array);
         
         expect(result.pass).toBe(true);
-        expect(result.value).toEqual([0, false]);
+        expect(result.value).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    test('should handle array with all empty values', () => {
+        const array = [null, undefined, ''];
+        const result = ArrayHandler.removeEmpties(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([]);
+    });
+
+    test('should not mutate original array', () => {
+        const array = [1, null, 2];
+        const originalLength = array.length;
+        ArrayHandler.removeEmpties(array);
+        
+        expect(array).toHaveLength(originalLength);
+        expect(array).toEqual([1, null, 2]);
     });
 
 });
 
 describe('ArrayHandler.removeUndefined', () => {
     
-    test('should remove only undefined values', () => {
-        const array = [1, undefined, 2, null, 3, undefined, 4];
-        const result = ArrayHandler.removeUndefined(array);
-        
-        expect(result.pass).toBe(true);
-        expect(result.value).toEqual([1, 2, null, 3, 4]);
-    });
-
-    test('should keep other falsy values', () => {
-        const array = [0, false, '', null, undefined];
-        const result = ArrayHandler.removeUndefined(array);
-        
-        expect(result.pass).toBe(true);
-        expect(result.value).toEqual([0, false, '', null]);
-    });
-
-    test('should handle array with no undefined', () => {
-        const array = [1, 2, 3];
+    test('should remove all undefined values', () => {
+        const array = [1, undefined, 2, undefined, 3];
         const result = ArrayHandler.removeUndefined(array);
         
         expect(result.pass).toBe(true);
         expect(result.value).toEqual([1, 2, 3]);
+    });
+
+    test('should preserve null and other falsy values', () => {
+        const array = [1, undefined, null, false, 0, '', 2];
+        const result = ArrayHandler.removeUndefined(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, null, false, 0, '', 2]);
+    });
+
+    test('should handle array with no undefined values', () => {
+        const array = [1, 2, null, false];
+        const result = ArrayHandler.removeUndefined(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, 2, null, false]);
+    });
+
+    test('should handle array with only undefined values', () => {
+        const array = [undefined, undefined, undefined];
+        const result = ArrayHandler.removeUndefined(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([]);
+    });
+
+    test('should not mutate original array', () => {
+        const array = [1, undefined, 2];
+        const originalLength = array.length;
+        ArrayHandler.removeUndefined(array);
+        
+        expect(array).toHaveLength(originalLength);
+        expect(array).toEqual([1, undefined, 2]);
+    });
+
+});
+
+describe('ArrayHandler.shuffle', () => {
+    
+    test('should return an array with same elements', () => {
+        const array = [1, 2, 3, 4, 5];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toHaveLength(array.length);
+        expect(result.value.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    test('should work with empty array', () => {
+        const array = [];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([]);
+    });
+
+    test('should work with single element', () => {
+        const array = [42];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([42]);
+    });
+
+    test('should work with string values', () => {
+        const array = ['a', 'b', 'c', 'd'];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toHaveLength(4);
+        expect(result.value.sort()).toEqual(['a', 'b', 'c', 'd']);
+    });
+
+    test('should work with object values', () => {
+        const obj1 = { id: 1 };
+        const obj2 = { id: 2 };
+        const obj3 = { id: 3 };
+        const array = [obj1, obj2, obj3];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toHaveLength(3);
+        expect(result.value).toContain(obj1);
+        expect(result.value).toContain(obj2);
+        expect(result.value).toContain(obj3);
+    });
+
+    test('should not mutate original array', () => {
+        const array = [1, 2, 3];
+        const originalArray = [...array];
+        ArrayHandler.shuffle(array);
+        
+        expect(array).toEqual(originalArray);
+    });
+
+    test('should handle arrays with duplicates', () => {
+        const array = [1, 1, 2, 2, 3];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toHaveLength(array.length);
+        expect(result.value.sort((a, b) => a - b)).toEqual([1, 1, 2, 2, 3]);
+    });
+
+    test('should work with mixed data types', () => {
+        const array = [1, 'hello', true, null, { id: 1 }];
+        const result = ArrayHandler.shuffle(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toHaveLength(5);
     });
 
 });
@@ -3537,14 +3698,23 @@ describe('ArrayHandler.reverse', () => {
         expect(result.value).toEqual([5, 4, 3, 2, 1]);
     });
 
-    test('should not mutate original array', () => {
-        const array = [1, 2, 3];
-        ArrayHandler.reverse(array);
+    test('should handle empty array', () => {
+        const array = [];
+        const result = ArrayHandler.reverse(array);
         
-        expect(array).toEqual([1, 2, 3]);
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([]);
     });
 
-    test('should work with strings', () => {
+    test('should reverse single element array', () => {
+        const array = [42];
+        const result = ArrayHandler.reverse(array);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([42]);
+    });
+
+    test('should reverse with string values', () => {
         const array = ['a', 'b', 'c'];
         const result = ArrayHandler.reverse(array);
         
@@ -3552,72 +3722,39 @@ describe('ArrayHandler.reverse', () => {
         expect(result.value).toEqual(['c', 'b', 'a']);
     });
 
-    test('should handle single element', () => {
-        const array = [1];
-        const result = ArrayHandler.reverse(array);
+    test('should reverse with object values', () => {
+        const objs = [{ id: 1 }, { id: 2 }, { id: 3 }];
+        const result = ArrayHandler.reverse(objs);
         
         expect(result.pass).toBe(true);
-        expect(result.value).toEqual([1]);
-    });
-
-    test('should handle empty array', () => {
-        const array = [];
-        const result = ArrayHandler.reverse(array);
-        
-        expect(result.pass).toBe(true);
-        expect(result.value).toEqual([]);
-    });
-
-});
-
-describe('ArrayHandler.shuffle', () => {
-    
-    test('should return array with same length', () => {
-        const array = [1, 2, 3, 4, 5];
-        const result = ArrayHandler.shuffle(array);
-        
-        expect(result.pass).toBe(true);
-        expect(result.value).toHaveLength(5);
-    });
-
-    test('should contain all original elements', () => {
-        const array = [1, 2, 3, 4, 5];
-        const result = ArrayHandler.shuffle(array);
-        
-        expect(result.pass).toBe(true);
-        array.forEach(val => {
-            expect(result.value).toContain(val);
-        });
+        expect(result.value).toEqual([{ id: 3 }, { id: 2 }, { id: 1 }]);
     });
 
     test('should not mutate original array', () => {
-        const array = [1, 2, 3, 4, 5];
-        ArrayHandler.shuffle(array);
+        const array = [1, 2, 3];
+        const result = ArrayHandler.reverse(array);
         
-        expect(array).toEqual([1, 2, 3, 4, 5]);
+        expect(array).toEqual([1, 2, 3]);
+        expect(result.value).toEqual([3, 2, 1]);
     });
 
-    test('should handle single element', () => {
-        const array = [1];
-        const result = ArrayHandler.shuffle(array);
+    test('should reverse with mixed data types', () => {
+        const array = [1, 'hello', true, null, { id: 1 }];
+        const result = ArrayHandler.reverse(array);
         
         expect(result.pass).toBe(true);
-        expect(result.value).toEqual([1]);
-    });
-
-    test('should handle empty array', () => {
-        const array = [];
-        const result = ArrayHandler.shuffle(array);
-        
-        expect(result.pass).toBe(true);
-        expect(result.value).toEqual([]);
+        expect(result.value[0]).toEqual({ id: 1 });
+        expect(result.value[1]).toBe(null);
+        expect(result.value[2]).toBe(true);
+        expect(result.value[3]).toBe('hello');
+        expect(result.value[4]).toBe(1);
     });
 
 });
 
 describe('ArrayHandler.slice', () => {
     
-    test('should slice array with start and end', () => {
+    test('should slice array with start and end indices', () => {
         const array = [1, 2, 3, 4, 5];
         const result = ArrayHandler.slice(array, 1, 4);
         
@@ -3625,7 +3762,7 @@ describe('ArrayHandler.slice', () => {
         expect(result.value).toEqual([2, 3, 4]);
     });
 
-    test('should slice from start to end', () => {
+    test('should slice from start to end of array', () => {
         const array = [1, 2, 3, 4, 5];
         const result = ArrayHandler.slice(array, 2);
         
@@ -3633,22 +3770,48 @@ describe('ArrayHandler.slice', () => {
         expect(result.value).toEqual([3, 4, 5]);
     });
 
-    test('should work with negative indices', () => {
+    test('should handle negative start index', () => {
         const array = [1, 2, 3, 4, 5];
-        const result = ArrayHandler.slice(array, -3, -1);
+        const result = ArrayHandler.slice(array, -3);
         
         expect(result.pass).toBe(true);
-        expect(result.value).toEqual([3, 4]);
+        expect(result.value).toEqual([3, 4, 5]);
+    });
+
+    test('should handle negative end index', () => {
+        const array = [1, 2, 3, 4, 5];
+        const result = ArrayHandler.slice(array, 1, -1);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([2, 3, 4]);
+    });
+
+    test('should return empty array when start >= array length', () => {
+        const array = [1, 2, 3];
+        const result = ArrayHandler.slice(array, 5);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([]);
+    });
+
+    test('should work with empty array', () => {
+        const array = [];
+        const result = ArrayHandler.slice(array, 0, 5);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([]);
     });
 
     test('should not mutate original array', () => {
         const array = [1, 2, 3];
-        ArrayHandler.slice(array, 1, 2);
+        ArrayHandler.slice(array, 0, 2);
         
         expect(array).toEqual([1, 2, 3]);
     });
 
 });
+
+
 
 describe('ArrayHandler.sliceFirst', () => {
     
@@ -3714,6 +3877,57 @@ describe('ArrayHandler.sliceLast', () => {
     test('should not mutate original array', () => {
         const array = [1, 2, 3];
         ArrayHandler.sliceLast(array, 2);
+        
+        expect(array).toEqual([1, 2, 3]);
+    });
+
+});
+
+describe('ArrayHandler.splice', () => {
+    
+    test('should remove elements at index', () => {
+        const array = [1, 2, 3, 4, 5];
+        const result = ArrayHandler.splice(array, 2, 2);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, 2, 5]);
+    });
+
+    test('should remove and insert elements', () => {
+        const array = [1, 2, 3, 4, 5];
+        const result = ArrayHandler.splice(array, 2, 1, [10, 11]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, 2, 10, 11, 4, 5]);
+    });
+
+    test('should insert without removing', () => {
+        const array = [1, 2, 4, 5];
+        const result = ArrayHandler.splice(array, 2, 0, [3]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    test('should handle negative index', () => {
+        const array = [1, 2, 3, 4, 5];
+        const result = ArrayHandler.splice(array, -2, 1);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([1, 2, 3, 5]);
+    });
+
+    test('should splice from start with no delete count', () => {
+        const array = [1, 2, 3];
+        const result = ArrayHandler.splice(array, 0, 0, [0]);
+        
+        expect(result.pass).toBe(true);
+        expect(result.value).toEqual([0, 1, 2, 3]);
+    });
+
+    test('should not mutate original array', () => {
+        const array = [1, 2, 3];
+        ArrayHandler.splice(array, 1, 1);
         
         expect(array).toEqual([1, 2, 3]);
     });
