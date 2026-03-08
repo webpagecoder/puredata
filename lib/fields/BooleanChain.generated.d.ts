@@ -2,7 +2,7 @@
 // Source: lib/handlers/BooleanHandler.js
 // Purpose: provide static editor autocomplete/hover for handler-backed methods.
 
-// import type BooleanChain from './BooleanChain.js';
+// import type BooleanChain from './BooleanChain.ts';
 
 declare module './BooleanChain.js' {
     interface BooleanChain {

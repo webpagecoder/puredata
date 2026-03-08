@@ -7,9 +7,20 @@
 const config = {
   // Use node --experimental-vm-modules
   runner: 'jest-runner',
+  extensionsToTreatAsEsm: ['.ts'],
   
   // Transform configuration for ES modules
-  transform: {},
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          allowImportingTsExtensions: true,
+        }
+      }
+    ]
+  },
   
   // Module file extensions
   moduleFileExtensions: ['js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'json', 'node'],
