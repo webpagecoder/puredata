@@ -62,6 +62,9 @@ class Utils {
         if (obj === null || typeof obj !== 'object') {
             return obj;
         }
+        if(Array.isArray(obj)) {
+            return obj.map(item => Utils.clone(item));
+        }
         var clone = {};
         for (const key of Object.keys(obj)) {
             clone[key] = Utils.clone(obj[key]);

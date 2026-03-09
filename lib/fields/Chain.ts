@@ -1,18 +1,51 @@
-// @ts-nocheck
 'use strict';
 
 import Field from './Field.ts';
 
+type StepArgsResolver = (this: Chain) => unknown[];
+type StepArgs = unknown[] | StepArgsResolver;
+type ProcessorFn = (...args: unknown[]) => unknown;
+
+type Step = {
+    fn: ProcessorFn;
+    args: StepArgs;
+    prioritize: boolean;
+};
+
+type CloneOptions = Record<string, unknown> & {
+    step?: Step;
+    pipeline?: Step[];
+};
+
+type ProcessorMap = {
+    [key: string]: ProcessorFn | undefined;
+    [key: symbol]: ProcessorFn | undefined;
+};
+
 class Chain extends Field {
 
-    constructor(props = {}) {
+    declare props: Field['props'] & {
+        pipeline: Step[];
+        processors?: ProcessorMap;
+    };
+
+    constructor(props: Record<string, unknown> = {}) {
         super(props);
         this.props.pipeline = [];
+        return new Proxy(this, this);
     }
 
-    clone(props = {}) {
-        const clone = super.clone(props);
-        const { step, pipeline = this.props.pipeline } = props;
+    get(target: Chain, prop: PropertyKey, receiver: unknown) {
+        if (prop in target) {
+            return target[prop];
+        }
+        return (...args: unknown[]) => this.addStep(prop, args);
+    }
+
+
+    clone(props: Record<string, unknown> = {}): this {
+        const clone = super.clone(props) as this;
+        const { step, pipeline = this.props.pipeline as Step[] } = props as CloneOptions;
         const updatedPipeline = [...pipeline];
 
         if (step) {
@@ -28,9 +61,10 @@ class Chain extends Field {
         return clone;
     }
 
-    addStep(fnKey, args = [], prioritize = false) {
-        const fn = this.props.processors[fnKey];
-        if (fn) {
+    addStep(fnKey: PropertyKey, args: StepArgs = [], prioritize: boolean = false): Chain {
+        const processors = this.props.processors as ProcessorMap | undefined;
+        const fn = processors?.[fnKey];
+        if (typeof fn === 'function') {
             return this.clone({
                 step: {
                     fn,
@@ -39,7 +73,7 @@ class Chain extends Field {
                 }
             });
         }
-        throw new Error(`Filter '${fnKey}' not found in processors`);
+        throw new Error(`Filter '${String(fnKey)}' not found in processors`);
     }
 
 
@@ -53,7 +87,7 @@ class Chain extends Field {
      * @example
      * generic.hasProperty('id')
      */
-    hasProperty(...args) {
+    hasProperty(...args: unknown[]): Chain {
         return this.addStep('property', args);
     }
 
@@ -63,7 +97,7 @@ class Chain extends Field {
      * @example
      * generic.defined()
      */
-    defined() {
+    defined(): Chain {
         return this.addStep('defined');
     }
 
@@ -73,7 +107,7 @@ class Chain extends Field {
      * @example
      * generic.empty()
      */
-    empty() {
+    empty(): Chain {
         return this.addStep('empty');
     }
 
@@ -84,7 +118,7 @@ class Chain extends Field {
      * @example
      * generic.equals(10)
      */
-    equals(...args) {
+    equals(...args: unknown[]): Chain {
         return this.addStep('equals', args);
     }
 
@@ -94,7 +128,7 @@ class Chain extends Field {
      * @example
      * generic.falsy()
      */
-    falsy() {
+    falsy(): Chain {
         return this.addStep('falsy');
     }
 
@@ -105,7 +139,7 @@ class Chain extends Field {
      * @example
      * generic.instanceOf(Date)
      */
-    instanceOf(...args) {
+    instanceOf(...args: unknown[]): Chain {
         return this.addStep('instanceOf', args);
     }
 
@@ -115,7 +149,7 @@ class Chain extends Field {
      * @example
      * generic.notEmpty()
      */
-    notEmpty() {
+    notEmpty(): Chain {
         return this.addStep('notEmpty');
     }
 
@@ -125,7 +159,7 @@ class Chain extends Field {
      * @example
      * generic.notNull()
      */
-    notNull() {
+    notNull(): Chain {
         return this.addStep('notNull');
     }
 
@@ -136,7 +170,7 @@ class Chain extends Field {
      * @example
      * generic.notEquals(false)
      */
-    notEquals(...args) {
+    notEquals(...args: unknown[]): Chain {
         return this.addStep('notEquals', args);
     }
 
@@ -147,7 +181,7 @@ class Chain extends Field {
      * @example
      * generic.notOneOf([null, undefined])
      */
-    notOneOf(...args) {
+    notOneOf(...args: unknown[]): Chain {
         return this.addStep('notOneOf', args);
     }
 
@@ -157,7 +191,7 @@ class Chain extends Field {
      * @example
      * generic.null()
      */
-    null() {
+    null(): Chain {
         return this.addStep('null');
     }
 
@@ -167,7 +201,7 @@ class Chain extends Field {
      * @example
      * generic.nullOrUndefined()
      */
-    nullOrUndefined() {
+    nullOrUndefined(): Chain {
         return this.addStep('nullOrUndefined');
     }
 
@@ -178,7 +212,7 @@ class Chain extends Field {
      * @example
      * generic.oneOf(['red', 'green', 'blue'])
      */
-    oneOf(...args) {
+    oneOf(...args: unknown[]): Chain {
         return this.addStep('oneOf', args);
     }
 
@@ -188,7 +222,7 @@ class Chain extends Field {
      * @example
      * generic.primitive('number')
      */
-    primitive(type = null) {
+    primitive(type: unknown = null): Chain {
         return this.addStep('primitive', [type]);
     }
 
@@ -198,7 +232,7 @@ class Chain extends Field {
      * @example
      * generic.truthy()
      */
-    truthy() {
+    truthy(): Chain {
         return this.addStep('truthy');
     }
 
@@ -208,7 +242,7 @@ class Chain extends Field {
      * @example
      * generic.notDefined()
      */
-    notDefined() {
+    notDefined(): Chain {
         return this.addStep('notDefined');
     }
 
@@ -221,7 +255,7 @@ class Chain extends Field {
      * @example
      * generic.custom(customFunction)
      */
-    custom(...args) {
+    custom(...args: unknown[]): Chain {
         return this.addStep('custom', args);
     }
 

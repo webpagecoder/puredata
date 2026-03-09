@@ -21,7 +21,7 @@ class SchemaConditionalField extends ConditionalField {
     //     Object.assign(clone.props, {
     //         comparisonField: comparisonField.compile(localRootContext) ,
     //         chain: chain.map(
-    //             ([operator, entity]) => [operator, entity.compile(localRootContext)]
+    //             ([operator, field]) => [operator, field.compile(localRootContext)]
     //         ),
     //         thenResult: thenResult.compile(localRootContext),
     //         otherwiseResult: otherwiseResult.compile(localRootContext),

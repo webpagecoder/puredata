@@ -7,11 +7,15 @@
   "scripts": {
     "test": "node --import tsx --experimental-vm-modules node_modules/jest/bin/jest.js",
     "typecheck": "tsc --noEmit",
+    "generate:arraychain-header": "tsx ./_misc/generate-arraychain-header.ts",
+    "generate:booleanchain-header": "tsx ./_misc/generate-booleanchain-header.ts",
+    "watch:arraychain-header": "npm-watch arraychain-header",
+    "watch:booleanchain-header": "npm-watch booleanchain-header",
     "push": "npm version patch && git push",
     "push-minor": "npm version minor && git push",
     "push-major": "npm version major && git push",
     "misc": "tsx ./_misc/misc.ts",
-    "watch": "npm-watch",
+    "watch": "npm-watch misc",
     "test:unit": "node --import tsx --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=tests/"
   },
   "author": "j0hnc0des",
@@ -24,6 +28,24 @@
     "typescript": "^5.8.2"
   },
   "watch": {
-    "misc": "{lib,_misc}/**/*.ts"
+    "misc": {
+      "patterns": [
+        "lib/**/*.ts",
+        "_misc/**/*.ts"
+      ],
+      "extensions": "ts"
+    },
+    "arraychain-header": {
+      "patterns": [
+        "lib/handlers/ArrayHandler.ts"
+      ],
+      "extensions": "ts"
+    },
+    "booleanchain-header": {
+      "patterns": [
+        "lib/handlers/BooleanHandler.ts"
+      ],
+      "extensions": "ts"
+    }
   }
 }

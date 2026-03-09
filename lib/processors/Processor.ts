@@ -9,11 +9,11 @@ import PathReferenceField from '../fields/PathReferenceField.ts';
 class Processor {
 
     constructor(props = {}) {
-        const { entity, compilationMapper } = props;
+        const { field, compilationMapper } = props;
         this.props = {
             compilationMapper,
             defaultValueReference: null,
-            entity,
+            field,
             id: ++Processor.id
         };
     }
@@ -27,8 +27,8 @@ class Processor {
     }
 
     compile() {
-        const { entity, compilationMapper } = this.props;
-        const { defaultValue } = entity.props;
+        const { field, compilationMapper } = this.props;
+        const { defaultValue } = field.props;
         if (defaultValue instanceof PathReferenceField) {
             this.props.defaultValueReference = compilationMapper.createProcessor(defaultValue);
         }
@@ -37,7 +37,7 @@ class Processor {
 
     process(valueOrValueNode, state = {}) {
 
-        const { entity } = this.props;
+        const { field } = this.props;
         this.state = state;
 
         let value, tracker;
@@ -51,14 +51,14 @@ class Processor {
             value = valueOrValueNode;
             tracker = new ValueNode(value, { compiledField: this });
         }
-        // tracker.entity = entity;
+        // tracker.field = field;
 
         const isDefined = tracker.getValue() !== undefined;
 
-        if (entity.isRequired() && !isDefined) {
+        if (field.isRequired() && !isDefined) {
             return tracker.addError('generic/required');
         }
-        else if (entity.isForbidden() && isDefined) {
+        else if (field.isForbidden() && isDefined) {
             return tracker.addError('generic/forbidden');
         }
         else if (!isDefined) {
@@ -67,7 +67,7 @@ class Processor {
                 defaultValueReference.process(tracker, state);
             }
             else {
-                tracker.setValue(entity.props.defaultValue);
+                tracker.setValue(field.props.defaultValue);
             }
         }
         else {
@@ -90,13 +90,13 @@ class Processor {
             return this.cachedReferences;
         }
 
-        const { entity } = this.props;
+        const { field } = this.props;
         const references = new Set();
-        if (entity instanceof PathReferenceField) {
-            references.add(entity);
+        if (field instanceof PathReferenceField) {
+            references.add(field);
         }
         else {
-            const { defaultValue } = entity.props;
+            const { defaultValue } = field.props;
             if (defaultValue instanceof PathReferenceField) {
                 references.add(defaultValue);
             }

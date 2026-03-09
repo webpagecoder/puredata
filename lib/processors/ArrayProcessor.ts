@@ -6,9 +6,9 @@ import ChainProcessor from './ChainProcessor.ts';
 class ArrayProcessor extends ChainProcessor {
 
     preProcess(tracker) {
-        const {entity} = this.props;
-        const { label } = entity;
-        const { castSingle } = entity.props;
+        const {field} = this.props;
+        const { label } = field;
+        const { castSingle } = field.props;
 
         if (!Array.isArray(tracker.getValue())) {
             if (castSingle && tracker.getValue() !== undefined) {
@@ -19,14 +19,14 @@ class ArrayProcessor extends ChainProcessor {
             }
         }
         else {
-            const { maxLength, removeEmpties, emptyValues } = entity.props;
+            const { maxLength, removeEmpties, emptyValues } = field.props;
 
             if (removeEmpties) {
-                tracker.setValue(entity.props.processors.removeEmpties(tracker.getValue(), emptyValues).value);
+                tracker.setValue(field.props.processors.removeEmpties(tracker.getValue(), emptyValues).value);
             }
 
             if (maxLength != null) {
-                const result = entity.props.processors.hasMaxLength(tracker.getValue(), maxLength);
+                const result = field.props.processors.hasMaxLength(tracker.getValue(), maxLength);
                 if (result.fail) {
                     return tracker.addError('array/maxLength', {
                         maxLength,

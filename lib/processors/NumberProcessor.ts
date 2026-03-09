@@ -7,8 +7,8 @@ import ChainProcessor from './ChainProcessor.ts';
 class NumberProcessor extends ChainProcessor {
 
     preProcess(tracker) {
-        const { entity } = this.props;
-        const result = Utils.toNumber(tracker.getValue(), entity.props);
+        const { field } = this.props;
+        const result = Utils.toNumber(tracker.getValue(), field.props);
         if (result == null) {
             return tracker.addError('number/base');
         }

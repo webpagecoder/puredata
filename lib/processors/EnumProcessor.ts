@@ -6,7 +6,7 @@ import Processor from './Processor.ts';
 class EnumProcessor extends Processor {
 
     process(tracker, state = {}) {
-        const { structure, isArray } = this.entity.props;
+        const { structure, isArray } = this.field.props;
         if (isArray) {
             if (structure.indexOf(tracker.getValue()) === -1) {
                 tracker.addError('enum/allowedValues', { allowedValues: structure });

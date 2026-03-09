@@ -32,7 +32,7 @@ function createEntity({ required = false, forbidden = false, defaultValue = null
 
 describe('Processor generic presence errors', () => {
     test('should add generic/required when required value is undefined', () => {
-        const processor = new Processor({ entity: createEntity({ required: true }) });
+        const processor = new Processor({ field: createEntity({ required: true }) });
 
         const result = processor.process(undefined);
         const errors = result.getLocalErrors();
@@ -44,7 +44,7 @@ describe('Processor generic presence errors', () => {
     });
 
     test('should add generic/forbidden when forbidden field is defined', () => {
-        const processor = new Processor({ entity: createEntity({ forbidden: true }) });
+        const processor = new Processor({ field: createEntity({ forbidden: true }) });
 
         const result = processor.process('value');
         const errors = result.getLocalErrors();
@@ -56,7 +56,7 @@ describe('Processor generic presence errors', () => {
     });
 
     test('should pass when required field is defined', () => {
-        const processor = new Processor({ entity: createEntity({ required: true }) });
+        const processor = new Processor({ field: createEntity({ required: true }) });
 
         const result = processor.process(123);
 

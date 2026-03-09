@@ -12,29 +12,29 @@ class SchemaConditionalProcessor extends Processor {
     compile(context = {}) {
         super.compile(context);
 
-        const { entity, compilationMapper } = this.props;
+        const { field, compilationMapper } = this.props;
 
-        const { comparisonField, chain, thenResult, otherwiseResult } = entity.props;
+        const { comparisonField, chain, thenResult, otherwiseResult } = field.props;
 
-        const clone = entity.clone();
+        const clone = field.clone();
         Object.assign(clone.props, {
             comparisonField: compilationMapper.createProcessor(comparisonField.clone()),
             chain: chain.map(
-                ([operator, entity]) => [operator, compilationMapper.createProcessor(entity.clone())]
+                ([operator, field]) => [operator, compilationMapper.createProcessor(field.clone())]
             ),
             thenResult: compilationMapper.createProcessor(thenResult.clone()),
             otherwiseResult: compilationMapper.createProcessor(otherwiseResult.clone()),
         });
 
-        this.entity = clone;
+        this.field = clone;
 
         return this;
     }
 
     process(tracker) {
 
-        const { entity } = this.props;
-        const { chain, stage, comparisonField, referencePath: { path } } = entity.props;
+        const { field } = this.props;
+        const { chain, stage, comparisonField, referencePath: { path } } = field.props;
 
         if (stage !== 2) {
             throw new Error('Conditionals must contain a complete then/otherwise pair')
@@ -55,7 +55,7 @@ class SchemaConditionalProcessor extends Processor {
             
         });
 
-        const chosenField = entity.getChosenField(testValueNode);
+        const chosenField = field.getChosenField(testValueNode);
 
         chosenField.process(tracker);
 

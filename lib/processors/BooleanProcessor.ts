@@ -6,13 +6,13 @@ import ChainProcessor from './ChainProcessor.ts';
 class BooleanProcessor extends ChainProcessor {
 
     preProcess(tracker) {
-        const { entity } = this.props;
+        const { field } = this.props;
         const {
             boolishPairs,
             allowBoolish,
             transformer = x => x,
             autoConvert
-        } = entity.props;
+        } = field.props;
 
         let value = transformer(tracker.getValue());
 

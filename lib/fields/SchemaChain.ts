@@ -22,32 +22,32 @@ class SchemaChain extends ObjectChain {
         const schema = new Map();
         for (const key of Object.keys(structure)) {
             let value = structure[key];
-            let entity;
+            let field;
 
             if (value instanceof Field) {
-                entity = value;
+                field = value;
             }
             else if (Utils.isPlainObject(value)) {
-                entity = new SchemaChain({
+                field = new SchemaChain({
                     compilationMapper,
                     locale,
                     structure: value
                 });
             }
             else if (Array.isArray(value)) {
-                entity = new ArrayChain({
+                field = new ArrayChain({
                     compilationMapper,
                     locale
                 }).tuple(value);
             }
             else {
-                entity = new ValueField({
+                field = new ValueField({
                     compilationMapper,
                     locale,
                     value
                 });
             }
-            schema.set(key, entity);
+            schema.set(key, field);
         }
 
         Object.assign(this.props, {
@@ -71,8 +71,8 @@ class SchemaChain extends ObjectChain {
     getRawDescription() {
         const builder = super.getRawDescription();
 
-        for (const [key, entity] of this.props.schema) {
-            builder.setChild(key, entity.getRawDescription());
+        for (const [key, field] of this.props.schema) {
+            builder.setChild(key, field.getRawDescription());
         }
 
         return builder;

@@ -23,7 +23,7 @@ class SchemaProcessor extends ObjectProcessor {
 
     constructor(props = {}) {
         const {
-            entity,
+            field,
             compilationMapper,
             depth = 0,
             path = Path.create('/'),
@@ -40,7 +40,7 @@ class SchemaProcessor extends ObjectProcessor {
         this.props.referenceResolver = referenceResolver;
         this.props.root = root || this;
 
-        const { schema = new Map() } = entity.props;
+        const { schema = new Map() } = field.props;
 
         const compiledSchema = new Map();
         this.props.schema = compiledSchema;
@@ -132,7 +132,7 @@ class SchemaProcessor extends ObjectProcessor {
             return tracker;
         }
 
-        const { entity, referenceResolver } = this.props;
+        const { field, referenceResolver } = this.props;
 
         if (!state.localRoot) {
             state.localRoot = this;
@@ -140,7 +140,7 @@ class SchemaProcessor extends ObjectProcessor {
         }
 
 
-        const { processors: { renameKeysArgs, stripUnknownKeys }, schema, failOnFirstError } = entity.props;
+        const { processors: { renameKeysArgs, stripUnknownKeys }, schema, failOnFirstError } = field.props;
         const { value } = tracker;
 
 
@@ -163,7 +163,7 @@ class SchemaProcessor extends ObjectProcessor {
         //todo: check if error and exit here?
 
         for (let [key, childProcessor] of this.props.schema) {
-            const childField = childProcessor.props.entity;
+            const childField = childProcessor.props.field;
             let childValueNode = tracker.createChild(key, childProcessor);
             childValueNode.setValue(value[key]);
             // childValueNode.path = tracker.path.move(key);

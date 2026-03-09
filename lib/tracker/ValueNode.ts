@@ -69,7 +69,7 @@ class ValueNode extends Node {
 
     addError(errorKey, args) {
         const {
-            compiledField: { props: { entity: { props: { label, locale } } } },
+            compiledField: { props: { field: { props: { label, locale } } } },
             path,
         } = this;
         let text = locale.getText(Path.fromArray(['errors', errorKey])).replace('{label}', label);

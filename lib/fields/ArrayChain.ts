@@ -123,9 +123,9 @@ class ArrayChain extends Chain {
      * array([1, 2, 1]).only([1, 2, 3]) // passes
      * array([1, 2, 4]).only([1, 2, 3]) // fails
      */
-    only(values) {
-        return this.addStep('only', [values]);
-    }
+    // only(values) {
+    //     return this.addStep('only', [values]);
+    // }
 
     /**
      * Validates that array contains at least one of the specified values

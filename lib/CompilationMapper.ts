@@ -65,11 +65,11 @@ COMPILATION_MAPPINGS.set(ValueField, ValueProcessor);
 
 class CompilationMapper {
 
-    createProcessor(entity, context = {}) {
-        const entityCompiler = COMPILATION_MAPPINGS.get(entity.constructor) || Processor;
-        return new entityCompiler(Object.assign(
+    createProcessor(field, context = {}) {
+        const fieldCompiler = COMPILATION_MAPPINGS.get(field.constructor) || Processor;
+        return new fieldCompiler(Object.assign(
             {
-                entity,
+                field,
                 compilationMapper: this
             },
             context

@@ -7,7 +7,7 @@ import Processor from './Processor.ts';
 class ValueProcessor extends Processor {
 
     process(tracker) {
-        const { mutable, value } = this.props.entity.props;
+        const { mutable, value } = this.props.field.props;
         if (!mutable || tracker.getValue() === undefined) {
             tracker.setValue(value);
         }

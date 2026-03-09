@@ -4,7 +4,7 @@
 class HtmlFormatter {
     format(node, isRoot = true) {
         const { children, errorCollection, compiledField } = node;
-        const { label } = compiledField.props.entity.props;
+        const { label } = compiledField.props.field.props;
 
         let html = errorCollection.length
             ? '<ul class="pd-messages">' + errorCollection.map(error => `<li>${error.text}</li>`).join('') + '</ul>'

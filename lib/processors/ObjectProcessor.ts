@@ -13,7 +13,7 @@ class ObjectProcessor extends ChainProcessor {
             return tracker.addError('object/base');
         }
 
-        const { ensurePlain, clone, maxDepth, maxKeyCount } = this.props.entity.props;
+        const { ensurePlain, clone, maxDepth, maxKeyCount } = this.props.field.props;
 
         if (ensurePlain && !Utils.isPlainObject(tracker.getValue())) {
             return tracker.addError('object/plain');

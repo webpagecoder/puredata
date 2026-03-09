@@ -3274,7 +3274,7 @@ describe('StringHandler.toDelimited', () => {
 		expect(result.value).toBe('');
 	});
 
-	test('should use default delimiter and identity transformer when options are omitted', () => {
+	test('should use default delimiter and idfield transformer when options are omitted', () => {
 		const result = StringHandler.toDelimited('One two_three');
 		expect(result.pass).toBe(true);
 		expect(result.value).toBe('One-two-three');

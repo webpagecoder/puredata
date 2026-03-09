@@ -143,8 +143,8 @@ export default ConditionalField;
 //     }
 //     if (thenResult) {
 //         if (thenResult instanceof ConditionalField) {
-//             for (const entity of thenResult.internalEntities) {
-//                 fields.add(entity);
+//             for (const field of thenResult.internalEntities) {
+//                 fields.add(field);
 //             }
 //         }
 //         else {
@@ -153,8 +153,8 @@ export default ConditionalField;
 //     }
 //     if (otherwiseResult) {
 //         if (otherwiseResult instanceof ConditionalField) {
-//             for (const entity of otherwiseResult.internalEntities) {
-//                 fields.add(entity);
+//             for (const field of otherwiseResult.internalEntities) {
+//                 fields.add(field);
 //             }
 //         }
 //         else {

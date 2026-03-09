@@ -9,14 +9,14 @@ class DateProcessor extends ChainProcessor {
 
 
     ensureEmptyQueue(type) {
-        if (this.entity.props.pipeline.length > 0) {
+        if (this.field.props.pipeline.length > 0) {
             throw new Error(type + ' processor must be the first processor in the chain, if used.');
         }
     }
 
     preProcess(tracker, state = {}) {
-        const { entity } = this.props;
-        const { inputType } = entity.props;
+        const { field } = this.props;
+        const { inputType } = field.props;
 
         state.originalValue = tracker.getValue();
         if (inputType) {
@@ -36,9 +36,9 @@ class DateProcessor extends ChainProcessor {
     }
 
     postProcess(tracker, state = {}) {
-        const { entity } = this.props;
+        const { field } = this.props;
         const { inputType } = state;
-        const outputType = entity.props.outputType || inputType;
+        const outputType = field.props.outputType || inputType;
         const dateValue = tracker.getValue();
         if (!(dateValue instanceof Date) || isNaN(dateValue.getTime())) {
             return tracker.addError('date/base');

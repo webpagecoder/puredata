@@ -12,8 +12,8 @@ class ReferenceProcessor extends Processor {
     }
 
     compile(context = {}) {
-        const { compilationMapper, entity, parent, path, root } = this.props;
-        const { path: referencePath } = entity.props;
+        const { compilationMapper, field, parent, path, root } = this.props;
+        const { path: referencePath } = field.props;
 
         const compiledReference = parent.resolvePath(referencePath);
 
@@ -38,7 +38,7 @@ class ReferenceProcessor extends Processor {
                 parent,
                 path,
                 root,
-                entity: compiledReference.props.entity,
+                field: compiledReference.props.field,
                 isLocalRoot: true,
             });
             compiledField.compile(Object.assign({}, context));
@@ -52,7 +52,7 @@ class ReferenceProcessor extends Processor {
 
     process(tracker, state) {
         let { 
-            entity: { props: { minDepth = 0, maxDepth = 1, path } }, 
+            field: { props: { minDepth = 0, maxDepth = 1, path } }, 
             parent
          } = this.props;
 

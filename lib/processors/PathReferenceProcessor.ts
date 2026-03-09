@@ -6,8 +6,8 @@ import Processor from './Processor.ts';
 class PathReferenceProcessor extends Processor {
 
     process(tracker) {
-        const { entity } = this.props;
-        const { path, callback = x => x, defaultValue } = entity.props;
+        const { field } = this.props;
+        const { path, callback = x => x, defaultValue } = field.props;
         const referencedValueNode = tracker.parent.getNodeByPath(path);
         let resolvedValue = undefined;
         if (referencedValueNode) {

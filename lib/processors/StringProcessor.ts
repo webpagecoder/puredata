@@ -7,8 +7,8 @@ class StringProcessor extends ChainProcessor {
 
 
     preProcess(tracker) {
-        const {entity} = this.props;
-        const { trim, maxLength, truncate } = entity.props;
+        const {field} = this.props;
+        const { trim, maxLength, truncate } = field.props;
         if (typeof tracker.getValue() !== 'string') {
             return tracker.addError('string/base');
         }

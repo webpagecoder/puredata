@@ -22,7 +22,7 @@ class ChainProcessor extends Processor {
     }
 
     executePipeline(tracker) {
-        for (const step of this.props.entity.props.pipeline) {
+        for (const step of this.props.field.props.pipeline) {
             let { fn, args } = step;
             let finalArgs = [];
             if(typeof args === 'function') {
@@ -61,7 +61,7 @@ class ChainProcessor extends Processor {
 
     getReferences() {
         const references = super.getReferences();
-        for (const { args } of this.props.entity.props.pipeline) {
+        for (const { args } of this.props.field.props.pipeline) {
             for (const arg of args) {
                 if (arg instanceof PathReferenceField) {
                     references.add(arg);
