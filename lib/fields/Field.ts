@@ -1,24 +1,28 @@
 'use strict';
 
+import { CompilationMapper } from '../CompilationMapper.ts';
 import { Locale } from '../Locale.ts';
 import { PRESENCE } from '../Presence.ts';
-import type { CompilationMapper } from '../CompilationMapper.ts';
 import type { Processor } from '../processors/Processor.ts';
+import { ValueNode } from '../tracker/ValueNode.ts';
 
 type PresenceValue = (typeof PRESENCE)[keyof typeof PRESENCE];
 
-export type FieldProps = Record<string, unknown> & {
+export type ErrorMessages = Record<string, string>;
+
+type FieldProps = Record<string, unknown> & {
     compilationMapper?: CompilationMapper;
     defaultValue?: unknown;
-    errorMessages?: Record<string, string>;
+    errorMessages?: ErrorMessages;
     label?: string;
     locale?: Locale | string;
     presence?: PresenceValue;
 };
 
-type ResolvedFieldProps = FieldProps & {
+export type ResolvedFieldProps = FieldProps & {
+    compilationMapper: CompilationMapper;
     defaultValue: unknown;
-    errorMessages: Record<string, string>;
+    errorMessages: ErrorMessages;
     label: string;
     locale: Locale;
     presence: PresenceValue;
@@ -36,12 +40,12 @@ class Field {
     constructor(props: FieldProps = {}) {
 
         const {
+            compilationMapper = new CompilationMapper(),
             defaultValue = undefined,
             errorMessages = {},
             label = 'Value',
-            locale,
+            locale = 'en-US',
             presence = PRESENCE.REQUIRED,
-            compilationMapper
         } = props;
 
         this.id = ++Field.id;
@@ -59,7 +63,7 @@ class Field {
     }
 
     clone(props: FieldProps = {}): this {
-        const Constructor = this.constructor as new (props?: FieldProps) => this;
+        const Constructor = this.constructor as new (...args: ConstructorParameters<typeof Field>) => this;
         return new Constructor(
             //todo: is this deepmerge necessary?
             // Utils.mergeObjects(this.props, props || {}),
@@ -67,7 +71,7 @@ class Field {
         );
     }
 
-    process(valueOrValueNode: unknown, state: Record<string, unknown> = {}): unknown {
+    process(valueOrValueNode: ValueNode | unknown, state: Record<string, unknown> = {}): unknown {
         if (!this.compiled) {
             if (!this.props.compilationMapper) {
                 throw new Error('Field compilation mapper is not configured');
@@ -97,19 +101,11 @@ class Field {
         return this.props.presence === PRESENCE.REQUIRED;
     }
 
-
-    // Generic declaratives exposed in the fluent interface
-
-    // set(props = {}) {
-    //     return this.setProps(props);
-    // }
-
-
     default(defaultValue: unknown): this {
         return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL });
     }
 
-    errors(messages: Record<string, unknown>): this {
+    errors(messages: ErrorMessages): this {
         const clone = this.clone();
         clone.props.locale.override(messages);
         return clone;
@@ -130,8 +126,7 @@ class Field {
     required(): this {
         return this.clone({ presence: PRESENCE.REQUIRED });
     }
-
-    
 }
 
 export { Field };
+

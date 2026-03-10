@@ -1,6 +1,6 @@
 'use strict';
 
-import { Field } from './Field.ts';
+import { Field, ResolvedFieldProps } from './Field.ts';
 
 type StepArgsResolver = (this: Chain) => unknown[];
 type StepArgs = unknown[] | StepArgsResolver;
@@ -24,7 +24,7 @@ type ProcessorMap = {
 
 class Chain extends Field {
 
-    declare props: Field['props'] & {
+    declare props: ResolvedFieldProps & {
         pipeline: Step[];
         processors?: ProcessorMap;
     };
