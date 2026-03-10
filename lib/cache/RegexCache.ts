@@ -3,7 +3,7 @@
 
 /** @typedef import('./typedefs.ts') */
 
-import Cache from './Cache.ts';
+import { Cache } from './Cache.ts';
 
 const SYM_REGEX_CACHE_KEY = Symbol();
 const REGEX_CACHE = Cache.registerStore(SYM_REGEX_CACHE_KEY);
@@ -20,4 +20,4 @@ const RegexCache = (() => {
     }
 })();
 
-export default RegexCache;
+export { RegexCache };

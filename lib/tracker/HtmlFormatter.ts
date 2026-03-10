@@ -31,4 +31,4 @@ class HtmlFormatter {
 
 }
 
-export default HtmlFormatter;
+export { HtmlFormatter };

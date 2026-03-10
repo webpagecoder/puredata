@@ -1,50 +1,51 @@
-// @ts-nocheck
 'use strict';
 
-import Processor from './processors/Processor.ts';
+// Base Field and Processor
 
-// Chains
+import { Field } from './fields/Field.ts';
+import { Processor } from './processors/Processor.ts';
 
-import ArrayChain from './fields/ArrayChain.ts';
-import ArrayProcessor from './processors/ArrayProcessor.ts';
+// Chains & processors
 
-import BooleanChain from './fields/BooleanChain.ts';
-import BooleanProcessor from './processors/BooleanProcessor.ts';
+import { ArrayChain } from './fields/ArrayChain.ts';
+import { ArrayProcessor } from './processors/ArrayProcessor.ts';
 
-import DateProcessor from './processors/DateProcessor.ts';
-import DateChain from './fields/DateChain.ts';
+import { BooleanChain } from './fields/BooleanChain.ts';
+import { BooleanProcessor } from './processors/BooleanProcessor.ts';
 
-import NumberProcessor from './processors/NumberProcessor.ts';
-import NumberChain from './fields/NumberChain.ts';
+import { DateChain } from './fields/DateChain.ts';
+import { DateProcessor } from './processors/DateProcessor.ts';
 
-import ObjectProcessor from './processors/ObjectProcessor.ts';
-import ObjectChain from './fields/ObjectChain.ts';
+import { NumberChain } from './fields/NumberChain.ts';
+import { NumberProcessor } from './processors/NumberProcessor.ts';
 
-import SchemaProcessor from './processors/SchemaProcessor.ts';
-import SchemaChain from './fields/SchemaChain.ts';
+import { ObjectChain } from './fields/ObjectChain.ts';
+import { ObjectProcessor } from './processors/ObjectProcessor.ts';
 
-import StringProcessor from './processors/StringProcessor.ts';
-import StringChain from './fields/StringChain.ts';
+import { SchemaChain } from './fields/SchemaChain.ts';
+import { SchemaProcessor } from './processors/SchemaProcessor.ts';
 
-// Other
+import { StringChain } from './fields/StringChain.ts';
+import { StringProcessor } from './processors/StringProcessor.ts';
 
-import ReferenceProcessor from './processors/ReferenceProcessor.ts';
-import ReferenceField from './fields/ReferenceField.ts';
+// Others & processors
 
-import EnumProcessor from './processors/EnumProcessor.ts';
-import EnumField from './fields/EnumField.ts';
+import { ReferenceField } from './fields/ReferenceField.ts';
+import { ReferenceProcessor } from './processors/ReferenceProcessor.ts';
 
-import PathReferenceProcessor from './processors/PathReferenceProcessor.ts';
-import PathReferenceField from './fields/PathReferenceField.ts';
+import { EnumField } from './fields/EnumField.ts';
+import { EnumProcessor } from './processors/EnumProcessor.ts';
 
-import SchemaConditionalProcessor from './processors/SchemaConditionalProcessor.ts';
-import SchemaConditionalField from './fields/SchemaConditionalField.ts';
+import { PathReferenceField } from './fields/PathReferenceField.ts';
+import { PathReferenceProcessor } from './processors/PathReferenceProcessor.ts';
 
-import ValueProcessor from './processors/ValueProcessor.ts';
-import ValueField from './fields/ValueField.ts';
-// import { compilationMapper } from '../pd.ts';
+import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
+import { SchemaConditionalProcessor } from './processors/SchemaConditionalProcessor.ts';
 
-const COMPILATION_MAPPINGS = new Map();
+import { ValueField } from './fields/ValueField.ts';
+import { ValueProcessor } from './processors/ValueProcessor.ts';
+
+const COMPILATION_MAPPINGS = new Map<typeof Field, typeof Processor>();
 
 // Chains
 COMPILATION_MAPPINGS.set(ArrayChain, ArrayProcessor);
@@ -65,9 +66,12 @@ COMPILATION_MAPPINGS.set(ValueField, ValueProcessor);
 
 class CompilationMapper {
 
-    createProcessor(field, context = {}) {
-        const fieldCompiler = COMPILATION_MAPPINGS.get(field.constructor) || Processor;
-        return new fieldCompiler(Object.assign(
+    createProcessor(field: Field, context = {}) {
+        const processorConstructor: typeof Processor = COMPILATION_MAPPINGS.get(field.constructor as typeof Field);
+        if (!processorConstructor) {
+            throw new Error(`No processor found for field of type ${field.constructor.name}`);
+        }
+        return new processorConstructor(Object.assign(
             {
                 field,
                 compilationMapper: this
@@ -78,4 +82,4 @@ class CompilationMapper {
 
 }
 
-export default CompilationMapper;
+export { CompilationMapper };

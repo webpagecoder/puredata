@@ -1,9 +1,9 @@
 'use strict';
 
-import Field from '../../lib/fields/Field.ts';
-import Chain from '../../lib/fields/Chain.ts';
-import Locale from '../../lib/Locale.ts';
-import DefaultLanguage from '../../lib/config/DefaultLanguage.ts';
+import { Field } from '../../lib/fields/Field.ts';
+import { Chain } from '../../lib/fields/Chain.ts';
+import { Locale } from '../../lib/Locale.ts';
+import { DefaultLanguage } from '../../lib/config/DefaultLanguage.ts';
 
 class DynamicChain extends Chain {}
 

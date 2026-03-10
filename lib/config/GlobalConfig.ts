@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-export default Object.seal({
+const GLOBAL_CONFIG = Object.seal({
     general: {
         emptyValues: [null, undefined, ''],
         // cloneValueBeforeFilter: false,
@@ -66,3 +66,5 @@ export default Object.seal({
         truncate: true //todo
     }
 });
+
+export { GLOBAL_CONFIG };

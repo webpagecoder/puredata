@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Path from '../Path.ts';
+import { Path } from '../Path.ts';
 
 class Node {
     constructor() {
@@ -82,4 +82,4 @@ class Node {
 //     }
 // }
 
-export default Node;
+export { Node };

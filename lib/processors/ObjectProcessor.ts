@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Utils from '../utils/Utils.ts';
-import ChainProcessor from './ChainProcessor.ts';
+import { Utils } from '../utils/Utils.ts';
+import { ChainProcessor } from './ChainProcessor.ts';
 
 class ObjectProcessor extends ChainProcessor {
 
@@ -37,4 +37,4 @@ class ObjectProcessor extends ChainProcessor {
 
 }
 
-export default ObjectProcessor;
+export { ObjectProcessor };

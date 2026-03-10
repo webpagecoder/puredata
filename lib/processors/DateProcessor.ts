@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Utils from '../utils/Utils.ts';
-import ChainProcessor from './ChainProcessor.ts';
+import { Utils } from '../utils/Utils.ts';
+import { ChainProcessor } from './ChainProcessor.ts';
 
 
 class DateProcessor extends ChainProcessor {
@@ -70,4 +70,4 @@ class DateProcessor extends ChainProcessor {
 
 }
 
-export default DateProcessor;
+export { DateProcessor };

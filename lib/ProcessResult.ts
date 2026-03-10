@@ -49,4 +49,4 @@ class ProcessResult {
 
 }
 
-export default ProcessResult;
+export { ProcessResult };

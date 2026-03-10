@@ -17,4 +17,4 @@ class TextFormatter {
     }
 }
 
-export default TextFormatter;
+export { TextFormatter };

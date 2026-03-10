@@ -1,7 +1,7 @@
 'use strict';
 
-import ObjectHandler from '../../lib/handlers/ObjectHandler.ts';
-import Path from '../../lib/Path.ts';
+import { ObjectHandler } from '../../lib/handlers/ObjectHandler.ts';
+import { Path } from '../../lib/Path.ts';
 
 // ====================================
 // VALIDATORS

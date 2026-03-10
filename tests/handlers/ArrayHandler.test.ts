@@ -1,7 +1,7 @@
 'use strict';
 
-import ArrayHandler from '../../lib/handlers/ArrayHandler.ts';
-import Path from '../../lib/Path.ts';
+import { ArrayHandler } from '../../lib/handlers/ArrayHandler.ts';
+import { Path } from '../../lib/Path.ts';
 
 // ====================================
 // VALIDATORS

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import ChainProcessor from './ChainProcessor.ts';
+import { ChainProcessor } from './ChainProcessor.ts';
 
 class StringProcessor extends ChainProcessor {
 
@@ -27,4 +27,4 @@ class StringProcessor extends ChainProcessor {
 
 }
 
-export default StringProcessor;
+export { StringProcessor };

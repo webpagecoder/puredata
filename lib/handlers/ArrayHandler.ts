@@ -1,10 +1,10 @@
 // @ts-nocheck
 'use strict';
 
-import Path from '../Path.ts';
-import ProcessResult from '../ProcessResult.ts';
-import Utils from '../utils/Utils.ts';
-import GenericHandler from './GenericHandler.ts';
+import { Path } from '../Path.ts';
+import { ProcessResult } from '../ProcessResult.ts';
+import { Utils } from '../utils/Utils.ts';
+import { GenericHandler } from './GenericHandler.ts';
 const { pass, fail } = ProcessResult;
 
 function getSorter(order = 1, pathOrComparator = null) {
@@ -475,7 +475,7 @@ class ArrayHandler extends GenericHandler {
 
 };
 
-export default ArrayHandler;
+export { ArrayHandler };
 
 
 //todo: add sort

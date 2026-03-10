@@ -5,18 +5,18 @@
 //todo: pathdelim and upchar make global chars...cant do it by object too much craziness
 
 
-// import ReferenceValueNode from '../../tracker/ReferenceValueNode.ts';
+// import { ReferenceValueNode } from '../../tracker/ReferenceValueNode.ts';
 
-// import Meta from '../Meta.ts';
+// import { Meta } from '../Meta.ts';
 
-// import SchemaChainMeta from '../meta/SchemaChainMeta.ts';
-// import PathReferenceField from '../reference/PathReferenceField.ts';
-import Path from '../Path.ts';
-import PubSub from '../pub-sub/PubSub.ts';
+// import { SchemaChainMeta } from '../meta/SchemaChainMeta.ts';
+// import { PathReferenceField } from '../reference/PathReferenceField.ts';
+import { Path } from '../Path.ts';
+import { PubSub } from '../pub-sub/PubSub.ts';
 
 
-import SchemaConditionalField from '../fields/SchemaConditionalField.ts';
-import ObjectProcessor from './ObjectProcessor.ts';
+import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
+import { ObjectProcessor } from './ObjectProcessor.ts';
 
 
 class SchemaProcessor extends ObjectProcessor {
@@ -224,5 +224,5 @@ class SchemaProcessor extends ObjectProcessor {
 
 }
 
-export default SchemaProcessor;
+export { SchemaProcessor };
 

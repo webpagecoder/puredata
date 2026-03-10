@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import ValueNode from '../tracker/ValueNode.ts';
-import Processor from './Processor.ts';
+import { ValueNode } from '../tracker/ValueNode.ts';
+import { Processor } from './Processor.ts';
 
 class SchemaConditionalProcessor extends Processor {
 
@@ -64,4 +64,4 @@ class SchemaConditionalProcessor extends Processor {
 
 }
 
-export default SchemaConditionalProcessor;
+export { SchemaConditionalProcessor };

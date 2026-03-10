@@ -5,7 +5,7 @@
   "type": "module",
   "main": "val.js",
   "scripts": {
-    "test": "node --import tsx --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --import { tsx } --experimental-vm-modules node_modules/jest/bin/jest.js",
     "typecheck": "tsc --noEmit",
     "generate:arraychain-header": "tsx ./_misc/generate-arraychain-header.ts",
     "generate:booleanchain-header": "tsx ./_misc/generate-booleanchain-header.ts",
@@ -16,7 +16,7 @@
     "push-major": "npm version major && git push",
     "misc": "tsx ./_misc/misc.ts",
     "watch": "npm-watch misc",
-    "test:unit": "node --import tsx --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=tests/"
+    "test:unit": "node --import { tsx } --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=tests/"
   },
   "author": "j0hnc0des",
   "license": "MIT",

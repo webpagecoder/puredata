@@ -2,9 +2,9 @@
 'use strict';
 //TODO: revisit if we need to be checking the 2nd and subsequent args for data types
 
-import ProcessResult from '../ProcessResult.ts';
-import Utils from '../utils/Utils.ts';
-import GenericHandler from './GenericHandler.ts';
+import { ProcessResult } from '../ProcessResult.ts';
+import { Utils } from '../utils/Utils.ts';
+import { GenericHandler } from './GenericHandler.ts';
 const { pass, fail } = ProcessResult;
 
 function areOptionsCompliant(parsed = {}, required = [], forbidden = []) {
@@ -414,4 +414,4 @@ class DateHandler extends GenericHandler {
 }
 
 
-export default DateHandler;
+export { DateHandler };

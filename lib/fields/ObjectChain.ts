@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Path from '../Path.ts';
-import Chain from './Chain.ts';
+import { Path } from '../Path.ts';
+import { Chain } from './Chain.ts';
 
 
 class ObjectChain extends Chain {
@@ -373,4 +373,4 @@ class ObjectChain extends Chain {
 
 }
 
-export default ObjectChain;
+export { ObjectChain };

@@ -1,7 +1,7 @@
 'use strict';
 
-import StringHandler from '../../lib/handlers/StringHandler.ts';
-import Presence from '../../lib/Presence.ts';
+import { StringHandler } from '../../lib/handlers/StringHandler.ts';
+import { PRESENCE } from '../../lib/Presence.ts';
 
 const { required, optional, forbidden } = Presence;
 

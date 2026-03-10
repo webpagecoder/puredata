@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Chain from './Chain.ts';
+import { Chain } from './Chain.ts';
 
 class NumberChain extends Chain {
 
@@ -405,4 +405,4 @@ class NumberChain extends Chain {
 
 }
 
-export default NumberChain;
+export { NumberChain };

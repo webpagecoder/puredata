@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Field from './Field.ts';
+import { Field } from './Field.ts';
 
 class EnumField extends Field {
 
@@ -13,4 +13,4 @@ class EnumField extends Field {
 
 }
 
-export default EnumField;
+export { EnumField };

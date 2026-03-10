@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Utils from '../utils/Utils.ts';
-import ChainProcessor from './ChainProcessor.ts';
+import { Utils } from '../utils/Utils.ts';
+import { ChainProcessor } from './ChainProcessor.ts';
 
 class NumberProcessor extends ChainProcessor {
 
@@ -17,4 +17,4 @@ class NumberProcessor extends ChainProcessor {
 
 }
 
-export default NumberProcessor;
+export { NumberProcessor };

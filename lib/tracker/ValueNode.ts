@@ -1,11 +1,11 @@
 // @ts-nocheck
 'use strict';
 
-// import AdvancedPath from '../path/AdvancedPath.ts'; // File missing - commented out 
-import Utils from '../utils/Utils.ts';
-import HtmlErrorFormatter from './HtmlErrorFormatter.ts';
-import Node from './Node.ts';
-import Path from '../Path.ts'
+// import { AdvancedPath } from '../path/AdvancedPath.ts'; // File missing - commented out 
+import { Utils } from '../utils/Utils.ts';
+import { HtmlErrorFormatter } from './HtmlErrorFormatter.ts';
+import { Node } from './Node.ts';
+import { Path } from '../Path.ts'
 
 class ValueNode extends Node {
     constructor(_value, {
@@ -170,7 +170,7 @@ class ValueNode extends Node {
     }
 }
 
-export default ValueNode;
+export { ValueNode };
 
 
 

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Field from './Field.ts';
+import { Field } from './Field.ts';
 
 class ReferenceField extends Field {
 
@@ -14,4 +14,4 @@ class ReferenceField extends Field {
 
 }
 
-export default ReferenceField;
+export { ReferenceField };

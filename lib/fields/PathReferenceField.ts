@@ -1,10 +1,10 @@
 // @ts-nocheck
 'use strict';
 
-import Path from '../Path.ts';
-import Field from './Field.ts';
+import { Path } from '../Path.ts';
+import { Field } from './Field.ts';
 
-// import Meta from '../meta/Meta.ts';
+// import { Meta } from '../meta/Meta.ts';
 
 class PathReferenceField extends Field {
 
@@ -35,4 +35,4 @@ class PathReferenceField extends Field {
 
 }
 
-export default PathReferenceField;
+export { PathReferenceField };

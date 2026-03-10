@@ -1,7 +1,9 @@
 // @ts-nocheck
 'use strict';
 
-import GlobalConfig from './config/GlobalConfig.ts';
-import PureData from './PureData.ts';
+import { GLOBAL_CONFIG } from './config/GlobalConfig.ts';
+import { PureData } from './PureData.ts';
 
-export default new PureData(GlobalConfig);
+const pd = new PureData(GLOBAL_CONFIG);
+
+export { pd };

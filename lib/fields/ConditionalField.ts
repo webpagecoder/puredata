@@ -2,8 +2,8 @@
 
 'use strict';
 
-import Field from './Field.ts';
-import ValueField from './ValueField.ts';
+import { Field } from './Field.ts';
+import { ValueField } from './ValueField.ts';
 
 
 
@@ -121,7 +121,7 @@ class ConditionalField extends Field {
 
 }
 
-export default ConditionalField;
+export { ConditionalField };
 
 
 

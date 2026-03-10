@@ -1,6 +1,6 @@
 'use strict';
 
-import Field from './Field.ts';
+import { Field } from './Field.ts';
 
 type StepArgsResolver = (this: Chain) => unknown[];
 type StepArgs = unknown[] | StepArgsResolver;
@@ -261,5 +261,5 @@ class Chain extends Field {
 
 }
 
-export default Chain;
+export { Chain };
 

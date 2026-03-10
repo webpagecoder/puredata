@@ -1,10 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Path from './Path.ts';
-import Utils from './utils/Utils.ts';
-
-
+import { Path } from './Path.ts';
+import { Utils } from './utils/Utils.ts';
 
 class Locale {
 
@@ -13,20 +11,20 @@ class Locale {
         registry.set(languageKey, text);
     }
 
-    constructor(languageKeyOrParent) {
+    constructor(keyOrParentLocale: string | Locale) {
         this.overrides = new Map();
 
-        if (languageKeyOrParent instanceof Locale) {
-            this.parent = languageKeyOrParent;
+        if (keyOrParentLocale instanceof Locale) {
+            this.parent = keyOrParentLocale;
             return;
         }
 
-        const text = Locale.registry.get(languageKeyOrParent);
+        const text = Locale.registry.get(keyOrParentLocale);
         if (!text) {
-            throw new Error(`Language '${languageKeyOrParent}' is not registered`);
+            throw new Error(`Language '${keyOrParentLocale}' is not registered`);
         }
 
-        this.languageKey = languageKeyOrParent;
+        this.languageKey = keyOrParentLocale;
         this.text = text;
     }
 
@@ -75,4 +73,4 @@ class Locale {
     }
 }
 
-export default Locale;
+export { Locale };

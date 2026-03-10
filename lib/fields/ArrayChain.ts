@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Path from '../Path.ts';
-import Chain from './Chain.ts';
+import { Path } from '../Path.ts';
+import { Chain } from './Chain.ts';
 
 class ArrayChain extends Chain {
 
@@ -494,6 +494,6 @@ class ArrayChain extends Chain {
 
 }
 
-export default ArrayChain;
+export { ArrayChain };
 
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import NumberHandler from '../../lib/handlers/NumberHandler.ts';
+import { NumberHandler } from '../../lib/handlers/NumberHandler.ts';
 
 // ====================================
 // VALIDATORS

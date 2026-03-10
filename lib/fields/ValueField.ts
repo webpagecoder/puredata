@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Field from './Field.ts';
+import { Field } from './Field.ts';
 
 class ValueField extends Field {
     constructor(props = {}) {
@@ -12,5 +12,5 @@ class ValueField extends Field {
     }
 }
 
-export default ValueField;
+export { ValueField };
 

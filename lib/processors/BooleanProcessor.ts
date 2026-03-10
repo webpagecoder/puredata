@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import ChainProcessor from './ChainProcessor.ts';
+import { ChainProcessor } from './ChainProcessor.ts';
 
 class BooleanProcessor extends ChainProcessor {
 
@@ -35,4 +35,4 @@ class BooleanProcessor extends ChainProcessor {
     }
 }
 
-export default BooleanProcessor;
+export { BooleanProcessor };

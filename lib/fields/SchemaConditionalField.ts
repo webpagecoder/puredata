@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import ConditionalField from './ConditionalField.ts';
+import { ConditionalField } from './ConditionalField.ts';
 
 
 class SchemaConditionalField extends ConditionalField {
@@ -32,5 +32,5 @@ class SchemaConditionalField extends ConditionalField {
 
 }
 
-export default SchemaConditionalField;
+export { SchemaConditionalField };
 

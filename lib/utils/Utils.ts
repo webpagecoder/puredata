@@ -1,11 +1,11 @@
 // @ts-nocheck
 'use strict';
 
-import RegexCache from '../cache/RegexCache.ts';
-import DefaultLanguage from '../config/DefaultLanguage.ts';
-import Field from '../fields/Field.ts';
-import Path from '../Path.ts';
-import DATE_TYPES from './DateTypes.ts';
+import { RegexCache } from '../cache/RegexCache.ts';
+import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
+import { Field } from '../fields/Field.ts';
+import { Path } from '../Path.ts';
+import { DATE_TYPES } from './DateTypes.ts';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -849,4 +849,4 @@ class Utils {
     }
 }
 
-export default Utils;
+export { Utils };

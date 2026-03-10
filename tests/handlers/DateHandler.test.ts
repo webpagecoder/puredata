@@ -1,6 +1,6 @@
 'use strict';
 
-import DateHandler from '../../lib/handlers/DateHandler.ts';
+import { DateHandler } from '../../lib/handlers/DateHandler.ts';
 
 // ====================================
 // VALIDATORS

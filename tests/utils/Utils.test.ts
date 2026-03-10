@@ -1,9 +1,9 @@
 'use strict';
 
-import Field from '../../lib/fields/Field.ts';
-import Path from '../../lib/Path.ts';
-import DATE_TYPES from '../../lib/utils/DateTypes.ts';
-import Utils from '../../lib/utils/Utils.ts';
+import { Field } from '../../lib/fields/Field.ts';
+import { Path } from '../../lib/Path.ts';
+import { DATE_TYPES } from '../../lib/utils/DateTypes.ts';
+import { Utils } from '../../lib/utils/Utils.ts';
 
 const pathObj = (...keys) => ({ keys: [...keys] });
 

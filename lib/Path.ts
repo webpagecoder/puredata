@@ -109,4 +109,4 @@ Path.separator = '/';
 Path.up = '..';
 Path.self = '.';
 
-export default Path;
+export { Path };

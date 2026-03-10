@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import DATE_TYPES from '../utils/DateTypes.ts';
-import Chain from './Chain.ts';
+import { DATE_TYPES } from '../utils/DateTypes.ts';
+import { Chain } from './Chain.ts';
 
 class DateChain extends Chain {
 
@@ -480,4 +480,4 @@ class DateChain extends Chain {
     }
 }
 
-export default DateChain;
+export { DateChain };

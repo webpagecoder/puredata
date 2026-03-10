@@ -1,8 +1,8 @@
 'use strict';
 
-import DefaultLanguage from '../../../lib/config/DefaultLanguage.ts';
-import Processor from '../../../lib/processors/Processor.ts';
-import Path from '../../../lib/Path.ts';
+import { DefaultLanguage } from '../../../lib/config/DefaultLanguage.ts';
+import { Processor } from '../../../lib/processors/Processor.ts';
+import { Path } from '../../../lib/Path.ts';
 
 Path.delims({ separator: '/', self: '.', up: '..' });
 

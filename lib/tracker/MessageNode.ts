@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Node from './Node.ts';
+import { Node } from './Node.ts';
 
 class MessageNode extends Node {
     constructor(label) {
@@ -16,4 +16,4 @@ class MessageNode extends Node {
     }
 }
 
-export default MessageNode;
+export { MessageNode };

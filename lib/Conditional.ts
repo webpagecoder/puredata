@@ -10,7 +10,7 @@ class Conditional {
     }
 }
 
-export default Conditional;
+export { Conditional };
 
 
 

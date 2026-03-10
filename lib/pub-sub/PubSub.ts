@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Node from './Node.ts';
+import { Node } from './Node.ts';
 
 class PubSub {
     static _internalId = 0;
@@ -118,4 +118,4 @@ class PubSub {
     }
 }
 
-export default PubSub;
+export { PubSub };

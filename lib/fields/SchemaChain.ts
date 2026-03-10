@@ -1,11 +1,11 @@
 // @ts-nocheck
 'use strict';
 
-import Utils from '../utils/Utils.ts';
-import Field from './Field.ts';
-import ValueField from './ValueField.ts';
-import ArrayChain from './ArrayChain.ts';
-import ObjectChain from './ObjectChain.ts';
+import { Utils } from '../utils/Utils.ts';
+import { Field } from './Field.ts';
+import { ValueField } from './ValueField.ts';
+import { ArrayChain } from './ArrayChain.ts';
+import { ObjectChain } from './ObjectChain.ts';
 
 class SchemaChain extends ObjectChain {
 
@@ -80,5 +80,5 @@ class SchemaChain extends ObjectChain {
 
 }
 
-export default SchemaChain;
+export { SchemaChain };
 

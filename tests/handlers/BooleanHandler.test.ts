@@ -1,6 +1,6 @@
 'use strict';
 
-import BooleanHandler from '../../lib/handlers/BooleanHandler.ts';
+import { BooleanHandler } from '../../lib/handlers/BooleanHandler.ts';
 
 // ====================================
 // VALIDATORS

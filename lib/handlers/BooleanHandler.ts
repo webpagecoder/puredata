@@ -1,7 +1,7 @@
 'use strict';
 
-import ProcessResult from '../ProcessResult.ts';
-import GenericHandler from './GenericHandler.ts';
+import { ProcessResult } from '../ProcessResult.ts';
+import { GenericHandler } from './GenericHandler.ts';
 const { pass, fail } = ProcessResult;
 
 type BoolishPair = [truthy: any, falsy: unknown];
@@ -68,5 +68,5 @@ class BooleanHandler extends GenericHandler {
     }
 }
 
-export default BooleanHandler;
+export { BooleanHandler };
 

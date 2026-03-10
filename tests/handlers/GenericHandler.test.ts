@@ -1,7 +1,7 @@
 'use strict';
 
-import GenericHandler from '../../lib/handlers/GenericHandler.ts';
-import ProcessResult from '../../lib/ProcessResult.ts';
+import { GenericHandler } from '../../lib/handlers/GenericHandler.ts';
+import { ProcessResult } from '../../lib/ProcessResult.ts';
 
 // ====================================
 // VALIDATORS

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-const TYPES = Object.freeze({
+const DATE_TYPES = Object.freeze({
     OBJECT: 1,
     TIMESTAMP: 2,
     ISO: 3,
@@ -10,4 +10,4 @@ const TYPES = Object.freeze({
     HUMAN: 6
 });
 
-export default TYPES;
+export { DATE_TYPES };

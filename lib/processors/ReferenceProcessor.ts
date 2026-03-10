@@ -1,9 +1,9 @@
 // @ts-nocheck
 'use strict';
 
-import RecursiveValueNode from '../tracker/RecursiveValueNode.ts';
-import Processor from './Processor.ts';
-import PathReferenceField from '../fields/PathReferenceField.ts';
+import { RecursiveValueNode } from '../tracker/RecursiveValueNode.ts';
+import { Processor } from './Processor.ts';
+import { PathReferenceField } from '../fields/PathReferenceField.ts';
 
 class ReferenceProcessor extends Processor {
 
@@ -81,4 +81,4 @@ class ReferenceProcessor extends Processor {
 
 }
 
-export default ReferenceProcessor;
+export { ReferenceProcessor };

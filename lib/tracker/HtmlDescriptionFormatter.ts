@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import HtmlFormatter from './HtmlFormatter.ts';
+import { HtmlFormatter } from './HtmlFormatter.ts';
 
 class HtmlDescriptionFormatter extends HtmlFormatter{
     constructor() {
@@ -10,4 +10,4 @@ class HtmlDescriptionFormatter extends HtmlFormatter{
     }
 }
 
-export default HtmlDescriptionFormatter;
+export { HtmlDescriptionFormatter };

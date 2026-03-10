@@ -1,6 +1,6 @@
 'use strict';
 
-import Chain from './Chain.ts';
+import { Chain } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 type BoolishValues = {
@@ -79,4 +79,4 @@ class BooleanChain extends Chain {
 
 }
 
-export default BooleanChain;
+export { BooleanChain };

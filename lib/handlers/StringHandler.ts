@@ -1,14 +1,14 @@
 // @ts-nocheck
 'use strict';
 
-import Presence from '../Presence.ts';
-import ProcessResult from '../ProcessResult.ts';
-import RegexCache from '../cache/RegexCache.ts';
-import Utils from '../utils/Utils.ts';
-import GenericHandler from './GenericHandler.ts';
-import NumberHandler from './NumberHandler.ts';
+import { PRESENCE } from '../Presence.ts';
+import { ProcessResult } from '../ProcessResult.ts';
+import { RegexCache } from '../cache/RegexCache.ts';
+import { Utils } from '../utils/Utils.ts';
+import { GenericHandler } from './GenericHandler.ts';
+import { NumberHandler } from './NumberHandler.ts';
 const { pass, fail } = ProcessResult;
-const { optional, required, forbidden } = Presence;
+const { OPTIONAL, REQUIRED, FORBIDDEN } = PRESENCE;
 
 
 class StringHandler extends GenericHandler {
@@ -1489,4 +1489,4 @@ StringHandler.matchingDefaults = {
 }
 
 
-export default StringHandler;
+export { StringHandler };

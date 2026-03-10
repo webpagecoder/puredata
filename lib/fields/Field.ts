@@ -1,41 +1,37 @@
 'use strict';
 
-import Locale from '../Locale.ts';
-import Path from '../Path.ts';
-import Presence from '../Presence.ts';
-import HtmlDescriptionFormatter from '../tracker/HtmlDescriptionFormatter.ts';
-import MessageNode from '../tracker/MessageNode.ts';
+import { Locale } from '../Locale.ts';
+import { PRESENCE } from '../Presence.ts';
+import type { CompilationMapper } from '../CompilationMapper.ts';
+import type { Processor } from '../processors/Processor.ts';
 
-type CompiledProcessor = {
-    process(valueOrValueNode: unknown, state?: Record<string, unknown>): unknown;
-};
+type PresenceValue = (typeof PRESENCE)[keyof typeof PRESENCE];
 
-type CompilationMapperLike = {
-    createProcessor(field: Field): {
-        compile(): CompiledProcessor;
-    };
-};
-
-type FieldProps = Record<string, unknown> & {
-    compilationMapper?: CompilationMapperLike;
+export type FieldProps = Record<string, unknown> & {
+    compilationMapper?: CompilationMapper;
     defaultValue?: unknown;
-    errorMessages?: Record<string, unknown>;
+    errorMessages?: Record<string, string>;
     label?: string;
-    locale?: unknown;
-    presence?: unknown;
+    locale?: Locale | string;
+    presence?: PresenceValue;
+};
+
+type ResolvedFieldProps = FieldProps & {
+    defaultValue: unknown;
+    errorMessages: Record<string, string>;
+    label: string;
+    locale: Locale;
+    presence: PresenceValue;
 };
 
 class Field {
 
-    static id: number;
-    static registry: Map<number, Field>;
+    static id: number = 0;
+    static registry: Map<number, Field> = new Map();
 
     id: number;
-    props: FieldProps & {
-        locale: Locale;
-        presence: unknown;
-    };
-    compiled: false | CompiledProcessor;
+    props: ResolvedFieldProps;
+    compiled: null | Processor;
 
     constructor(props: FieldProps = {}) {
 
@@ -44,7 +40,7 @@ class Field {
             errorMessages = {},
             label = 'Value',
             locale,
-            presence = Presence.required,
+            presence = PRESENCE.REQUIRED,
             compilationMapper
         } = props;
 
@@ -58,7 +54,7 @@ class Field {
             presence,
         });
 
-        this.compiled = false;
+        this.compiled = null;
         Field.registry.set(this.id, this);
     }
 
@@ -90,15 +86,15 @@ class Field {
     }
 
     isForbidden(): boolean {
-        return this.props.presence === Presence.forbidden;
+        return this.props.presence === PRESENCE.FORBIDDEN;
     }
 
     isOptional(): boolean {
-        return this.props.presence === Presence.optional;
+        return this.props.presence === PRESENCE.OPTIONAL;
     }
 
     isRequired(): boolean {
-        return this.props.presence === Presence.required;
+        return this.props.presence === PRESENCE.REQUIRED;
     }
 
 
@@ -110,7 +106,7 @@ class Field {
 
 
     default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: Presence.optional });
+        return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL });
     }
 
     errors(messages: Record<string, unknown>): this {
@@ -120,7 +116,7 @@ class Field {
     }
 
     forbidden(): this {
-        return this.clone({ presence: Presence.forbidden });
+        return this.clone({ presence: PRESENCE.FORBIDDEN });
     }
 
     label(label: string): this {
@@ -128,17 +124,14 @@ class Field {
     }
 
     optional(): this {
-        return this.clone({ presence: Presence.optional });
+        return this.clone({ presence: PRESENCE.OPTIONAL });
     }
 
     required(): this {
-        return this.clone({ presence: Presence.required });
+        return this.clone({ presence: PRESENCE.REQUIRED });
     }
 
     
 }
 
-Field.id = 1;
-Field.registry = new Map();
-
-export default Field;
+export { Field };

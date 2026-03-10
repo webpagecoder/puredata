@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import HtmlFormatter from './HtmlFormatter.ts';
+import { HtmlFormatter } from './HtmlFormatter.ts';
 
 class HtmlErrorFormatter extends HtmlFormatter{
     constructor() {
@@ -10,4 +10,4 @@ class HtmlErrorFormatter extends HtmlFormatter{
     }
 }
 
-export default HtmlErrorFormatter;
+export { HtmlErrorFormatter };

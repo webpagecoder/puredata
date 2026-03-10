@@ -1,32 +1,32 @@
 // @ts-nocheck
 'use strict';
 
-import CompilationMapper from './CompilationMapper.ts';
-import DefaultLanguage from './config/DefaultLanguage.ts';
-import ArrayChain from './fields/ArrayChain.ts';
-import BooleanChain from './fields/BooleanChain.ts';
-import Chain from './fields/Chain.ts';
-import DateChain from './fields/DateChain.ts';
-import NumberChain from './fields/NumberChain.ts';
-import SchemaChain from './fields/SchemaChain.ts';
-import StringChain from './fields/StringChain.ts';
-import EnumField from './fields/EnumField.ts';
-import PathReferenceField from './fields/PathReferenceField.ts';
-import ReferenceField from './fields/ReferenceField.ts';
-import SchemaConditionalField from './fields/SchemaConditionalField.ts';
-import ValueField from './fields/ValueField.ts';
-import Locale from './Locale.ts';
-import Path from './Path.ts';
-import Presence from './Presence.ts';
-import ArrayHandler from './handlers/ArrayHandler.ts';
-import BooleanHandler from './handlers/BooleanHandler.ts';
-import DateHandler from './handlers/DateHandler.ts';
-import NumberHandler from './handlers/NumberHandler.ts';
-import ObjectHandler from './handlers/ObjectHandler.ts';
-import StringHandler from './handlers/StringHandler.ts';
-import Utils from './utils/Utils.ts';
+import { CompilationMapper } from './CompilationMapper.ts';
+import { DEFAULT_LANGUAGE } from './config/DefaultLanguage.ts';
+import { ArrayChain } from './fields/ArrayChain.ts';
+import { BooleanChain } from './fields/BooleanChain.ts';
+import { Chain } from './fields/Chain.ts';
+import { DateChain } from './fields/DateChain.ts';
+import { NumberChain } from './fields/NumberChain.ts';
+import { SchemaChain } from './fields/SchemaChain.ts';
+import { StringChain } from './fields/StringChain.ts';
+import { EnumField } from './fields/EnumField.ts';
+import { PathReferenceField } from './fields/PathReferenceField.ts';
+import { ReferenceField } from './fields/ReferenceField.ts';
+import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
+import { ValueField } from './fields/ValueField.ts';
+import { Locale } from './Locale.ts';
+import { Path } from './Path.ts';
+import { PRESENCE } from './Presence.ts';
+import { ArrayHandler } from './handlers/ArrayHandler.ts';
+import { BooleanHandler } from './handlers/BooleanHandler.ts';
+import { DateHandler } from './handlers/DateHandler.ts';
+import { NumberHandler } from './handlers/NumberHandler.ts';
+import { ObjectHandler } from './handlers/ObjectHandler.ts';
+import { StringHandler } from './handlers/StringHandler.ts';
+import { Utils } from './utils/Utils.ts';
 
-Locale.register('en-US', DefaultLanguage);
+Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
     constructor(config, compilationMapper = new CompilationMapper()) {
@@ -154,15 +154,15 @@ class PureData {
     }
 
     get optional() {
-        return Presence.optional;
+        return PRESENCE.OPTIONAL;
     }
 
     get forbidden() {
-        return Presence.forbidden;
+        return PRESENCE.FORBIDDEN;
     }
 
     get required() {
-        return Presence.required;
+        return PRESENCE.REQUIRED;
     }
 
     get now() {
@@ -170,4 +170,4 @@ class PureData {
     }
 }
 
-export default PureData;
+export { PureData };

@@ -1,8 +1,8 @@
 // @ts-nocheck
 // 'use strict';
 
-// import Utils from '../../utils/Utils.ts';
-// import PathReferenceField from '../reference/PathReferenceField.ts';
+// import { Utils } from '../../utils/Utils.ts';
+// import { PathReferenceField } from '../reference/PathReferenceField.ts';
 
 
 // class RecursiveSchemaProcessor {
@@ -65,7 +65,7 @@
 
 // }
 
-// export default RecursiveSchemaProcessor;
+// export { RecursiveSchemaProcessor };
 
 
 
@@ -78,9 +78,9 @@
 
 // // 'use strict';
 
-// // import Utils from '../../utils/Utils.ts';
-// // import PathReferenceField from '../reference/PathReferenceField.ts';
-// // import SchemaProcessor from './SchemaProcessor.ts';
+// // import { Utils } from '../../utils/Utils.ts';
+// // import { PathReferenceField } from '../reference/PathReferenceField.ts';
+// // import { SchemaProcessor } from './SchemaProcessor.ts';
 
 
 // // class RecursiveSchemaProcessor {
@@ -155,5 +155,5 @@
 
 // // }
 
-// // export default RecursiveSchemaProcessor;
+// // export { RecursiveSchemaProcessor };
 

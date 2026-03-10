@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import ProcessResult from '../ProcessResult.ts';
-import Utils from '../utils/Utils.ts';
+import { ProcessResult } from '../ProcessResult.ts';
+import { Utils } from '../utils/Utils.ts';
 const { pass, fail } = ProcessResult;
 
 class GenericHandler {
@@ -129,4 +129,4 @@ class GenericHandler {
 }
 
 
-export default GenericHandler;
+export { GenericHandler };

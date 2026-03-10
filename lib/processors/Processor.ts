@@ -1,12 +1,14 @@
 // @ts-nocheck
 'use strict';
 
-import ValueNode from '../tracker/ValueNode.ts';
-import Utils from '../utils/Utils.ts';
-import PathReferenceField from '../fields/PathReferenceField.ts';
-
+import { ValueNode } from '../tracker/ValueNode.ts';
+import { Utils } from '../utils/Utils.ts';
+import { PathReferenceField } from '../fields/PathReferenceField.ts';
+import { CompilationMapper } from '../CompilationMapper.ts';
 
 class Processor {
+
+    static id = 0;
 
     constructor(props = {}) {
         const { field, compilationMapper } = props;
@@ -77,7 +79,7 @@ class Processor {
         return tracker;
     }
 
-    _process(tracker) {
+    _process(tracker, state = {}) {
         return tracker;
     }
 
@@ -107,6 +109,4 @@ class Processor {
 
 }
 
-Processor.id = 0;
-
-export default Processor;
+export { Processor };

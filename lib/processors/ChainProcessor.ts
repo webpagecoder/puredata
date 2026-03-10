@@ -1,8 +1,8 @@
 // @ts-nocheck
 'use strict';
 
-import Processor from './Processor.ts';
-import PathReferenceField from '../fields/PathReferenceField.ts';
+import { Processor } from './Processor.ts';
+import { PathReferenceField } from '../fields/PathReferenceField.ts';
 
 class ChainProcessor extends Processor {
 
@@ -72,4 +72,4 @@ class ChainProcessor extends Processor {
     }
 }
 
-export default ChainProcessor;
+export { ChainProcessor };

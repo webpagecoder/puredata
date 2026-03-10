@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-export default {
+const DEFAULT_LANGUAGE = {
     calendar: {
         numberSuffixes: [
             'st',
@@ -271,3 +271,5 @@ export default {
         }
     }
 };
+
+export { DEFAULT_LANGUAGE };

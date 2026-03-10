@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Processor from './Processor.ts';
+import { Processor } from './Processor.ts';
 
 class PathReferenceProcessor extends Processor {
 
@@ -27,4 +27,4 @@ class PathReferenceProcessor extends Processor {
 
 }
 
-export default PathReferenceProcessor;
+export { PathReferenceProcessor };

@@ -17,4 +17,4 @@ const Cache = (() => {
     };
 })();
 
-export default Cache;
+export { Cache };

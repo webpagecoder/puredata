@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import ValueNode from './ValueNode.ts';
+import { ValueNode } from './ValueNode.ts';
 
 class RecursiveValueNode extends ValueNode {
     constructor(value, props) {
@@ -38,7 +38,7 @@ class RecursiveValueNode extends ValueNode {
 }
 
 
-export default RecursiveValueNode;
+export { RecursiveValueNode };
 
 
 

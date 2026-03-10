@@ -9,4 +9,4 @@ class ErrorData {
     }
 }
 
-export default ErrorData;
+export { ErrorData };

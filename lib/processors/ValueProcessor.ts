@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Processor from './Processor.ts';
+import { Processor } from './Processor.ts';
 
 
 class ValueProcessor extends Processor {
@@ -16,5 +16,5 @@ class ValueProcessor extends Processor {
 
 }
 
-export default ValueProcessor;
+export { ValueProcessor };
 

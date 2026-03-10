@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import Processor from './Processor.ts';
+import { Processor } from './Processor.ts';
 
 class EnumProcessor extends Processor {
 
@@ -25,4 +25,4 @@ class EnumProcessor extends Processor {
 
 }
 
-export default EnumProcessor;
+export { EnumProcessor };
