@@ -140,7 +140,7 @@ class SchemaProcessor extends ObjectProcessor {
         }
 
 
-        const { processors: { renameKeysArgs, stripUnknownKeys }, schema, failOnFirstError } = field.props;
+        const { chainHandler: { renameKeysArgs, stripUnknownKeys }, schema, failOnFirstError } = field.props;
         const { value } = tracker;
 
 

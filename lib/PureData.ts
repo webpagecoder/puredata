@@ -54,7 +54,7 @@ class PureData {
             {
                 compilationMapper,
                 locale,
-                processors: chainHandler
+                chainHandler
             },
             config.general,
             config[chainType],

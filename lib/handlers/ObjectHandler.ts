@@ -1,10 +1,10 @@
 // @ts-nocheck
 'use strict';
 
-import { ProcessResult } from '../ProcessResult.ts';
+import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 import { GenericHandler } from './GenericHandler.ts';
-const { pass, fail } = ProcessResult;
+const { pass, fail } = HandlerResult;
 
 class ObjectHandler extends GenericHandler {
 

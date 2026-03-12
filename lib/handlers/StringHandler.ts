@@ -2,12 +2,12 @@
 'use strict';
 
 import { PRESENCE } from '../Presence.ts';
-import { ProcessResult } from '../ProcessResult.ts';
+import { HandlerResult } from './HandlerResult.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 import { Utils } from '../utils/Utils.ts';
 import { GenericHandler } from './GenericHandler.ts';
 import { NumberHandler } from './NumberHandler.ts';
-const { pass, fail } = ProcessResult;
+const { pass, fail } = HandlerResult;
 const { OPTIONAL, REQUIRED, FORBIDDEN } = PRESENCE;
 
 

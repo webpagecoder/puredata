@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-class ProcessResult {
+class HandlerResult {
 
     constructor({
         value,
@@ -28,11 +28,11 @@ class ProcessResult {
     }
 
     static pass(value) {
-        return new ProcessResult({ value, pass: true });
+        return new HandlerResult({ value, pass: true });
     }
 
     static fail(value, errorKey, args = {}) {
-        return new ProcessResult({ value, pass: false, errorKey, args });
+        return new HandlerResult({ value, pass: false, errorKey, args });
     }
 
     *yieldErrors() {
@@ -49,4 +49,4 @@ class ProcessResult {
 
 }
 
-export { ProcessResult };
+export { HandlerResult };

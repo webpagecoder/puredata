@@ -1,8 +1,8 @@
 'use strict';
 
-import { ProcessResult } from '../ProcessResult.ts';
+import { HandlerResult } from './HandlerResult.ts';
 import { GenericHandler } from './GenericHandler.ts';
-const { pass, fail } = ProcessResult;
+const { pass, fail } = HandlerResult;
 
 type BoolishPair = [truthy: any, falsy: unknown];
 
@@ -17,9 +17,9 @@ class BooleanHandler extends GenericHandler {
      *
      * @param bool - Value to validate as falsy.
      * @param falsyValues - Additional values treated as falsy.
-     * @returns {ProcessResult} A pass result for valid falsy values, otherwise a fail result.
+     * @returns {HandlerResult} A pass result for valid falsy values, otherwise a fail result.
      */
-    static falsy(bool: unknown, falsyValues: unknown[] = []): ProcessResult {
+    static falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
         return bool === false || falsyValues.indexOf(bool) > -1
             ? pass(bool)
             : fail(bool, 'boolean/falsy', { falsyValues });
@@ -30,9 +30,9 @@ class BooleanHandler extends GenericHandler {
      *
      * @param bool - Value to validate as truthy.
      * @param truthyValues - Additional values treated as truthy.
-     * @returns {ProcessResult} A pass result for valid truthy values, otherwise a fail result.
+     * @returns {HandlerResult} A pass result for valid truthy values, otherwise a fail result.
      */
-    static truthy(bool: unknown, truthyValues: unknown[] = []): ProcessResult {
+    static truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
         return bool === true || truthyValues.indexOf(bool) > -1
             ? pass(bool)
             : fail(bool, 'boolean/truthy', { truthyValues });
@@ -50,9 +50,9 @@ class BooleanHandler extends GenericHandler {
      *
      * @param bool - Value to invert.
      * @param boolishPairs - Custom truthy/falsy tuple pairs.
-     * @returns {ProcessResult} A pass result with the inverted value, otherwise a fail result.
+     * @returns {HandlerResult} A pass result with the inverted value, otherwise a fail result.
      */
-    static invert(bool: unknown, boolishPairs: BoolishPair[] = []): ProcessResult {
+    static invert(bool: unknown, boolishPairs: BoolishPair[] = []): HandlerResult {
         boolishPairs.push([true, false]);
 
         const truthyMatchIndex = boolishPairs.map(([truthy, _]) => truthy).indexOf(bool);

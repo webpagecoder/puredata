@@ -22,7 +22,7 @@ class ArrayProcessor extends ChainProcessor {
             const { maxLength, removeEmpties, emptyValues } = field.props;
 
             if (removeEmpties) {
-                tracker.setValue(field.props.processors.removeEmpties(tracker.getValue(), emptyValues).value);
+                tracker.setValue(field.props.chainHandler.removeEmpties(tracker.getValue(), emptyValues).value);
             }
 
             if (maxLength != null) {

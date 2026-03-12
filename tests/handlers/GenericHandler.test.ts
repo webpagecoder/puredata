@@ -1,7 +1,7 @@
 'use strict';
 
 import { GenericHandler } from '../../lib/handlers/GenericHandler.ts';
-import { ProcessResult } from '../../lib/ProcessResult.ts';
+import { HandlerResult } from '../../lib/HandlerResult.ts';
 
 // ====================================
 // VALIDATORS
@@ -322,8 +322,8 @@ describe('GenericHandler.custom', () => {
         expect(result.value).toBe(6);
     });
 
-    test('should return ProcessResult.fail from callback as-is', () => {
-        const customResult = ProcessResult.fail('bad', 'generic/custom');
+    test('should return HandlerResult.fail from callback as-is', () => {
+        const customResult = HandlerResult.fail('bad', 'generic/custom');
         const result = GenericHandler.custom('bad', () => customResult);
 
         expect(result).toBe(customResult);
@@ -331,8 +331,8 @@ describe('GenericHandler.custom', () => {
         expect([...result.errors][0].key).toBe('generic/custom');
     });
 
-    test('should return ProcessResult.pass from callback as-is', () => {
-        const customResult = ProcessResult.pass({ ok: true });
+    test('should return HandlerResult.pass from callback as-is', () => {
+        const customResult = HandlerResult.pass({ ok: true });
         const result = GenericHandler.custom('ignored', () => customResult);
 
         expect(result).toBe(customResult);

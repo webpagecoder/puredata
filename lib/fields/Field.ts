@@ -1,32 +1,22 @@
 'use strict';
 
 import { CompilationMapper } from '../CompilationMapper.ts';
+import type { ErrorMessages } from '../ErrorMessages.ts';
 import { Locale } from '../Locale.ts';
 import { PRESENCE } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueNode } from '../tracker/ValueNode.ts';
 
-type PresenceValue = (typeof PRESENCE)[keyof typeof PRESENCE];
-
-export type ErrorMessages = Record<string, string>;
-
-type FieldProps = Record<string, unknown> & {
+export type FieldProps = Record<string, unknown> & {
     compilationMapper?: CompilationMapper;
     defaultValue?: unknown;
     errorMessages?: ErrorMessages;
     label?: string;
-    locale?: Locale | string;
-    presence?: PresenceValue;
+    locale?: Locale;
+    presence?: PRESENCE;
 };
 
-export type ResolvedFieldProps = FieldProps & {
-    compilationMapper: CompilationMapper;
-    defaultValue: unknown;
-    errorMessages: ErrorMessages;
-    label: string;
-    locale: Locale;
-    presence: PresenceValue;
-};
+export type ResolvedFieldProps = Required<FieldProps>;
 
 class Field {
 
@@ -44,7 +34,7 @@ class Field {
             defaultValue = undefined,
             errorMessages = {},
             label = 'Value',
-            locale = 'en-US',
+            locale = new Locale('en-US'),
             presence = PRESENCE.REQUIRED,
         } = props;
 

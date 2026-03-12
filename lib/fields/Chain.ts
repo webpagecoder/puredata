@@ -1,51 +1,52 @@
 'use strict';
 
-import { Field, ResolvedFieldProps } from './Field.ts';
+import { HandlerResult } from '../handlers/HandlerResult.ts';
+import { Field, FieldProps, ResolvedFieldProps } from './Field.ts';
 
-type StepArgsResolver = (this: Chain) => unknown[];
-type StepArgs = unknown[] | StepArgsResolver;
-type ProcessorFn = (...args: unknown[]) => unknown;
+type HandlerFn = (value: unknown, ...args: unknown[]) => HandlerResult;
+
+type ChainHandler =  {
+    [key: string]: HandlerFn;
+}
 
 type Step = {
-    fn: ProcessorFn;
-    args: StepArgs;
+    fn: HandlerFn;
+    args: unknown[];
     prioritize: boolean;
 };
 
-type CloneOptions = Record<string, unknown> & {
+type CloneProps = FieldProps & {
     step?: Step;
     pipeline?: Step[];
-};
-
-type ProcessorMap = {
-    [key: string]: ProcessorFn | undefined;
-    [key: symbol]: ProcessorFn | undefined;
 };
 
 class Chain extends Field {
 
     declare props: ResolvedFieldProps & {
         pipeline: Step[];
-        processors?: ProcessorMap;
+        chainHandler: ChainHandler;
     };
 
-    constructor(props: Record<string, unknown> = {}) {
+    constructor(props: FieldProps = {}) {
         super(props);
         this.props.pipeline = [];
-        return new Proxy(this, this);
+        return new Proxy(this, this as ProxyHandler<Chain>);
     }
 
-    get(target: Chain, prop: PropertyKey, receiver: unknown) {
-        if (prop in target) {
-            return target[prop];
+    get(target: Chain, fnKey: keyof ChainHandler): ((...args: unknown[]) => Chain) | Chain[keyof Chain] {
+        if (fnKey in target) {
+            return target[fnKey as keyof Chain];
         }
-        return (...args: unknown[]) => this.addStep(prop, args);
+        return (...args: unknown[]) => this.addStep(fnKey, args);
     }
 
 
-    clone(props: Record<string, unknown> = {}): this {
+    clone(props: CloneProps = {}): this {
         const clone = super.clone(props) as this;
-        const { step, pipeline = this.props.pipeline as Step[] } = props as CloneOptions;
+        const { 
+            step, 
+            pipeline = this.props.pipeline
+        } = props;
         const updatedPipeline = [...pipeline];
 
         if (step) {
@@ -61,9 +62,9 @@ class Chain extends Field {
         return clone;
     }
 
-    addStep(fnKey: PropertyKey, args: StepArgs = [], prioritize: boolean = false): Chain {
-        const processors = this.props.processors as ProcessorMap | undefined;
-        const fn = processors?.[fnKey];
+    addStep(fnKey: keyof ChainHandler, args: unknown[] = [], prioritize: boolean = false): Chain {
+        const chainHandler = this.props.chainHandler;
+        const fn = chainHandler?.[fnKey];
         if (typeof fn === 'function') {
             return this.clone({
                 step: {
@@ -73,7 +74,7 @@ class Chain extends Field {
                 }
             });
         }
-        throw new Error(`Filter '${String(fnKey)}' not found in processors`);
+        throw new Error(`Filter '${String(fnKey)}' not found in chain handler`);
     }
 
 

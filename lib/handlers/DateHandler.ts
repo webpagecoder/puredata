@@ -2,10 +2,10 @@
 'use strict';
 //TODO: revisit if we need to be checking the 2nd and subsequent args for data types
 
-import { ProcessResult } from '../ProcessResult.ts';
+import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 import { GenericHandler } from './GenericHandler.ts';
-const { pass, fail } = ProcessResult;
+const { pass, fail } = HandlerResult;
 
 function areOptionsCompliant(parsed = {}, required = [], forbidden = []) {
     for (const option of required) {

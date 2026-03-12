@@ -2,10 +2,10 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { ProcessResult } from '../ProcessResult.ts';
+import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 import { GenericHandler } from './GenericHandler.ts';
-const { pass, fail } = ProcessResult;
+const { pass, fail } = HandlerResult;
 
 function getSorter(order = 1, pathOrComparator = null) {
     let sorter;

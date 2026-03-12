@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { ValueNode } from '../tracker/ValueNode.ts';
@@ -6,11 +5,19 @@ import { Utils } from '../utils/Utils.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { CompilationMapper } from '../CompilationMapper.ts';
 
+export type ProcessorProps = { 
+    field: any; 
+    compilationMapper: CompilationMapper
+};
+
 class Processor {
 
     static id = 0;
+    props: ProcessorProps;
+    cachedReferences: Set<any> | null = null;
+    state: Record<string, unknown> = {};
 
-    constructor(props = {}) {
+    constructor(props: ProcessorProps) {
         const { field, compilationMapper } = props;
         this.props = {
             compilationMapper,

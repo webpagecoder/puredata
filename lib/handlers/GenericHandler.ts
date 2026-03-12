@@ -1,9 +1,9 @@
 // @ts-nocheck
 'use strict';
 
-import { ProcessResult } from '../ProcessResult.ts';
+import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
-const { pass, fail } = ProcessResult;
+const { pass, fail } = HandlerResult;
 
 class GenericHandler {
 
@@ -120,7 +120,7 @@ class GenericHandler {
 
     static custom(value, filterFn) {
         const result = filterFn(value);
-        if (result instanceof ProcessResult) {
+        if (result instanceof HandlerResult) {
             return result;
         }
         return pass(result);
