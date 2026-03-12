@@ -26,36 +26,36 @@
 //         minDepth = minDepth instanceof PathReferenceField ? tracker.getByPath(minDepth) : minDepth;
 //         maxDepth = maxDepth instanceof PathReferenceField ? tracker.getByPath(maxDepth) : maxDepth;
 
-//         const localRootValueNode = tracker;
-//         let currentValueNode = tracker;
+//         const localRootValueTracker = tracker;
+//         let currentValueTracker = tracker;
 
-//         // let parentValueNode = tracker;
-//         let { value } = localRootValueNode;
+//         // let parentValueTracker = tracker;
+//         let { value } = localRootValueTracker;
 
-//         currentValueNode.depth = 1;
+//         currentValueTracker.depth = 1;
 
 //         while(true) {
 //             if (value === undefined) {
-//                 if (currentValueNode.depth < minDepth) {
-//                     localRootValueNode.addError('object/recursion/tooShallow', {});
+//                 if (currentValueTracker.depth < minDepth) {
+//                     localRootValueTracker.addError('object/recursion/tooShallow', {});
 //                 }
-//                 return localRootValueNode;
+//                 return localRootValueTracker;
 //             }
 
 //             if (!Utils.isPlainObject(value)) {
-//                 currentValueNode.addError('object/base');
-//                 return currentValueNode;
+//                 currentValueTracker.addError('object/base');
+//                 return currentValueTracker;
 //             }
 
-//             ++currentValueNode.depth;
-//             if (currentValueNode.depth > maxDepth) {
-//                 localRootValueNode.addError('object/recursion/tooDeep', {});
+//             ++currentValueTracker.depth;
+//             if (currentValueTracker.depth > maxDepth) {
+//                 localRootValueTracker.addError('object/recursion/tooDeep', {});
 //                 return tracker;
 //             }
 
-//             this.cachedReference.process(currentValueNode); //todo: send state?
+//             this.cachedReference.process(currentValueTracker); //todo: send state?
 
-//             // const nextNestedValue = currentValueNode.getNodeByPath(path.toRelative());
+//             // const nextNestedValue = currentValueTracker.getNodeByPath(path.toRelative());
 //             console.log()
 
 //         }
@@ -105,47 +105,47 @@
 // //         minDepth = minDepth instanceof PathReferenceField ? tracker.getByPath(minDepth) : minDepth;
 // //         maxDepth = maxDepth instanceof PathReferenceField ? tracker.getByPath(maxDepth) : maxDepth;
 
-// //         const localRootValueNode = tracker;
-// //         let currentValueNode = tracker;
+// //         const localRootValueTracker = tracker;
+// //         let currentValueTracker = tracker;
 
-// //         // let parentValueNode = tracker;
-// //         let { value } = localRootValueNode;
+// //         // let parentValueTracker = tracker;
+// //         let { value } = localRootValueTracker;
 
 // //         if (!state.nestDepth) {
 // //             state.nestDepth = 1;
 // //         }
 
-// //         if(!state.nestValueNode) {
-// //             state.nestValueNode = new Map();
+// //         if(!state.nestValueTracker) {
+// //             state.nestValueTracker = new Map();
 // //         }
-// //         if(!state.nestValueNode.has(this)) {
-// //             state.nestValueNode.set(this, 1);
+// //         if(!state.nestValueTracker.has(this)) {
+// //             state.nestValueTracker.set(this, 1);
 // //         }
 
-// //         const depth = state.nestValueNode.get(this);
+// //         const depth = state.nestValueTracker.get(this);
 
 // //         // do {
 // //             if (value === undefined) {
-// //                 if (currentValueNode.depth < minDepth) {
-// //                     currentValueNode.addError('object/recursion/tooShallow', {});
+// //                 if (currentValueTracker.depth < minDepth) {
+// //                     currentValueTracker.addError('object/recursion/tooShallow', {});
 // //                 }
-// //                 return currentValueNode;
+// //                 return currentValueTracker;
 // //             }
 
 // //             if (!Utils.isPlainObject(value)) {
-// //                 currentValueNode.addError('object.base');
-// //                 return currentValueNode;
+// //                 currentValueTracker.addError('object.base');
+// //                 return currentValueTracker;
 // //             }
 
-// //             ++currentValueNode.depth;
-// //             if (currentValueNode.depth > maxDepth) {
-// //                 localRootValueNode.addError('object/recursion/tooDeep', {});
+// //             ++currentValueTracker.depth;
+// //             if (currentValueTracker.depth > maxDepth) {
+// //                 localRootValueTracker.addError('object/recursion/tooDeep', {});
 // //                 return tracker;
 // //             }
 
-// //             this.cachedReference.process(currentValueNode, state); //todo: send state?
+// //             this.cachedReference.process(currentValueTracker, state); //todo: send state?
 
-// //             // const nextNestedValue = currentValueNode.getNodeByPath(path.toRelative());
+// //             // const nextNestedValue = currentValueTracker.getNodeByPath(path.toRelative());
 // //             console.log()
 
 // //         // } while(true);

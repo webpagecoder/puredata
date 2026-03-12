@@ -32,8 +32,8 @@ class ChainProcessor extends Processor {
 
             for (const arg of args) {
                 if (arg instanceof PathReferenceField) {
-                    const refValueNode = tracker.parent.getByPath(arg.path);
-                    finalArgs.push(refValueNode ? refValueNode.value : undefined);
+                    const refValueTracker = tracker.parent.getByPath(arg.path);
+                    finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {
                     finalArgs.push(arg);

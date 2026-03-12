@@ -1,19 +1,19 @@
-// @ts-nocheck
-'use strict';
+// // @ts-nocheck
+// 'use strict';
 
-import { Node } from './Node.ts';
+// import { Node } from './Node.ts';
 
-class MessageNode extends Node {
-    constructor(label) {
-        super();
-        this.messages = [];
-        this.label = label;
-    }
+// class MessageNode extends Node {
+//     constructor(label) {
+//         super();
+//         this.messages = [];
+//         this.label = label;
+//     }
 
-    addMessage({ args = {}, key, text } = {}) {
-        this.messages.push({ args, key, text });
-        return this;
-    }
-}
+//     addMessage({ args = {}, key, text } = {}) {
+//         this.messages.push({ args, key, text });
+//         return this;
+//     }
+// }
 
-export { MessageNode };
+// export { MessageNode };

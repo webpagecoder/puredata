@@ -5,16 +5,14 @@ import { Field, FieldProps, ResolvedFieldProps } from './Field.ts';
 
 type HandlerFn = (value: unknown, ...args: unknown[]) => HandlerResult;
 
-type ChainHandler =  {
+type ChainHandler = {
     [key: string]: HandlerFn;
 }
-
 type Step = {
     fn: HandlerFn;
     args: unknown[];
     prioritize: boolean;
 };
-
 type CloneProps = FieldProps & {
     step?: Step;
     pipeline?: Step[];
@@ -37,14 +35,13 @@ class Chain extends Field {
         if (fnKey in target) {
             return target[fnKey as keyof Chain];
         }
-        return (...args: unknown[]) => this.addStep(fnKey, args);
+        return (...args: unknown[]): Chain => this.addStep(fnKey, args);
     }
 
-
-    clone(props: CloneProps = {}): this {
+    override clone(props: CloneProps = {}): this {
         const clone = super.clone(props) as this;
-        const { 
-            step, 
+        const {
+            step,
             pipeline = this.props.pipeline
         } = props;
         const updatedPipeline = [...pipeline];

@@ -5,7 +5,7 @@ import type { ErrorMessages } from '../ErrorMessages.ts';
 import { Locale } from '../Locale.ts';
 import { PRESENCE } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
-import { ValueNode } from '../tracker/ValueNode.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 
 export type FieldProps = Record<string, unknown> & {
     compilationMapper?: CompilationMapper;
@@ -15,7 +15,6 @@ export type FieldProps = Record<string, unknown> & {
     locale?: Locale;
     presence?: PRESENCE;
 };
-
 export type ResolvedFieldProps = Required<FieldProps>;
 
 class Field {
@@ -61,14 +60,14 @@ class Field {
         );
     }
 
-    process(valueOrValueNode: ValueNode | unknown, state: Record<string, unknown> = {}): unknown {
+    process(valueOrValueTracker: ValueTracker | unknown, state: Record<string, unknown> = {}): unknown {
         if (!this.compiled) {
             if (!this.props.compilationMapper) {
                 throw new Error('Field compilation mapper is not configured');
             }
             this.compiled = this.props.compilationMapper.createProcessor(this).compile();
         }
-        return this.compiled.process(valueOrValueNode, state);
+        return this.compiled.process(valueOrValueTracker, state);
     }
 
     setProps(props: FieldProps = {}): this {

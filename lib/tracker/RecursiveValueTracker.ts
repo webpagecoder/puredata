@@ -1,9 +1,9 @@
 // @ts-nocheck
 'use strict';
 
-import { ValueNode } from './ValueNode.ts';
+import { ValueTracker } from './ValueTracker.ts';
 
-class RecursiveValueNode extends ValueNode {
+class RecursiveValueTracker extends ValueTracker {
     constructor(value, props) {
         super(value, props);
         this.depth = 1;
@@ -21,7 +21,7 @@ class RecursiveValueNode extends ValueNode {
         let { parent } = this;
 
         do {
-            if (parent instanceof RecursiveValueNode) {
+            if (parent instanceof RecursiveValueTracker) {
                 if (parent.compiledField === this.compiledField) {
                     this.depth = parent.depth + 1;
                     this.nestParent = parent;
@@ -38,7 +38,7 @@ class RecursiveValueNode extends ValueNode {
 }
 
 
-export { RecursiveValueNode };
+export { RecursiveValueTracker };
 
 
 

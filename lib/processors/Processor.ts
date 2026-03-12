@@ -1,41 +1,49 @@
 'use strict';
 
-import { ValueNode } from '../tracker/ValueNode.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Utils } from '../utils/Utils.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { CompilationMapper } from '../CompilationMapper.ts';
+import { Field } from '../fields/Field.ts';
 
-export type ProcessorProps = { 
-    field: any; 
-    compilationMapper: CompilationMapper
+export type ProcessorProps = {
+    field?: Field;
+    compilationMapper?: CompilationMapper;
 };
+export type ResolvedProcessorProps = Required<ProcessorProps>;
+export type State = Record<string, unknown>;
 
 class Processor {
 
-    static id = 0;
-    props: ProcessorProps;
+    static id: number = 0;
+
+    declare props: ResolvedProcessorProps & {
+        defaultValueReference: Processor | null;
+    };
+
+    id: number;
     cachedReferences: Set<any> | null = null;
     state: Record<string, unknown> = {};
 
     constructor(props: ProcessorProps) {
-        const { field, compilationMapper } = props;
+        const { field, compilationMapper = new CompilationMapper() } = props;
+        if (!field) {
+            throw new Error('Processor requires a field');
+        }
         this.props = {
             compilationMapper,
             defaultValueReference: null,
             field,
-            id: ++Processor.id
         };
+        this.id = ++Processor.id;
     }
 
-    get valueNodeConstructor() {
-        return ValueNode;
+    clone(props: ProcessorProps = {}): this {
+        const Constructor = this.constructor as new (...args: ConstructorParameters<typeof Processor>) => this;
+        return new Constructor(Utils.mergeObjects(this.props, props || {}));
     }
 
-    clone(props = {}) {
-        return new this.constructor(Utils.mergeObjects(this.props, props || {}));
-    }
-
-    compile() {
+    compile(): this {
         const { field, compilationMapper } = this.props;
         const { defaultValue } = field.props;
         if (defaultValue instanceof PathReferenceField) {
@@ -44,21 +52,21 @@ class Processor {
         return this;
     }
 
-    process(valueOrValueNode, state = {}) {
+    process(valueOrValueTracker: unknown | ValueTracker, state: State = {}): ValueTracker {
 
         const { field } = this.props;
         this.state = state;
 
         let value, tracker;
 
-        if (valueOrValueNode instanceof ValueNode) {
-            value = valueOrValueNode.value;
-            tracker = valueOrValueNode;
+        if (valueOrValueTracker instanceof ValueTracker) {
+            value = valueOrValueTracker.value;
+            tracker = valueOrValueTracker;
             // tracker.clearErrors();
         }
         else {
-            value = valueOrValueNode;
-            tracker = new ValueNode(value, { compiledField: this });
+            value = valueOrValueTracker;
+            tracker = new ValueTracker(value, this);
         }
         // tracker.field = field;
 
@@ -82,25 +90,25 @@ class Processor {
         else {
             this._process(tracker, state);
         }
-        
+
         return tracker;
     }
 
-    _process(tracker, state = {}) {
+    _process(tracker: ValueTracker, state: State = {}): ValueTracker {
         return tracker;
     }
 
-    hasReferences() {
+    hasReferences():boolean {
         return this.getReferences().size > 0;
     }
 
-    getReferences() {
-        if(this.cachedReferences) {
+    getReferences(): Set<PathReferenceField> {
+        if (this.cachedReferences) {
             return this.cachedReferences;
         }
 
         const { field } = this.props;
-        const references = new Set();
+        const references = new Set<PathReferenceField>();
         if (field instanceof PathReferenceField) {
             references.add(field);
         }

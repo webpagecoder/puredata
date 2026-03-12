@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict';
 
-import { ValueNode } from '../tracker/ValueNode.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Processor } from './Processor.ts';
 
 class SchemaConditionalProcessor extends Processor {
@@ -46,16 +46,16 @@ class SchemaConditionalProcessor extends Processor {
         }
 
 
-        const referencedValueNode = path.isSelf ? tracker : tracker.parent.getNodeByPath(path, this);
+        const referencedValueTracker = path.isSelf ? tracker : tracker.parent.getNodeByPath(path, this);
 
-        const testValueNode = new ValueNode(referencedValueNode.value, {
+        const testValueTracker = new ValueTracker(referencedValueTracker.value, {
             compiledField: this,
             parent: tracker.parent,
             root: tracker.root,
             
         });
 
-        const chosenField = field.getChosenField(testValueNode);
+        const chosenField = field.getChosenField(testValueTracker);
 
         chosenField.process(tracker);
 

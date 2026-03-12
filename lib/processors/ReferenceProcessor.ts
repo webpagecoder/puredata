@@ -1,14 +1,14 @@
 // @ts-nocheck
 'use strict';
 
-import { RecursiveValueNode } from '../tracker/RecursiveValueNode.ts';
+import { RecursiveValueTracker } from '../tracker/RecursiveValueTracker.ts';
 import { Processor } from './Processor.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 
 class ReferenceProcessor extends Processor {
 
     get valueNodeConstructor() {
-        return RecursiveValueNode;
+        return RecursiveValueTracker;
     }
 
     compile(context = {}) {

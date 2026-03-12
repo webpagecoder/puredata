@@ -5,7 +5,7 @@
 //todo: pathdelim and upchar make global chars...cant do it by object too much craziness
 
 
-// import { ReferenceValueNode } from '../../tracker/ReferenceValueNode.ts';
+// import { ReferenceValueTracker } from '../../tracker/ReferenceValueTracker.ts';
 
 // import { Meta } from '../Meta.ts';
 
@@ -103,9 +103,9 @@ class SchemaProcessor extends ObjectProcessor {
                     const subNode = resolver.getOrCreateNode(
                         childPath.string,
                         function ({ tracker, failOnFirstError, prependRootPath }) {
-                            const activeValueNode = tracker.getNodeByPath(adjustedRelativeSubPath);
-                            if (activeValueNode) {
-                                childProcessor.process(activeValueNode);
+                            const activeValueTracker = tracker.getNodeByPath(adjustedRelativeSubPath);
+                            if (activeValueTracker) {
+                                childProcessor.process(activeValueTracker);
                             }
                             return true;
                         }
@@ -164,15 +164,15 @@ class SchemaProcessor extends ObjectProcessor {
 
         for (let [key, childProcessor] of this.props.schema) {
             const childField = childProcessor.props.field;
-            let childValueNode = tracker.createChild(key, childProcessor);
-            childValueNode.setValue(value[key]);
-            // childValueNode.path = tracker.path.move(key);
+            let childValueTracker = tracker.createChild(key, childProcessor);
+            childValueTracker.setValue(value[key]);
+            // childValueTracker.path = tracker.path.move(key);
 
             if (childField instanceof SchemaConditionalField) {
-                state.conditionals.push([childProcessor, childValueNode]);
+                state.conditionals.push([childProcessor, childValueTracker]);
             }
             else if (!childProcessor.hasReferences()) {
-                childProcessor.process(childValueNode, state);
+                childProcessor.process(childValueTracker, state);
             }
         }
 

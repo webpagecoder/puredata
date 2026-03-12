@@ -8,10 +8,10 @@ class PathReferenceProcessor extends Processor {
     process(tracker) {
         const { field } = this.props;
         const { path, callback = x => x, defaultValue } = field.props;
-        const referencedValueNode = tracker.parent.getNodeByPath(path);
+        const referencedValueTracker = tracker.parent.getNodeByPath(path);
         let resolvedValue = undefined;
-        if (referencedValueNode) {
-            resolvedValue = callback(referencedValueNode.value);
+        if (referencedValueTracker) {
+            resolvedValue = callback(referencedValueTracker.value);
         }
 
         if (resolvedValue === undefined) {
