@@ -5,7 +5,7 @@ import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 const { pass, fail } = HandlerResult;
 
-class GenericHandler {
+class Handler {
 
 
     // ====================================
@@ -22,8 +22,8 @@ class GenericHandler {
         return value !== undefined ? pass(value) : fail(value, 'generic/defined');
     }
 
-    static empty(value) {
-        return (value === null || value === undefined)
+    static empty(value, empties = [null, undefined]) {
+        return Handler.oneOf(value, empties).pass
             ? pass(value)
             : fail(value, 'generic/empty');
     }
@@ -32,10 +32,10 @@ class GenericHandler {
         return !value ? pass(value) : fail(value, 'generic/falsy');
     }
 
-    static notEmpty(value) {
-        return (value !== null && value !== undefined)
+    static notEmpty(value, empties = [null, undefined]) {
+        return Handler.oneOf(value, empties).fail
             ? pass(value)
-            : fail(value, 'generic/empty');
+            : fail(value, 'generic/notEmpty');
     }
 
     static notNull(value) {
@@ -129,4 +129,4 @@ class GenericHandler {
 }
 
 
-export { GenericHandler };
+export { Handler };

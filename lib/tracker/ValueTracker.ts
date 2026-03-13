@@ -122,12 +122,6 @@ class ValueTracker extends Node {
         return child;
     }
 
-    // override createChild(key: string, compiledField: Processor): ValueTracker {
-    //     const child = super.createChild(key, compiledField.valueNodeConstructor) as ValueTracker;
-    //     child.compiledField = compiledField;
-    //     return child;
-    // }
-
     hasErrors(): boolean {
         if (this.errorCollection.length > 0) {
             return true;
@@ -150,9 +144,6 @@ class ValueTracker extends Node {
     isFail(): boolean {
         return this.hasErrors();
     }
-
-
-
 
     getErrors(): ErrorTree {
         const obj: ErrorTree = {
@@ -182,8 +173,6 @@ class ValueTracker extends Node {
     formatLocalErrors(formatter: Formatter = new HtmlFormatter()): string {
         return formatter.format(this);
     }
-
-
 
     // Convenience getters
 

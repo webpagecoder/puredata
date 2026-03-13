@@ -4,7 +4,7 @@
 
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
-import { GenericHandler } from './GenericHandler.ts';
+import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
 function areOptionsCompliant(parsed = {}, required = [], forbidden = []) {
@@ -21,7 +21,7 @@ function areOptionsCompliant(parsed = {}, required = [], forbidden = []) {
     return true;
 }
 
-class DateHandler extends GenericHandler {
+class DateHandler extends Handler {
 
     // ====================================
     // VALIDATORS 

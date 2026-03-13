@@ -1,28 +1,39 @@
-// @ts-nocheck
 'use strict';
 
+type PathOrString = Path | string;
+
 class Path {
-    static delims({ separator, up, self }) {
+    static separator: string = '/';
+    static up: string = '..';
+    static self: string = '.';
+
+    string: string;
+    private _keys: string[];
+    isAbsolute: boolean;
+    isSelf: boolean;
+    upCount: number;
+
+    static delims({ separator, up, self }: { separator: string; up: string; self: string }): void {
         Path.separator = separator;
         Path.up = up;
         Path.self = self;
     }
 
-    static create(string) {
-        return new Path(string);
+    static create(path: PathOrString): Path {
+        return path instanceof Path ? new Path(path.string) : new Path(path);
     }
 
-    static fromArray(keys) {
+    static fromArray(keys: string[]): Path {
         const { separator } = Path;
         return Path.create(keys.join(separator));
     }
 
-    constructor(string = '') {
+    constructor(pathString: string = '') {
         const { separator, up, self } = Path;
-        const isAbsolute = string.startsWith(separator);
+        const isAbsolute = pathString.startsWith(separator);
         let upCount = 0;
-        const keys = [];
-        for (const part of string.split(separator)) {
+        const keys: string[] = [];
+        for (const part of pathString.split(separator)) {
             if (part === '' || part === self) {
                 continue;
             }
@@ -46,16 +57,16 @@ class Path {
         this.upCount = upCount;
     }
 
-    get keys() {
+    get keys(): string[] {
         return [...this._keys];
     }
 
-    parent() {
-        const { string, separator, up } = Path;
-        return Path.create(string + separator + up);
+    parent(): Path {
+        const { separator, up } = Path;
+        return Path.create(this.string + separator + up);
     }
 
-    move(movementPath = '') {
+    move(movementPath: Path | string = ''): Path {
         const movementString = movementPath instanceof Path
             ? movementPath.string
             : movementPath;
@@ -66,7 +77,7 @@ class Path {
             : Path.create(this.string + separator + movementString);
     }
 
-    equals(otherPath) {
+    equals(otherPath: Path): boolean {
         if (
             otherPath.isSelf !== this.isSelf
             || otherPath.isAbsolute !== this.isAbsolute
@@ -83,30 +94,27 @@ class Path {
         return true;
     }
 
-    shiftKeys(count = 1) {
+    shiftKeys(count: number = 1): Path {
         if (!this.isAbsolute) {
             throw new Error('Can only shift absolute paths.');
         }
-        const { isAbsolute, separator, up, upCount, _keys } = this;
+        const { separator, up } = Path;
+        const { isAbsolute, upCount, _keys } = this;
         return Path.create(
             (isAbsolute ? separator : (up + separator).repeat(upCount)) + _keys.slice(count).join(separator)
         );
     }
 
-    toRelative() {
-        const { string, separator, self } = Path;
-        return Path.create(self + separator + string);
+    toRelative(): Path {
+        const { separator, self } = Path;
+        return Path.create(self + separator + this.string);
     }
 
-    toAbsolute() {
-        const { string, separator } = Path;
-        return Path.create(separator + string);
+    toAbsolute(): Path {
+        const { separator } = Path;
+        return Path.create(separator + this.string);
     }
 
 }
-
-Path.separator = '/';
-Path.up = '..';
-Path.self = '.';
 
 export { Path };

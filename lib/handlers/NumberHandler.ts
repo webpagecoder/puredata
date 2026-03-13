@@ -2,11 +2,11 @@
 'use strict';
 
 import { HandlerResult } from './HandlerResult.ts';
-import { GenericHandler } from './GenericHandler.ts';
+import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
 
-class NumberHandler extends GenericHandler {
+class NumberHandler extends Handler {
 
     // ====================================
     // VALIDATORS

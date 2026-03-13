@@ -1,23 +1,32 @@
-// @ts-nocheck
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Chain } from './Chain.ts';
+import { Chain, ResolvedChainProps, ChainProps } from './Chain.ts';
 
+type RenameKeyOptions = {
+    deleteOriginalKey?: boolean;
+    overrideExistingKey?: boolean;
+};
+type StripUnknownOptions = {
+    includeUndefined?: boolean;
+};
+type PathOrString = Path | string;
 
 class ObjectChain extends Chain {
 
-    constructor(props = {}) {
+    declare props: ResolvedChainProps & {
+        clone: boolean;
+    };
+
+    constructor(props: ChainProps = {}) {
         super(props);
         this.props.clone = false;
     }
 
     // Configurators
-    configClone(clone = true) {
+    configClone(clone: boolean = true): this {
         return this.setProps({ clone });
     }
-
-    // ...........................
 
     // Validators
 
@@ -28,30 +37,10 @@ class ObjectChain extends Chain {
      * @example
      * object.depth(2) // Object must be exactly 2 levels deep
      */
-    depth(depth) {
+    depth(depth: number): this {
         return this.addStep('depth', [depth]);
     }
-
-    /**
-     * Validates that the object is empty (has no keys).
-     * @returns {ObjectChain} Returns the chain for method chaining
-     * @example
-     * object.empty() // Must be {} (empty object)
-     */
-    empty() {
-        return this.addStep('empty');
-    }
-
-    /**
-     * Validates that the object is not empty (has at least one key).
-     * @returns {ObjectChain} Returns the chain for method chaining
-     * @example
-     * object.notEmpty() // Must have at least one property
-     */
-    notEmpty() {
-        return this.addStep('notEmpty');
-    }
-
+    
     /**
      * Validates that the object has all but a specific number of the specified paths.
      * @param {number} count - Number of paths that can be missing
@@ -60,8 +49,8 @@ class ObjectChain extends Chain {
      * @example
      * object.allOfButXOfPaths(1, 'user.name', 'user.email', 'user.phone') // Missing at most 1 path
      */
-    allOfButXOfPaths(count, paths) {
-        return this.addStep('allOfButXOfPaths', [count, paths.map(path => Path.create(path))]);
+    allOfButXOfPaths(count: number, paths: PathOrString[]): this {
+        return this.addStep('allOfButXOfPaths', [count, paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -71,8 +60,8 @@ class ObjectChain extends Chain {
      * @example
      * object.allOfPaths('user.name', 'user.email') // Must have both paths
      */
-    allOfPaths(paths) {
-        return this.addStep('allOfPaths', [paths.map(path => Path.create(path))]);
+    allOfPaths(paths: PathOrString[]): this {
+        return this.addStep('allOfPaths', [paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -82,8 +71,8 @@ class ObjectChain extends Chain {
      * @example
      * object.exactlyPaths('id', 'name') // Must have only these 2 paths
      */
-    exactlyPaths(paths) {
-        return this.addStep('exactlyPaths', [paths.map(path => Path.create(path))]);
+    exactlyPaths(paths: PathOrString[]): this {
+        return this.addStep('exactlyPaths', [paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -93,8 +82,8 @@ class ObjectChain extends Chain {
      * @example
      * object.noneOfPaths('password', 'secret') // Must not have these paths
      */
-    noneOfPaths(paths) {
-        return this.addStep('noneOfPaths', [paths.map(path => Path.create(path))]);
+    noneOfPaths(paths: PathOrString[]): this {
+        return this.addStep('noneOfPaths', [paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -104,8 +93,8 @@ class ObjectChain extends Chain {
      * @example
      * object.onlyPaths('id', 'name', 'email') // Can only have these paths
      */
-    onlyPaths(paths) {
-        return this.addStep('onlyPaths', [paths.map(path => Path.create(path))]);
+    onlyPaths(paths: PathOrString[]): this {
+        return this.addStep('onlyPaths', [paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -115,8 +104,8 @@ class ObjectChain extends Chain {
      * @example
      * object.pathsOtherThan('temp', 'cache') // Must have paths other than these
      */
-    pathsOtherThan(paths) {
-        return this.addStep('pathsOtherThan', [paths.map(path => Path.create(path))]);
+    pathsOtherThan(paths: PathOrString[]): this {
+        return this.addStep('pathsOtherThan', [paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -126,8 +115,8 @@ class ObjectChain extends Chain {
      * @example
      * object.someOfPaths('email', 'phone', 'address') // Must have at least one
      */
-    someOfPaths(paths) {
-        return this.addStep('someOfPaths', [paths.map(path => Path.create(path))]);
+    someOfPaths(paths: PathOrString[]): this {
+        return this.addStep('someOfPaths', [paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -138,8 +127,8 @@ class ObjectChain extends Chain {
      * @example
      * object.xOfPaths(2, 'name', 'email', 'phone') // Must have exactly 2 of these paths
      */
-    xOfPaths(count, paths) {
-        return this.addStep('xOfPaths', [count, paths.map(path => Path.create(path))]);
+    xOfPaths(count: number, paths: PathOrString[]): this {
+        return this.addStep('xOfPaths', [count, paths.map((path: PathOrString): Path => Path.create(path))]);
     }
 
     /**
@@ -150,7 +139,7 @@ class ObjectChain extends Chain {
      * object.instanceOf(Date) // Must be a Date instance
      * object.instanceOf(MyClass) // Must be an instance of MyClass
      */
-    instanceOf(constructor) {
+    instanceOf(constructor: Function): this {
         return this.addStep('instanceOf', [constructor]);
     }
 
@@ -161,7 +150,7 @@ class ObjectChain extends Chain {
      * @example
      * object.keyCount(5) // Must have exactly 5 keys
      */
-    keyCount(keyCount) {
+    keyCount(keyCount: number): this {
         return this.addStep('keyCount', [keyCount]);
     }
 
@@ -172,7 +161,7 @@ class ObjectChain extends Chain {
      * @example
      * object.keyCountRecursive(10) // Must have exactly 10 keys including nested
      */
-    keyCountRecursive(keyCount) {
+    keyCountRecursive(keyCount: number): this {
         return this.addStep('keyCountRecursive', [keyCount]);
     }
 
@@ -183,7 +172,7 @@ class ObjectChain extends Chain {
      * @example
      * object.maxDepth(3) // Must be 3 levels deep or less
      */
-    maxDepth(maxDepth) {
+    maxDepth(maxDepth: number): this {
         return this.addStep('maxDepth', [maxDepth]);
     }
 
@@ -194,7 +183,7 @@ class ObjectChain extends Chain {
      * @example
      * object.maxKeyCount(10) // Must have 10 keys or fewer
      */
-    maxKeyCount(maxKeyCount) {
+    maxKeyCount(maxKeyCount: number): this {
         return this.addStep('maxKeyCount', [maxKeyCount]);
     }
 
@@ -205,7 +194,7 @@ class ObjectChain extends Chain {
      * @example
      * object.maxKeyCountRecursive(50) // Must have 50 or fewer keys including nested
      */
-    maxKeyCountRecursive(maxKeyCount) {
+    maxKeyCountRecursive(maxKeyCount: number): this {
         return this.addStep('maxKeyCountRecursive', [maxKeyCount]);
     }
 
@@ -216,7 +205,7 @@ class ObjectChain extends Chain {
      * @example
      * object.minDepth(2) // Must be at least 2 levels deep
      */
-    minDepth(minDepth) {
+    minDepth(minDepth: number): this {
         return this.addStep('minDepth', [minDepth]);
     }
 
@@ -227,7 +216,7 @@ class ObjectChain extends Chain {
      * @example
      * object.minKeyCount(3) // Must have at least 3 keys
      */
-    minKeyCount(minKeyCount) {
+    minKeyCount(minKeyCount: number): this {
         return this.addStep('minKeyCount', [minKeyCount]);
     }
 
@@ -238,7 +227,7 @@ class ObjectChain extends Chain {
      * @example
      * object.minKeyCountRecursive(15) // Must have at least 15 keys including nested
      */
-    minKeyCountRecursive(minKeyCount) {
+    minKeyCountRecursive(minKeyCount: number): this {
         return this.addStep('minKeyCountRecursive', [minKeyCount]);
     }
 
@@ -248,11 +237,11 @@ class ObjectChain extends Chain {
      * @example
      * object.plain({ x: 1, y: 2}) // Yes this is a plain object
      */
-    plain() {
+    plain(): this {
         return this.addStep('plain');
     }
 
-    property(property) {
+    property(property: string): this {
         return this.addStep('property', [property]);
     }
 
@@ -267,7 +256,7 @@ class ObjectChain extends Chain {
      * @example
      * object.pickRandom(3) // Get 3 random key-value pairs
      */
-    pickRandom(count) {
+    pickRandom(count: number): this {
         return this.addStep('pickRandom', [count]);
     }
 
@@ -282,13 +271,11 @@ class ObjectChain extends Chain {
      * @example
      * object.renameKeys(/^old_/, 'new_') // Rename keys starting with 'old_' to 'new_'
      */
-    renameKeys(fromRegex, toRegex, options = {}) {
-        return this.setProps({ clone: true }).addStep('renameKey', function () {
-            return [fromRegex, toRegex, options];
-        });
+    renameKeys(fromRegex: RegExp | string, toRegex: string, options: RenameKeyOptions = {}): this {
+        return this.setProps({ clone: true }).addStep('renameKey', [fromRegex, toRegex, options]);
     }
 
-    renameKey(fromRegex, toRegex, options = {}) {
+    renameKey(fromRegex: RegExp | string, toRegex: string, options: RenameKeyOptions = {}): this {
         return this.renameKeys(fromRegex, toRegex, options);
     }
 
@@ -301,13 +288,11 @@ class ObjectChain extends Chain {
      * @example
      * object.stripUnknownKeys(['id', 'name', 'email']) // Keep only these keys
      */
-    stripUnknownKeys(knownKeys, options = {}) {
-        return this.setProps({ clone: true }).addStep('stripUnknown', function () {
-            return [knownKeys, options];
-        });
+    stripUnknownKeys(knownKeys: string[], options: StripUnknownOptions = {}): this {
+        return this.setProps({ clone: true }).addStep('stripUnknown', [knownKeys, options]);
     }
 
-    stripUnknown(knownKeys, options = {}) {
+    stripUnknown(knownKeys: string[], options: StripUnknownOptions = {}): this {
         return this.stripUnknownKeys(knownKeys, options);
     }
 
@@ -317,13 +302,14 @@ class ObjectChain extends Chain {
      * @example
      * object.removeEmpties() // Removes keys with falsy or empty values
      */
-    removeEmpties() {
-        return this.setProps({ clone: true }).addStep('removeEmpty', function () {
-            return [this.props.emptyValues];
+    //todo: WHAT HAPPENED HERE
+    removeEmpties(): this {
+        return this.setProps({ clone: true }).addStep('removeEmpty', function (): unknown[] {
+            return [(this as ObjectChain).props.emptyValues];
         });
     }
 
-    removeEmpty(emptyValues = this.props.emptyValues) {
+    removeEmpty(emptyValues: unknown[] = this.props.emptyValues): this {
         return this.setProps({ clone: true }).addStep('removeEmpty', [emptyValues]);
     }
 
@@ -333,13 +319,13 @@ class ObjectChain extends Chain {
      * @example
      * object.removeEmptiesRecursive() // Deep clean of empty values in nested objects
      */
-    removeEmptiesRecursive() {
-        return this.setProps({ clone: true }).addStep('removeEmptyRecursive', function () {
+    removeEmptiesRecursive(): this {
+        return this.setProps({ clone: true }).addStep('removeEmptyRecursive', function (): unknown[] {
             return [this.props.emptyValues];
         });
     }
 
-    removeEmptyRecursive(emptyValues = this.props.emptyValues) {
+    removeEmptyRecursive(emptyValues: unknown[] = this.props.emptyValues): this {
         return this.setProps({ clone: true }).addStep('removeEmptyRecursive', [emptyValues]);
     }
 
@@ -349,17 +335,13 @@ class ObjectChain extends Chain {
      * @example
      * object.removePaths(['x/y/z', 'd']) // Removes key d and path x/y/z from object
      */
-    removePaths(paths = []) {
-        return this.setProps({ clone: true }).addStep('removePath', [
-            paths.map(path => Path.create(path))
+    removePaths(paths: PathOrString[] = []): this {
+        return this.setProps({ clone: true }).addStep('removePaths', [
+            paths.map((path: PathOrString): Path => Path.create(path))
         ]);
     }
 
-    removePath(paths = []) {
-        return this.removePaths(paths);
-    }
-
-    setPaths(pathsAndValues = {}, overwrite = true, create = true) {
+    setPaths(pathsAndValues: Record<string, unknown> = {}, overwrite: boolean = true, create: boolean = true): this {
         const valueMap = new Map();
         for (const key of Object.keys(pathsAndValues)) {
             valueMap.set(Path.create(key), pathsAndValues[key]);
@@ -367,7 +349,7 @@ class ObjectChain extends Chain {
         return this.setProps({ clone: true }).addStep('setPath', [valueMap, overwrite, create]);
     }
 
-    setPath(pathsAndValues = {}, overwrite = true, create = true) {
+    setPath(pathsAndValues: Record<string, unknown> = {}, overwrite: boolean = true, create: boolean = true): this {
         return this.setPaths(pathsAndValues, overwrite, create);
     }
 

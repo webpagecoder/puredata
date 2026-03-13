@@ -1,21 +1,8 @@
-// @ts-nocheck
 'use strict';
 
-
-//todo: pathdelim and upchar make global chars...cant do it by object too much craziness
-
-
-// import { ReferenceValueTracker } from '../../tracker/ReferenceValueTracker.ts';
-
-// import { Meta } from '../Meta.ts';
-
-// import { SchemaChainMeta } from '../meta/SchemaChainMeta.ts';
-// import { PathReferenceField } from '../reference/PathReferenceField.ts';
+import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
 import { PubSub } from '../pub-sub/PubSub.ts';
-
-
-import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
 
 

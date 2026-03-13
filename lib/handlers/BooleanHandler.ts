@@ -1,12 +1,12 @@
 'use strict';
 
 import { HandlerResult } from './HandlerResult.ts';
-import { GenericHandler } from './GenericHandler.ts';
+import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
 type BoolishPair = [truthy: any, falsy: unknown];
 
-class BooleanHandler extends GenericHandler {
+class BooleanHandler extends Handler {
 
     // ====================================
     // VALIDATORS 

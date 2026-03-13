@@ -1,70 +1,70 @@
 'use strict';
 
-import { GenericHandler } from '../../lib/handlers/GenericHandler.ts';
+import { Handler } from '../../lib/handlers/Handler.ts';
 import { HandlerResult } from '../../lib/HandlerResult.ts';
 
 // ====================================
 // VALIDATORS
 // ====================================
 
-describe('GenericHandler.defined', () => {
+describe('Handler.defined', () => {
     test('should pass when value is null', () => {
-        const result = GenericHandler.defined(null);
+        const result = Handler.defined(null);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(null);
     });
 
     test('should pass when value is false', () => {
-        const result = GenericHandler.defined(false);
+        const result = Handler.defined(false);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(false);
     });
 
     test('should fail when value is undefined', () => {
-        const result = GenericHandler.defined(undefined);
+        const result = Handler.defined(undefined);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/defined');
     });
 });
 
-describe('GenericHandler.empty', () => {
+describe('Handler.empty', () => {
     test('should pass for null', () => {
-        const result = GenericHandler.empty(null);
+        const result = Handler.empty(null);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(null);
     });
 
     test('should pass for undefined', () => {
-        const result = GenericHandler.empty(undefined);
+        const result = Handler.empty(undefined);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(undefined);
     });
 
     test('should fail for zero', () => {
-        const result = GenericHandler.empty(0);
+        const result = Handler.empty(0);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/empty');
     });
 });
 
-describe('GenericHandler.equals', () => {
+describe('Handler.equals', () => {
     test('should pass for deep-equal objects', () => {
         const value = { a: 1, b: { c: 2 } };
         const comparison = { a: 1, b: { c: 2 } };
-        const result = GenericHandler.equals(value, comparison);
+        const result = Handler.equals(value, comparison);
 
         expect(result.pass).toBe(true);
         expect(result.value).toBe(value);
     });
 
     test('should pass for equal primitive values', () => {
-        const result = GenericHandler.equals('x', 'x');
+        const result = Handler.equals('x', 'x');
         expect(result.pass).toBe(true);
         expect(result.value).toBe('x');
     });
 
     test('should fail for different values', () => {
-        const result = GenericHandler.equals(1, 2);
+        const result = Handler.equals(1, 2);
 
         expect(result.pass).toBe(false);
         const errors = [...result.errors];
@@ -73,77 +73,77 @@ describe('GenericHandler.equals', () => {
     });
 });
 
-describe('GenericHandler.falsy', () => {
+describe('Handler.falsy', () => {
     test('should pass for empty string', () => {
-        expect(GenericHandler.falsy('').pass).toBe(true);
+        expect(Handler.falsy('').pass).toBe(true);
     });
 
     test('should pass for 0', () => {
-        expect(GenericHandler.falsy(0).pass).toBe(true);
+        expect(Handler.falsy(0).pass).toBe(true);
     });
 
     test('should pass for null', () => {
-        expect(GenericHandler.falsy(null).pass).toBe(true);
+        expect(Handler.falsy(null).pass).toBe(true);
     });
 
     test('should fail for truthy value', () => {
-        const result = GenericHandler.falsy('x');
+        const result = Handler.falsy('x');
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/falsy');
     });
 });
 
-describe('GenericHandler.notDefined', () => {
+describe('Handler.notDefined', () => {
     test('should pass for undefined', () => {
-        const result = GenericHandler.notDefined(undefined);
+        const result = Handler.notDefined(undefined);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(undefined);
     });
 
     test('should fail for null', () => {
-        const result = GenericHandler.notDefined(null);
+        const result = Handler.notDefined(null);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/notDefined');
     });
 });
 
-describe('GenericHandler.notEmpty', () => {
+describe('Handler.notEmpty', () => {
     test('should pass for number', () => {
-        expect(GenericHandler.notEmpty(0).pass).toBe(true);
+        expect(Handler.notEmpty(0).pass).toBe(true);
     });
 
     test('should pass for false', () => {
-        expect(GenericHandler.notEmpty(false).pass).toBe(true);
+        expect(Handler.notEmpty(false).pass).toBe(true);
     });
 
     test('should fail for null', () => {
-        const result = GenericHandler.notEmpty(null);
+        const result = Handler.notEmpty(null);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/empty');
     });
 
     test('should fail for undefined', () => {
-        const result = GenericHandler.notEmpty(undefined);
+        const result = Handler.notEmpty(undefined);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/empty');
     });
 });
 
-describe('GenericHandler.notEquals', () => {
+describe('Handler.notEquals', () => {
     test('should pass for non-equal primitive values', () => {
-        const result = GenericHandler.notEquals(1, 2);
+        const result = Handler.notEquals(1, 2);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(1);
     });
 
     test('should pass for non-equal objects', () => {
-        const result = GenericHandler.notEquals({ a: 1 }, { a: 2 });
+        const result = Handler.notEquals({ a: 1 }, { a: 2 });
         expect(result.pass).toBe(true);
     });
 
     test('should fail for deep-equal objects', () => {
         const comparison = { a: 1 };
-        const result = GenericHandler.notEquals({ a: 1 }, comparison);
+        const result = Handler.notEquals({ a: 1 }, comparison);
 
         expect(result.pass).toBe(false);
         const errors = [...result.errors];
@@ -152,38 +152,38 @@ describe('GenericHandler.notEquals', () => {
     });
 });
 
-describe('GenericHandler.notNull', () => {
+describe('Handler.notNull', () => {
     test('should pass for undefined', () => {
-        expect(GenericHandler.notNull(undefined).pass).toBe(true);
+        expect(Handler.notNull(undefined).pass).toBe(true);
     });
 
     test('should pass for empty string', () => {
-        expect(GenericHandler.notNull('').pass).toBe(true);
+        expect(Handler.notNull('').pass).toBe(true);
     });
 
     test('should fail for null', () => {
-        const result = GenericHandler.notNull(null);
+        const result = Handler.notNull(null);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/notNull');
     });
 });
 
-describe('GenericHandler.notOneOf', () => {
+describe('Handler.notOneOf', () => {
     test('should pass when list is empty', () => {
-        const result = GenericHandler.notOneOf('a', []);
+        const result = Handler.notOneOf('a', []);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('a');
     });
 
     test('should pass when value is not forbidden', () => {
-        const result = GenericHandler.notOneOf('c', ['a', 'b']);
+        const result = Handler.notOneOf('c', ['a', 'b']);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('c');
     });
 
     test('should fail when primitive value is forbidden', () => {
         const forbiddenValues = ['a', 'b'];
-        const result = GenericHandler.notOneOf('a', forbiddenValues);
+        const result = Handler.notOneOf('a', forbiddenValues);
 
         expect(result.pass).toBe(false);
         const errors = [...result.errors];
@@ -193,48 +193,48 @@ describe('GenericHandler.notOneOf', () => {
 
     test('should fail when deep-equal object is forbidden', () => {
         const forbiddenValues = [{ id: 1 }, { id: 2 }];
-        const result = GenericHandler.notOneOf({ id: 2 }, forbiddenValues);
+        const result = Handler.notOneOf({ id: 2 }, forbiddenValues);
 
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/notOneOf');
     });
 });
 
-describe('GenericHandler.null', () => {
+describe('Handler.null', () => {
     test('should pass for null', () => {
-        const result = GenericHandler.null(null);
+        const result = Handler.null(null);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(null);
     });
 
     test('should fail for undefined', () => {
-        const result = GenericHandler.null(undefined);
+        const result = Handler.null(undefined);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/null');
     });
 
     test('should fail for false', () => {
-        const result = GenericHandler.null(false);
+        const result = Handler.null(false);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/null');
     });
 });
 
-describe('GenericHandler.oneOf', () => {
+describe('Handler.oneOf', () => {
     test('should pass when primitive value is allowed', () => {
-        const result = GenericHandler.oneOf('a', ['a', 'b']);
+        const result = Handler.oneOf('a', ['a', 'b']);
         expect(result.pass).toBe(true);
         expect(result.value).toBe('a');
     });
 
     test('should pass when deep-equal object is allowed', () => {
-        const result = GenericHandler.oneOf({ id: 1 }, [{ id: 1 }, { id: 2 }]);
+        const result = Handler.oneOf({ id: 1 }, [{ id: 1 }, { id: 2 }]);
         expect(result.pass).toBe(true);
     });
 
     test('should fail when value is not allowed', () => {
         const allowedValues = ['a', 'b'];
-        const result = GenericHandler.oneOf('c', allowedValues);
+        const result = Handler.oneOf('c', allowedValues);
 
         expect(result.pass).toBe(false);
         const errors = [...result.errors];
@@ -244,7 +244,7 @@ describe('GenericHandler.oneOf', () => {
 
     test('should fail when allowedValues list is empty', () => {
         const allowedValues = [];
-        const result = GenericHandler.oneOf('a', allowedValues);
+        const result = Handler.oneOf('a', allowedValues);
 
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/oneOf');
@@ -252,20 +252,20 @@ describe('GenericHandler.oneOf', () => {
     });
 });
 
-describe('GenericHandler.primitive', () => {
+describe('Handler.primitive', () => {
     test('should pass for primitive values when type is not provided', () => {
-        expect(GenericHandler.primitive(1).pass).toBe(true);
-        expect(GenericHandler.primitive(true).pass).toBe(true);
-        expect(GenericHandler.primitive(undefined).pass).toBe(true);
+        expect(Handler.primitive(1).pass).toBe(true);
+        expect(Handler.primitive(true).pass).toBe(true);
+        expect(Handler.primitive(undefined).pass).toBe(true);
     });
 
     test('should pass for symbol and bigint without type', () => {
-        expect(GenericHandler.primitive(Symbol('x')).pass).toBe(true);
-        expect(GenericHandler.primitive(1n).pass).toBe(true);
+        expect(Handler.primitive(Symbol('x')).pass).toBe(true);
+        expect(Handler.primitive(1n).pass).toBe(true);
     });
 
     test('should fail for object value when type is not provided', () => {
-        const result = GenericHandler.primitive({});
+        const result = Handler.primitive({});
         expect(result.pass).toBe(false);
 
         const errors = [...result.errors];
@@ -274,13 +274,13 @@ describe('GenericHandler.primitive', () => {
     });
 
     test('should pass when value matches provided primitive type', () => {
-        expect(GenericHandler.primitive('abc', 'string').pass).toBe(true);
-        expect(GenericHandler.primitive(false, 'boolean').pass).toBe(true);
-        expect(GenericHandler.primitive(10n, 'bigint').pass).toBe(true);
+        expect(Handler.primitive('abc', 'string').pass).toBe(true);
+        expect(Handler.primitive(false, 'boolean').pass).toBe(true);
+        expect(Handler.primitive(10n, 'bigint').pass).toBe(true);
     });
 
     test('should fail when value does not match provided primitive type', () => {
-        const result = GenericHandler.primitive(1, 'string');
+        const result = Handler.primitive(1, 'string');
         expect(result.pass).toBe(false);
 
         const errors = [...result.errors];
@@ -289,23 +289,23 @@ describe('GenericHandler.primitive', () => {
     });
 });
 
-describe('GenericHandler.truthy', () => {
+describe('Handler.truthy', () => {
     test('should pass for truthy string', () => {
-        expect(GenericHandler.truthy('x').pass).toBe(true);
+        expect(Handler.truthy('x').pass).toBe(true);
     });
 
     test('should pass for truthy object', () => {
-        expect(GenericHandler.truthy({}).pass).toBe(true);
+        expect(Handler.truthy({}).pass).toBe(true);
     });
 
     test('should fail for zero', () => {
-        const result = GenericHandler.truthy(0);
+        const result = Handler.truthy(0);
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/truthy');
     });
 
     test('should fail for empty string', () => {
-        const result = GenericHandler.truthy('');
+        const result = Handler.truthy('');
         expect(result.pass).toBe(false);
         expect([...result.errors][0].key).toBe('generic/truthy');
     });
@@ -315,16 +315,16 @@ describe('GenericHandler.truthy', () => {
 // MUTATORS
 // ====================================
 
-describe('GenericHandler.custom', () => {
+describe('Handler.custom', () => {
     test('should pass transformed value when callback returns plain value', () => {
-        const result = GenericHandler.custom(2, (value) => value * 3);
+        const result = Handler.custom(2, (value) => value * 3);
         expect(result.pass).toBe(true);
         expect(result.value).toBe(6);
     });
 
     test('should return HandlerResult.fail from callback as-is', () => {
         const customResult = HandlerResult.fail('bad', 'generic/custom');
-        const result = GenericHandler.custom('bad', () => customResult);
+        const result = Handler.custom('bad', () => customResult);
 
         expect(result).toBe(customResult);
         expect(result.pass).toBe(false);
@@ -333,7 +333,7 @@ describe('GenericHandler.custom', () => {
 
     test('should return HandlerResult.pass from callback as-is', () => {
         const customResult = HandlerResult.pass({ ok: true });
-        const result = GenericHandler.custom('ignored', () => customResult);
+        const result = Handler.custom('ignored', () => customResult);
 
         expect(result).toBe(customResult);
         expect(result.pass).toBe(true);
@@ -341,7 +341,7 @@ describe('GenericHandler.custom', () => {
     });
 
     test('should wrap undefined callback return in pass', () => {
-        const result = GenericHandler.custom('x', () => undefined);
+        const result = Handler.custom('x', () => undefined);
 
         expect(result.pass).toBe(true);
         expect(result.value).toBe(undefined);

@@ -3,21 +3,21 @@
 
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
-import { GenericHandler } from './GenericHandler.ts';
+import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
-class ObjectHandler extends GenericHandler {
+class ObjectHandler extends Handler {
 
     // ====================================
     // VALIDATORS
     // ====================================
 
-    static empty(value) {
-        return Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
+    static empty(value, empties = [null, undefined]) {
+        return super.empty(value, empties) || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
     }
 
-    static notEmpty(value) {
-        return Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
+    static notEmpty(value, empties = [null, undefined]) {
+        return super.notEmpty(value, empties) && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
     }
 
     static property(value, property) {
@@ -249,7 +249,7 @@ class ObjectHandler extends GenericHandler {
         return pass(objectCopy);
     }
 
-    static removePath(obj, paths = []) {
+    static removePaths(obj, paths = []) {
         for (const path of paths) {
             Utils.removePath(obj, path);
         }

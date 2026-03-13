@@ -4,7 +4,7 @@
 import { Path } from '../Path.ts';
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
-import { GenericHandler } from './GenericHandler.ts';
+import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
 function getSorter(order = 1, pathOrComparator = null) {
@@ -25,7 +25,7 @@ function getSorter(order = 1, pathOrComparator = null) {
     return sorter;
 }
 
-class ArrayHandler extends GenericHandler {
+class ArrayHandler extends Handler {
 
     // ====================================
     // VALIDATORS 
