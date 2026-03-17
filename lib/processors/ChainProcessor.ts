@@ -1,16 +1,33 @@
-// @ts-nocheck
 'use strict';
 
-import { Processor } from './Processor.ts';
+import { Processor, State } from './Processor.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { Chain } from '../fields/Chain.ts';
+
+type PipelineError = {
+    key: string;
+    args: Record<string, unknown>;
+};
+
+type PipelineResult = {
+    value: unknown;
+    fail: boolean;
+    errors: Iterable<PipelineError>;
+};
+
+type PipelineStep = {
+    fn: (value: unknown, ...args: unknown[]) => PipelineResult;
+    args?: unknown[] | ((this: ChainProcessor) => unknown[]);
+};
 
 class ChainProcessor extends Processor {
 
-    preProcess() { }
+    preProcess(_tracker: ValueTracker, _state?: State): void {}
 
-    postProcess() { }
+    postProcess(_tracker: ValueTracker, _state?: State): void {};
 
-    _process(tracker, state = {}) {
+    override _process(tracker: ValueTracker, state: State = {}): ValueTracker {
         // const { failOnFirstError } = this.globalConfig;
         this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
@@ -21,18 +38,25 @@ class ChainProcessor extends Processor {
         return tracker;
     }
 
-    executePipeline(tracker) {
-        for (const step of this.props.field.props.pipeline) {
+    private resolveStepArgs(args: PipelineStep['args']): unknown[] {
+        if (typeof args === 'function') {
+            return args.call(this);
+        }
+        return args || [];
+    }
+
+    executePipeline(tracker: ValueTracker): void {
+        const pipeline = (this.props.field as Chain).props.pipeline;
+        for (const step of pipeline) {
             let { fn, args } = step;
-            let finalArgs = [];
-            if(typeof args === 'function') {
-                //todo : this is utilized in boolean make sure it works
-                args = args.call(this);
-            }
+            const finalArgs: unknown[] = [];
+            args = this.resolveStepArgs(args);
 
             for (const arg of args) {
                 if (arg instanceof PathReferenceField) {
-                    const refValueTracker = tracker.parent.getByPath(arg.path);
+                    const refValueTracker = (tracker.parent as unknown as {
+                        getByPath(path: unknown): ValueTracker | undefined;
+                    }).getByPath(arg.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {
@@ -48,8 +72,8 @@ class ChainProcessor extends Processor {
             tracker.setValue(result.value);
 
             if (result.fail) {
-                for (const { key, args } of result.errors) {
-                    tracker.addError(key, args);
+                for (const key of Object.keys(result.errors)) {
+                    tracker.addError(key, result.errors[key]);
                 }
             }
 
@@ -59,10 +83,11 @@ class ChainProcessor extends Processor {
         }
     }
 
-    getReferences() {
+    override getReferences(): Set<PathReferenceField> {
         const references = super.getReferences();
-        for (const { args } of this.props.field.props.pipeline) {
-            for (const arg of args) {
+        const pipeline = (this.props.field as Chain).props.pipeline;
+        for (const { args } of pipeline) {
+            for (const arg of this.resolveStepArgs(args)) {
                 if (arg instanceof PathReferenceField) {
                     references.add(arg);
                 }

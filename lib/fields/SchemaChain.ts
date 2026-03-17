@@ -1,17 +1,32 @@
-// @ts-nocheck
 'use strict';
 
 import { Utils } from '../utils/Utils.ts';
 import { Field } from './Field.ts';
 import { ValueField } from './ValueField.ts';
 import { ArrayChain } from './ArrayChain.ts';
-import { ObjectChain } from './ObjectChain.ts';
+import { ObjectChain, ObjectChainProps, ResolvedObjectChainProps } from './ObjectChain.ts';
+
+type SchemaChainProps = ObjectChainProps & {
+    structure?: Record<string, unknown>;
+};
+type ResolvedSchemaChainProps = ResolvedObjectChainProps & {
+    structure: Record<string, unknown>;
+};
+type DescriptionBuilder = {
+    setChild(key: string, child: unknown): void;
+};
 
 class SchemaChain extends ObjectChain {
 
-    constructor(props = {}) {
-        super(props);
+    declare props: ResolvedSchemaChainProps & {
+        clone: boolean;
+        ensurePlain: boolean;
+        schema: Map<string, Field>;
+        stripUnknownKeys?: boolean;
+    };
 
+    constructor(props: SchemaChainProps = {}) {
+        super(props);
 
         let {
             compilationMapper,
@@ -19,10 +34,10 @@ class SchemaChain extends ObjectChain {
             structure = {},
         } = props;
 
-        const schema = new Map();
+        const schema = new Map<string, Field>();
         for (const key of Object.keys(structure)) {
             let value = structure[key];
-            let field;
+            let field: Field;
 
             if (value instanceof Field) {
                 field = value;
@@ -31,14 +46,14 @@ class SchemaChain extends ObjectChain {
                 field = new SchemaChain({
                     compilationMapper,
                     locale,
-                    structure: value
+                    structure: value as Record<string, unknown>
                 });
             }
             else if (Array.isArray(value)) {
                 field = new ArrayChain({
                     compilationMapper,
                     locale
-                }).tuple(value);
+                }).tuple(value) as Field;
             }
             else {
                 field = new ValueField({
@@ -50,33 +65,32 @@ class SchemaChain extends ObjectChain {
             schema.set(key, field);
         }
 
-        Object.assign(this.props, {
-            clone: true,
-            ensurePlain: true,
-            // renameKeysArgs: null,
-            schema,
-        });
+        this.props.clone = true;
+        this.props.ensurePlain = true;
+        this.props.schema = schema;
     }
 
-    get schema() {
+    get schema(): Map<string, Field> {
         return this.props.schema;
     }
 
     // Configurators
 
-    configStripUnknownKeys(stripUnknownKeys = true) {
+    configStripUnknownKeys(stripUnknownKeys: boolean = true): this {
         return this.setProps({ stripUnknownKeys });
     }
 
-    getRawDescription() {
-        const builder = super.getRawDescription();
+    // getRawDescription(): DescriptionBuilder {
+    //     // @ts-ignore - getRawDescription will be defined on parent when fully typed
+    //     const builder: DescriptionBuilder = super.getRawDescription();
 
-        for (const [key, field] of this.props.schema) {
-            builder.setChild(key, field.getRawDescription());
-        }
+    //     for (const [key, field] of this.props.schema) {
+    //         // @ts-ignore - getRawDescription will be defined on Field when fully typed
+    //         builder.setChild(key, field.getRawDescription());
+    //     }
 
-        return builder;
-    }
+    //     return builder;
+    // }
 
 }
 

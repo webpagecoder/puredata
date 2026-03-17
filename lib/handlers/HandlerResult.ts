@@ -1,50 +1,44 @@
-// @ts-nocheck
 'use strict';
+
+import { ArgumentCollection, ErrorCollection } from '../types.ts';
 
 class HandlerResult {
 
-    constructor({
-        value,
-        pass = false,
-        errorKey = '',
-        args = [],
+    value: unknown;
+    pass: boolean;
+    fail: boolean;
+    errors: ErrorCollection;
+
+    constructor(props: {
+        value?: unknown;
+        pass?: boolean;
+        errorKey?: string;
+        args?: ArgumentCollection;
     } = {}) {
-        this.value = value;
-        this.pass = pass;
-        this.fail = !pass;
-        if (!pass) {
-            this._errors = new Map();
-            if (errorKey) {
-                this.addError(errorKey, args);
+        this.value = props.value;
+        this.pass = props.pass ?? false;
+        this.fail = !this.pass;
+        this.errors =  {}
+        if (!this.pass) {
+            if (props.errorKey) {
+                this.addError(props.errorKey, props.args || {});
             }
         }
     }
 
-    addError(errorKey, args) {
+    addError(errorKey: string, args: ArgumentCollection): void {
         if(this.pass) {
             throw new Error('Errors cannot be added to a Result that passed');
         }
-        this._errors.set(errorKey, args);
+        this.errors[errorKey] = args;
     }
 
-    static pass(value) {
+    static pass(value: unknown): HandlerResult {
         return new HandlerResult({ value, pass: true });
     }
 
-    static fail(value, errorKey, args = {}) {
+    static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): HandlerResult {
         return new HandlerResult({ value, pass: false, errorKey, args });
-    }
-
-    *yieldErrors() {
-        for (const [key, args] of this._errors) {
-            yield { key, args };
-        }
-    }
-
-    // Getters
-
-    get errors() {
-        return this.yieldErrors();
     }
 
 }

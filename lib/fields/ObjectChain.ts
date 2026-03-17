@@ -7,14 +7,13 @@ type RenameKeyOptions = {
     deleteOriginalKey?: boolean;
     overrideExistingKey?: boolean;
 };
-type StripUnknownOptions = {
-    includeUndefined?: boolean;
-};
+export type ResolvedObjectChainProps = ResolvedChainProps;
+export type ObjectChainProps = ChainProps;
 type PathOrString = Path | string;
 
 class ObjectChain extends Chain {
 
-    declare props: ResolvedChainProps & {
+    declare props: ResolvedObjectChainProps & {
         clone: boolean;
     };
 
@@ -62,6 +61,12 @@ class ObjectChain extends Chain {
      */
     allOfPaths(paths: PathOrString[]): this {
         return this.addStep('allOfPaths', [paths.map((path: PathOrString): Path => Path.create(path))]);
+    }
+
+    empty(): this {
+        return this.addStep('empty', function (this: ObjectChain): unknown[] {
+            return [this.props.emptyValues];
+        });
     }
 
     /**
@@ -231,6 +236,12 @@ class ObjectChain extends Chain {
         return this.addStep('minKeyCountRecursive', [minKeyCount]);
     }
 
+    notEmpty(): this {
+        return this.addStep('notEmpty', function (this: ObjectChain): unknown[] {
+            return [this.props.emptyValues];
+        });
+    }
+
     /**
      * Validates that the object is pure/plain and it's constructor is Object
      * @returns {ObjectChain} Returns the chain for method chaining
@@ -275,10 +286,6 @@ class ObjectChain extends Chain {
         return this.setProps({ clone: true }).addStep('renameKey', [fromRegex, toRegex, options]);
     }
 
-    renameKey(fromRegex: RegExp | string, toRegex: string, options: RenameKeyOptions = {}): this {
-        return this.renameKeys(fromRegex, toRegex, options);
-    }
-
     /**
      * Keeps only the specified known keys, removing all others.
      * @param {string[]} knownKeys - Array of keys to keep
@@ -288,12 +295,8 @@ class ObjectChain extends Chain {
      * @example
      * object.stripUnknownKeys(['id', 'name', 'email']) // Keep only these keys
      */
-    stripUnknownKeys(knownKeys: string[], options: StripUnknownOptions = {}): this {
-        return this.setProps({ clone: true }).addStep('stripUnknown', [knownKeys, options]);
-    }
-
-    stripUnknown(knownKeys: string[], options: StripUnknownOptions = {}): this {
-        return this.stripUnknownKeys(knownKeys, options);
+    stripUnknownKeys(knownKeys: string[]): this {
+        return this.setProps({ clone: true }).addStep('stripUnknown', [knownKeys]);
     }
 
     /**
@@ -302,15 +305,10 @@ class ObjectChain extends Chain {
      * @example
      * object.removeEmpties() // Removes keys with falsy or empty values
      */
-    //todo: WHAT HAPPENED HERE
     removeEmpties(): this {
-        return this.setProps({ clone: true }).addStep('removeEmpty', function (): unknown[] {
-            return [(this as ObjectChain).props.emptyValues];
+        return this.setProps({ clone: true }).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
+            return [this.props.emptyValues];
         });
-    }
-
-    removeEmpty(emptyValues: unknown[] = this.props.emptyValues): this {
-        return this.setProps({ clone: true }).addStep('removeEmpty', [emptyValues]);
     }
 
     /**
@@ -320,13 +318,9 @@ class ObjectChain extends Chain {
      * object.removeEmptiesRecursive() // Deep clean of empty values in nested objects
      */
     removeEmptiesRecursive(): this {
-        return this.setProps({ clone: true }).addStep('removeEmptyRecursive', function (): unknown[] {
+        return this.setProps({ clone: true }).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
             return [this.props.emptyValues];
         });
-    }
-
-    removeEmptyRecursive(emptyValues: unknown[] = this.props.emptyValues): this {
-        return this.setProps({ clone: true }).addStep('removeEmptyRecursive', [emptyValues]);
     }
 
     /**
@@ -346,7 +340,7 @@ class ObjectChain extends Chain {
         for (const key of Object.keys(pathsAndValues)) {
             valueMap.set(Path.create(key), pathsAndValues[key]);
         }
-        return this.setProps({ clone: true }).addStep('setPath', [valueMap, overwrite, create]);
+        return this.setProps({ clone: true }).addStep('setPaths', [valueMap, overwrite, create]);
     }
 
     setPath(pathsAndValues: Record<string, unknown> = {}, overwrite: boolean = true, create: boolean = true): this {

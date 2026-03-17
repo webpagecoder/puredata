@@ -7,35 +7,39 @@ import { CompilationMapper } from '../CompilationMapper.ts';
 import { Field } from '../fields/Field.ts';
 
 export type ProcessorProps = {
-    field: Field;
-    compilationMapper: CompilationMapper;
-    defaultValueReference: Processor | null;
+    field?: Field;
+    compilationMapper?: CompilationMapper;
 };
-
+export type ResolvedProcessorProps = Required<ProcessorProps>;
 export type State = Record<string, unknown>;
 
 class Processor {
 
     static id: number = 0;
 
-    declare props: ProcessorProps;
+    declare props: ResolvedProcessorProps & {
+        defaultValueReference: Processor | null;
+    };
 
     id: number;
     cachedReferences: Set<any> | null = null;
     state: Record<string, unknown> = {};
 
     constructor(props: ProcessorProps) {
-        const { field, compilationMapper } = props;
+        const { field, compilationMapper = new CompilationMapper() } = props;
+        if (!field) {
+            throw new Error('Processor requires a field');
+        }
         this.props = {
             compilationMapper,
-            field,
             defaultValueReference: null,
+            field,
         };
         this.id = ++Processor.id;
     }
 
-    clone(props: ProcessorProps): this {
-        const Constructor = this.constructor as new (...args: Partial<ConstructorParameters<typeof Processor>>) => this;
+    clone(props: ProcessorProps = {}): this {
+        const Constructor = this.constructor as new (...args: ConstructorParameters<typeof Processor>) => this;
         return new Constructor(Utils.mergeObjects(this.props, props || {}));
     }
 

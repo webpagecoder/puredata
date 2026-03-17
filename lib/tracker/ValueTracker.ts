@@ -6,11 +6,12 @@ import { Node, NodeData } from './Node.ts';
 import { Path } from '../Path.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { Formatter } from './formatters/Formatter.ts';
+import { ArgumentCollection } from '../types.ts';
 
-export type ErrorArgs = Record<string, unknown>;
+
 
 type TrackerError = {
-    args: ErrorArgs;
+    args: ArgumentCollection;
     errorKey: string;
     key: string;
     path: string;
@@ -89,7 +90,7 @@ class ValueTracker extends Node {
         return false;
     }
 
-    addError(errorKey: string, args?: ErrorArgs): this {
+    addError(errorKey: string, args?: ArgumentCollection): this {
         if (!this.compiledField) {
             throw new Error('ValueTracker compiled field is not configured');
         }

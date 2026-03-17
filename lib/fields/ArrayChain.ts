@@ -1,10 +1,19 @@
-// @ts-nocheck
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Chain } from './Chain.ts';
+import { Chain, ChainProps } from './Chain.ts';
+
+type SortComparator = (a: unknown, b: unknown) => number;
+
+export type ArrayChainProps = ChainProps & {
+        castSingle: boolean;
+        maxLength: number;
+        removeEmpties: boolean;
+};
 
 class ArrayChain extends Chain {
+
+    declare props: ArrayChainProps;
 
     // Configurators
 
@@ -18,10 +27,10 @@ class ArrayChain extends Chain {
      * array([1, null, 2, '', 3, 'N/A']).configRemoveEmpties(true, ['N/A'])
      * // Results in: [1, 2, 3] after preprocessing
      */
-    configRemoveEmpties(removeEmpties = true, addEmptyValues = []) {
-        return this.setProps({
+    configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
+        return this.setProps<ArrayChainProps>({
             removeEmpties,
-            emptyValues: [...this.getProp('emptyValues'), ...addEmptyValues]
+            emptyValues: [...this.props.emptyValues, ...addEmptyValues],
         });
     }
 
@@ -38,8 +47,8 @@ class ArrayChain extends Chain {
      * array('hello').configCastSingle(false)
      * // Would fail validation since 'hello' is not an array
      */
-    configCastSingle(castSingle = true) {
-        return this.setProps({ castSingle });
+    configCastSingle(castSingle: boolean = true): this {
+        return this.setProps({ castSingle } as any);
     }
 
 
@@ -52,7 +61,7 @@ class ArrayChain extends Chain {
      * @example
      * array([[1, 2], [3, 4]]).dimensions([2, 2]) // passes - 2x2 matrix
      */
-    dimensions(dimensions) {
+    dimensions(dimensions: number[]): this {
         return this.addStep('dimensions', [dimensions]);
     }
 
@@ -63,7 +72,7 @@ class ArrayChain extends Chain {
      * array([]).empty() // passes
      * array([1]).empty() // fails
      */
-    empty() {
+    empty(): this {
         return this.addStep('empty');
     }
 
@@ -75,7 +84,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3, 4]).allOf([1, 3]) // passes
      * array([1, 2]).allOf([1, 3]) // fails
      */
-    allOf(values) {
+    allOf(values: unknown[]): this {
         return this.addStep('allOf', [values]);
     }
 
@@ -87,7 +96,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).otherThan([1, 2]) // passes (has 3)
      * array([1, 2]).otherThan([1, 2]) // fails
      */
-    otherThan(forbiddenValues) {
+    otherThan(forbiddenValues: unknown[]): this {
         return this.addStep('otherThan', [forbiddenValues]);
     }
 
@@ -99,7 +108,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).exactly([3, 1, 2]) // passes
      * array([1, 2, 3]).exactly([1, 2]) // fails
      */
-    exactly(values) {
+    exactly(values: unknown[]): this {
         return this.addStep('exactly', [values]);
     }
 
@@ -111,7 +120,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).noneOf([4, 5]) // passes
      * array([1, 2, 3]).noneOf([2, 4]) // fails
      */
-    noneOf(values) {
+    noneOf(values: unknown[]): this {
         return this.addStep('noneOf', [values]);
     }
 
@@ -135,7 +144,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).someOf([3, 4, 5]) // passes
      * array([1, 2, 3]).someOf([4, 5, 6]) // fails
      */
-    someOf(values) {
+    someOf(values: unknown[]): this {
         return this.addStep('someOf', [values]);
     }
 
@@ -147,7 +156,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).length(3) // passes
      * array([1, 2]).length(3) // fails
      */
-    length(length) {
+    length(length: number): this {
         return this.addStep('length', [length]);
     }
 
@@ -159,7 +168,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3]).lengthBetween(2, 4) // passes
      */
-    lengthBetween(min, max) {
+    lengthBetween(min: number, max: number): this {
         return this.addStep('lengthBetween', [min, max]);
     }
 
@@ -171,7 +180,7 @@ class ArrayChain extends Chain {
      * array([1, 2]).maxLength(3) // passes
      * array([1, 2, 3, 4]).maxLength(3) // fails
      */
-    maxLength(max) {
+    maxLength(max: number): this {
         return this.addStep('maxLength', [max]);
     }
 
@@ -183,7 +192,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).minLength(2) // passes
      * array([1]).minLength(2) // fails
      */
-    minLength(min) {
+    minLength(min: number): this {
         return this.addStep('minLength', [min]);
     }
 
@@ -194,7 +203,7 @@ class ArrayChain extends Chain {
      * array([1, 2]).notEmpty() // passes
      * array([]).notEmpty() // fails
      */
-    notEmpty() {
+    notEmpty(): this {
         return this.addStep('notEmpty');
     }
 
@@ -206,7 +215,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).sorted() // passes
      * array([3, 1, 2]).sorted() // fails
      */
-    sorted(pathOrComparator) {
+    sorted(pathOrComparator?: string | SortComparator): this {
         return this.addStep('sorted', [pathOrComparator]);
     }
 
@@ -217,7 +226,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 'hello', true]).tuple([pd.number(), pd.string(), pd.boolean()]) // passes
      */
-    tuple(values) {
+    tuple(values: unknown[]): this {
         return this.addStep('tuple', [values]);
     }
 
@@ -229,7 +238,7 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).type(pd.number()) // passes
      * array([1, '2', 3]).type(pd.boolean()) // fails
      */
-    type(type) {
+    type(type: unknown): this {
         return this.addStep('type', [type]);
     }
 
@@ -241,10 +250,10 @@ class ArrayChain extends Chain {
      * array([1, 2, 3]).unique() // passes
      * array([1, 2, 1]).unique() // fails
      */
-    unique(pathStringOrComparator) {
+    unique(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             //todo: check this out...create
-            ? Path.create(pathStringOrComparator, this.props.delim)
+            ? Path.create(pathStringOrComparator)
             : pathStringOrComparator;
         return this.addStep('unique', [pathOrComparator]);
     }
@@ -260,7 +269,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2]).add([3, 4]) // [1, 2, 3, 4]
      */
-    add(items) {
+    add(items: unknown[]): this {
         return this.addStep('add', [items]);
     }
 
@@ -271,7 +280,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4, 5]).chunk(2) // [[1, 2], [3, 4], [5]]
      */
-    chunk(size) {
+    chunk(size: number): this {
         return this.addStep('chunk', [size]);
     }
 
@@ -282,8 +291,8 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4]).filter(x => x > 2) // [3, 4]
      */
-    filter(filter) {
-        return this.addStep('filter', [filter]);
+    filter(filterFn: (value: unknown, index: number, array: unknown[]) => boolean): this {
+        return this.addStep('filter', [filterFn]);
     }
 
     /**
@@ -292,7 +301,7 @@ class ArrayChain extends Chain {
      * @example
      * array([[1, 2], [3, 4]]).flatten() // [1, 2, 3, 4]
      */
-    flatten() {
+    flatten(): this {
         return this.addStep('flatten');
     }
 
@@ -303,9 +312,9 @@ class ArrayChain extends Chain {
      * @example
      * array([{type: 'A', val: 1}, {type: 'B', val: 2}]).group('type')
      */
-    group(pathString) {
+    group(pathString: string | null): this {
         const path = typeof pathString === 'string'
-            ? Path.create(pathString, this.props.delim)
+            ? Path.create(pathString)
             : null;
         return this.addStep('group', [path]);
     }
@@ -317,7 +326,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4]).keep([2, 4]) // [2, 4]
      */
-    keep(values) {
+    keep(values: unknown[]): this {
         return this.addStep('keep', [values]);
     }
 
@@ -328,8 +337,8 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3]).map(x => x * 2) // [2, 4, 6]
      */
-    map(map) {
-        return this.addStep('map', [map]);
+    map(mapFn: (value: unknown, index: number, array: unknown[]) => unknown): this {
+        return this.addStep('map', [mapFn]);
     }
 
     /**
@@ -340,7 +349,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2]).padEnd(4, 0) // [1, 2, 0, 0]
      */
-    padEnd(targetLength, padValue) {
+    padEnd(targetLength: number, padValue?: unknown): this {
         return this.addStep('padEnd', [targetLength, padValue]);
     }
 
@@ -351,7 +360,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4, 5]).pickRandom(2) // [3, 1] (random)
      */
-    pickRandom(num) {
+    pickRandom(num: number): this {
         return this.addStep('pickRandom', [num]);
     }
 
@@ -362,7 +371,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4]).remove([2, 4]) // [1, 3]
      */
-    remove(values) {
+    remove(values: unknown[]): this {
         return this.addStep('remove', [values]);
     }
 
@@ -374,9 +383,9 @@ class ArrayChain extends Chain {
      * array([1, 2, 2, 3]).removeDuplicates() // [1, 2, 3]
      * array([{id: 1}, {id: 1}]).removeDuplicates('id') // [{id: 1}]
      */
-    removeDuplicates(pathStringOrComparator) {
+    removeDuplicates(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
-            ? Path.create(pathStringOrComparator, this.props.delim)
+            ? Path.create(pathStringOrComparator)
             : pathStringOrComparator;
         return this.addStep('removeDuplicates', [pathOrComparator]);
     }
@@ -387,8 +396,8 @@ class ArrayChain extends Chain {
      * @example
      * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
      */
-    removeEmpties() {
-        return this.addStep('removeEmpties', function () {
+    removeEmpties(): this {
+        return this.addStep('removeEmpties', function (this: Chain): unknown[] {
             return [this.props.emptyValues];
         });
     }
@@ -399,7 +408,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, ,undefined, 2, undefined, 3]).removeUndefined() // [1, 2, 3]
      */
-    removeUndefined() {
+    removeUndefined(): this {
         return this.addStep('removeUndefined');
     }
 
@@ -409,7 +418,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3]).reverse() // [3, 2, 1]
      */
-    reverse() {
+    reverse(): this {
         return this.addStep('reverse');
     }
 
@@ -419,7 +428,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4]).shuffle() // [3, 1, 4, 2] (random order)
      */
-    shuffle() {
+    shuffle(): this {
         return this.addStep('shuffle');
     }
 
@@ -431,7 +440,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4, 5]).slice(1, 3) // [2, 3]
      */
-    slice(startIndex, endIndex) {
+    slice(startIndex: number, endIndex?: number): this {
         return this.addStep('slice', [startIndex, endIndex]);
     }
 
@@ -442,7 +451,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4, 5]).sliceFirst(3) // [1, 2, 3]
      */
-    sliceFirst(num) {
+    sliceFirst(num: number): this {
         return this.addStep('sliceFirst', [num]);
     }
 
@@ -453,7 +462,7 @@ class ArrayChain extends Chain {
      * @example
      * array([1, 2, 3, 4, 5]).sliceLast(3) // [3, 4, 5]
      */
-    sliceLast(num) {
+    sliceLast(num: number): this {
         return this.addStep('sliceLast', [num]);
     }
 
@@ -464,7 +473,7 @@ class ArrayChain extends Chain {
      * @param {Array} [insertValues=[]] - Items to insert at startIndex.
      * @returns {ArrayChain} Returns this chain for method chaining.
      */
-    splice(startIndex, deleteCount = 0, insertValues = []) {
+    splice(startIndex: number, deleteCount: number = 0, insertValues: unknown[] = []): this {
         return this.addStep('splice', [startIndex, deleteCount, insertValues]);
     }
 
@@ -476,7 +485,7 @@ class ArrayChain extends Chain {
      * array([3, 1, 2]).sortAsc() // [1, 2, 3]
      * array([{age: 30}, {age: 20}]).sortAsc('age') // [{age: 20}, {age: 30}]
      */
-    sortAsc(pathOrComparator) {
+    sortAsc(pathOrComparator?: string | SortComparator): this {
         return this.addStep('sortAsc', [pathOrComparator]);
     }
 
@@ -488,7 +497,7 @@ class ArrayChain extends Chain {
      * array([1, 3, 2]).sortDesc() // [3, 2, 1]
      * array([{age: 20}, {age: 30}]).sortDesc('age') // [{age: 30}, {age: 20}]
      */
-    sortDesc(pathOrComparator) {
+    sortDesc(pathOrComparator?: string | SortComparator): this {
         return this.addStep('sortDesc', [pathOrComparator]);
     }
 

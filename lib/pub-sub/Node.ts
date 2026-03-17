@@ -1,11 +1,19 @@
-// @ts-nocheck
 'use strict';
 
+import { PubSubContext } from './PubSub.ts';
+
+export type NodeCallback = (context?: PubSubContext) => unknown;
+
 class Node {
-    constructor(key, callback = () => true) {
+
+    key: unknown;
+    callback: NodeCallback;
+    children: Set<Node>;
+
+    constructor(key: unknown, callback: NodeCallback = (_context: PubSubContext = {}): unknown => true) {
         this.key = key;
         this.callback = callback;
-        this.children = new Set();
+        this.children = new Set<Node>();
     }
 }
 

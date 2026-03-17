@@ -1,31 +1,46 @@
-// @ts-nocheck
 'use strict';
 
-import { Node } from './Node.ts';
+import { Node, NodeCallback } from './Node.ts';
+
+export type PubSubContext = Record<string, unknown>;
+
+type PubSubNode = {
+    key: unknown;
+    callback: NodeCallback;
+    children: Set<PubSubNode>;
+};
 
 class PubSub {
-    static _internalId = 0;
+    static _internalId: number = 0;
+
+    id: symbol;
+    internalId: number;
+    nodes: Map<unknown, PubSubNode>;
+    roots: Set<PubSubNode>;
+    _cachedExecutionOrder: Set<PubSubNode> | null;
 
     constructor() {
         this.id = Symbol();
         this.internalId = ++PubSub._internalId;
-        this.nodes = new Map();
-        this.roots = new Set();
+        this.nodes = new Map<unknown, PubSubNode>();
+        this.roots = new Set<PubSubNode>();
         this._cachedExecutionOrder = null;
     }
 
-    createNode(key, callback) {
+    createNode(key: unknown, callback?: NodeCallback): PubSubNode {
         const { nodes, roots } = this;
         if (nodes.has(key)) {
             throw new Error('Cannot create node - the key already exists');
         }
-        const node = new Node(key, callback);
+        const finalCallback: NodeCallback = callback || ((_: PubSubContext = {}): unknown => true);
+        const node = new Node(key, finalCallback as unknown as () => boolean) as unknown as PubSubNode;
         nodes.set(key, node);
         roots.add(node);
+        this._cachedExecutionOrder = null;
         return node;
     }
 
-    getOrCreateNode(key, callback) {
+    getOrCreateNode(key: unknown, callback?: NodeCallback): PubSubNode {
         const node = this.nodes.get(key);
         if (!node) {
             return this.createNode(key, callback);
@@ -36,20 +51,20 @@ class PubSub {
         return node;
     }
 
-    getNode(key) {
+    getNode(key: unknown): PubSubNode | null {
         const { nodes } = this;
-        return nodes.has(key) ? nodes.get(key) : null;
+        return nodes.get(key) || null;
     }
 
-    hasNode(key) {
+    hasNode(key: unknown): boolean {
         return this.nodes.has(key);
     }
 
-    linkNodes(pubNode, subNode) {
+    linkNodes(pubNode: PubSubNode, subNode: PubSubNode): void {
 
-        let stack = [...subNode.children];
+        let stack: PubSubNode[] = [...subNode.children];
         while (stack.length) {
-            const nextStack = [];
+            const nextStack: PubSubNode[] = [];
             for (const node of stack) {
                 if (node === pubNode) {
                     throw new Error(`Circular pub/sub detected: ${pubNode.key} -> ${subNode.key}`);
@@ -66,38 +81,16 @@ class PubSub {
         this._cachedExecutionOrder = null;
     }
 
-    // assertNotCircular(key) {
-    //     const { pairs } = this;
-    //     let stack = [key];
-    //     while (stack.length) {
-    //         let curKey = stack.pop();
-
-    //         const nextKeys = []
-    //         for (const [pubKey, subKey] of pairs) {
-    //             if (pubKey === curKey) {
-    //                 nextKeys.push(subKey);
-    //             }
-    //         }
-
-    //         for (const nextKey of nextKeys) {
-    //             if (nextKey === key) {
-    //                 throw new Error(`Circular pub/sub detected: ${key} <=> ${curKey}`);
-    //             }
-    //         }
-    //         stack = nextKeys;
-    //     }
-    // }
-
-    execute(context = {}) {
+    execute(context: PubSubContext = {}): void {
         const { _cachedExecutionOrder } = this;
 
         if (!_cachedExecutionOrder) {
 
-            const executionOrder = new Set(this.roots);
-            let curLevelNodes = [...this.roots];
+            const executionOrder = new Set<PubSubNode>(this.roots);
+            let curLevelNodes: PubSubNode[] = [...this.roots];
 
             while (curLevelNodes.length > 0) {
-                let nextLevel = [];
+                const nextLevel: PubSubNode[] = [];
                 for (const node of curLevelNodes) {
                     for (const child of node.children) {
                         executionOrder.delete(child);
@@ -109,6 +102,10 @@ class PubSub {
             }
 
             this._cachedExecutionOrder = executionOrder;
+        }
+
+        if (!this._cachedExecutionOrder) {
+            return;
         }
 
         for (const node of this._cachedExecutionOrder) {

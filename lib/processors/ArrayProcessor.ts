@@ -1,12 +1,13 @@
-// @ts-nocheck
 'use strict';
 
+import { ArrayChain } from '../fields/ArrayChain.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessor } from './ChainProcessor.ts';
 
 class ArrayProcessor extends ChainProcessor {
 
-    preProcess(tracker) {
-        const {field} = this.props;
+    override preProcess(tracker: ValueTracker): void {
+        const field = this.props.field as ArrayChain;
         const { label } = field;
         const { castSingle } = field.props;
 
@@ -15,7 +16,7 @@ class ArrayProcessor extends ChainProcessor {
                 tracker.setValue([tracker.getValue()]);
             }
             else {
-                return tracker.addError('array/array');
+                tracker.addError('array/array');
             }
         }
         else {
@@ -26,9 +27,9 @@ class ArrayProcessor extends ChainProcessor {
             }
 
             if (maxLength != null) {
-                const result = field.props.processors.hasMaxLength(tracker.getValue(), maxLength);
+                const result = field.props.chainHandler.hasMaxLength(tracker.getValue(), maxLength);
                 if (result.fail) {
-                    return tracker.addError('array/maxLength', {
+                    tracker.addError('array/maxLength', {
                         maxLength,
                         label
                     });
@@ -36,6 +37,7 @@ class ArrayProcessor extends ChainProcessor {
             }
         }
     }
+
 
 }
 

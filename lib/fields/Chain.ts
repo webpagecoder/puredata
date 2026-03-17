@@ -1,7 +1,7 @@
 'use strict';
 
 import { HandlerResult } from '../handlers/HandlerResult.ts';
-import { Field, FieldProps, ResolvedFieldProps } from './Field.ts';
+import { Field, FieldProps } from './Field.ts';
 
 type StepHandlerFn = (value: unknown, ...args: unknown[]) => HandlerResult;
 type ChainHandler = {
@@ -13,24 +13,18 @@ type Step = {
     args?: StepArgs;
     prioritize?: boolean;
 };
+
 export type ChainProps = FieldProps & {
-    emptyValues?: unknown[];
-};
-export type ResolvedChainProps = ResolvedFieldProps & {
     emptyValues: unknown[];
     pipeline: Step[];
     chainHandler: ChainHandler;
 };
-type CloneProps = FieldProps & {
-    step?: Step;
-    pipeline?: Step[];
-};
 
 abstract class Chain extends Field {
 
-    declare props: ResolvedChainProps;
+    declare props: ChainProps;
 
-    constructor(props: ChainProps = {}) {
+    constructor(props: Partial<ChainProps> = {}) {
         super(props);
         this.props.pipeline = [];
         this.props.emptyValues = props.emptyValues || [null, undefined];
@@ -44,7 +38,10 @@ abstract class Chain extends Field {
         return (...args: unknown[]): this => this.addStep(fnKey, args);
     }
 
-    override clone(props: CloneProps = {}): this {
+    override clone(props: Partial<ChainProps> & {
+        step?: Step;
+        pipeline?: Step[];
+    } = {}): this {
         const clone = super.clone(props) as this;
         const {
             step,
@@ -65,9 +62,9 @@ abstract class Chain extends Field {
         return clone;
     }
 
-    addStep(fnKey: keyof ChainHandler, args: StepArgs = [], prioritize: boolean = false): this {
+    addStep<H = this['props']['chainHandler']>(fnKey: keyof H, args: StepArgs = [], prioritize: boolean = false): this {
         const chainHandler = this.props.chainHandler;
-        const fn = chainHandler?.[fnKey];
+        const fn = (chainHandler as H)?.[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }

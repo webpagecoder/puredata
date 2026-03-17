@@ -13,11 +13,11 @@ class ObjectHandler extends Handler {
     // ====================================
 
     static empty(value, empties = [null, undefined]) {
-        return super.empty(value, empties) || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
+        return super.empty(value, empties).pass || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
     }
 
     static notEmpty(value, empties = [null, undefined]) {
-        return super.notEmpty(value, empties) && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
+        return super.empty(value, empties).fail && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
     }
 
     static property(value, property) {
@@ -87,14 +87,14 @@ class ObjectHandler extends Handler {
     static keyCount(obj, keyCount) {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount !== keyCount
-            ? fail(obj, 'object/keyCount', { actualKeyCount,keyCount })
+            ? fail(obj, 'object/keyCount', { actualKeyCount, keyCount })
             : pass(obj);
     }
 
     static keyCountRecursive(obj, keyCount) {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount !== keyCount
-            ? fail(obj, 'object/keyCountRecursive', { actualKeyCount,keyCount })
+            ? fail(obj, 'object/keyCountRecursive', { actualKeyCount, keyCount })
             : pass(obj);
     }
 
@@ -182,7 +182,7 @@ class ObjectHandler extends Handler {
     }
 
 
-    
+
     // ====================================
     // MUTATORS
     // ====================================
@@ -202,8 +202,8 @@ class ObjectHandler extends Handler {
         }
         return pass(newObject);
     }
-    
-    static removeEmpty(obj, emptyValues = [null, undefined]) {
+
+    static removeEmpties(obj, emptyValues = [null, undefined]) {
         const newObj = {};
         for (const key of Object.keys(obj)) {
             const value = obj[key];
@@ -214,12 +214,12 @@ class ObjectHandler extends Handler {
         return newObj;
     }
 
-    static removeEmptyRecursive(obj, emptyValues = [null, undefined]) {
+    static removeEmptiesRecursive(obj, emptyValues = [null, undefined]) {
         const newObj = {};
         for (const key of Object.keys(obj)) {
             const value = obj[key];
             if (Utils.isPlainObject(value)) {
-                const cleaned = this.removeEmptyRecursive(value, emptyValues);
+                const cleaned = this.removeEmptiesRecursive(value, emptyValues);
                 if (Object.keys(cleaned).length > 0) {
                     newObj[key] = cleaned;
                 }
@@ -231,7 +231,7 @@ class ObjectHandler extends Handler {
         return newObj;
     }
 
-    static renameKey(obj, fromRegex, toRegex, {
+    static renameKeys(obj, fromRegex, toRegex, {
         deleteOriginalKey = true,
         overrideExistingKey = true
     } = {}) {
@@ -256,26 +256,17 @@ class ObjectHandler extends Handler {
         return pass(obj);
     }
 
-    static setPath(obj, valueMap, overwrite = true, create = true) {
-        for (const [path, value] of valueMap) {
-            Utils.setPathValue(obj, path, value, { overwrite, create });
+    static setPaths(obj, pathValues = {}, overwrite = true, create = true) {
+        for (const path of Object.keys(pathValues)) {
+            Utils.setPathValue(obj, path, pathValues[path], { overwrite, create });
         }
         return pass(obj);
     }
 
-    static stripUnknown(obj, knownKeys, { includeUndefined = false } = {}) {
+    static stripUnknownKeys(obj, knownKeys = []) {
         const copy = {};
-        if (!includeUndefined) {
-            for (const key of knownKeys) {
-                if (includeUndefined || obj[key] !== undefined) {
-                    copy[key] = obj[key];
-                }
-            }
-        }
-        else {
-            for (const key of knownKeys) {
-                copy[key] = obj[key];
-            }
+        for (const key of knownKeys) {
+            copy[key] = obj[key];
         }
         return pass(copy);
     }

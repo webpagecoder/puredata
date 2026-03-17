@@ -524,19 +524,19 @@ describe('ObjectHandler.pickRandom', () => {
 
 describe('ObjectHandler.removeEmpty', () => {
     test('should remove null and undefined keys', () => {
-        const result = ObjectHandler.removeEmpty({ a: 1, b: null, c: undefined, d: '' });
+        const result = ObjectHandler.removeEmpties({ a: 1, b: null, c: undefined, d: '' });
         expect(result).toEqual({ a: 1, d: '' });
     });
 
     test('should support custom empty values', () => {
-        const result = ObjectHandler.removeEmpty({ a: '', b: 0, c: false, d: 'ok' }, ['', 0]);
+        const result = ObjectHandler.removeEmpties({ a: '', b: 0, c: false, d: 'ok' }, ['', 0]);
         expect(result).toEqual({ c: false, d: 'ok' });
     });
 });
 
-describe('ObjectHandler.removeEmptyRecursive', () => {
+describe('ObjectHandler.removeEmptiesRecursive', () => {
     test('should recursively remove empty values and empty nested objects', () => {
-        const result = ObjectHandler.removeEmptyRecursive({
+        const result = ObjectHandler.removeEmptiesRecursive({
             a: 1,
             b: null,
             c: {
@@ -552,7 +552,7 @@ describe('ObjectHandler.removeEmptyRecursive', () => {
     });
 
     test('should keep arrays untouched while cleaning nested plain objects', () => {
-        const result = ObjectHandler.removeEmptyRecursive({
+        const result = ObjectHandler.removeEmptiesRecursive({
             a: [null, 1],
             b: {
                 c: null,
@@ -620,13 +620,13 @@ describe('ObjectHandler.removePath', () => {
 
 describe('ObjectHandler.renameKey', () => {
     test('should rename matching keys', () => {
-        const result = ObjectHandler.renameKey({ old_name: 1 }, /old_/, 'new_');
+        const result = ObjectHandler.renameKeys({ old_name: 1 }, /old_/, 'new_');
         expect(result.pass).toBe(true);
         expect(result.value).toEqual({ new_name: 1 });
     });
 
     test('should keep original key when deleteOriginalKey is false', () => {
-        const result = ObjectHandler.renameKey(
+        const result = ObjectHandler.renameKeys(
             { old_name: 1 },
             /old_/,
             'new_',
@@ -638,7 +638,7 @@ describe('ObjectHandler.renameKey', () => {
     });
 
     test('should not override existing key when overrideExistingKey is false', () => {
-        const result = ObjectHandler.renameKey(
+        const result = ObjectHandler.renameKeys(
             { old_name: 1, new_name: 2 },
             /old_/,
             'new_',

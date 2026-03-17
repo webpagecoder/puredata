@@ -6,27 +6,25 @@ import { PRESENCE } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 
-type ErrorMessages = Record<string, string>;
-
-export type FieldProps = {
-    compilationMapper: CompilationMapper;
-    defaultValue: unknown;
-    errorMessages: ErrorMessages;
-    label: string;
-    locale: Locale;
-    presence: PRESENCE;
+export type FieldProps = Record<string, unknown> & {
+    compilationMapper?: CompilationMapper;
+    defaultValue?: unknown;
+    label?: string;
+    locale?: Locale;
+    presence?: PRESENCE;
 };
+export type ResolvedFieldProps = Required<FieldProps>;
 
-abstract class Field {
+class Field {
 
     static id: number = 0;
     static registry: Map<number, Field> = new Map();
 
     id: number;
-    props: FieldProps;
-    processor: null | Processor;
+    props: ResolvedFieldProps;
+    compiled: null | Processor;
 
-    constructor(props: Partial<FieldProps> = {}) {
+    constructor(props: FieldProps = {}) {
 
         const {
             compilationMapper = new CompilationMapper(),
@@ -34,48 +32,46 @@ abstract class Field {
             label = 'Value',
             locale = new Locale('en-US'),
             presence = PRESENCE.REQUIRED,
-            errorMessages = {},
         } = props;
 
         this.id = ++Field.id;
         this.props = Object.assign(props, {
             compilationMapper,
             defaultValue,
-            errorMessages,
             locale: new Locale(locale),
             label,
             presence,
         });
 
-        this.processor = null;
+        this.compiled = null;
         Field.registry.set(this.id, this);
     }
 
-    clone<P extends this['props'] = this['props']>(props: Partial<P> = {}): this {
-        const Constructor = this.constructor as new (props?: Partial<P>) => this;
+    clone(props: FieldProps = {}): this {
+        const Constructor = this.constructor as new (...args: ConstructorParameters<typeof Field>) => this;
         return new Constructor(
             //todo: is this deepmerge necessary?
             // Utils.mergeObjects(this.props, props || {}),
-            Object.assign({}, this.props, props || {}) as P
+            Object.assign({}, this.props, props || {}) as FieldProps
         );
     }
 
     process(valueOrValueTracker: ValueTracker | unknown, state: Record<string, unknown> = {}): unknown {
-        if (!this.processor) {
+        if (!this.compiled) {
             if (!this.props.compilationMapper) {
                 throw new Error('Field compilation mapper is not configured');
             }
-            this.processor = this.props.compilationMapper.createProcessor(this).compile();
+            this.compiled = this.props.compilationMapper.createProcessor(this).compile();
         }
-        return this.processor.process(valueOrValueTracker, state);
+        return this.compiled.process(valueOrValueTracker, state);
     }
 
-    setProps<P extends this['props'] = this['props']>(props: Partial<P> = {}): this {
-        return this.clone<P>(props);
+    setProps(props: FieldProps = {}): this {
+        return this.clone(props);
     }
 
-    getProp<K extends keyof this['props']>(key: K): this['props'][K] {
-        return (this.props as this['props'])[key];
+    getProp<T = unknown>(key: string): T {
+        return this.props[key] as T;
     }
 
     isForbidden(): boolean {
@@ -91,7 +87,7 @@ abstract class Field {
     }
 
     default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL } as Partial<this['props']>);
+        return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL });
     }
 
     errors(messages: ErrorMessages): this {
@@ -101,19 +97,19 @@ abstract class Field {
     }
 
     forbidden(): this {
-        return this.clone({ presence: PRESENCE.FORBIDDEN } as Partial<this['props']>);
+        return this.clone({ presence: PRESENCE.FORBIDDEN });
     }
 
     label(label: string): this {
-        return this.clone({ label } as Partial<this['props']>);
+        return this.clone({ label });
     }
 
     optional(): this {
-        return this.clone({ presence: PRESENCE.OPTIONAL } as Partial<this['props']>);
+        return this.clone({ presence: PRESENCE.OPTIONAL });
     }
 
     required(): this {
-        return this.clone({ presence: PRESENCE.REQUIRED } as Partial<this['props']>);
+        return this.clone({ presence: PRESENCE.REQUIRED });
     }
 }
 
