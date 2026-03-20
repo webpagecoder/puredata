@@ -1,29 +1,25 @@
 'use strict';
 
 import { Path } from './Path.ts';
-import { Utils } from './utils/Utils.ts';
+import { Utils, NestedStringRecord } from './utils/Utils.ts';
 
-interface LocaleText {
-    [key: string]: string | LocaleText;
-}
 
 class Locale {
 
-    static registry: Record<string, LocaleText> = {};
+    static registry: Record<string, NestedStringRecord> = {};
 
     languageKey?: string;
-    overrides: LocaleText = {};
-    parent?: Locale;
-    text: LocaleText = {};
+    overrides: NestedStringRecord = {};
+    text: Locale | NestedStringRecord = {};
 
-    static register(languageKey: string, text: LocaleText = {}): void {
+    static register(languageKey: string, text: NestedStringRecord = {}): void {
         Locale.registry[languageKey] = text;
     }
 
     constructor(keyOrParentLocale: string | Locale) {
 
         if (keyOrParentLocale instanceof Locale) {
-            this.parent = keyOrParentLocale;
+            this.text = keyOrParentLocale;
             return;
         }
 
@@ -41,47 +37,33 @@ class Locale {
         return new Constructor(language);
     }
 
-    getText(path: string | Path): string | LocaleText {
+    getText(path: string | Path): string {
         if (!(path instanceof Path)) {
             path = Path.create(path).toRelative();
         }
-        const override = this.overrides[path.string];
-        if (override) {
-            return override;
+
+        // Check in order: overrides, locale text, parent locale text
+        let pathPointer = Utils.getRefByPath(this.overrides, path);
+        if (pathPointer == null) {
+            pathPointer = Utils.getRefByPath(this.text, path);
         }
-        else if (this.parent) {
-            return this.parent.getText(path);
+        if (pathPointer == null && this.text instanceof Locale) {
+            return this.text.getText(path);
         }
 
-        if (!this.text) {
-            throw new Error('Locale text is not configured');
+        if (pathPointer == null) {
+            throw new Error('Nonexistent path in language file: ' + path.string);
         }
 
-        let pointer: string | LocaleText = this.text;
-        for (const key of path.keys) {
-            if (!Utils.isPlainObject(pointer)) {
-                throw new Error('Nonexistent path in language file: ' + path.string);
-            }
-            pointer = (pointer as LocaleText)[key];
-            if (Utils.isPlainObject(pointer)) {
-                continue;
-            }
-            else if (pointer == null) {
-                throw new Error('Nonexistent path in language file: ' + path.string);
-            }
-            else {
-                return String(pointer);
-            }
+        const [pointer, key] = pathPointer;
+        const value = pointer[key];
+        if (typeof value !== 'string') {
+            throw new Error('Value at path is not a string: ' + path.string);
         }
-
-        // If we got here, it means the path points to an object, check for 'base' key
-        if (Utils.isPlainObject(pointer) && typeof (pointer as LocaleText).base === 'string') {
-            return (pointer as LocaleText).base as string;
-        }
-        throw new Error('Nonexistent path in language file: ' + path.string);
+        return value;
     }
 
-    override(overrides: LocaleText): void {
+    override(overrides: NestedStringRecord): void {
         for (const key of Object.keys(overrides)) {
             const path = Path.create(key).toRelative();
             this.overrides[path.string] = overrides[key] as string;

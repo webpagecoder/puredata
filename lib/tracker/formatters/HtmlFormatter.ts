@@ -8,7 +8,7 @@ class HtmlFormatter implements Formatter {
         const {
             children,
             errorCollection,
-            compiledField: {
+            processor: {
                 props: {
                     field: {
                         props: { label }

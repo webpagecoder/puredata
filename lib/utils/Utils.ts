@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { RegexCache } from '../cache/RegexCache.ts';
@@ -6,6 +5,10 @@ import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
 import { Field } from '../fields/Field.ts';
 import { Path } from '../Path.ts';
 import { DATE_TYPES } from './DateTypes.ts';
+
+export type NestedStringRecord = {
+    [key: string]: NestedStringRecord | string | undefined;
+};
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -15,7 +18,7 @@ class Utils {
      * General utilities
      ***************************************************/
 
-    static areEqual(x, y) {
+    static areEqual(x: unknown, y: unknown): boolean {
         if (x === y) {
             return true;
         }
@@ -24,8 +27,9 @@ class Utils {
         const yIsChain = y instanceof Field;
 
         if (!!xIsChain != !!yIsChain) {
-            const [chain, value] = (xIsChain && [x, y]) || (yIsChain && [y, x]);
-            return chain.process(value).pass;
+            const chain = (xIsChain ? x : y) as Field;
+            const value = xIsChain ? y : x;
+            return (chain as any).process(value).pass;
         }
 
         if (Array.isArray(x)) {
@@ -44,30 +48,30 @@ class Utils {
             return false;
         }
 
-        const xKeys = Object.keys(x);
-        const yKeys = Object.keys(y);
+        const xKeys = Object.keys(x as object);
+        const yKeys = Object.keys(y as object);
         if (xKeys.length !== yKeys.length) {
             return false;
         }
 
         for (const key of xKeys) {
-            if (!hasOwnProperty.call(y, key) || !Utils.areEqual(x[key], y[key])) {
+            if (!hasOwnProperty.call(y, key) || !Utils.areEqual((x as Record<string, unknown>)[key], (y as Record<string, unknown>)[key])) {
                 return false;
             }
         }
         return true;
     }
 
-    static clone(obj) {
-        if (obj === null || typeof obj !== 'object') {
-            return obj;
+    static clone(variable: unknown): unknown {
+        if (variable === null || typeof variable !== 'object') {
+            return variable;
         }
-        if(Array.isArray(obj)) {
-            return obj.map(item => Utils.clone(item));
+        if (Array.isArray(variable)) {
+            return variable.map((item: unknown): unknown => Utils.clone(item));
         }
-        var clone = {};
-        for (const key of Object.keys(obj)) {
-            clone[key] = Utils.clone(obj[key]);
+        const clone: Record<string, unknown> = {};
+        for (const key of Object.keys(variable as object)) {
+            clone[key] = Utils.clone((variable as Record<string, unknown>)[key]);
         }
         return clone;
     }
@@ -77,16 +81,16 @@ class Utils {
      * Object-based utilities
      ***************************************************/
 
-    static getDepth(obj, maxDepth = null) {
+    static getDepth(obj: unknown, maxDepth: number | null = null): number | boolean {
         if (!Utils.isObject(obj)) {
             return 0;
         }
         let depth = 1;
         const { isObject, getDepth } = Utils;
-        for (const key of Object.keys(obj)) {
-            const value = obj[key];
+        for (const key of Object.keys(obj as object)) {
+            const value = (obj as Record<string, unknown>)[key];
             if (isObject(value)) {
-                const curDepth = 1 + getDepth(value, maxDepth);
+                const curDepth = 1 + (getDepth(value, maxDepth) as number);
                 if (maxDepth !== null && curDepth > maxDepth) {
                     return false;
                 }
@@ -96,18 +100,18 @@ class Utils {
         return depth;
     }
 
-    static getDepthAndKeyCount(obj, {
+    static getDepthAndKeyCount(obj: unknown, {
         depth = 0,
         keyCount = 0,
         maxDepth = null,
         maxKeyCount = null,
-    } = {}) {
+    }: { depth?: number; keyCount?: number; maxDepth?: number | null; maxKeyCount?: number | null } = {}): false | [number, number] {
 
         if (!Utils.isObject(obj)) {
             return false;
         }
 
-        const keys = Object.keys(obj);
+        const keys = Object.keys(obj as object);
         keyCount += keys.length;
         depth++;
 
@@ -120,7 +124,7 @@ class Utils {
 
         let currentMaxDepth = depth;
         for (const key of keys) {
-            const value = obj[key];
+            const value = (obj as Record<string, unknown>)[key];
             if (Utils.isObject(value)) {
                 const childResult = Utils.getDepthAndKeyCount(value, {
                     depth,
@@ -148,17 +152,17 @@ class Utils {
         return [currentMaxDepth, keyCount];
     }
 
-    static getRecursiveKeyCount(obj, maxKeyCount = null) {
+    static getRecursiveKeyCount(obj: unknown, maxKeyCount: number | null = null): number | boolean {
         if (!Utils.isObject(obj)) {
             return 0;
         }
         let count = 0;
         const { isObject, getRecursiveKeyCount } = Utils;
-        for (const key of Object.keys(obj)) {
-            const value = obj[key];
+        for (const key of Object.keys(obj as object)) {
+            const value = (obj as Record<string, unknown>)[key];
             if (isObject(value)) {
                 ++count;
-                count += getRecursiveKeyCount(value, maxKeyCount);
+                count += getRecursiveKeyCount(value, maxKeyCount) as number;
                 if (maxKeyCount !== null && count > maxKeyCount) {
                     return false;
                 }
@@ -170,30 +174,32 @@ class Utils {
         return count;
     }
 
-    static isObject(obj) {
+    static isObject(obj: unknown): boolean {
         return !!obj && typeof obj === 'object';
     }
 
-    static isPlainObject(obj) {
-        return !!obj && obj.constructor === Object;
+    static isPlainObject(obj: unknown): boolean {
+        return !!obj && (obj as Record<string, unknown>).constructor === Object;
     }
 
-    static mergeObjects(parent, child) {
-        let stack = [[
+    static mergeObjects(parent: unknown, child: unknown): unknown {
+        let stack: [unknown, unknown][] = [[
             parent = Utils.clone(parent),
             Utils.clone(child)
         ]];
         while (stack.length) {
-            const [parent, child] = stack.shift();
-            for (const key of Object.keys(child)) {
-                if (Utils.isPlainObject(parent[key]) && Utils.isPlainObject(child[key])) {
+            const [parentVal, childVal] = stack.shift()!;
+            const parentObj = parentVal as Record<string, unknown>;
+            const childObj = childVal as Record<string, unknown>;
+            for (const key of Object.keys(childObj)) {
+                if (Utils.isPlainObject(parentObj[key]) && Utils.isPlainObject(childObj[key])) {
                     stack.push([
-                        parent[key],
-                        child[key]
+                        parentObj[key],
+                        childObj[key]
                     ]);
                 }
                 else {
-                    parent[key] = Array.isArray(child[key]) ? [...child[key]] : child[key];
+                    parentObj[key] = Array.isArray(childObj[key]) ? [...childObj[key] as unknown[]] : childObj[key];
                 }
             }
         }
@@ -204,51 +210,59 @@ class Utils {
      * Object path utilities
      ***************************************************/
 
-    static *getAllPaths(obj, separator, {
+    static *getAllPaths(obj: unknown, separator: string, {
         keys = [],
         includeObjectRoots = false,
         rootsOnly = false
-    } = {}) {
+    }: { keys?: string[]; includeObjectRoots?: boolean; rootsOnly?: boolean } = {}): Generator<Path> {
         const { isObject, getAllPaths } = Utils;
-        for (const key of Object.keys(obj)) {
-            const value = obj[key];
-            if (isObject(value)) {
-                if (includeObjectRoots || rootsOnly) {
-                    yield Path.fromArray(keys.concat(key), { separator });
+        // Store original separator and set to provided one
+        const originalSeparator = Path.separator;
+        Path.separator = separator;
+
+        try {
+            for (const key of Object.keys(obj as object)) {
+                const value = (obj as Record<string, unknown>)[key];
+                if (isObject(value)) {
+                    if (includeObjectRoots || rootsOnly) {
+                        yield Path.fromArray(keys.concat(key));
+                    }
+                    yield* getAllPaths(value, separator, {
+                        keys: keys.concat(key),
+                        includeObjectRoots,
+                        rootsOnly
+                    });
                 }
-                yield* getAllPaths(value, separator, {
-                    keys: keys.concat(key),
-                    includeObjectRoots,
-                    rootsOnly
-                });
+                else if (!rootsOnly) {
+                    yield Path.fromArray(keys.concat(key));
+                }
             }
-            else if (!rootsOnly) {
-                yield Path.fromArray(keys.concat(key), { separator });
-            }
+        } finally {
+            Path.separator = originalSeparator;
         }
     }
 
-    static getPathCount(obj, options = {}) {
+    static getPathCount(obj: unknown, options: Record<string, unknown> = {}): number {
         let count = 0;
-        for (const _ of Utils.getAllPaths(obj, '', options)) {
+        for (const _ of Utils.getAllPaths(obj, '', options as { keys?: string[]; includeObjectRoots?: boolean; rootsOnly?: boolean })) {
             count++;
         }
         return count;
     }
 
-    static getPathPointer(obj, path, { create = true, overwrite = false } = {}) {
+    static getRefByPath(obj: unknown, path: Path, create: boolean = false, overwrite: boolean = false): [NestedStringRecord, string] | null {
         let { keys } = path;
         const { isObject } = Utils;
         if (!isObject(obj) || keys.length === 0) {
-            return [];
+            return null;
         }
 
-        const lastKey = keys.pop();
-        let pointer = obj;
+        const lastKey = keys.pop()!;
+        let pointer: NestedStringRecord = obj as NestedStringRecord;
 
         for (const key of keys) {
             if (isObject(pointer[key])) {
-                pointer = pointer[key];
+                pointer = pointer[key] as NestedStringRecord;
             }
             else {
                 const hasKey = hasOwnProperty.call(pointer, key);
@@ -256,7 +270,7 @@ class Utils {
                     pointer = pointer[key] = {};
                 }
                 else {
-                    return [];
+                    return null;
                 }
             }
         }
@@ -265,19 +279,19 @@ class Utils {
             pointer[lastKey] = undefined;
         }
 
-        return isObject(pointer) && hasOwnProperty.call(pointer, lastKey) ? [pointer, lastKey] : [];
+        return isObject(pointer) && hasOwnProperty.call(pointer, lastKey) ? [pointer, lastKey] : null;
     }
 
-    static getPathValue(obj, path) {
+    static getPathValue(obj: unknown, path: Path): unknown {
         const { keys } = path;
-        let pointer = obj;
+        let pointer: unknown = obj;
         if (keys.length === 0) {
             return obj;
         }
         const { isObject } = Utils;
         for (const key of keys) {
             if (isObject(pointer)) {
-                pointer = pointer[key];
+                pointer = (pointer as Record<string, unknown>)[key];
             }
             else {
                 return undefined;
@@ -286,25 +300,29 @@ class Utils {
         return pointer;
     }
 
-    static hasPath(obj, path) {
-        const [pointer,] = Utils.getPathPointer(obj, path, { create: false, overwrite: false });
-        return Boolean(pointer);
+    static hasPath(obj: unknown, path: Path): boolean {
+        return Utils.getRefByPath(obj, path, false, false) !== null;
     }
 
-    static removePath(obj, path) {
-        const [pointer, key] = Utils.getPathPointer(obj, path, { create: false });
-        if (pointer) {
-            delete pointer[key];
-            return true;
+    static removePath(obj: unknown, path: Path): boolean {
+        const result = Utils.getRefByPath(obj, path, false, false);
+        if (result === null) {
+            return false;
         }
-        return false;
+        const [pointer, key] = result;
+        delete pointer[key];
+        return true;
     }
 
-    static setPathValue(obj, path, value, { create = true, overwrite = true } = {}) {
-        const [objRef, key] = Utils.getPathPointer(obj, path, { create, overwrite });
-        if (objRef && (overwrite || create && objRef[key] === undefined)) {
-            objRef[key] = value;
-            return true;
+    static setPathValue(obj: unknown, path: Path, value: unknown, create: boolean = true, overwrite: boolean = true): boolean {
+        const result = Utils.getRefByPath(obj, path, create, overwrite);
+        if (result.length > 0) {
+            const [objRef, key] = result as [unknown, string];
+            const objRefRecord = objRef as Record<string, unknown>;
+            if (overwrite || create && objRefRecord[key] === undefined) {
+                objRefRecord[key] = value;
+                return true;
+            }
         }
         return false;
     }
@@ -313,21 +331,21 @@ class Utils {
      * String utilities
      ***************************************************/
 
-    static escapeForRegex(str) {
-        return str.replace(/([\\\^\$\*\+\?\.\(\)\|\{\}\[\]\-])/g, '\\$1')
+    static escapeForRegex(str: string): string {
+        return str.replace(/([\\^$*+?.()\|{}\[\]-])/g, '\\$1')
     }
 
-    static generateCheckDigit(str, {
+    static generateCheckDigit(str: string, {
         weights = [2, 1],
         alpha = {
             A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, G: 16, H: 17, I: 18, J: 19, K: 20, L: 21, M: 22,
             N: 23, O: 24, P: 25, Q: 26, R: 27, S: 28, T: 29, U: 30, V: 31, W: 32, X: 33, Y: 34, Z: 35
         },
         mod = 10,
-        transform = x => x,
+        transform = (x: number): number => x,
         reverse = false
-    } = {}) {
-        const values = str.toUpperCase().split('').map(ch => isNaN(ch) ? alpha[ch] : +ch);
+    }: { weights?: number[]; alpha?: Record<string, number>; mod?: number; transform?: (x: number) => number; reverse?: boolean } = {}): number {
+        const values = str.toUpperCase().split('').map((ch: string): number => isNaN(+ch) ? (alpha as Record<string, number>)[ch] : +ch);
         if (reverse) {
             values.reverse();
         }
@@ -340,7 +358,7 @@ class Utils {
         return (mod - (sum % mod)) % mod;
     }
 
-    static padLeft(str, length, char = ' ') {
+    static padLeft(str: string, length: number, char: string = ' '): string {
         let padding = '';
         if (str.length < length) {
             padding = new Array(length - str.length + 1).join(char);
@@ -348,7 +366,7 @@ class Utils {
         return padding + str;
     }
 
-    static padRight(str, length, char = ' ') {
+    static padRight(str: string, length: number, char: string = ' '): string {
         let padding = '';
         if (str.length < length) {
             padding = new Array(length - str.length + 1).join(char);
@@ -356,27 +374,27 @@ class Utils {
         return str + padding;
     }
 
-    static regexMatch(str, regex, options = {}) {
+    static regexMatch(str: string, regex: RegExp | RegExp[], options: Record<string, unknown> = {}): RegExpExecArray | null {
         const {
             allowedDelims,
             delim,
             allowLooseFormat
-        } = options;
+        } = options as { allowedDelims?: string; delim?: string; allowLooseFormat?: boolean };
 
-        let matchData;
-        const bareStr = Utils.replaceChars(str, allowedDelims + delim);
+        let matchData: RegExpExecArray | null;
+        const bareStr = Utils.replaceChars(str, (allowedDelims || '') + (delim || ''));
 
         // Loose match
         if (allowLooseFormat) {
             matchData = Array.isArray(regex)
-                ? RegexCache('^(' + regex.join(')(') + ')$', 'i').exec(bareStr)
-                : regex.exec(bareStr);
+                ? RegexCache('^(' + (regex as RegExp[]).map((r: RegExp): string => r.source).join(')(') + ')$', 'i').exec(bareStr)
+                : (regex as RegExp).exec(bareStr);
         }
         else {
             matchData = Array.isArray(regex)
-                ? RegexCache('^(' + regex.join(')' + Utils.escapeForRegex(delim) + '(') + ')$')
+                ? RegexCache('^(' + (regex as RegExp[]).map((r: RegExp): string => r.source).join(')' + Utils.escapeForRegex(delim || '') + '(') + ')$')
                     .exec(str)
-                : regex.exec(str);
+                : (regex as RegExp).exec(str);
         }
 
         if (matchData) {
@@ -386,15 +404,15 @@ class Utils {
         return matchData;
     }
 
-    static replaceChars(str, delims, replacement = '') {
+    static replaceChars(str: string, delims: string, replacement: string = ''): string {
         return str.replace(RegexCache('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);
     }
 
-    static splitOnDelims(str, chars) {
+    static splitOnDelims(str: string, chars: string): string[] {
         const split = str.length > 0
             ? str.split(RegexCache('[' + Utils.escapeForRegex(chars) + ']+'))
             : [];
-        const final = [];
+        const final: string[] = [];
         for (const part of split) {
             if (part.length > 0) {
                 final.push(part);
@@ -403,12 +421,12 @@ class Utils {
         return final;
     }
 
-    static validateWithCheckDigit(str, {
+    static validateWithCheckDigit(str: string, {
         weights = [2, 1],
         mod = 10,
-        transform = x => x,
+        transform = (x: number): number => x,
         reverse = false
-    } = {}) {
+    }: { weights?: number[]; mod?: number; transform?: (x: number) => number; reverse?: boolean } = {}): boolean {
         return str.length > 0 && Utils.generateCheckDigit(str.slice(0, -1), {
             weights,
             mod,
@@ -421,26 +439,26 @@ class Utils {
      * Date utilities
      ***************************************************/
 
-    static areDayAndDateValid(dateParts = {}) {
-        let { YYYY, MM, DD } = dateParts;
-        YYYY = +YYYY || 0;
-        MM = +MM || 0;
-        DD = +DD || 0;
-        const numDaysInMonth = [4, 6, 9, 11].indexOf(MM) > -1 && 30
-            || MM === 2 && (Utils.isLeapYear(YYYY) ? 29 : 28)
-            || [1, 3, 5, 7, 8, 10, 12].indexOf(MM) > -1 && 31
+    static areDayAndDateValid(dateParts: Record<string, unknown> = {}): boolean {
+        let { YYYY, MM, DD } = dateParts as { YYYY?: unknown; MM?: unknown; DD?: unknown };
+        YYYY = +(YYYY as any) || 0;
+        MM = +(MM as any) || 0;
+        DD = +(DD as any) || 0;
+        const numDaysInMonth = [4, 6, 9, 11].indexOf(MM as number) > -1 && 30
+            || (MM as number) === 2 && (Utils.isLeapYear(YYYY as number) ? 29 : 28)
+            || [1, 3, 5, 7, 8, 10, 12].indexOf(MM as number) > -1 && 31
             || -1;
-        if (YYYY && MM && DD && +DD > numDaysInMonth) {
+        if ((YYYY as number) && (MM as number) && (DD as number) && +(DD as number) > numDaysInMonth) {
             return false;
         }
         return true;
     }
 
-    static isLeapYear(year) {
-        return new Date(Date.UTC(+year, 1, 29)).getUTCDate() === 29;
+    static isLeapYear(year: unknown): boolean {
+        return new Date(Date.UTC(+(year as any), 1, 29)).getUTCDate() === 29;
     }
 
-    static parseDate(value, parseTypes = []) {
+    static parseDate(value: unknown, parseTypes: number[] = []): { date: Date; parsed: Record<string, unknown>; type: number } | null {
         const anyType = parseTypes.length === 0;
 
         if (value instanceof Date && !isNaN(value.getTime())) {
@@ -490,45 +508,45 @@ class Utils {
         return null;
     }
 
-    static parseDateFromHuman(dateString, {
+    static parseDateFromHuman(dateString: unknown, {
         monthBeforeDay = true,
-        numberSuffixes = DefaultLanguage.calendar.numberSuffixes,
-        fullMonths = DefaultLanguage.calendar.months.full,
-        shortMonths = DefaultLanguage.calendar.months.short
-    } = {}) {
+        numberSuffixes = DEFAULT_LANGUAGE.calendar.numberSuffixes,
+        fullMonths = DEFAULT_LANGUAGE.calendar.months.full,
+        shortMonths = DEFAULT_LANGUAGE.calendar.months.short
+    }: { monthBeforeDay?: boolean; numberSuffixes?: string[]; fullMonths?: string[]; shortMonths?: string[] } = {}): { date: Date; parsed: Record<string, unknown> } | null {
         if (typeof dateString !== 'string' || dateString.trim().length === 0) {
             return null;
         }
 
-        const allMonths = fullMonths.concat(shortMonths).map(name => name.toLowerCase());
+        const allMonths = fullMonths.concat(shortMonths).map((name: string): string => name.toLowerCase());
 
         const yearRegex = '(\\d{4})';
         const monthRegex = '(1[012]|0?[1-9])';
         const dayNumRegex = '(3[01]|[12]\\d|0?[1-9])(?:' + numberSuffixes.join('|') + ')?';
         const namedDayRegex = '(?:[a-z]{1,20})';
-        const allMonthsRegex = '(' + allMonths.map(name => name.toLowerCase()).join('|') + ')';
+        const allMonthsRegex = '(' + allMonths.map((name: string): string => name.toLowerCase()).join('|') + ')';
 
-        dateString = dateString
+        dateString = (dateString as string)
             .trim()
             .replace(/,/g, ' ')
             .replace(/\s+/g, ' ')
             .replace(/ ?([/.:-]) ?/g, '$1');
 
-        const dateRegexes = [
+        const dateRegexes: [string[], number[]][] = [
             [[allMonthsRegex, dayNumRegex, yearRegex], [4, 2, 3]],
             [[dayNumRegex, allMonthsRegex, yearRegex], [4, 3, 2]],
             [[yearRegex, allMonthsRegex, dayNumRegex], [2, 3, 4]],
             [[namedDayRegex, allMonthsRegex, dayNumRegex, yearRegex], [4, 2, 3]],
             [[namedDayRegex, dayNumRegex, allMonthsRegex, yearRegex], [4, 3, 2]],
             [[yearRegex, monthRegex, dayNumRegex], [2, 3, 4]],
-            monthBeforeDay
-                ? [[monthRegex, dayNumRegex, yearRegex], [4, 2, 3]]
-                : [[dayNumRegex, monthRegex, yearRegex], [4, 3, 2]]
+            ...(monthBeforeDay
+                ? [[[monthRegex, dayNumRegex, yearRegex], [4, 2, 3]] as [string[], number[]]]
+                : [[[dayNumRegex, monthRegex, yearRegex], [4, 3, 2]] as [string[], number[]]])
         ];
 
-        let matchResult, indexes;
+        let matchResult: RegExpExecArray | null, indexes: number[] | undefined;
         for (const [curPattern, curIndexes] of dateRegexes) {
-            matchResult = RegexCache(`^(?=(${curPattern.join('[/. -]')}))\\1(.*)$`, 'i').exec(dateString);
+            matchResult = RegexCache(`^(?=(${(curPattern as string[]).join('[/. -]')}))\\1(.*)$`, 'i').exec(dateString);
             if (matchResult) {
                 indexes = curIndexes;
                 break;
@@ -538,7 +556,7 @@ class Utils {
             return null;
         }
 
-        const timePortion = matchResult[Math.max(...indexes) + 1];
+        const timePortion = matchResult![Math.max(...indexes) + 1];
         let HH, mm, ss, sss, amPM, HHOffset, mmOffset;
 
         if (timePortion) {
@@ -579,26 +597,26 @@ class Utils {
             }
         }
 
-        let [YYYY, MM, DD] = indexes.map(index => matchResult[index]);
+        let [YYYY, MM, DD] = indexes.map((index: number): unknown => matchResult![index]) as (string | number | undefined)[];
 
         if (MM) {
-            if (!/^[0-9]/.test(MM)) {
-                const monthNum = allMonths.indexOf(MM.toLowerCase());
+            if (!/^[0-9]/.test(MM as string)) {
+                const monthNum = allMonths.indexOf((MM as string).toLowerCase());
                 if (monthNum === -1) {
                     return null;
                 }
                 MM = monthNum % 12 + 1;
             }
-            MM = +MM;
+            MM = +(MM as string);
         }
 
-        if (!Utils.areDayAndDateValid({ YYYY, MM, DD })) {
+        if (!Utils.areDayAndDateValid({ YYYY: YYYY as string, MM: MM as number, DD: DD as string })) {
             return null;
         }
 
-        YYYY = +YYYY;
-        MM = +MM;
-        DD = +DD;
+        YYYY = +(YYYY as string);
+        MM = +(MM as number);
+        DD = +(DD as string);
         if (HH !== undefined) {
             HH = +HH;
         }
@@ -648,7 +666,7 @@ class Utils {
         };
     }
 
-    static parseDateFromIso(dateString) {
+    static parseDateFromIso(dateString: unknown): { date: Date; parsed: Record<string, unknown> } | null {
         if (typeof dateString !== 'string' || dateString.trim().length === 0) {
             return null;
         }
@@ -745,7 +763,7 @@ class Utils {
         };
     }
 
-    static parseDateFromIsoOrdinal(dateString) {
+    static parseDateFromIsoOrdinal(dateString: unknown): { date: Date; parsed: Record<string, unknown> } | null {
         if (typeof dateString !== 'string' || dateString.trim().length === 0) {
             return null;
         }
@@ -773,7 +791,7 @@ class Utils {
         };
     }
 
-    static parseDateFromIsoWeek(dateString) {
+    static parseDateFromIsoWeek(dateString: unknown): { date: Date; parsed: Record<string, unknown> } | null {
         if (typeof dateString !== 'string' || dateString.trim().length === 0) {
             return null;
         }
@@ -811,8 +829,8 @@ class Utils {
         };
     }
 
-    static parseDateFromTimestamp(value) {
-        if (Number.isInteger(value) && !isNaN(new Date(value))) {
+    static parseDateFromTimestamp(value: unknown): { date: Date; parsed: Record<string, unknown> } | null {
+        if (Number.isInteger(value) && !isNaN(new Date(value as number).getTime())) {
             return {
                 date: new Date(Number(value)),
                 parsed: {}
@@ -825,16 +843,17 @@ class Utils {
      * Number utilities
      ***************************************************/
 
-    static getSign(x) {
-        return Math.sign(+x) === -1 || 1 / +x === -Infinity ? -1 : 1;
+    static getSign(x: unknown): number {
+        const num = +(x as any);
+        return Math.sign(num) === -1 || 1 / num === -Infinity ? -1 : 1;
     }
 
-    static parseNumber(value, {
+    static parseNumber(value: unknown, {
         autoConvert = true,
         ensureSafe = true,
         ensureFinite = true,
         preservePrecision = true
-    } = {}) {
+    }: { autoConvert?: boolean; ensureSafe?: boolean; ensureFinite?: boolean; preservePrecision?: boolean } = {}): number | null {
         const num = autoConvert && typeof value === 'string' ? Number(value) : value;
         return (
             (typeof num !== 'number' || Number.isNaN(num))

@@ -7,7 +7,6 @@ export type NodeData = Record<string, unknown>;
 class Node {
 
     children: Map<string, Node>;
-    data: NodeData;
     parent: Node;
     root: Node;
     path: Path;
@@ -16,7 +15,6 @@ class Node {
         this.children = new Map();
         this.parent = this.root = this;
         this.path = Path.create('/');
-        this.data = {};
     }
 
     removeChild(key: string): void {
@@ -27,14 +25,7 @@ class Node {
         this.children.set(key, child);
         child.parent = this;
         child.root = this.root;
-    }
-
-    createChild(key: string, data: NodeData = {}): Node {
-        const child = new Node();
-        child.data = data;
         child.path = this.path.move(key);
-        this.setChild(key, child);
-        return child;
     }
 
     // getFormatted(formatter = new NodeFormatter()) {
@@ -51,7 +42,7 @@ class Node {
         if (resolvedPath.isSelf) {
             return this;
         }
-        let tracker = this;
+        let tracker: Node = this;
         if (resolvedPath.isAbsolute) {
             tracker = this.root;
         }
@@ -76,19 +67,5 @@ class Node {
     }
 }
 
-// class NodeFormatter {
-//     visit(message) {
-//         let str = `<span class="pd-message">`;
-//         str += message.data.join(', ');
-//         if (message.children.length) {
-//             str += '\t<ul>\n';
-//             for (const child of message.children) {
-//                 str += '\t<li>' + this.visit(child) + '</li>\n';
-//             }
-//             str += '\t\n</ul>\n';
-//         }
-//         return str + '</span>\n';
-//     }
-// }
 
 export { Node };

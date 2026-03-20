@@ -20,15 +20,20 @@ export type ChainProps = FieldProps & {
     chainHandler: ChainHandler;
 };
 
+type ProxiedHandlerMethods<T> = {
+    [K in keyof T]: T[K] extends (...args: unknown[]) => Chain ? K : never;
+}
+
 abstract class Chain extends Field {
 
     declare props: ChainProps;
 
     constructor(props: Partial<ChainProps> = {}) {
         super(props);
+        this.props.chainHandler = props.chainHandler || {};
         this.props.pipeline = [];
         this.props.emptyValues = props.emptyValues || [null, undefined];
-        return new Proxy(this, this as ProxyHandler<Chain>);
+        return new Proxy(this, this as ProxyHandler<typeof this>) as this & ProxiedHandlerMethods<Chain>;
     }
 
     get(target: Chain, fnKey: keyof ChainHandler): ((...args: unknown[]) => Chain) | Chain[keyof Chain] {

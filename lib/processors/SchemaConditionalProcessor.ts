@@ -49,7 +49,7 @@ class SchemaConditionalProcessor extends Processor {
         const referencedValueTracker = path.isSelf ? tracker : tracker.parent.getNodeByPath(path, this);
 
         const testValueTracker = new ValueTracker(referencedValueTracker.value, {
-            compiledField: this,
+            processor: this,
             parent: tracker.parent,
             root: tracker.root,
             

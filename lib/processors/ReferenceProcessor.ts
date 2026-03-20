@@ -31,23 +31,23 @@ class ReferenceProcessor extends Processor {
 
         const isNest = refPathStr === separator || (thisPathStr + separator).startsWith(refPathStr + separator);
 
-        let compiledField;
+        let processor;
 
         if (!isNest) {
-            compiledField = compilationMapper.createProcessor({
+            processor = compilationMapper.createProcessor({
                 parent,
                 path,
                 root,
                 field: compiledReference.props.field,
                 isLocalRoot: true,
             });
-            compiledField.compile(Object.assign({}, context));
+            processor.compile(Object.assign({}, context));
         }
         else {
-            compiledField = this;
+            processor = this;
         }
 
-        return compiledField;
+        return processor;
     }
 
     process(tracker, state) {

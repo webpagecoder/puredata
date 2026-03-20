@@ -22,7 +22,7 @@ class RecursiveValueTracker extends ValueTracker {
 
         do {
             if (parent instanceof RecursiveValueTracker) {
-                if (parent.compiledField === this.compiledField) {
+                if (parent.processor === this.processor) {
                     this.depth = parent.depth + 1;
                     this.nestParent = parent;
                     this.nestRoot = parent.nestRoot;

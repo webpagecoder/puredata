@@ -233,10 +233,10 @@ describe('Utils path utilities', () => {
         expect(Utils.getPathCount(obj)).toBe(2);
     });
 
-    test('getPathPointer, hasPath, getPathValue, setPathValue, and removePath work end-to-end', () => {
+    test('getRefByPath, hasPath, getPathValue, setPathValue, and removePath work end-to-end', () => {
         const obj = { a: {} };
 
-        const pointer = Utils.getPathPointer(obj, pathObj('a', 'b'));
+        const pointer = Utils.getRefByPath(obj, pathObj('a', 'b'));
         expect(Array.isArray(pointer)).toBe(true);
         expect(pointer[1]).toBe('b');
 
@@ -248,7 +248,7 @@ describe('Utils path utilities', () => {
         expect(Utils.setPathValue(obj, pathObj('a', 'b'), 999, { overwrite: false })).toBe(false);
         expect(Utils.removePath(obj, pathObj('a', 'b'))).toBe(true);
         expect(Utils.removePath(obj, pathObj('a', 'z'))).toBe(false);
-        expect(Utils.getPathPointer(5, pathObj('a'))).toEqual([]);
+        expect(Utils.getRefByPath(5, pathObj('a'))).toEqual([]);
     });
 
     test('setPathValue and getPathValue work with deep nested paths', () => {

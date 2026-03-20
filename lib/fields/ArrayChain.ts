@@ -3,12 +3,12 @@
 import { Path } from '../Path.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
-type SortComparator = (a: unknown, b: unknown) => number;
+type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
 export type ArrayChainProps = ChainProps & {
-        castSingle: boolean;
-        maxLength: number;
-        removeEmpties: boolean;
+    castSingle: boolean;
+    maxLength: number;
+    removeEmpties: boolean;
 };
 
 class ArrayChain extends Chain {

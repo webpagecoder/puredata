@@ -8,8 +8,6 @@ import type { Processor } from '../processors/Processor.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { ArgumentCollection } from '../types.ts';
 
-
-
 type TrackerError = {
     args: ArgumentCollection;
     errorKey: string;
@@ -25,14 +23,15 @@ type ErrorTree = {
 
 class ValueTracker extends Node {
 
-    compiledField: Processor;
+    processor: Processor;
     errorCollection: TrackerError[];
     originalValue: unknown;
     _value: unknown;
 
-    constructor(value: unknown, compiledField: Processor) {
+
+    constructor(value: unknown, processor: Processor) {
         super();
-        this.compiledField = compiledField;
+        this.processor = processor;
         // this.cachedErrorMessages = null;
         this.errorCollection = [];
         this.originalValue = value;
@@ -91,12 +90,12 @@ class ValueTracker extends Node {
     }
 
     addError(errorKey: string, args?: ArgumentCollection): this {
-        if (!this.compiledField) {
+        if (!this.processor) {
             throw new Error('ValueTracker compiled field is not configured');
         }
 
         const {
-            compiledField: { props: { field: { props: { label, locale } } } },
+            processor: { props: { field: { props: { label, locale } } } },
             path,
         } = this;
         let text = locale.getText(Path.fromArray(['errors', errorKey])).replace('{label}', label);
@@ -115,12 +114,6 @@ class ValueTracker extends Node {
             value: this.value
         });
         return this;
-    }
-
-    createChild(key: string, data: NodeData = {}): ValueTracker {
-        const child = super.createChild(key, data) as ValueTracker;
-        this.compiledField = data.compiledField as Processor;
-        return child;
     }
 
     hasErrors(): boolean {

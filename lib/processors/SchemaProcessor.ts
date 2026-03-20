@@ -3,6 +3,7 @@
 import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
 import { PubSub } from '../pub-sub/PubSub.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
 
 
@@ -150,11 +151,14 @@ class SchemaProcessor extends ObjectProcessor {
         //todo: check if error and exit here?
 
         for (let [key, childProcessor] of this.props.schema) {
-            const childField = childProcessor.props.field;
-            let childValueTracker = tracker.createChild(key, childProcessor);
+            
+            let childValueTracker = new ValueTracker(undefined, childProcessor);
+            tracker.setChild(key, childValueTracker);
+
             childValueTracker.setValue(value[key]);
             // childValueTracker.path = tracker.path.move(key);
 
+            const childField = childProcessor.props.field;
             if (childField instanceof SchemaConditionalField) {
                 state.conditionals.push([childProcessor, childValueTracker]);
             }
