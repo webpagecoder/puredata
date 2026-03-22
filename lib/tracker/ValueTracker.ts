@@ -102,7 +102,7 @@ class ValueTracker extends Node {
         if (args) {
             for (const argKey of Object.keys(args)) {
                 const arg = args[argKey];
-                text = text.replace(`{${argKey}}`, Array.isArray(arg) ? arg.join(', ') : arg);
+                text = text.replace(`{${argKey}}`, Array.isArray(arg) ? arg.join(', ') : arg as string);
             }
         }
         this.errorCollection.push({

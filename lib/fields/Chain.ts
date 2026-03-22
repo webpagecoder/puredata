@@ -1,15 +1,13 @@
 'use strict';
 
+import { Handler } from '../handlers/Handler.ts';
 import { HandlerResult } from '../handlers/HandlerResult.ts';
 import { Field, FieldProps } from './Field.ts';
 
-type StepHandlerFn = (value: unknown, ...args: unknown[]) => HandlerResult;
-type ChainHandler = {
-    [key: string]: StepHandlerFn;
-}
+
 type StepArgs = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
-    fn: StepHandlerFn;
+    fn: (value: unknown, ...args: unknown[]) => HandlerResult;
     args?: StepArgs;
     prioritize?: boolean;
 };
@@ -17,28 +15,33 @@ type Step = {
 export type ChainProps = FieldProps & {
     emptyValues: unknown[];
     pipeline: Step[];
-    chainHandler: ChainHandler;
+    chainHandler: Handler;
 };
 
-type ProxiedHandlerMethods<T> = {
-    [K in keyof T]: T[K] extends (...args: unknown[]) => Chain ? K : never;
+// type ProxiedHandlerMethods<H> = {
+//     [K in keyof H]: H[K] extends (...args: any) => Chain<H extends Handler> ? K : never;
+// }
+
+type Tester = {
+    tester(x: number): void;
 }
 
-abstract class Chain extends Field {
+abstract class Chain<H extends Handler> extends Field {
 
     declare props: ChainProps;
 
     constructor(props: Partial<ChainProps> = {}) {
         super(props);
-        this.props.chainHandler = props.chainHandler || {};
+        this.props.chainHandler = props.chainHandler as Handler || {};
         this.props.pipeline = [];
         this.props.emptyValues = props.emptyValues || [null, undefined];
-        return new Proxy(this, this as ProxyHandler<typeof this>) as this & ProxiedHandlerMethods<Chain>;
+        // return new Proxy(this, this as ProxyHandler<typeof this>) as this & ProxiedHandlerMethods<H>;
+        return new Proxy(this, this as ProxyHandler<this>);
     }
 
-    get(target: Chain, fnKey: keyof ChainHandler): ((...args: unknown[]) => Chain) | Chain[keyof Chain] {
+    get(target: Chain<H>, fnKey: keyof H): ((...args: unknown[]) => Chain<H>) | Chain<H>[keyof Chain<H>] {
         if (fnKey in target) {
-            return target[fnKey as keyof Chain];
+            return target[fnKey as keyof Chain<H>];
         }
         return (...args: unknown[]): this => this.addStep(fnKey, args);
     }
@@ -67,7 +70,7 @@ abstract class Chain extends Field {
         return clone;
     }
 
-    addStep<H = this['props']['chainHandler']>(fnKey: keyof H, args: StepArgs = [], prioritize: boolean = false): this {
+    addStep<H = this['props']['chainHandler']>(fnKey: keyof H, args: StepArgs = [], prioritize: boolean = false): this & H {
         const chainHandler = this.props.chainHandler;
         const fn = (chainHandler as H)?.[fnKey];
         if (typeof fn !== 'function') {
@@ -79,7 +82,7 @@ abstract class Chain extends Field {
                 args,
                 prioritize,
             }
-        });
+        }) as unknown as this & H ;
     }
 
 

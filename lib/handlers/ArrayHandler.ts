@@ -26,7 +26,20 @@ function getSorter(order = 1, pathOrComparator = null) {
 }
 
 class ArrayHandler extends Handler {
-
+    static boyzzr(arr, requiredValues = []) {
+        checkRequired: for (const requiredValue of requiredValues) {
+            for (const entry of arr) {
+                if (Utils.areEqual(entry, requiredValue)) {
+                    continue checkRequired;
+                }
+            }
+            return fail(arr, 'array/allOf', {
+                requiredValues,
+                missingValue: requiredValue
+            });
+        }
+        return pass(arr);
+    }
     // ====================================
     // VALIDATORS 
     // ====================================

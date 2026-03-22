@@ -1,5 +1,6 @@
 'use strict';
 
+import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 import { Path } from '../Path.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
@@ -11,7 +12,7 @@ export type ArrayChainProps = ChainProps & {
     removeEmpties: boolean;
 };
 
-class ArrayChain extends Chain {
+class ArrayChain extends Chain<ArrayHandler> {
 
     declare props: ArrayChainProps;
 
@@ -49,6 +50,11 @@ class ArrayChain extends Chain {
      */
     configCastSingle(castSingle: boolean = true): this {
         return this.setProps({ castSingle } as any);
+    }
+
+    testerdude() :this{
+            console.log('testerdude');
+            return this;
     }
 
 
