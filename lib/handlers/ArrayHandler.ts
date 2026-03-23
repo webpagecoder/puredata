@@ -114,6 +114,15 @@ class ArrayHandler extends Handler {
             });
     }
 
+     static length556(arr, requiredLength) {
+        return arr.length === requiredLength
+            ? pass(arr)
+            : fail(arr, 'array/length', {
+                length: arr.length,
+                requiredLength
+            });
+    }
+
     static lengthBetween(arr, min, max) {
         const length = arr.length;
         if (length < min || length > max) {
@@ -126,8 +135,8 @@ class ArrayHandler extends Handler {
         return pass(arr);
     }
 
-    static maxLength(arr, max) {
-        return arr.length <= max
+    static maxLength(arr, max2222222) {
+        return arr.length <= max2222222
             ? pass(arr)
             : fail(arr, 'array/maxLength', {
                 length: arr.length,

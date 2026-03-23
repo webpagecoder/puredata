@@ -18,13 +18,18 @@ export type ChainProps = FieldProps & {
     chainHandler: Handler;
 };
 
-// type ProxiedHandlerMethods<H> = {
-//     [K in keyof H]: H[K] extends (...args: any) => Chain<H extends Handler> ? K : never;
-// }
+// Dynamically load the Handler's static methods as chainable methods on the Chain class via Proxy.
+type StripFirstParameter<C, F> = F extends (arg0: any, ...args: infer Rest) => HandlerResult
+    ? (...args: Rest) => C
+    : never;
 
-type Tester = {
-    tester(x: number): void;
-}
+type OwnStaticKeys<H extends typeof Handler> = keyof Omit<H, keyof typeof Handler>;
+
+export type ChainProxyMethods<C, H extends typeof Handler> = {
+    [K in OwnStaticKeys<H> as H[K] extends (...args: any[]) => HandlerResult
+        ? K
+        : never]: StripFirstParameter<C, H[K]>;
+};
 
 abstract class Chain<H extends Handler> extends Field {
 
@@ -32,7 +37,7 @@ abstract class Chain<H extends Handler> extends Field {
 
     constructor(props: Partial<ChainProps> = {}) {
         super(props);
-        this.props.chainHandler = props.chainHandler as Handler || {};
+        this.props.chainHandler = props.chainHandler as H || {};
         this.props.pipeline = [];
         this.props.emptyValues = props.emptyValues || [null, undefined];
         // return new Proxy(this, this as ProxyHandler<typeof this>) as this & ProxiedHandlerMethods<H>;
@@ -78,7 +83,7 @@ abstract class Chain<H extends Handler> extends Field {
         }
         return this.clone({
             step: {
-                fn,
+                fn: fn as Step['fn'],
                 args,
                 prioritize,
             }
@@ -117,7 +122,7 @@ abstract class Chain<H extends Handler> extends Field {
      * generic.empty()
      */
     empty(): this {
-        return this.addStep('empty', function (this: Chain): unknown[] {
+        return this.addStep('empty', function (this: Chain<any>): unknown[] {
             return [this.props.emptyValues];
         });
     }
@@ -161,7 +166,7 @@ abstract class Chain<H extends Handler> extends Field {
      * generic.notEmpty()
      */
     notEmpty(): this {
-        return this.addStep('notEmpty', function (this: Chain): unknown[] {
+        return this.addStep('notEmpty', function (this: Chain<any>): unknown[] {
             return [this.props.emptyValues];
         });
     }
