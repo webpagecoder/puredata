@@ -5,62 +5,45 @@ import { HandlerResult } from '../handlers/HandlerResult.ts';
 import { Field, FieldProps } from './Field.ts';
 
 
-type StepArgs = unknown[] | ((...args: unknown[]) => unknown[]);
+type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
     fn: (value: unknown, ...args: unknown[]) => HandlerResult;
-    args?: StepArgs;
+    args?: StepArgsOrFn;
     prioritize?: boolean;
 };
 
-export type ChainProps = FieldProps & {
+export type ChainProps<H extends Handler = Handler> = FieldProps & {
+    chainHandler: H;
     emptyValues: unknown[];
     pipeline: Step[];
-    chainHandler: Handler;
 };
 
-// Dynamically load the Handler's static methods as chainable methods on the Chain class via Proxy.
-type StripFirstParameter<C, F> = F extends (arg0: any, ...args: infer Rest) => HandlerResult
-    ? (...args: Rest) => C
-    : never;
+type CloneProps<P extends ChainProps = ChainProps> = Partial<P> & { step: Step };
 
-type OwnStaticKeys<H extends typeof Handler> = keyof Omit<H, keyof typeof Handler>;
+abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
 
-export type ChainProxyMethods<C, H extends typeof Handler> = {
-    [K in OwnStaticKeys<H> as H[K] extends (...args: any[]) => HandlerResult
-        ? K
-        : never]: StripFirstParameter<C, H[K]>;
-};
-
-abstract class Chain<H extends Handler> extends Field {
-
-    declare props: ChainProps;
-
-    constructor(props: Partial<ChainProps> = {}) {
+    constructor(props: Partial<P> = {}) {
         super(props);
-        this.props.chainHandler = props.chainHandler as H || {};
+        this.props.chainHandler = (props.chainHandler || {});
         this.props.pipeline = [];
         this.props.emptyValues = props.emptyValues || [null, undefined];
         // return new Proxy(this, this as ProxyHandler<typeof this>) as this & ProxiedHandlerMethods<H>;
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
-    get(target: Chain<H>, fnKey: keyof H): ((...args: unknown[]) => Chain<H>) | Chain<H>[keyof Chain<H>] {
-        if (fnKey in target) {
-            return target[fnKey as keyof Chain<H>];
+    get(target: this, key: PropertyKey): unknown {
+        if (key in target) {
+            return (target as Record<PropertyKey, unknown>)[key];
         }
-        return (...args: unknown[]): this => this.addStep(fnKey, args);
+        return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
     }
 
-    override clone(props: Partial<ChainProps> & {
-        step?: Step;
-        pipeline?: Step[];
-    } = {}): this {
-        const clone = super.clone(props) as this;
+    override clone(props: CloneProps<P>): this {
+        const clone = super.clone(props);
         const {
             step,
-            pipeline = this.props.pipeline
         } = props;
-        const updatedPipeline = [...pipeline];
+        const updatedPipeline = [...this.props.pipeline];
 
         if (step) {
             if (step.prioritize) {
@@ -75,9 +58,9 @@ abstract class Chain<H extends Handler> extends Field {
         return clone;
     }
 
-    addStep<H = this['props']['chainHandler']>(fnKey: keyof H, args: StepArgs = [], prioritize: boolean = false): this & H {
-        const chainHandler = this.props.chainHandler;
-        const fn = (chainHandler as H)?.[fnKey];
+    addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = [], prioritize: boolean = false): this{
+        const chainHandler = this.props.chainHandler as P['chainHandler'];
+        const fn = chainHandler?.[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }
@@ -87,9 +70,8 @@ abstract class Chain<H extends Handler> extends Field {
                 args,
                 prioritize,
             }
-        }) as unknown as this & H ;
+        } as CloneProps<P>);
     }
-
 
     // Validators
 
@@ -102,7 +84,7 @@ abstract class Chain<H extends Handler> extends Field {
      * generic.hasProperty('id')
      */
     hasProperty(...args: unknown[]): this {
-        return this.addStep('property', args);
+        return this.addStep('property' as keyof P['chainHandler'], args);
     }
 
     /**
@@ -112,7 +94,7 @@ abstract class Chain<H extends Handler> extends Field {
      * generic.defined()
      */
     defined(): this {
-        return this.addStep('defined');
+        return this.addStep('defined' as keyof P['chainHandler']);
     }
 
     /**

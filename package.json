@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"{lib,_misc,tests}/**/*.ts\"",
     "lint:fix": "eslint \"{lib,_misc,tests}/**/*.ts\" --fix",
-    "generate:arraychain-header": "tsx ./_misc/generate-arraychain-header.ts",
+    "generate:arraychain-definitions": "tsx ./_misc/generate-arraychain-definitions.ts",
     "generate:booleanchain-header": "tsx ./_misc/generate-booleanchain-header.ts",
-    "watch:arraychain-header": "npm-watch arraychain-header",
+    "watch:arraychain-definitions": "npm-watch arraychain-definitions",
     "watch:booleanchain-header": "npm-watch booleanchain-header",
     "push": "npm version patch && git push",
     "push-minor": "npm version minor && git push",
@@ -40,7 +40,7 @@
       ],
       "extensions": "ts"
     },
-    "arraychain-header": {
+    "arraychain-definitions": {
       "patterns": [
         "lib/handlers/ArrayHandler.ts"
       ],

@@ -17,16 +17,16 @@ export type FieldProps = {
     presence: PRESENCE;
 };
 
-abstract class Field {
+abstract class Field<P extends FieldProps = FieldProps> {
 
     static id: number = 0;
-    static registry: Map<number, Field> = new Map();
+    static registry: Map<number, Field<FieldProps>> = new Map();
 
     id: number;
-    props: FieldProps;
+    props: P;
     processor: null | Processor;
 
-    constructor(props: Partial<FieldProps> = {}) {
+    constructor(props: Partial<P> = {}) {
 
         const {
             compilationMapper = new CompilationMapper(),
@@ -42,16 +42,16 @@ abstract class Field {
             compilationMapper,
             defaultValue,
             errorMessages,
-            locale: new Locale(locale),
             label,
+            locale: new Locale(locale),
             presence,
-        });
+        } as P);
 
         this.processor = null;
-        Field.registry.set(this.id, this);
+        Field.registry.set(this.id, this as unknown as Field<FieldProps>);
     }
 
-    clone<P extends this['props'] = this['props']>(props: Partial<P> = {}): this {
+    clone(props: Partial<P> = {}): this {
         const Constructor = this.constructor as new (props?: Partial<P>) => this;
         return new Constructor(
             //todo: is this deepmerge necessary?
@@ -60,7 +60,7 @@ abstract class Field {
         );
     }
 
-    process(valueOrValueTracker: ValueTracker | unknown, state: Record<string, unknown> = {}): unknown {
+    process(valueOrValueTracker: ValueTracker | unknown, state: Record<string, unknown> = {}): ValueTracker {
         if (!this.processor) {
             if (!this.props.compilationMapper) {
                 throw new Error('Field compilation mapper is not configured');
@@ -70,12 +70,12 @@ abstract class Field {
         return this.processor.process(valueOrValueTracker, state);
     }
 
-    setProps<P extends this['props'] = this['props']>(props: Partial<P> = {}): this {
-        return this.clone<P>(props);
+    setProps(props: Partial<P> = {}): this {
+        return this.clone(props);
     }
 
-    getProp<K extends keyof this['props']>(key: K): this['props'][K] {
-        return (this.props as this['props'])[key];
+    getProp(key: keyof P): P[typeof key] {
+        return (this.props as P)[key];
     }
 
     isForbidden(): boolean {
@@ -91,7 +91,7 @@ abstract class Field {
     }
 
     default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL } as Partial<this['props']>);
+        return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL } as Partial<P>);
     }
 
     errors(messages: ErrorMessages): this {
@@ -101,19 +101,19 @@ abstract class Field {
     }
 
     forbidden(): this {
-        return this.clone({ presence: PRESENCE.FORBIDDEN } as Partial<this['props']>);
+        return this.clone({ presence: PRESENCE.FORBIDDEN } as Partial<P>);
     }
 
     label(label: string): this {
-        return this.clone({ label } as Partial<this['props']>);
+        return this.clone({ label } as Partial<P>);
     }
 
     optional(): this {
-        return this.clone({ presence: PRESENCE.OPTIONAL } as Partial<this['props']>);
+        return this.clone({ presence: PRESENCE.OPTIONAL } as Partial<P>);
     }
 
     required(): this {
-        return this.clone({ presence: PRESENCE.REQUIRED } as Partial<this['props']>);
+        return this.clone({ presence: PRESENCE.REQUIRED } as Partial<P>);
     }
 }
 

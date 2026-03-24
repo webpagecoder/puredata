@@ -2,21 +2,18 @@
 
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 import { Path } from '../Path.ts';
-import { Chain, ChainProxyMethods, ChainProps } from './Chain.ts';
+import { Chain, ChainProps } from './Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainProps = ChainProps & {
+export type ArrayChainProps = ChainProps<typeof ArrayHandler> & {
     castSingle: boolean;
     maxLength: number;
     removeEmpties: boolean;
 };
 
-interface ArrayChain extends ChainProxyMethods<ArrayChain, typeof ArrayHandler> { }
 
-class ArrayChain extends Chain<ArrayHandler> {
-
-    declare props: ArrayChainProps;
+class ArrayChain extends Chain<ArrayChainProps> {
 
     // Configurators
 
@@ -31,7 +28,7 @@ class ArrayChain extends Chain<ArrayHandler> {
      * // Results in: [1, 2, 3] after preprocessing
      */
     configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
-        return this.setProps<ArrayChainProps>({
+        return this.setProps({
             removeEmpties,
             emptyValues: [...this.props.emptyValues, ...addEmptyValues],
         });

@@ -30,7 +30,7 @@ const GLOBAL_CONFIG = Object.seal({
             ['true', 'false'],
             ['t', 'f'],
         ],
-        transformer: x => x.toLowerCase(), // Transforms boolish strings if needed
+        transformer: x => typeof x === 'string' ? x.toLowerCase() : x, // Transforms boolish strings if needed
     },
     date: {
         monthBeforeDay: true,

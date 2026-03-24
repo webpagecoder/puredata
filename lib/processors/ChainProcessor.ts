@@ -4,6 +4,7 @@ import { Processor, State } from './Processor.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Chain } from '../fields/Chain.ts';
+import { Field } from '../fields/Field.ts';
 
 type PipelineError = {
     key: string;
@@ -18,7 +19,7 @@ type PipelineResult = {
 
 type PipelineStep = {
     fn: (value: unknown, ...args: unknown[]) => PipelineResult;
-    args?: unknown[] | ((this: ChainProcessor) => unknown[]);
+    args?: unknown[] | ((this: Field) => unknown[]);
 };
 
 class ChainProcessor extends Processor {
@@ -40,7 +41,7 @@ class ChainProcessor extends Processor {
 
     private resolveStepArgs(args: PipelineStep['args']): unknown[] {
         if (typeof args === 'function') {
-            return args.call(this);
+            return args.call(this.props.field);
         }
         return args || [];
     }
