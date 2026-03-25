@@ -1,6 +1,5 @@
-// @ts-nocheck
 'use strict';
-
+//todo: the paths below need to accept both strings and actual Path
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 import { Handler } from './Handler.ts';
@@ -12,15 +11,33 @@ class ObjectHandler extends Handler {
     // VALIDATORS
     // ====================================
 
-    static empty(value, empties = [null, undefined]) {
+    /**
+     * Executes the empty handler step.
+     * @param {any} value
+     * @param {any} empties
+     * @returns {HandlerResult}
+     */
+    static empty(value: any, empties: any= [null, undefined]): HandlerResult {
         return super.empty(value, empties).pass || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
     }
 
-    static notEmpty(value, empties = [null, undefined]) {
+    /**
+     * Executes the notEmpty handler step.
+     * @param {any} value
+     * @param {any} empties
+     * @returns {HandlerResult}
+     */
+    static notEmpty(value: any, empties: any= [null, undefined]): HandlerResult {
         return super.empty(value, empties).fail && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
     }
 
-    static property(value, property) {
+    /**
+     * Executes the property handler step.
+     * @param {any} value
+     * @param {any} property
+     * @returns {HandlerResult}
+     */
+    static property(value: any, property: any): HandlerResult {
         if (value == null) {
             return fail(value, 'object/property', { property });
         }
@@ -29,82 +46,154 @@ class ObjectHandler extends Handler {
             : fail(value, 'object/property', { property });
     }
 
-    static instanceOf(obj, constructor) {
+    /**
+     * Executes the instanceOf handler step.
+     * @param {any} obj
+     * @param {any} constructor
+     * @returns {HandlerResult}
+     */
+    static instanceOf(obj: any, constructor: any): HandlerResult {
         return obj.constructor === constructor
             ? pass(obj)
             : fail(obj, 'object/instanceOf', { constructor });
     }
 
-    static maxDepth(obj, maxDepth) {
+    /**
+     * Executes the maxDepth handler step.
+     * @param {any} obj
+     * @param {any} maxDepth
+     * @returns {HandlerResult}
+     */
+    static maxDepth(obj: any, maxDepth: any): HandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth > maxDepth
             ? fail(obj, 'object/maxDepth', { actualDepth, maxDepth })
             : pass(obj);
     }
 
-    static minDepth(obj, minDepth) {
+    /**
+     * Executes the minDepth handler step.
+     * @param {any} obj
+     * @param {any} minDepth
+     * @returns {HandlerResult}
+     */
+    static minDepth(obj: any, minDepth: any): HandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth < minDepth
             ? fail(obj, 'object/minDepth', { actualDepth, minDepth })
             : pass(obj);
     }
 
-    static depth(obj, depth) {
+    /**
+     * Executes the depth handler step.
+     * @param {any} obj
+     * @param {any} depth
+     * @returns {HandlerResult}
+     */
+    static depth(obj: any, depth: any): HandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth !== depth
             ? fail(obj, 'object/depth', { actualDepth, depth })
             : pass(obj);
     }
 
-    static maxKeyCount(obj, maxKeyCount) {
+    /**
+     * Executes the maxKeyCount handler step.
+     * @param {any} obj
+     * @param {any} maxKeyCount
+     * @returns {HandlerResult}
+     */
+    static maxKeyCount(obj: any, maxKeyCount: any): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCount', { actualKeyCount, maxKeyCount })
             : pass(obj);
     }
 
-    static maxKeyCountRecursive(obj, maxKeyCount) {
+    /**
+     * Executes the maxKeyCountRecursive handler step.
+     * @param {any} obj
+     * @param {any} maxKeyCount
+     * @returns {HandlerResult}
+     */
+    static maxKeyCountRecursive(obj: any, maxKeyCount: any): HandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCountRecursive', { actualKeyCount, maxKeyCount })
             : pass(obj);
     }
 
-    static minKeyCount(obj, minKeyCount) {
+    /**
+     * Executes the minKeyCount handler step.
+     * @param {any} obj
+     * @param {any} minKeyCount
+     * @returns {HandlerResult}
+     */
+    static minKeyCount(obj: any, minKeyCount: any): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCount', { actualKeyCount, minKeyCount })
             : pass(obj);
     }
 
-    static minKeyCountRecursive(obj, minKeyCount) {
+    /**
+     * Executes the minKeyCountRecursive handler step.
+     * @param {any} obj
+     * @param {any} minKeyCount
+     * @returns {HandlerResult}
+     */
+    static minKeyCountRecursive(obj: any, minKeyCount: any): HandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCountRecursive', { actualKeyCount, minKeyCount })
             : pass(obj);
     }
 
-    static keyCount(obj, keyCount) {
+    /**
+     * Executes the keyCount handler step.
+     * @param {any} obj
+     * @param {any} keyCount
+     * @returns {HandlerResult}
+     */
+    static keyCount(obj: any, keyCount: any): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCount', { actualKeyCount, keyCount })
             : pass(obj);
     }
 
-    static keyCountRecursive(obj, keyCount) {
+    /**
+     * Executes the keyCountRecursive handler step.
+     * @param {any} obj
+     * @param {any} keyCount
+     * @returns {HandlerResult}
+     */
+    static keyCountRecursive(obj: any, keyCount: any): HandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCountRecursive', { actualKeyCount, keyCount })
             : pass(obj);
     }
 
-    static noneOfPaths(obj, paths = []) {
+    /**
+     * Executes the noneOfPaths handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static noneOfPaths(obj: any, paths: any= []): HandlerResult {
         return this.someOfPaths(obj, paths).pass
             ? fail(obj, 'object/noneOfPaths', { paths })
             : pass(obj);
     }
 
-    static someOfPaths(obj, paths = []) {
+    /**
+     * Executes the someOfPaths handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static someOfPaths(obj: any, paths: any= []): HandlerResult {
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
                 return pass(obj);
@@ -113,7 +202,13 @@ class ObjectHandler extends Handler {
         return fail(obj, 'object/someOfPaths', { paths });
     }
 
-    static allOfPaths(obj, paths = []) {
+    /**
+     * Executes the allOfPaths handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static allOfPaths(obj: any, paths: any= []): HandlerResult {
         const missingPaths = [];
         const { hasPath } = Utils;
         for (const path of paths) {
@@ -126,7 +221,13 @@ class ObjectHandler extends Handler {
             : fail(obj, 'object/allOfPaths', { missingPaths });
     }
 
-    static exactlyPaths(obj, paths = []) {
+    /**
+     * Executes the exactlyPaths handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static exactlyPaths(obj: any, paths: any= []): HandlerResult {
         if (Utils.getPathCount(obj) !== paths.length) {
             return fail(obj, 'object/exactlyPaths', { paths });
         }
@@ -138,7 +239,13 @@ class ObjectHandler extends Handler {
         return pass(obj);
     }
 
-    static onlyPaths(obj, paths = []) {
+    /**
+     * Executes the onlyPaths handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static onlyPaths(obj: any, paths: any= []): HandlerResult {
         let pathsFound = 0;
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
@@ -150,13 +257,26 @@ class ObjectHandler extends Handler {
             : fail(obj, 'object/onlyPaths', { paths });
     }
 
-    static pathsOtherThan(obj, paths = []) {
+    /**
+     * Executes the pathsOtherThan handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static pathsOtherThan(obj: any, paths: any= []): HandlerResult {
         return this.onlyPaths(obj, paths).pass
             ? fail(obj, 'object/pathsOtherThan', { paths })
             : pass(obj);
     }
 
-    static xOfPaths(obj, count, paths = []) {
+    /**
+     * Executes the xOfPaths handler step.
+     * @param {any} obj
+     * @param {any} count
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static xOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
         let found = 0;
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
@@ -171,13 +291,25 @@ class ObjectHandler extends Handler {
             : fail(obj, 'object/xOfPaths', { paths, count });
     }
 
-    static allOfButXOfPaths(obj, count, paths = []) {
+    /**
+     * Executes the allOfButXOfPaths handler step.
+     * @param {any} obj
+     * @param {any} count
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static allOfButXOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
         return this.xOfPaths(obj, paths.length - count, paths).pass
             ? pass(obj)
             : fail(obj, 'object/allOfButXOfPaths', { count, paths });
     }
 
-    static plain(obj) {
+    /**
+     * Executes the plain handler step.
+     * @param {any} obj
+     * @returns {HandlerResult}
+     */
+    static plain(obj: any): HandlerResult {
         return Utils.isPlainObject(obj) ? pass(obj) : fail(obj, 'object/plain');
     }
 
@@ -187,12 +319,18 @@ class ObjectHandler extends Handler {
     // MUTATORS
     // ====================================
 
-    static pickRandom(obj, count) {
+    /**
+     * Executes the pickRandom handler step.
+     * @param {any} obj
+     * @param {any} count
+     * @returns {HandlerResult}
+     */
+    static pickRandom(obj: any, count: any): HandlerResult {
         const keys = Object.keys(obj);
         if (count >= keys.length) {
             return pass(Object.assign({}, obj));
         }
-        const newObject = {};
+        const newObject: Record<string, any> = {};
         while (count > 0) {
             const randomKey = keys.splice(
                 Math.floor(Math.random() * keys.length), 1
@@ -203,8 +341,14 @@ class ObjectHandler extends Handler {
         return pass(newObject);
     }
 
-    static removeEmpties(obj, emptyValues = [null, undefined]) {
-        const newObj = {};
+    /**
+     * Executes the removeEmpties handler step.
+     * @param {any} obj
+     * @param {any} emptyValues
+     * @returns {any}
+     */
+    static removeEmpties(obj: any, emptyValues: any= [null, undefined]): any {
+        const newObj: Record<string, any> = {};
         for (const key of Object.keys(obj)) {
             const value = obj[key];
             if (emptyValues.indexOf(value) === -1) {
@@ -214,8 +358,14 @@ class ObjectHandler extends Handler {
         return newObj;
     }
 
-    static removeEmptiesRecursive(obj, emptyValues = [null, undefined]) {
-        const newObj = {};
+    /**
+     * Executes the removeEmptiesRecursive handler step.
+     * @param {any} obj
+     * @param {any} emptyValues
+     * @returns {any}
+     */
+    static removeEmptiesRecursive(obj: any, emptyValues: any= [null, undefined]): any {
+        const newObj: Record<string, any> = {};
         for (const key of Object.keys(obj)) {
             const value = obj[key];
             if (Utils.isPlainObject(value)) {
@@ -231,10 +381,18 @@ class ObjectHandler extends Handler {
         return newObj;
     }
 
-    static renameKeys(obj, fromRegex, toRegex, {
+    /**
+     * Executes the renameKeys handler step.
+     * @param {any} obj
+     * @param {any} fromRegex
+     * @param {any} toRegex
+     * @param {any} param4
+     * @returns {HandlerResult}
+     */
+    static renameKeys(obj: any, fromRegex: any, toRegex: any, {
         deleteOriginalKey = true,
         overrideExistingKey = true
-    } = {}) {
+    }: any= {}): HandlerResult {
         const objectCopy = Object.assign({}, obj);
         for (const originalKey of Object.keys(obj)) {
             let renamedKey = originalKey.replace(fromRegex, toRegex);
@@ -249,22 +407,42 @@ class ObjectHandler extends Handler {
         return pass(objectCopy);
     }
 
-    static removePaths(obj, paths = []) {
+    /**
+     * Executes the removePaths handler step.
+     * @param {any} obj
+     * @param {any} paths
+     * @returns {HandlerResult}
+     */
+    static removePaths(obj: any, paths: any= []): HandlerResult {
         for (const path of paths) {
             Utils.removePath(obj, path);
         }
         return pass(obj);
     }
 
-    static setPaths(obj, pathValues = {}, overwrite = true, create = true) {
+    /**
+     * Executes the setPaths handler step.
+     * @param {any} obj
+     * @param {any} pathValues
+     * @param {any} overwrite
+     * @param {any} create
+     * @returns {HandlerResult}
+     */
+    static setPaths(obj: any, pathValues: any= {}, overwrite: any= true, create: any= true): HandlerResult {
         for (const path of Object.keys(pathValues)) {
-            Utils.setPathValue(obj, path, pathValues[path], { overwrite, create });
+            Utils.setPathValue(obj, path as any, pathValues[path], create, overwrite);
         }
         return pass(obj);
     }
 
-    static stripUnknownKeys(obj, knownKeys = []) {
-        const copy = {};
+    /**
+     * Executes the stripUnknownKeys handler step.
+     * @param {any} obj
+     * @param {any} knownKeys
+     * @returns {HandlerResult}
+     */
+    static stripUnknownKeys(obj: any, knownKeys: any= []): HandlerResult {
+        const copy: Record<string, any> = {};
         for (const key of knownKeys) {
             copy[key] = obj[key];
         }

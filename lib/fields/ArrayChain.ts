@@ -51,460 +51,66 @@ class ArrayChain extends Chain<ArrayChainProps> {
         return this.setProps({ castSingle } as any);
     }
 
-    testerdude() :this{
-            console.log('testerdude');
-            return this;
-    }
-
-
-    // // Validators
-
-    // /**
-    //  * Validates that array matches specified dimensional shape
-    //  * @param {Array<number>} dimensions - Expected dimensions [length, width, ...]
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([[1, 2], [3, 4]]).dimensions([2, 2]) // passes - 2x2 matrix
-    //  */
-    // dimensions22(dimensions: number[]): this {
-    //     return this.addStep('dimensions', [dimensions]);
-    // }
-
-    // /**
-    //  * Validates that array is empty
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([]).empty() // passes
-    //  * array([1]).empty() // fails
-    //  */
-    // empty(): this {
-    //     return this.addStep('empty');
-    // }
-
-    // /**
-    //  * Validates that array contains all specified values
-    //  * @param {Array} values - Values that must all be present in the array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4]).allOf([1, 3]) // passes
-    //  * array([1, 2]).allOf([1, 3]) // fails
-    //  */
-    // allOf(values: unknown[]): this {
-    //     return this.addStep('allOf', [values]);
-    // }
-
-    // /**
-    //  * Validates that array contains values other than those specified
-    //  * @param {Array} values - Values to check against
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).otherThan([1, 2]) // passes (has 3)
-    //  * array([1, 2]).otherThan([1, 2]) // fails
-    //  */
-    // otherThan(forbiddenValues: unknown[]): this {
-    //     return this.addStep('otherThan', [forbiddenValues]);
-    // }
-
-    // /**
-    //  * Validates that array contains exactly the specified values
-    //  * @param {Array} values - Values that must exactly match array contents
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).exactly([3, 1, 2]) // passes
-    //  * array([1, 2, 3]).exactly([1, 2]) // fails
-    //  */
-    // exactly(values: unknown[]): this {
-    //     return this.addStep('exactly', [values]);
-    // }
-
-    // /**
-    //  * Validates that array contains none of the specified values
-    //  * @param {Array} values - Values that must not be present
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).noneOf([4, 5]) // passes
-    //  * array([1, 2, 3]).noneOf([2, 4]) // fails
-    //  */
-    // noneOf(values: unknown[]): this {
-    //     return this.addStep('noneOf', [values]);
-    // }
-
-    // /**
-    //  * Validates that array contains only the specified values
-    //  * @param {Array} values - Values that are allowed in the array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 1]).only([1, 2, 3]) // passes
-    //  * array([1, 2, 4]).only([1, 2, 3]) // fails
-    //  */
-    // // only(values) {
-    // //     return this.addStep('only', [values]);
-    // // }
-
-    // /**
-    //  * Validates that array contains at least one of the specified values
-    //  * @param {Array} values - Values to check for presence
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).someOf([3, 4, 5]) // passes
-    //  * array([1, 2, 3]).someOf([4, 5, 6]) // fails
-    //  */
-    // someOf(values: unknown[]): this {
-    //     return this.addStep('someOf', [values]);
-    // }
-
-    // /**
-    //  * Validates that array has exact length
-    //  * @param {number} length - Expected array length
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).length(3) // passes
-    //  * array([1, 2]).length(3) // fails
-    //  */
-    // length(length: number): this {
-    //     return this.addStep('length', [length]);
-    // }
-
-    // /**
-    //  * Validates that array length is within specified range
-    //  * @param {number} min - Minimum length (inclusive)
-    //  * @param {number} max - Maximum length (inclusive)
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).lengthBetween(2, 4) // passes
-    //  */
-    // lengthBetween(min: number, max: number): this {
-    //     return this.addStep('lengthBetween', [min, max]);
-    // }
+    // Validators
 
     /**
-     * Validates that array length does not exceed maximum
-     * @param {number} max - Maximum allowed length
+     * Validates that array elements are unique
+     * @param {string|Function} [pathStringOrComparator] - Property path or comparator
      * @returns {ArrayChain} Returns this chain for method chaining
      * @example
-     * array([1, 2]).maxLength(3) // passes
-     * array([1, 2, 3, 4]).maxLength(3) // fails
+     * array([1, 2, 3]).unique() // passes
+     * array([1, 2, 1]).unique() // fails
      */
-    // maxLength(max: number): this {
-    //     return this.addStep('maxLength', [max]);
-    // }
+    unique(pathStringOrComparator?: string | SortComparator): this {
+        const pathOrComparator = typeof pathStringOrComparator === 'string'
+            //todo: check this out...create
+            ? Path.create(pathStringOrComparator)
+            : pathStringOrComparator;
+        return this.addStep('unique', [pathOrComparator]);
+    }
 
-    // /**
-    //  * Validates that array length meets minimum requirement
-    //  * @param {number} min - Minimum required length
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).minLength(2) // passes
-    //  * array([1]).minLength(2) // fails
-    //  */
-    // minLength(min: number): this {
-    //     return this.addStep('minLength', [min]);
-    // }
+    // Transformers
 
-    // /**
-    //  * Validates that array is not empty
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2]).notEmpty() // passes
-    //  * array([]).notEmpty() // fails
-    //  */
-    // notEmpty(): this {
-    //     return this.addStep('notEmpty');
-    // }
+    /**
+     * Groups array elements by a property path or value
+     * @param {string} pathString - Path to property for grouping
+     * @returns {ArrayChain} Returns this chain for method chaining
+     * @example
+     * array([{type: 'A', val: 1}, {type: 'B', val: 2}]).group('type')
+     */
+    group(pathString: string | null): this {
+        const path = typeof pathString === 'string'
+            ? Path.create(pathString)
+            : null;
+        return this.addStep('group', [path]);
+    }
 
-    // /**
-    //  * Validates that array is sorted in ascending order
-    //  * @param {string|Function} [pathOrComparator] - Property path or comparator function
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).sorted() // passes
-    //  * array([3, 1, 2]).sorted() // fails
-    //  */
-    // sorted(pathOrComparator?: string | SortComparator): this {
-    //     return this.addStep('sorted', [pathOrComparator]);
-    // }
+    /**
+     * Removes duplicate values from array
+     * @param {string|Function} [pathStringOrComparator] - Property path or comparator function
+     * @returns {ArrayChain} Returns this chain for method chaining
+     * @example
+     * array([1, 2, 2, 3]).removeDuplicates() // [1, 2, 3]
+     * array([{id: 1}, {id: 1}]).removeDuplicates('id') // [{id: 1}]
+     */
+    removeDuplicates(pathStringOrComparator?: string | SortComparator): this {
+        const pathOrComparator = typeof pathStringOrComparator === 'string'
+            ? Path.create(pathStringOrComparator)
+            : pathStringOrComparator;
+        return this.addStep('removeDuplicates', [pathOrComparator]);
+    }
 
-    // /**
-    //  * Validates that array matches tuple pattern with specific values
-    //  * @param {Array} values - Expected values in order
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 'hello', true]).tuple([pd.number(), pd.string(), pd.boolean()]) // passes
-    //  */
-    // tuple(values: unknown[]): this {
-    //     return this.addStep('tuple', [values]);
-    // }
-
-    // /**
-    //  * Validates that all array elements are of specified type
-    //  * @param {string} type - Expected type ('string', 'number', 'object', etc.)
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).type(pd.number()) // passes
-    //  * array([1, '2', 3]).type(pd.boolean()) // fails
-    //  */
-    // type(type: unknown): this {
-    //     return this.addStep('type', [type]);
-    // }
-
-    // /**
-    //  * Validates that array elements are unique
-    //  * @param {string|Function} [pathStringOrComparator] - Property path or comparator
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).unique() // passes
-    //  * array([1, 2, 1]).unique() // fails
-    //  */
-    // unique(pathStringOrComparator?: string | SortComparator): this {
-    //     const pathOrComparator = typeof pathStringOrComparator === 'string'
-    //         //todo: check this out...create
-    //         ? Path.create(pathStringOrComparator)
-    //         : pathStringOrComparator;
-    //     return this.addStep('unique', [pathOrComparator]);
-    // }
-
-
-
-    // // Transformers
-
-    // /**
-    //  * Adds items to end of the array
-    //  * @param {Array} items - Items to add to the array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2]).add([3, 4]) // [1, 2, 3, 4]
-    //  */
-    // add(items: unknown[]): this {
-    //     return this.addStep('add', [items]);
-    // }
-
-    // /**
-    //  * Splits array into chunks of specified size
-    //  * @param {number} size - Maximum size of each chunk
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4, 5]).chunk(2) // [[1, 2], [3, 4], [5]]
-    //  */
-    // chunk(size: number): this {
-    //     return this.addStep('chunk', [size]);
-    // }
-
-    // /**
-    //  * Filters array elements using a predicate function
-    //  * @param {Function} filter - Predicate function to test each element
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4]).filter(x => x > 2) // [3, 4]
-    //  */
-    // filter(filterFn: (value: unknown, index: number, array: unknown[]) => boolean): this {
-    //     return this.addStep('filter', [filterFn]);
-    // }
-
-    // /**
-    //  * Flattens nested arrays into a single array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([[1, 2], [3, 4]]).flatten() // [1, 2, 3, 4]
-    //  */
-    // flatten(): this {
-    //     return this.addStep('flatten');
-    // }
-
-    // /**
-    //  * Groups array elements by a property path or value
-    //  * @param {string} pathString - Path to property for grouping
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([{type: 'A', val: 1}, {type: 'B', val: 2}]).group('type')
-    //  */
-    // group(pathString: string | null): this {
-    //     const path = typeof pathString === 'string'
-    //         ? Path.create(pathString)
-    //         : null;
-    //     return this.addStep('group', [path]);
-    // }
-
-    // /**
-    //  * Filters array to keep only specified values
-    //  * @param {Array} values - Values to keep in the array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4]).keep([2, 4]) // [2, 4]
-    //  */
-    // keep(values: unknown[]): this {
-    //     return this.addStep('keep', [values]);
-    // }
-
-    // /**
-    //  * Maps array elements using a transformation function
-    //  * @param {Function} map - Function to transform each element
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).map(x => x * 2) // [2, 4, 6]
-    //  */
-    // map(mapFn: (value: unknown, index: number, array: unknown[]) => unknown): this {
-    //     return this.addStep('map', [mapFn]);
-    // }
-
-    // /**
-    //  * Pads array to target length with specified value
-    //  * @param {number} targetLength - Desired array length
-    //  * @param {*} [padValue] - Value to use for padding
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2]).padEnd(4, 0) // [1, 2, 0, 0]
-    //  */
-    // padEnd(targetLength: number, padValue?: unknown): this {
-    //     return this.addStep('padEnd', [targetLength, padValue]);
-    // }
-
-    // /**
-    //  * Picks random elements from array
-    //  * @param {number} num - Number of elements to pick
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4, 5]).pickRandom(2) // [3, 1] (random)
-    //  */
-    // pickRandom(num: number): this {
-    //     return this.addStep('pickRandom', [num]);
-    // }
-
-    // /**
-    //  * Removes specified values from array
-    //  * @param {Array} values - Values to remove from the array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4]).remove([2, 4]) // [1, 3]
-    //  */
-    // remove(values: unknown[]): this {
-    //     return this.addStep('remove', [values]);
-    // }
-
-    // /**
-    //  * Removes duplicate values from array
-    //  * @param {string|Function} [pathStringOrComparator] - Property path or comparator function
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 2, 3]).removeDuplicates() // [1, 2, 3]
-    //  * array([{id: 1}, {id: 1}]).removeDuplicates('id') // [{id: 1}]
-    //  */
-    // removeDuplicates(pathStringOrComparator?: string | SortComparator): this {
-    //     const pathOrComparator = typeof pathStringOrComparator === 'string'
-    //         ? Path.create(pathStringOrComparator)
-    //         : pathStringOrComparator;
-    //     return this.addStep('removeDuplicates', [pathOrComparator]);
-    // }
-
-    // /**
-    //  * Removes empty values from array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
-    //  */
-    // removeEmpties(): this {
-    //     return this.addStep('removeEmpties', function (this: Chain): unknown[] {
-    //         return [this.props.emptyValues];
-    //     });
-    // }
-
-    // /**
-    //  * Removes undefined values from array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, ,undefined, 2, undefined, 3]).removeUndefined() // [1, 2, 3]
-    //  */
-    // removeUndefined(): this {
-    //     return this.addStep('removeUndefined');
-    // }
-
-    // /**
-    //  * Reverses the array order
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3]).reverse() // [3, 2, 1]
-    //  */
-    // reverse(): this {
-    //     return this.addStep('reverse');
-    // }
-
-    // /**
-    //  * Randomly shuffles array elements
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4]).shuffle() // [3, 1, 4, 2] (random order)
-    //  */
-    // shuffle(): this {
-    //     return this.addStep('shuffle');
-    // }
-
-    // /**
-    //  * Extracts a section of array
-    //  * @param {number} startIndex - Start index (inclusive)
-    //  * @param {number} [endIndex] - End index (exclusive)
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4, 5]).slice(1, 3) // [2, 3]
-    //  */
-    // slice(startIndex: number, endIndex?: number): this {
-    //     return this.addStep('slice', [startIndex, endIndex]);
-    // }
-
-    // /**
-    //  * Takes first N elements from array
-    //  * @param {number} num - Number of elements to take from start
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4, 5]).sliceFirst(3) // [1, 2, 3]
-    //  */
-    // sliceFirst(num: number): this {
-    //     return this.addStep('sliceFirst', [num]);
-    // }
-
-    // /**
-    //  * Takes last N elements from array
-    //  * @param {number} num - Number of elements to take from end
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 2, 3, 4, 5]).sliceLast(3) // [3, 4, 5]
-    //  */
-    // sliceLast(num: number): this {
-    //     return this.addStep('sliceLast', [num]);
-    // }
-
-    // /**
-    //  * Splices array values by removing and optionally inserting items.
-    //  * @param {number} startIndex - Index at which to start changing the array.
-    //  * @param {number} [deleteCount=0] - Number of items to remove.
-    //  * @param {Array} [insertValues=[]] - Items to insert at startIndex.
-    //  * @returns {ArrayChain} Returns this chain for method chaining.
-    //  */
-    // splice(startIndex: number, deleteCount: number = 0, insertValues: unknown[] = []): this {
-    //     return this.addStep('splice', [startIndex, deleteCount, insertValues]);
-    // }
-
-    // /**
-    //  * Sorts array in ascending order
-    //  * @param {string|Function} [pathOrComparator] - Property path or comparator function
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([3, 1, 2]).sortAsc() // [1, 2, 3]
-    //  * array([{age: 30}, {age: 20}]).sortAsc('age') // [{age: 20}, {age: 30}]
-    //  */
-    // sortAsc(pathOrComparator?: string | SortComparator): this {
-    //     return this.addStep('sortAsc', [pathOrComparator]);
-    // }
-
-    // /**
-    //  * Sorts array in descending order
-    //  * @param {string|Function} [pathOrComparator] - Property path or comparator function
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, 3, 2]).sortDesc() // [3, 2, 1]
-    //  * array([{age: 20}, {age: 30}]).sortDesc('age') // [{age: 30}, {age: 20}]
-    //  */
-    // sortDesc(pathOrComparator?: string | SortComparator): this {
-    //     return this.addStep('sortDesc', [pathOrComparator]);
-    // }
+    /**
+     * Removes empty values from array
+     * @returns {ArrayChain} Returns this chain for method chaining
+     * @example
+     * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
+     */
+    removeEmpties(): this {
+        return this.addStep('removeEmpties', function (this: Chain): unknown[] {
+            return [this.props.emptyValues];
+        });
+    }
 
 }
 

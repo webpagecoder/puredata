@@ -9,10 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"{lib,_misc,tests}/**/*.ts\"",
     "lint:fix": "eslint \"{lib,_misc,tests}/**/*.ts\" --fix",
-    "generate:arraychain-definitions": "tsx ./_misc/generate-arraychain-definitions.ts",
-    "generate:booleanchain-header": "tsx ./_misc/generate-booleanchain-header.ts",
-    "watch:arraychain-definitions": "npm-watch arraychain-definitions",
-    "watch:booleanchain-header": "npm-watch booleanchain-header",
+    "generate:chain-defs": "tsx ./generators/generate-chain-defs.ts",
     "push": "npm version patch && git push",
     "push-minor": "npm version minor && git push",
     "push-major": "npm version major && git push",
@@ -37,18 +34,6 @@
       "patterns": [
         "lib/**/*.ts",
         "_misc/**/*.ts"
-      ],
-      "extensions": "ts"
-    },
-    "arraychain-definitions": {
-      "patterns": [
-        "lib/handlers/ArrayHandler.ts"
-      ],
-      "extensions": "ts"
-    },
-    "booleanchain-header": {
-      "patterns": [
-        "lib/handlers/BooleanHandler.ts"
       ],
       "extensions": "ts"
     }

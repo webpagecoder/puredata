@@ -35,7 +35,7 @@ function compareValues(a: ArrayValue, b: ArrayValue): number {
  * @param {Path|Function|null} [pathOrComparator=null] Optional path extractor or custom comparator.
  * @returns {Function} Comparator function for two values.
  */
-function getSorter(order = 1, pathOrComparator: PathOrSortComparator = null): SortComparator {
+function getSorter(order: any= 1, pathOrComparator: PathOrSortComparator = null): SortComparator {
     let sorter: SortComparator;
     if (typeof pathOrComparator === 'function') {
         sorter = pathOrComparator;
@@ -87,7 +87,7 @@ class ArrayHandler extends Handler {
      * @param {number} [index=0] Internal recursion index for the current dimension.
      * @returns {HandlerResult} Pass result when dimensions match, otherwise failure details.
      */
-    static dimensions(arr: ArrayValues, dimensions: Dimensions, index = 0): HandlerResult {
+    static dimensions(arr: ArrayValues, dimensions: Dimensions, index: any= 0): HandlerResult {
         if (arr.length !== dimensions[index]) {
             return fail(arr, "array/dimensions", { dimensions });
         }
@@ -150,22 +150,7 @@ class ArrayHandler extends Handler {
      * @param {number} requiredLength Exact required array length.
      * @returns {HandlerResult} Pass result when the length matches.
      */
-    // @ts-expect-error Preserve runtime API name used by chain step lookup.
-    static length(arr: ArrayValues, requiredLength: number): HandlerResult {
-        return arr.length === requiredLength
-            ? pass(arr)
-            : fail(arr, 'array/length', {
-                length: arr.length,
-                requiredLength
-            });
-    }
-
-    /**
-     * Validates that the array length matches the required length.
-     * @param {unknown[]} arr Array being validated.
-     * @param {number} requiredLength Exact required array length.
-     * @returns {HandlerResult} Pass result when the length matches.
-     */
+    // @ts-expect-error Runtime API requires static method name `length`.
     static length(arr: ArrayValues, requiredLength: number): HandlerResult {
         return arr.length === requiredLength
             ? pass(arr)
@@ -555,7 +540,7 @@ class ArrayHandler extends Handler {
      * @param {number} [count=1] Number of items to pick.
      * @returns {HandlerResult} Pass result containing the randomly selected items.
      */
-    static pickRandom(arr: ArrayValues, count = 1): HandlerResult {
+    static pickRandom(arr: ArrayValues, count: any= 1): HandlerResult {
         const arrCopy = [...arr];
         const random: ArrayValues = [];
         if (count > arrCopy.length) {
@@ -696,7 +681,7 @@ class ArrayHandler extends Handler {
      * @param {number} [count=1] Number of items to take.
      * @returns {HandlerResult} Pass result containing the leading slice.
      */
-    static sliceFirst(arr: ArrayValues, count = 1): HandlerResult {
+    static sliceFirst(arr: ArrayValues, count: any= 1): HandlerResult {
         return pass(arr.slice(0, count));
     }
 
@@ -706,7 +691,7 @@ class ArrayHandler extends Handler {
      * @param {number} [count=1] Number of items to take.
      * @returns {HandlerResult} Pass result containing the trailing slice.
      */
-    static sliceLast(arr: ArrayValues, count = 1): HandlerResult {
+    static sliceLast(arr: ArrayValues, count: any= 1): HandlerResult {
         return pass(arr.slice(-count));
     }
 
@@ -718,7 +703,7 @@ class ArrayHandler extends Handler {
      * @param {unknown[]} [insertValues=[]] Values to insert at the start index.
      * @returns {HandlerResult} Pass result containing the spliced array.
      */
-    static splice(arr: ArrayValues, startIndex: number, deleteCount = 0, insertValues: ArrayValues = []): HandlerResult {
+    static splice(arr: ArrayValues, startIndex: number, deleteCount: any= 0, insertValues: ArrayValues = []): HandlerResult {
         const arrCopy = [...arr];
         arrCopy.splice(startIndex, deleteCount, ...insertValues);
         return pass(arrCopy);

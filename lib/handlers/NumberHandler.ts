@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { HandlerResult } from './HandlerResult.ts';
@@ -12,28 +11,53 @@ class NumberHandler extends Handler {
     // VALIDATORS
     // ====================================
 
-    static approx(num, comparison, tolerance = Number.EPSILON) {
+    /**
+     * Executes the approx handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @param {any} tolerance
+     * @returns {HandlerResult}
+     */
+    static approx(num: any, comparison: any, tolerance: any= Number.EPSILON): HandlerResult {
         return Math.abs(num - comparison) < tolerance
             ? pass(num)
             : fail(num, 'number/approx', { comparison, tolerance });
     }
 
-    static number(num) {
+    /**
+     * Executes the number handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static number(num: any): HandlerResult {
         return typeof num === 'number' && !Number.isNaN(num)
             ? pass(num)
             : fail(num, 'number/base');
     }
 
-    static between(num, min, max) {
+    /**
+     * Executes the between handler step.
+     * @param {any} num
+     * @param {any} min
+     * @param {any} max
+     * @returns {HandlerResult}
+     */
+    static between(num: any, min: any, max: any): HandlerResult {
         return (num >= min && num <= max)
             ? pass(num)
             : fail(num, 'number/between', { num, min, max });
     }
 
-    static decimal(num, {
+    /**
+     * Executes the decimal handler step.
+     * @param {any} num
+     * @param {any} param2
+     * @returns {HandlerResult}
+     */
+    static decimal(num: any, {
         minDecimalPlaces = 0,
         maxDecimalPlaces = 20,
-    } = {}) {
+    }: any= {}): HandlerResult {
         if (Number.isInteger(num)) {
             return fail(num, 'number/decimal');
         }
@@ -56,114 +80,218 @@ class NumberHandler extends Handler {
         return pass(num);
     }
 
-    static equals(num, comparison) {
+    /**
+     * Executes the equals handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @returns {HandlerResult}
+     */
+    static equals(num: any, comparison: any): HandlerResult {
         return (num === comparison)
             ? pass(num)
             : fail(num, 'number/equals', { comparison });
     }
 
-    static even(num) {
+    /**
+     * Executes the even handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static even(num: any): HandlerResult {
         return (num % 2 === 0)
             ? pass(num)
             : fail(num, 'number/even');
     }
 
-    static factor(num, multiple) {
+    /**
+     * Executes the factor handler step.
+     * @param {any} num
+     * @param {any} multiple
+     * @returns {HandlerResult}
+     */
+    static factor(num: any, multiple: any): HandlerResult {
         return (multiple % num === 0)
             ? pass(num)
             : fail(num, 'number/factor', { num, multiple });
     }
 
-    static finite(num) {
+    /**
+     * Executes the finite handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static finite(num: any): HandlerResult {
         return Number.isFinite(num) ? pass(num) : fail(num, 'number/finite');
     }
 
-    static greaterThan(num, comparison) {
+    /**
+     * Executes the greaterThan handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @returns {HandlerResult}
+     */
+    static greaterThan(num: any, comparison: any): HandlerResult {
         return (num > comparison)
             ? pass(num)
             : fail(num, 'number/greaterThan', { comparison });
     }
 
-    static infinity(num) {
+    /**
+     * Executes the infinity handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static infinity(num: any): HandlerResult {
         return (num === Infinity || num === -Infinity)
             ? pass(num)
             : fail(num, 'number/infinity');
     }
 
-    static integer(num) {
+    /**
+     * Executes the integer handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static integer(num: any): HandlerResult {
         return Number.isInteger(num)
             ? pass(num)
             : fail(num, 'number/integer');
     }
 
-    static lessThan(num, comparison) {
+    /**
+     * Executes the lessThan handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @returns {HandlerResult}
+     */
+    static lessThan(num: any, comparison: any): HandlerResult {
         return (num < comparison)
             ? pass(num)
             : fail(num, 'number/lessThan', { comparison });
     }
 
-    static max(num, comparison) {
+    /**
+     * Executes the max handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @returns {HandlerResult}
+     */
+    static max(num: any, comparison: any): HandlerResult {
         return (num <= comparison)
             ? pass(num)
             : fail(num, 'number/max', { comparison });
     }
 
-    static min(num, comparison) {
+    /**
+     * Executes the min handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @returns {HandlerResult}
+     */
+    static min(num: any, comparison: any): HandlerResult {
         return (num >= comparison)
             ? pass(num)
             : fail(num, 'number/min', { comparison });
     }
 
-    static minusSign(num) {
+    /**
+     * Executes the minusSign handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static minusSign(num: any): HandlerResult {
         return String(num)[0] === '-'
             ? pass(num)
             : fail(num, 'number/minusSign');
     }
 
-    static multiple(num, factor) {
+    /**
+     * Executes the multiple handler step.
+     * @param {any} num
+     * @param {any} factor
+     * @returns {HandlerResult}
+     */
+    static multiple(num: any, factor: any): HandlerResult {
         return (num % factor === 0)
             ? pass(num)
             : fail(num, 'number/multiple', { num, factor });
     }
 
-    static negative(num) {
+    /**
+     * Executes the negative handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static negative(num: any): HandlerResult {
         return (num < 0)
             ? pass(num)
             : fail(num, 'number/negative');
     }
 
-    static notEquals(num, comparison) {
+    /**
+     * Executes the notEquals handler step.
+     * @param {any} num
+     * @param {any} comparison
+     * @returns {HandlerResult}
+     */
+    static notEquals(num: any, comparison: any): HandlerResult {
         return (num !== comparison)
             ? pass(num)
             : fail(num, 'number/notEquals', { comparison });
     }
 
-    static odd(num) {
+    /**
+     * Executes the odd handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static odd(num: any): HandlerResult {
         return (num % 2 !== 0)
             ? pass(num)
             : fail(num, 'number/odd');
     }
 
-    static plusSign(num) {
+    /**
+     * Executes the plusSign handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static plusSign(num: any): HandlerResult {
         return String(num)[0] === '+'
             ? pass(num)
             : fail(num, 'number/plusSign');
     }
 
-    static positive(num) {
+    /**
+     * Executes the positive handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static positive(num: any): HandlerResult {
         return (num > 0)
             ? pass(num)
             : fail(num, 'number/positive');
     }
 
-    static precision(num, precision) {
+    /**
+     * Executes the precision handler step.
+     * @param {any} num
+     * @param {any} precision
+     * @returns {HandlerResult}
+     */
+    static precision(num: any, precision: any): HandlerResult {
         const multiplier = Math.pow(10, precision);
         return (Math.round(num * multiplier) === num * multiplier)
             ? pass(num)
             : fail(num, 'number/precision', { num, precision });
     }
 
-    static prime(num) {
+    /**
+     * Executes the prime handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static prime(num: any): HandlerResult {
         if (!Number.isInteger(num) || num < 2) {
             return fail(num, 'number/prime');
         }
@@ -175,33 +303,58 @@ class NumberHandler extends Handler {
         return pass(num);
     }
 
-    static safe(num) {
+    /**
+     * Executes the safe handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static safe(num: any): HandlerResult {
         return num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER
             ? fail(num, 'number/safe')
             : pass(num);
     }
 
-    static safeInteger(num) {
+    /**
+     * Executes the safeInteger handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static safeInteger(num: any): HandlerResult {
         return Number.isSafeInteger(num)
             ? pass(num)
             : fail(num, 'number/safeInteger');
     }
 
-    static signed(num) {
+    /**
+     * Executes the signed handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static signed(num: any): HandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? pass(num)
             : fail(num, 'number/signed');
     }
 
-    static unsigned(num) {
+    /**
+     * Executes the unsigned handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static unsigned(num: any): HandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? fail(num, 'number/unsigned', { sign })
             : pass(num);
     }
 
-    static zero(num) {
+    /**
+     * Executes the zero handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static zero(num: any): HandlerResult {
         return (num === 0)
             ? pass(num)
             : fail(num, 'number/zero');
@@ -212,7 +365,14 @@ class NumberHandler extends Handler {
     // MUTATORS
     // ====================================
 
-    static clampBetween(num, min, max) {
+    /**
+     * Executes the clampBetween handler step.
+     * @param {any} num
+     * @param {any} min
+     * @param {any} max
+     * @returns {HandlerResult}
+     */
+    static clampBetween(num: any, min: any, max: any): HandlerResult {
         if(num > max) {
             return pass(max);
         }
@@ -222,66 +382,156 @@ class NumberHandler extends Handler {
         return pass(num);
     }
 
-    static constrain(num, min, max) {
+    /**
+     * Executes the constrain handler step.
+     * @param {any} num
+     * @param {any} min
+     * @param {any} max
+     * @returns {HandlerResult}
+     */
+    static constrain(num: any, min: any, max: any): HandlerResult {
         return pass(Math.min(Math.max(num, min), max));
     }
 
-    static negate(num) {
+    /**
+     * Executes the negate handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static negate(num: any): HandlerResult {
         return pass(-num);
     }
 
-    static round(num, numDecimals = 0) {
+    /**
+     * Executes the round handler step.
+     * @param {any} num
+     * @param {any} numDecimals
+     * @returns {HandlerResult}
+     */
+    static round(num: any, numDecimals: any= 0): HandlerResult {
         const multiplier = Math.pow(10, numDecimals);
         return pass(Math.round(num * multiplier) / multiplier);
     }
 
-    static roundDown(num) {
+    /**
+     * Executes the roundDown handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static roundDown(num: any): HandlerResult {
         return pass(Math.floor(num));
     }
 
-    static roundUp(num) {
+    /**
+     * Executes the roundUp handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static roundUp(num: any): HandlerResult {
         return pass(Math.ceil(num));
     }
 
-    static stripSign(num) {
+    /**
+     * Executes the stripSign handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static stripSign(num: any): HandlerResult {
         return pass(Math.abs(num));
     }
 
-    static toPower(num, exponent) {
+    /**
+     * Executes the toPower handler step.
+     * @param {any} num
+     * @param {any} exponent
+     * @returns {HandlerResult}
+     */
+    static toPower(num: any, exponent: any): HandlerResult {
         return pass(Math.pow(num, exponent));
     }
 
-    static toScale(num, fromMin, fromMax, toMin, toMax) {
+    /**
+     * Executes the toScale handler step.
+     * @param {any} num
+     * @param {any} fromMin
+     * @param {any} fromMax
+     * @param {any} toMin
+     * @param {any} toMax
+     * @returns {HandlerResult}
+     */
+    static toScale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
         const scaled = ((num - fromMin) / (fromMax - fromMin))
             * (toMax - toMin) + toMin;
         return pass(scaled);
     }
 
-    static truncate(num) {
+    /**
+     * Executes the truncate handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static truncate(num: any): HandlerResult {
         return pass(Math.trunc(num));
     }
 
-    static abs(num) {
+    /**
+     * Executes the abs handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static abs(num: any): HandlerResult {
         return this.stripSign(num);
     }
 
-    static ceil(num) {
+    /**
+     * Executes the ceil handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static ceil(num: any): HandlerResult {
         return this.roundUp(num);
     }
 
-    static clamp(num, min, max) {
+    /**
+     * Executes the clamp handler step.
+     * @param {any} num
+     * @param {any} min
+     * @param {any} max
+     * @returns {HandlerResult}
+     */
+    static clamp(num: any, min: any, max: any): HandlerResult {
         return this.clampBetween(num, min, max);
     }
 
-    static floor(num) {
+    /**
+     * Executes the floor handler step.
+     * @param {any} num
+     * @returns {HandlerResult}
+     */
+    static floor(num: any): HandlerResult {
         return this.roundDown(num);
     }
 
-    static pow(num, exponent) {
+    /**
+     * Executes the pow handler step.
+     * @param {any} num
+     * @param {any} exponent
+     * @returns {HandlerResult}
+     */
+    static pow(num: any, exponent: any): HandlerResult {
         return this.toPower(num, exponent);
     }
 
-    static scale(num, fromMin, fromMax, toMin, toMax) {
+    /**
+     * Executes the scale handler step.
+     * @param {any} num
+     * @param {any} fromMin
+     * @param {any} fromMax
+     * @param {any} toMin
+     * @param {any} toMax
+     * @returns {HandlerResult}
+     */
+    static scale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
         return this.toScale(num, fromMin, fromMax, toMin, toMax);
     }
 }

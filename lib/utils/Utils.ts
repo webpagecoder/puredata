@@ -374,7 +374,7 @@ class Utils {
         return str + padding;
     }
 
-    static regexMatch(str: string, regex: RegExp | RegExp[], options: Record<string, unknown> = {}): RegExpExecArray | null {
+    static regexMatch(str: string, regex: RegExp | RegExp[] | string | string[], options: Record<string, unknown> = {}): RegExpExecArray | null {
         const {
             allowedDelims,
             delim,
@@ -384,17 +384,19 @@ class Utils {
         let matchData: RegExpExecArray | null;
         const bareStr = Utils.replaceChars(str, (allowedDelims || '') + (delim || ''));
 
+        const toPattern = (input: RegExp | string): string => input instanceof RegExp ? input.source : input;
+
         // Loose match
         if (allowLooseFormat) {
             matchData = Array.isArray(regex)
-                ? RegexCache('^(' + (regex as RegExp[]).map((r: RegExp): string => r.source).join(')(') + ')$', 'i').exec(bareStr)
-                : (regex as RegExp).exec(bareStr);
+                ? RegexCache('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')(') + ')$', 'i').exec(bareStr)
+                : RegexCache(toPattern(regex as RegExp | string), 'i').exec(bareStr);
         }
         else {
             matchData = Array.isArray(regex)
-                ? RegexCache('^(' + (regex as RegExp[]).map((r: RegExp): string => r.source).join(')' + Utils.escapeForRegex(delim || '') + '(') + ')$')
+                ? RegexCache('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')' + Utils.escapeForRegex(delim || '') + '(') + ')$')
                     .exec(str)
-                : (regex as RegExp).exec(str);
+                : RegexCache(toPattern(regex as RegExp | string)).exec(str);
         }
 
         if (matchData) {

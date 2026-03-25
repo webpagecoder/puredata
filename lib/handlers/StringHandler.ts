@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { PRESENCE } from '../Presence.ts';
@@ -9,33 +8,60 @@ import { Handler } from './Handler.ts';
 import { NumberHandler } from './NumberHandler.ts';
 const { pass, fail } = HandlerResult;
 const { OPTIONAL, REQUIRED, FORBIDDEN } = PRESENCE;
+const optional = OPTIONAL;
+const required = REQUIRED;
+const forbidden = FORBIDDEN;
 
 
 class StringHandler extends Handler {
+
+    static matchingDefaults: Record<string, any>;
 
     // ====================================
     // VALIDATORS
     // ====================================
 
-    static alpha(str) {
+    /**
+     * Executes the alpha handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static alpha(str: any): HandlerResult {
         return /^[A-Z]+$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alpha');
     }
 
-    static alphanumeric(str) {
+    /**
+     * Executes the alphanumeric handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static alphanumeric(str: any): HandlerResult {
         return /^[A-Z0-9]+$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alphanumeric');
     }
 
-    static ascii(str) {
+    /**
+     * Executes the ascii handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static ascii(str: any): HandlerResult {
         return /^[\x00-\x7F]*$/.test(str)
             ? pass(str)
             : fail(str, 'string/ascii');
     }
 
-    static balanced(str, openChar = '(', closeChar = ')') {
+    /**
+     * Executes the balanced handler step.
+     * @param {any} str
+     * @param {any} openChar
+     * @param {any} closeChar
+     * @returns {HandlerResult}
+     */
+    static balanced(str: any, openChar: any= '(', closeChar: any= ')'): HandlerResult {
         let openCount = 0;
         for (let index = 0, max = str.length; index < max; ++index) {
             const char = str[index];
@@ -63,13 +89,23 @@ class StringHandler extends Handler {
             });
     }
 
-    static base64(str) {
+    /**
+     * Executes the base64 handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static base64(str: any): HandlerResult {
         return /^[A-Za-z0-9+/]+={0,2}$/.test(str) && str.length % 4 === 0
             ? pass(str)
             : fail(str, 'string/base64');
     }
 
-    static base64Decode(str) {
+    /**
+     * Executes the base64Decode handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static base64Decode(str: any): HandlerResult {
         if (typeof Buffer !== 'undefined') {
             return pass(Buffer.from(str, 'base64').toString('utf8'));
         }
@@ -79,7 +115,12 @@ class StringHandler extends Handler {
         return fail(str, 'string/base64Decode');
     }
 
-    static base64Encode(str) {
+    /**
+     * Executes the base64Encode handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static base64Encode(str: any): HandlerResult {
         if (typeof Buffer !== 'undefined') {
             return pass(Buffer.from(str, 'utf8').toString('base64'));
         }
@@ -89,19 +130,35 @@ class StringHandler extends Handler {
         return fail(str, 'string/base64Encode');
     }
 
-    static binary(str) {
+    /**
+     * Executes the binary handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static binary(str: any): HandlerResult {
         return /^[01]+$/.test(str)
             ? pass(str)
             : fail(str, 'string/binary');
     }
 
-    static bmp(str) {
+    /**
+     * Executes the bmp handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static bmp(str: any): HandlerResult {
         return /^[\u0000-\uFFFF]*$/u.test(str)
             ? pass(str)
             : fail(str, 'string/bmp');
     }
 
-    static complex(str, options = {}) {
+    /**
+     * Executes the complex handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static complex(str: any, options: any= {}): HandlerResult {
         const {
             minLen = 8,
             maxLen = 100,
@@ -117,19 +174,19 @@ class StringHandler extends Handler {
             return fail(str, 'string/complex/length', { minLen, maxLen });
         }
 
-        (str.match(/[A-Z]/g) || []).forEach(_ => ++upper); // count uppercase letters
+        (str.match(/[A-Z]/g) || []).forEach((_: string): void => { ++upper; }); // count uppercase letters
         if (upper < minUppercase) {
             return fail(str, 'string/complex/uppercase', { minUppercase });
         }
-        (str.match(/[a-z]/g) || []).forEach(_ => ++lower); // count lowercase letters
+        (str.match(/[a-z]/g) || []).forEach((_: string): void => { ++lower; }); // count lowercase letters
         if (lower < minLowercase) {
             return fail(str, 'string/complex/lowercase', { minLowercase });
         }
-        (str.match(/\d/g) || []).forEach(_ => ++digits);   // count digits
+        (str.match(/\d/g) || []).forEach((_: string): void => { ++digits; });   // count digits
         if (digits < minDigits) {
             return fail(str, 'string/complex/digits', { minDigits });
         }
-        (str.match(/[^a-z0-9]/ig) || []).forEach(_ => ++specials); // count specials
+        (str.match(/[^a-z0-9]/ig) || []).forEach((_: string): void => { ++specials; }); // count specials
         if (specials < minSpecialChars) {
             return fail(str, 'string/complex/specialChars', { minSpecialChars });
         }
@@ -141,7 +198,14 @@ class StringHandler extends Handler {
         return pass(str);
     }
 
-    static contains(str, substring, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the contains handler step.
+     * @param {any} str
+     * @param {any} substring
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static contains(str: any, substring: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { ignoreCase } = options;
 
         if (ignoreCase) {
@@ -154,7 +218,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/contains', Object.assign({ substring }, options));
     }
 
-    static creditCard(str, options = {}) {
+    /**
+     * Executes the creditCard handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static creditCard(str: any, options: any= {}): HandlerResult {
         const finalOptions = Object.assign({
             delim: '',
             types: null
@@ -168,7 +238,7 @@ class StringHandler extends Handler {
             types
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
 
-        const cards = [
+        const cards = ([
             // visa 4(13-19 total)
             [
                 'visa',
@@ -224,8 +294,8 @@ class StringHandler extends Handler {
                 true,
             ],
 
-        ].filter(
-            card => types === null
+        ] as Array<[string, string[], boolean]>).filter(
+            (card): boolean => types === null
                 ? true
                 : types.indexOf(card[0]) > -1
         );
@@ -258,7 +328,13 @@ class StringHandler extends Handler {
         return fail(str, 'string/creditCard', finalOptions);
     }
 
-    static currencyCode(str, options = {}) {
+    /**
+     * Executes the currencyCode handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static currencyCode(str: any, options: any= {}): HandlerResult {
         const {
             allowLooseFormat,
         } = Object.assign({}, StringHandler.matchingDefaults, options);
@@ -284,7 +360,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/currencyCode', options);
     }
 
-    static dataUrl(str, options = {}) {
+    /**
+     * Executes the dataUrl handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static dataUrl(str: any, options: any= {}): HandlerResult {
         const {
             allowedTypes = ['image', 'video', 'audio', 'text'],
         } = options;
@@ -300,13 +382,24 @@ class StringHandler extends Handler {
             : fail(str, 'string/dataUrl', options);
     }
 
-    static digits(str) {
+    /**
+     * Executes the digits handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static digits(str: any): HandlerResult {
         return /^\d+$/.test(str)
             ? pass(str)
             : fail(str, 'string/digits');
     }
 
-    static domain(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the domain handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static domain(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             wildcards = forbidden,
             subdomains = optional,
@@ -337,7 +430,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/domain', options);
     }
 
-    static e164(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the e164 handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static e164(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
 
         const finalOptions = Object.assign({
             delim: ' ',
@@ -375,7 +474,13 @@ class StringHandler extends Handler {
         );
     }
 
-    static email(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the email handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static email(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             normalize,
         } = options;
@@ -394,11 +499,23 @@ class StringHandler extends Handler {
             : fail(str, 'string/email', options);
     }
 
-    static empty(value) {
+    /**
+     * Executes the empty handler step.
+     * @param {any} value
+     * @returns {HandlerResult}
+     */
+    static empty(value: any): HandlerResult {
         return value.length === 0 ? pass(value) : fail(value, 'string/empty');
     }
 
-    static endsWith(str, suffix, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the endsWith handler step.
+     * @param {any} str
+     * @param {any} suffix
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static endsWith(str: any, suffix: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { ignoreCase } = options;
 
         if (ignoreCase) {
@@ -410,7 +527,14 @@ class StringHandler extends Handler {
             : fail(str, 'string/endsWith', Object.assign({ suffix }, options));
     }
 
-    static excludesChars(str, chars, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the excludesChars handler step.
+     * @param {any} str
+     * @param {any} chars
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static excludesChars(str: any, chars: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             ignoreCase,
         } = options;
@@ -426,7 +550,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/excludesChars', Object.assign({ chars }, options));
     }
 
-    static gtin(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the gtin handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static gtin(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const finalOptions = Object.assign({
             delim: '',
             lengths: [8, 12, 13, 14]
@@ -481,35 +611,60 @@ class StringHandler extends Handler {
         return fail(str, 'string/gtin', finalOptions);
     }
 
-    static hash(str, algorithm) {
+    /**
+     * Executes the hash handler step.
+     * @param {any} str
+     * @param {any} algorithm
+     * @returns {HandlerResult}
+     */
+    static hash(str: any, algorithm: any): HandlerResult {
         const algo = (algorithm || 'md5').toLowerCase();
         const hashLengths = {
             md5: 32, sha1: 40, sha256: 64, sha512: 128, ripemd: 32,
             ripemd128: 32, ripemd160: 40, ripemd320: 80, tiger128: 32,
             tiger160: 40, tiger192: 48, whirlpool: 128
         };
-        return hashLengths[algo]
-            ? RegexCache(`^(?=([a-f\\d]{${hashLengths[algo]}}))\\1$`, 'i').test(str)
+        const key = algo as keyof typeof hashLengths;
+        return hashLengths[key]
+            ? RegexCache(`^(?=([a-f\\d]{${hashLengths[key]}}))\\1$`, 'i').test(str)
                 ? pass(str)
                 : fail(str, 'string/hash', { algorithm })
             : fail(str, 'string/hash', { algorithm });
     }
 
-    static hex(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the hex handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static hex(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { normalize } = options;
         return /^[0-9A-F]+$/i.test(str)
             ? pass(normalize ? str.toLowerCase() : str)
             : fail(str, 'string/hex', options);
     }
 
-    static hexColor(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the hexColor handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static hexColor(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { normalize } = options;
         return /^#?([0-9A-F]{3}|[0-9A-F]{6})$/i.test(str)
             ? pass(normalize ? str.toLowerCase() : str)
             : fail(str, 'string/hexColor', options);
     }
 
-    static imei(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the imei handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static imei(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
         }, options);
@@ -547,7 +702,13 @@ class StringHandler extends Handler {
         return fail(str, 'string/imei', finalOptions);
     }
 
-    static ip(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the ip handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static ip(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { normalize } = options;
 
         const ipV4Test = this.ipV4(str);
@@ -563,13 +724,23 @@ class StringHandler extends Handler {
         return fail(str, 'string/ip', options);
     }
 
-    static ipCidr(str) {
+    /**
+     * Executes the ipCidr handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static ipCidr(str: any): HandlerResult {
         return this.ipCidrV4(str).pass || this.ipCidrV6(str).pass
             ? pass(str)
             : fail(str, 'string/ipCidr');
     }
 
-    static ipCidrV4(str) {
+    /**
+     * Executes the ipCidrV4 handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static ipCidrV4(str: any): HandlerResult {
         const parts = str.split('/');
         if (parts.length !== 2) {
             return fail(str, 'string/ipCidrV4');
@@ -580,7 +751,12 @@ class StringHandler extends Handler {
             : fail(str, 'string/ipCidrV4');
     }
 
-    static ipCidrV6(str) {
+    /**
+     * Executes the ipCidrV6 handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static ipCidrV6(str: any): HandlerResult {
         const parts = str.split('/');
         if (parts.length !== 2) {
             return fail(str, 'string/ipCidrV6');
@@ -591,7 +767,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/ipCidrV6');
     }
 
-    static ipV4(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the ipV4 handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static ipV4(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { normalize } = options;
         const digits = '(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         return RegexCache(`^${digits}\\.${digits}\\.${digits}\\.${digits}$`).test(str)
@@ -599,7 +781,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/ipV4', options);
     }
 
-    static ipV6(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the ipV6 handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static ipV6(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { normalize } = options;
         const digits = '(?:\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         const v4 = `${digits}\\.${digits}\\.${digits}\\.${digits}`;
@@ -617,18 +805,34 @@ class StringHandler extends Handler {
             : fail(str, 'string/ipV6', options);
     }
 
-    static json(str) {
+    /**
+     * Executes the json handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static json(str: any): HandlerResult {
         try { JSON.parse(str); } catch (e) { return fail(str, 'string/json'); }
         return pass(str);
     }
 
-    static jwt(str) {
+    /**
+     * Executes the jwt handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static jwt(str: any): HandlerResult {
         return /^(?=((?:[a-z\d_=-]+\.){2}[a-z\d_=-]+))\1$/i.test(str)
             ? pass(str)
             : fail(str, 'string/jwt');
     }
 
-    static label(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the label handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static label(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             normalize,
         } = options;
@@ -646,37 +850,67 @@ class StringHandler extends Handler {
             : fail(str, 'string/label', options);
     }
 
-    static length(str, length) {
+    /**
+     * Executes the length handler step.
+     * @param {any} str
+     * @param {any} length
+     * @returns {HandlerResult}
+     */
+    // @ts-expect-error Runtime API requires static method name `length`.
+    static ['length'](str: any, length: any): HandlerResult {
         return str.length === length
             ? pass(str)
             : fail(str, 'string/length', { length });
     }
 
-    static lengthBetween(str, min, max) {
+    /**
+     * Executes the lengthBetween handler step.
+     * @param {any} str
+     * @param {any} min
+     * @param {any} max
+     * @returns {HandlerResult}
+     */
+    static lengthBetween(str: any, min: any, max: any): HandlerResult {
         if (str.length >= min && str.length <= max) {
             return pass(str);
         }
         return fail(str, 'string/lengthBetween', { min, max });
     }
 
-    static lowerCase(str) {
+    /**
+     * Executes the lowerCase handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static lowerCase(str: any): HandlerResult {
         return str === str.toLowerCase()
             ? pass(str)
             : fail(str, 'string/lowerCase');
     }
 
-    static luhn(str) {
+    /**
+     * Executes the luhn handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static luhn(str: any): HandlerResult {
         return Utils.validateWithCheckDigit(str, {
             weights: [2, 1],
             mod: 10,
-            transform: x => x > 9 ? x - 9 : x,
+            transform: (x: number): number => x > 9 ? x - 9 : x,
             reverse: true
         })
             ? pass(str)
             : fail(str, 'string/luhn');
     }
 
-    static mac(str, options = {}) {
+    /**
+     * Executes the mac handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static mac(str: any, options: any= {}): HandlerResult {
         const finalOptions = Object.assign({
             delim: ':',
         }, options);
@@ -709,19 +943,38 @@ class StringHandler extends Handler {
         );
     }
 
-    static matches(str, regex) {
+    /**
+     * Executes the matches handler step.
+     * @param {any} str
+     * @param {any} regex
+     * @returns {HandlerResult}
+     */
+    static matches(str: any, regex: any): HandlerResult {
         return regex.test(str)
             ? pass(str)
             : fail(str, 'string/matches', { regex: regex.toString() });
     }
 
-    static maxLength(str, max) {
+    /**
+     * Executes the maxLength handler step.
+     * @param {any} str
+     * @param {any} max
+     * @returns {HandlerResult}
+     */
+    static maxLength(str: any, max: any): HandlerResult {
         return str.length <= max
             ? pass(str)
             : fail(str, 'string/maxLength', { max });
     }
 
-    static maxWords(str, max, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the maxWords handler step.
+     * @param {any} str
+     * @param {any} max
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static maxWords(str: any, max: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         const count = Utils.splitOnDelims(str, allowedDelims).length;
         return count <= max
             ? pass(str)
@@ -732,7 +985,13 @@ class StringHandler extends Handler {
             });
     }
 
-    static measurement(str, options = {}) {
+    /**
+     * Executes the measurement handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static measurement(str: any, options: any= {}): HandlerResult {
         const {
             units
         } = options;
@@ -746,13 +1005,26 @@ class StringHandler extends Handler {
 
     }
 
-    static minLength(str, min) {
+    /**
+     * Executes the minLength handler step.
+     * @param {any} str
+     * @param {any} min
+     * @returns {HandlerResult}
+     */
+    static minLength(str: any, min: any): HandlerResult {
         return str.length >= min
             ? pass(str)
             : fail(str, 'string/minLength', { min });
     }
 
-    static minWords(str, min, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the minWords handler step.
+     * @param {any} str
+     * @param {any} min
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static minWords(str: any, min: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         const count = Utils.splitOnDelims(str, allowedDelims).length;
         return count >= min
             ? pass(str)
@@ -763,7 +1035,13 @@ class StringHandler extends Handler {
             });
     }
 
-    static money(str, options = {}) {
+    /**
+     * Executes the money handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static money(str: any, options: any= {}): HandlerResult {
         const {
             parens = forbidden,
             leadingSymbol = '$',
@@ -794,11 +1072,22 @@ class StringHandler extends Handler {
             : fail(str, 'string/money', options);
     }
 
-    static notEmpty(value) {
+    /**
+     * Executes the notEmpty handler step.
+     * @param {any} value
+     * @returns {HandlerResult}
+     */
+    static notEmpty(value: any): HandlerResult {
         return value.length > 0 ? pass(value) : fail(value, 'string/notEmpty');
     }
 
-    static numeric(str, options = {}) {
+    /**
+     * Executes the numeric handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static numeric(str: any, options: any= {}): HandlerResult {
         const {
             plus = forbidden,
             minus = optional,
@@ -918,13 +1207,25 @@ class StringHandler extends Handler {
         return pass(leftPlus + leftMinus + leadingSymbol + number + trailingSymbol + rightPlus + rightMinus);
     }
 
-    static octal(str) {
+    /**
+     * Executes the octal handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static octal(str: any): HandlerResult {
         return /^[0-7]+$/.test(str)
             ? pass(str)
             : fail(str, 'string/octal');
     }
 
-    static onlyChars(str, chars, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the onlyChars handler step.
+     * @param {any} str
+     * @param {any} chars
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static onlyChars(str: any, chars: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             ignoreCase,
         } = options;
@@ -940,7 +1241,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/onlyChars', Object.assign({ chars }, options));
     }
 
-    static path(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the path handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static path(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             style = 'unix',
             fileExtensions = '',
@@ -977,7 +1284,7 @@ class StringHandler extends Handler {
                 // Any file/directory
                 (fileExtensionsArray[0] === '' || fileExtensionsArray.length === 0) && `${dir}?` ||
                 // Force specific file ext
-                '\\.(' + fileExtensionsArray.map(ext => Utils.escapeForRegex(ext)).join('|') + ')'
+                '\\.(' + fileExtensionsArray.map((ext: string): string => Utils.escapeForRegex(ext)).join('|') + ')'
             ),
             '))\\1',
             '$',
@@ -988,7 +1295,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/path', options)
     }
 
-    static phone(str, options = {}) {
+    /**
+     * Executes the phone handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static phone(str: any, options: any= {}): HandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
         }, options);
@@ -1023,7 +1336,14 @@ class StringHandler extends Handler {
         );
     }
 
-    static repetition(str, fragment, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the repetition handler step.
+     * @param {any} str
+     * @param {any} fragment
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static repetition(str: any, fragment: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const {
             min = 1,
             max = null,
@@ -1050,13 +1370,24 @@ class StringHandler extends Handler {
             : fail(str, 'string/repetition', Object.assign({ fragment, min, max }, options));
     }
 
-    static slug(str) {
+    /**
+     * Executes the slug handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static slug(str: any): HandlerResult {
         return /^(?=([a-z\d]+(-[a-z\d]+)*))\1$/.test(str)
             ? pass(str)
             : fail(str, 'string/slug');
     }
 
-    static ssn(str, options = {}) {
+    /**
+     * Executes the ssn handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static ssn(str: any, options: any= {}): HandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
         }, options);
@@ -1091,7 +1422,14 @@ class StringHandler extends Handler {
         );
     }
 
-    static startsWith(str, prefix, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the startsWith handler step.
+     * @param {any} str
+     * @param {any} prefix
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static startsWith(str: any, prefix: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         const { ignoreCase } = options;
 
         if (ignoreCase) {
@@ -1103,7 +1441,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/startsWith', Object.assign({ prefix }, options));
     }
 
-    static state(str, options = {}) {
+    /**
+     * Executes the state handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static state(str: any, options: any= {}): HandlerResult {
         const {
             allowLooseFormat,
         } = Object.assign({}, StringHandler.matchingDefaults, options);
@@ -1122,13 +1466,24 @@ class StringHandler extends Handler {
             : fail(str, 'string/state', options);
     }
 
-    static upperCase(str) {
+    /**
+     * Executes the upperCase handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static upperCase(str: any): HandlerResult {
         return str === str.toUpperCase()
             ? pass(str)
             : fail(str, 'string/upperCase');
     }
 
-    static url(str, options = StringHandler.matchingDefaults) {
+    /**
+     * Executes the url handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static url(str: any, options: any= StringHandler.matchingDefaults): HandlerResult {
         let {
             normalize,
             rootRelative = false,
@@ -1216,7 +1571,13 @@ class StringHandler extends Handler {
             : fail(str, 'string/url', options);
     }
 
-    static uuid(str, version) {
+    /**
+     * Executes the uuid handler step.
+     * @param {any} str
+     * @param {any} version
+     * @returns {HandlerResult}
+     */
+    static uuid(str: any, version: any): HandlerResult {
         return RegexCache([
             '^(?=([a-f\\d]{8}-[a-f\\d]{4}-[',
             !version ? '12345' : version,
@@ -1226,7 +1587,15 @@ class StringHandler extends Handler {
             : fail(str, 'string/uuid', { version });
     }
 
-    static wordCount(str, min, max, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the wordCount handler step.
+     * @param {any} str
+     * @param {any} min
+     * @param {any} max
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static wordCount(str: any, min: any, max: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         const count = Utils.splitOnDelims(str, allowedDelims).length;
         return count <= max && count >= min
             ? pass(str)
@@ -1238,7 +1607,13 @@ class StringHandler extends Handler {
             });
     }
 
-    static zip(str, options = {}) {
+    /**
+     * Executes the zip handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static zip(str: any, options: any= {}): HandlerResult {
         const finalOptions = Object.assign({
             delim: '',
             zip4: optional
@@ -1295,15 +1670,31 @@ class StringHandler extends Handler {
     // ====================================
 
 
-    static collapseRepeats(str, char) {
+    /**
+     * Executes the collapseRepeats handler step.
+     * @param {any} str
+     * @param {any} char
+     * @returns {HandlerResult}
+     */
+    static collapseRepeats(str: any, char: any): HandlerResult {
         return pass(str.replace(RegexCache('(' + (char ? Utils.escapeForRegex(char) : '.') + ')\\1+', 'g'), '$1'));
     }
 
-    static collapseSpacing(str) {
+    /**
+     * Executes the collapseSpacing handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static collapseSpacing(str: any): HandlerResult {
         return pass(str.replace(/\s+/g, ' '));
     }
 
-    static escapeHtml(str) {
+    /**
+     * Executes the escapeHtml handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static escapeHtml(str: any): HandlerResult {
         return pass(str
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -1312,7 +1703,12 @@ class StringHandler extends Handler {
             .replace(/'/g, '&#39;'));
     }
 
-    static hexDecode(str) {
+    /**
+     * Executes the hexDecode handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static hexDecode(str: any): HandlerResult {
         let decoded = '';
         for (const match of str.matchAll(/.{1,2}/g)) {
             decoded += String.fromCharCode(parseInt(match[0], 16));
@@ -1320,7 +1716,12 @@ class StringHandler extends Handler {
         return pass(decoded);
     }
 
-    static hexEncode(str) {
+    /**
+     * Executes the hexEncode handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static hexEncode(str: any): HandlerResult {
         let encoded = '';
         for (const char of [...str]) {
             encoded += Utils.padLeft(char.charCodeAt(0).toString(16), 2, '0');
@@ -1328,55 +1729,122 @@ class StringHandler extends Handler {
         return pass(encoded);
     }
 
-    static normalizeLineBreaks(str, lineBreak = '\n') {
+    /**
+     * Executes the normalizeLineBreaks handler step.
+     * @param {any} str
+     * @param {any} lineBreak
+     * @returns {HandlerResult}
+     */
+    static normalizeLineBreaks(str: any, lineBreak: any= '\n'): HandlerResult {
         return pass(str.replace(/\r\n|\r|\n/g, lineBreak));
     }
 
-    static normalizeUnicode(str, type = 'NFC') {
+    /**
+     * Executes the normalizeUnicode handler step.
+     * @param {any} str
+     * @param {any} type
+     * @returns {HandlerResult}
+     */
+    static normalizeUnicode(str: any, type: any= 'NFC'): HandlerResult {
         return pass(str.normalize(type));
     }
 
-    static padLeft(str, length, char) {
+    /**
+     * Executes the padLeft handler step.
+     * @param {any} str
+     * @param {any} length
+     * @param {any} char
+     * @returns {HandlerResult}
+     */
+    static padLeft(str: any, length: any, char: any): HandlerResult {
         return pass(Utils.padLeft(str, length, char));
     }
 
-    static padRight(str, length, char) {
+    /**
+     * Executes the padRight handler step.
+     * @param {any} str
+     * @param {any} length
+     * @param {any} char
+     * @returns {HandlerResult}
+     */
+    static padRight(str: any, length: any, char: any): HandlerResult {
         return pass(Utils.padRight(str, length, char));
     }
 
-    static removeSpacing(str) {
+    /**
+     * Executes the removeSpacing handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static removeSpacing(str: any): HandlerResult {
         return pass(str.replace(/\s/g, ''));
     }
 
-    static slice(str, startIndex, endIndex) {
+    /**
+     * Executes the slice handler step.
+     * @param {any} str
+     * @param {any} startIndex
+     * @param {any} endIndex
+     * @returns {HandlerResult}
+     */
+    static slice(str: any, startIndex: any, endIndex: any): HandlerResult {
         return pass(str.slice(startIndex, endIndex));
     }
 
-    static sliceFirst(str, count = 1) {
+    /**
+     * Executes the sliceFirst handler step.
+     * @param {any} str
+     * @param {any} count
+     * @returns {HandlerResult}
+     */
+    static sliceFirst(str: any, count: any= 1): HandlerResult {
         return pass(str.slice(0, count));
     }
 
-    static sliceLast(str, count = 1) {
+    /**
+     * Executes the sliceLast handler step.
+     * @param {any} str
+     * @param {any} count
+     * @returns {HandlerResult}
+     */
+    static sliceLast(str: any, count: any= 1): HandlerResult {
         return pass(str.slice(-count));
     }
 
-    static stripHtml(str) {
+    /**
+     * Executes the stripHtml handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static stripHtml(str: any): HandlerResult {
         return pass(str.replace(/<[^>]*>/g, ''));
     }
 
-    static toCamelCase(str, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the toCamelCase handler step.
+     * @param {any} str
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static toCamelCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '',
-            transformer1: word => word.toLowerCase(),
-            transformer2: word => word[0].toUpperCase() + word.slice(1).toLowerCase()
+            transformer1: (word: string): string => word.toLowerCase(),
+            transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase()
         });
     }
 
-    static toDelimited(str, options = {}) {
+    /**
+     * Executes the toDelimited handler step.
+     * @param {any} str
+     * @param {any} options
+     * @returns {HandlerResult}
+     */
+    static toDelimited(str: any, options: any= {}): HandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
-            transformer: x => x,
+            transformer: (x: string): string => x,
             switchIndex: 1
         }, options);
 
@@ -1391,7 +1859,7 @@ class StringHandler extends Handler {
 
         return pass(
             Utils.splitOnDelims(str, allowedDelims)
-                .reduce((acc, current, index) => {
+                .reduce((acc: string[], current: string, index: number): string[] => {
                     if (!transformer1) {
                         acc.push(transformer(current));
                     }
@@ -1401,80 +1869,148 @@ class StringHandler extends Handler {
                         );
                     }
                     return acc;
-                }, [])
+                }, [] as string[])
                 .join(delim)
         );
     }
 
-    static toKebabCase(str, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the toKebabCase handler step.
+     * @param {any} str
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static toKebabCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '-',
-            transformer: word => word.toLowerCase()
+            transformer: (word: string): string => word.toLowerCase()
         });
     }
 
-    static toLowerCase(str) {
+    /**
+     * Executes the toLowerCase handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static toLowerCase(str: any): HandlerResult {
         return pass(str.toLowerCase());
     }
 
-    static toPascalCase(str, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the toPascalCase handler step.
+     * @param {any} str
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static toPascalCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '',
-            transformer: word => word[0].toUpperCase() + word.slice(1).toLowerCase()
+            transformer: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase()
         });
     }
 
-    static toSentenceCase(str, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the toSentenceCase handler step.
+     * @param {any} str
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static toSentenceCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: ' ',
-            transformer1: word => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-            transformer2: word => word.toLowerCase()
+            transformer1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+            transformer2: (word: string): string => word.toLowerCase()
         });
     }
 
-    static toSnakeCase(str, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the toSnakeCase handler step.
+     * @param {any} str
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static toSnakeCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '_',
-            transformer: word => word.toLowerCase()
+            transformer: (word: string): string => word.toLowerCase()
         });
     }
 
-    static toTitleCase(str, allowedDelims = StringHandler.matchingDefaults.allowedDelims) {
+    /**
+     * Executes the toTitleCase handler step.
+     * @param {any} str
+     * @param {any} allowedDelims
+     * @returns {HandlerResult}
+     */
+    static toTitleCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): HandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: ' ',
-            transformer: word => word[0].toUpperCase() + word.slice(1).toLowerCase()
+            transformer: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase()
         });
     }
 
-    static toUpperCase(str) {
+    /**
+     * Executes the toUpperCase handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static toUpperCase(str: any): HandlerResult {
         return pass(str.toUpperCase());
     }
 
-    static trim(str, chars = ' ') {
+    /**
+     * Executes the trim handler step.
+     * @param {any} str
+     * @param {any} chars
+     * @returns {HandlerResult}
+     */
+    static trim(str: any, chars: any= ' '): HandlerResult {
         const finalChars = chars === ' ' ? '\\s' : Utils.escapeForRegex(chars);
         return pass(str.replace(RegexCache(`^[${finalChars}]+|[${finalChars}]+$`, 'g'), ''));
     }
 
-    static trimLeft(str, chars = ' ') {
+    /**
+     * Executes the trimLeft handler step.
+     * @param {any} str
+     * @param {any} chars
+     * @returns {HandlerResult}
+     */
+    static trimLeft(str: any, chars: any= ' '): HandlerResult {
         const finalChars = chars === ' ' ? '\\s' : Utils.escapeForRegex(chars);
         return pass(str.replace(RegexCache('^[' + finalChars + ']+'), ''));
     }
 
-    static trimRight(str, chars = ' ') {
+    /**
+     * Executes the trimRight handler step.
+     * @param {any} str
+     * @param {any} chars
+     * @returns {HandlerResult}
+     */
+    static trimRight(str: any, chars: any= ' '): HandlerResult {
         const finalChars = chars === ' ' ? '\\s' : Utils.escapeForRegex(chars);
         return pass(str.replace(RegexCache('[' + finalChars + ']+$'), ''));
     }
 
-    static urlDecode(str) {
+    /**
+     * Executes the urlDecode handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static urlDecode(str: any): HandlerResult {
         return pass(decodeURIComponent(str));
     }
 
-    static urlEncode(str) {
+    /**
+     * Executes the urlEncode handler step.
+     * @param {any} str
+     * @returns {HandlerResult}
+     */
+    static urlEncode(str: any): HandlerResult {
         return pass(encodeURIComponent(str));
     }
 
