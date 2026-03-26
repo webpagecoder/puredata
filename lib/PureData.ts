@@ -1,6 +1,6 @@
 'use strict';
 
-import { CompilationMapper } from './CompilationMapper.ts';
+import { FieldProcessorFactory } from './FieldProcessorFactory.ts';
 import { DEFAULT_LANGUAGE } from './config/DefaultLanguage.ts';
 import { ArrayChain } from './fields/ArrayChain.ts';
 import { BooleanChain } from './fields/BooleanChain.ts';
@@ -28,7 +28,7 @@ import { Utils } from './utils/Utils.ts';
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
-    constructor(config, compilationMapper = new CompilationMapper()) {
+    constructor(config, compilationMapper = new FieldProcessorFactory()) {
         this.config = Utils.clone(config);
 
         Path.delims(this.config.general.pathDelims);

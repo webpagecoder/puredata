@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 const GLOBAL_CONFIG = Object.seal({

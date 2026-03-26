@@ -1,4 +1,4 @@
-// // @ts-nocheck
+// 
 // 'use strict';
 
 // import { Node } from './Node.ts';

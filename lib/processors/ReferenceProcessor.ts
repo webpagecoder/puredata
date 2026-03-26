@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { RecursiveValueTracker } from '../tracker/RecursiveValueTracker.ts';

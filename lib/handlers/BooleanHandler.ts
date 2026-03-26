@@ -4,7 +4,7 @@ import { HandlerResult } from './HandlerResult.ts';
 import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
-type BoolishPair = [truthy: any, falsy: unknown];
+type BoolishPair = [truthy: unknown, falsy: unknown];
 
 class BooleanHandler extends Handler {
 
@@ -17,7 +17,7 @@ class BooleanHandler extends Handler {
      *
      * @param bool - Value to validate as falsy.
      * @param falsyValues - Additional values treated as falsy.
-     * @returns {HandlerResult} A pass result for valid falsy values, otherwise a fail result.
+     * @returns A pass result for valid falsy values, otherwise a fail result.
      */
     static falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
         return bool === false || falsyValues.indexOf(bool) > -1
@@ -30,7 +30,7 @@ class BooleanHandler extends Handler {
      *
      * @param bool - Value to validate as truthy.
      * @param truthyValues - Additional values treated as truthy.
-     * @returns {HandlerResult} A pass result for valid truthy values, otherwise a fail result.
+     * @returns A pass result for valid truthy values, otherwise a fail result.
      */
     static truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
         return bool === true || truthyValues.indexOf(bool) > -1
@@ -41,7 +41,7 @@ class BooleanHandler extends Handler {
     // ====================================
     // MUTATORS 
     // ====================================
-    
+
     /**
      * Inverts a boolean-like value using configured truthy/falsy pairs.
      *
@@ -50,16 +50,16 @@ class BooleanHandler extends Handler {
      *
      * @param bool - Value to invert.
      * @param boolishPairs - Custom truthy/falsy tuple pairs.
-     * @returns {HandlerResult} A pass result with the inverted value, otherwise a fail result.
+     * @returns A pass result with the inverted value, otherwise a fail result.
      */
     static invert(bool: unknown, boolishPairs: BoolishPair[] = []): HandlerResult {
         boolishPairs.push([true, false]);
 
-        const truthyMatchIndex = boolishPairs.map(([truthy, _]) => truthy).indexOf(bool);
+        const truthyMatchIndex = boolishPairs.map(([truthy, _]): unknown => truthy).indexOf(bool);
         if (truthyMatchIndex > -1) {
             return pass(boolishPairs[truthyMatchIndex][1]);
         }
-        const falsyMatchIndex = boolishPairs.map(([_, falsy]) => falsy).indexOf(bool);
+        const falsyMatchIndex = boolishPairs.map(([_, falsy]): unknown => falsy).indexOf(bool);
         if (falsyMatchIndex > -1) {
             return pass(boolishPairs[falsyMatchIndex][0]);
         }

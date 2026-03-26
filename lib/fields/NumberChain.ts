@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { Chain } from './Chain.ts';

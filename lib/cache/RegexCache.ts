@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 /** @typedef import('./typedefs.ts') */

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { ConditionalField } from './ConditionalField.ts';

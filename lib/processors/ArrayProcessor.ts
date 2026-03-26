@@ -8,6 +8,8 @@ class ArrayProcessor extends ChainProcessor {
 
     override preProcess(tracker: ValueTracker): void {
         const field = this.props.field as ArrayChain;
+        const {chainHandler } = field.props;
+        
         const { label } = field;
         const { castSingle } = field.props;
 
@@ -16,7 +18,7 @@ class ArrayProcessor extends ChainProcessor {
                 tracker.setValue([tracker.getValue()]);
             }
             else {
-                tracker.addError('array/array');
+                tracker.addError('array/base');
             }
         }
         else {

@@ -6,7 +6,7 @@ import { Node, NodeData } from './Node.ts';
 import { Path } from '../Path.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { Formatter } from './formatters/Formatter.ts';
-import { ArgumentCollection } from '../types.ts';
+import { ArgumentCollection } from '../types/types.ts';
 
 type TrackerError = {
     args: ArgumentCollection;

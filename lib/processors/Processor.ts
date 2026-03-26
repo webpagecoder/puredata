@@ -3,40 +3,41 @@
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Utils } from '../utils/Utils.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
-import { CompilationMapper } from '../CompilationMapper.ts';
+import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 
 export type ProcessorProps = {
     field: Field;
-    compilationMapper: CompilationMapper;
-    defaultValueReference: Processor | null;
+    compilationMapper: FieldProcessorFactory;
+    defaultValueReference?: Processor;
 };
 
 export type State = Record<string, unknown>;
 
-class Processor {
+class Processor<P extends ProcessorProps = ProcessorProps> {
 
     static id: number = 0;
 
-    declare props: ProcessorProps;
+    declare props: P;
 
     id: number;
     cachedReferences: Set<any> | null = null;
     state: Record<string, unknown> = {};
 
-    constructor(props: ProcessorProps) {
+    constructor(props: P) {
         const { field, compilationMapper } = props;
         this.props = {
             compilationMapper,
             field,
-            defaultValueReference: null,
-        };
+        } as P;
         this.id = ++Processor.id;
     }
 
-    clone(props: ProcessorProps): this {
-        const Constructor = this.constructor as new (...args: Partial<ConstructorParameters<typeof Processor>>) => this;
-        return new Constructor(Utils.mergeObjects(this.props, props || {}));
+    clone(props: Partial<P>): this {
+        const Constructor = this.constructor as new (props?: Partial<P>) => this;
+        return new Constructor(
+            Object.assign({}, this.props, props || {}) as P
+        );
     }
 
     compile(): this {
@@ -48,7 +49,7 @@ class Processor {
         return this;
     }
 
-    process(valueOrValueTracker: unknown | ValueTracker, state: State = {}): ValueTracker {
+    process(valueOrValueTracker: unknown | ValueTracker = undefined, state: State = {}): ValueTracker {
 
         const { field } = this.props;
         this.state = state;
@@ -90,11 +91,11 @@ class Processor {
         return tracker;
     }
 
-    _process(tracker: ValueTracker, state: State = {}): ValueTracker {
+    _process(tracker: ValueTracker, _state: State = {}): ValueTracker {
         return tracker;
     }
 
-    hasReferences():boolean {
+    hasReferences(): boolean {
         return this.getReferences().size > 0;
     }
 

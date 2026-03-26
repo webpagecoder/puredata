@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 const DEFAULT_LANGUAGE = {
@@ -101,6 +100,7 @@ const DEFAULT_LANGUAGE = {
             equals: 'Must equal {comparison}',
             falsy: 'Must be falsy',
             forbidden: 'Field is forbidden',
+            format: 'Invalid format',
             notDefined: 'Must be undefined',
             notEmpty: 'Must not be empty',
             notEquals: 'Must not equal {comparison}',

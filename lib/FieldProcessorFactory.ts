@@ -44,37 +44,41 @@ import { SchemaConditionalProcessor } from './processors/SchemaConditionalProces
 
 import { ValueField } from './fields/ValueField.ts';
 import { ValueProcessor } from './processors/ValueProcessor.ts';
+import { ProcessorProps } from './processors/Processor.ts';
 
-const COMPILATION_MAPPINGS = new Map<typeof Field, typeof Processor>();
+type FieldConstructor = abstract new (...args: any[]) => Field;
+type ProcessorConstructor = new (props: ProcessorProps) => Processor;
+
+const MAPPINGS = new Map<FieldConstructor, ProcessorConstructor>();
 
 // Chains
-COMPILATION_MAPPINGS.set(ArrayChain, ArrayProcessor);
-COMPILATION_MAPPINGS.set(BooleanChain, BooleanProcessor);
-COMPILATION_MAPPINGS.set(DateChain, DateProcessor);
-COMPILATION_MAPPINGS.set(NumberChain, NumberProcessor);
-COMPILATION_MAPPINGS.set(ObjectChain, ObjectProcessor);
-COMPILATION_MAPPINGS.set(SchemaChain, SchemaProcessor);
-COMPILATION_MAPPINGS.set(StringChain, StringProcessor);
+MAPPINGS.set(ArrayChain, ArrayProcessor);
+MAPPINGS.set(BooleanChain, BooleanProcessor);
+MAPPINGS.set(DateChain, DateProcessor);
+MAPPINGS.set(NumberChain, NumberProcessor);
+MAPPINGS.set(ObjectChain, ObjectProcessor);
+MAPPINGS.set(SchemaChain, SchemaProcessor);
+MAPPINGS.set(StringChain, StringProcessor);
 
 // Other types
-COMPILATION_MAPPINGS.set(ReferenceField, ReferenceProcessor);
-COMPILATION_MAPPINGS.set(EnumField, EnumProcessor);
-COMPILATION_MAPPINGS.set(PathReferenceField, PathReferenceProcessor);
-COMPILATION_MAPPINGS.set(SchemaConditionalField, SchemaConditionalProcessor);
-COMPILATION_MAPPINGS.set(ValueField, ValueProcessor);
+MAPPINGS.set(ReferenceField, ReferenceProcessor);
+MAPPINGS.set(EnumField, EnumProcessor);
+MAPPINGS.set(PathReferenceField, PathReferenceProcessor);
+MAPPINGS.set(SchemaConditionalField, SchemaConditionalProcessor);
+MAPPINGS.set(ValueField, ValueProcessor);
 
 
-class CompilationMapper {
+class FieldProcessorFactory {
 
-    createProcessor(field: Field, context = {}) {
-        const processorConstructor: typeof Processor = COMPILATION_MAPPINGS.get(field.constructor as typeof Field);
-        if (!processorConstructor) {
+    createProcessor(field: Field, context: Partial<ProcessorProps> = {}): Processor {
+        const ProcessorConstructor = MAPPINGS.get(field.constructor as FieldConstructor);
+        if (!ProcessorConstructor) {
             throw new Error(`No processor found for field of type ${field.constructor.name}`);
         }
-        return new processorConstructor(Object.assign(
+        return new ProcessorConstructor(Object.assign(
             {
                 field,
-                compilationMapper: this
+                compilationMapper: this,
             },
             context
         ));
@@ -82,4 +86,4 @@ class CompilationMapper {
 
 }
 
-export { CompilationMapper };
+export { FieldProcessorFactory };

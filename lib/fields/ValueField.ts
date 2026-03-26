@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { Field } from './Field.ts';

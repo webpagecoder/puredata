@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { Path } from '../Path.ts';

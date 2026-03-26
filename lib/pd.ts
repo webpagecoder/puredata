@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { GLOBAL_CONFIG } from './config/GlobalConfig.ts';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { ValueTracker } from '../tracker/ValueTracker.ts';

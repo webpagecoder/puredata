@@ -11,7 +11,7 @@ type Step = {
     prioritize?: boolean;
 };
 
-export type ChainProps<H extends Handler = Handler> = FieldProps & {
+export type ChainProps<H extends typeof Handler = typeof Handler> = FieldProps & {
     chainHandler: H;
     emptyValues: unknown[];
     pipeline: Step[];
@@ -23,7 +23,7 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
 
     constructor(props: Partial<P> = {}) {
         super(props);
-        this.props.chainHandler = (props.chainHandler || {});
+        this.props.chainHandler = props.chainHandler || {} as P['chainHandler'];
         this.props.pipeline = [];
         this.props.emptyValues = props.emptyValues || [null, undefined];
         return new Proxy(this, this as ProxyHandler<this>);

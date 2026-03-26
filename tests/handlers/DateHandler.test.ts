@@ -296,18 +296,18 @@ describe('DateHandler.equals', () => {
 describe('DateHandler.future', () => {
     
     test('should pass when date is in the future', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-20');
-        const result = DateHandler.future(date, referenceDate);
+        const result = DateHandler.future(date, compareDate);
         
         expect(result.pass).toBe(true);
         expect(result.value).toBe(date);
     });
 
     test('should fail when date is in the past', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-10');
-        const result = DateHandler.future(date, referenceDate);
+        const result = DateHandler.future(date, compareDate);
         
         expect(result.pass).toBe(false);
         expect(result.value).toBe(date);
@@ -318,14 +318,14 @@ describe('DateHandler.future', () => {
     });
 
     test('should fail when dates are equal', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-15');
-        const result = DateHandler.future(date, referenceDate);
+        const result = DateHandler.future(date, compareDate);
         
         expect(result.pass).toBe(false);
     });
 
-    test('should use current date when referenceDate not provided', () => {
+    test('should use current date when compareDate not provided', () => {
         const futureDate = new Date(Date.now() + 86400000); // Tomorrow
         const result = DateHandler.future(futureDate);
         
@@ -333,24 +333,24 @@ describe('DateHandler.future', () => {
     });
 
     test('should work with date strings', () => {
-        const referenceDate = '2024-01-15';
+        const compareDate = '2024-01-15';
         const date = '2024-01-20';
-        const result = DateHandler.future(date, referenceDate);
+        const result = DateHandler.future(date, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
-    test('should fail with invalid referenceDate', () => {
+    test('should fail with invalid compareDate', () => {
         const date = new Date('2024-01-20');
-        const referenceDate = 'invalid';
-        const result = DateHandler.future(date, referenceDate);
+        const compareDate = 'invalid';
+        const result = DateHandler.future(date, compareDate);
 
         expect(result.pass).toBe(false);
 
         const errors = [...result.errors];
         expect(errors).toHaveLength(1);
         expect(errors[0].key).toBe('date/base');
-        expect(errors[0].args).toEqual({ date: referenceDate });
+        expect(errors[0].args).toEqual({ date: compareDate });
     });
 
 });
@@ -755,8 +755,8 @@ describe('DateHandler.minAge', () => {
     
     test('should pass when age is above minimum', () => {
         const birthDate = new Date('2000-01-15');
-        const referenceDate = new Date('2024-01-15');
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = new Date('2024-01-15');
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(true);
         expect(result.value).toBe(birthDate);
@@ -764,16 +764,16 @@ describe('DateHandler.minAge', () => {
 
     test('should pass when age equals minimum', () => {
         const birthDate = new Date('2006-01-15');
-        const referenceDate = new Date('2024-01-15');
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = new Date('2024-01-15');
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
     test('should fail when age is below minimum', () => {
         const birthDate = new Date('2010-01-15');
-        const referenceDate = new Date('2024-01-15');
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = new Date('2024-01-15');
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(false);
         expect(result.value).toBe(birthDate);
@@ -785,21 +785,21 @@ describe('DateHandler.minAge', () => {
 
     test('should handle birthday not yet occurred this year', () => {
         const birthDate = new Date('2006-06-15');
-        const referenceDate = new Date('2024-01-15');
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = new Date('2024-01-15');
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(false); // Only 17 years old
     });
 
     test('should handle birthday already occurred this year', () => {
         const birthDate = new Date('2006-01-01');
-        const referenceDate = new Date('2024-06-15');
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = new Date('2024-06-15');
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(true); // 18 years old
     });
 
-    test('should use current date when referenceDate not provided', () => {
+    test('should use current date when compareDate not provided', () => {
         const birthDate = new Date('1990-01-15');
         const result = DateHandler.minAge(birthDate, 18);
         
@@ -808,31 +808,31 @@ describe('DateHandler.minAge', () => {
 
     test('should work with date strings', () => {
         const birthDate = '2000-01-15';
-        const referenceDate = '2024-01-15';
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = '2024-01-15';
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
     test('should fail with invalid date', () => {
         const birthDate = 'invalid';
-        const referenceDate = new Date('2024-01-15');
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = new Date('2024-01-15');
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
         
         expect(result.pass).toBe(false);
     });
 
-    test('should fail with invalid referenceDate', () => {
+    test('should fail with invalid compareDate', () => {
         const birthDate = '2000-01-15';
-        const referenceDate = 'invalid';
-        const result = DateHandler.minAge(birthDate, 18, referenceDate);
+        const compareDate = 'invalid';
+        const result = DateHandler.minAge(birthDate, 18, compareDate);
 
         expect(result.pass).toBe(false);
 
         const errors = [...result.errors];
         expect(errors).toHaveLength(1);
         expect(errors[0].key).toBe('date/base');
-        expect(errors[0].args).toEqual({ date: referenceDate });
+        expect(errors[0].args).toEqual({ date: compareDate });
     });
 
 });
@@ -840,18 +840,18 @@ describe('DateHandler.minAge', () => {
 describe('DateHandler.past', () => {
     
     test('should pass when date is in the past', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-10');
-        const result = DateHandler.past(date, referenceDate);
+        const result = DateHandler.past(date, compareDate);
         
         expect(result.pass).toBe(true);
         expect(result.value).toBe(date);
     });
 
     test('should fail when date is in the future', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-20');
-        const result = DateHandler.past(date, referenceDate);
+        const result = DateHandler.past(date, compareDate);
         
         expect(result.pass).toBe(false);
         expect(result.value).toBe(date);
@@ -862,14 +862,14 @@ describe('DateHandler.past', () => {
     });
 
     test('should fail when dates are equal', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-15');
-        const result = DateHandler.past(date, referenceDate);
+        const result = DateHandler.past(date, compareDate);
         
         expect(result.pass).toBe(false);
     });
 
-    test('should use current date when referenceDate not provided', () => {
+    test('should use current date when compareDate not provided', () => {
         const pastDate = new Date(Date.now() - 86400000); // Yesterday
         const result = DateHandler.past(pastDate);
         
@@ -877,24 +877,24 @@ describe('DateHandler.past', () => {
     });
 
     test('should work with date strings', () => {
-        const referenceDate = '2024-01-15';
+        const compareDate = '2024-01-15';
         const date = '2024-01-10';
-        const result = DateHandler.past(date, referenceDate);
+        const result = DateHandler.past(date, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
-    test('should fail with invalid referenceDate', () => {
+    test('should fail with invalid compareDate', () => {
         const date = new Date('2024-01-10');
-        const referenceDate = 'invalid';
-        const result = DateHandler.past(date, referenceDate);
+        const compareDate = 'invalid';
+        const result = DateHandler.past(date, compareDate);
 
         expect(result.pass).toBe(false);
 
         const errors = [...result.errors];
         expect(errors).toHaveLength(1);
         expect(errors[0].key).toBe('date/base');
-        expect(errors[0].args).toEqual({ date: referenceDate });
+        expect(errors[0].args).toEqual({ date: compareDate });
     });
 
 });
@@ -902,34 +902,34 @@ describe('DateHandler.past', () => {
 describe('DateHandler.recent', () => {
     
     test('should pass when date is within recent days', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-10');
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const result = DateHandler.recent(date, 30, compareDate);
         
         expect(result.pass).toBe(true);
         expect(result.value).toBe(date);
     });
 
     test('should pass when date is at boundary', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2023-12-16'); // Exactly 30 days ago
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const result = DateHandler.recent(date, 30, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
     test('should pass when date is today', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-15');
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const result = DateHandler.recent(date, 30, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
     test('should fail when date is too old', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2023-12-01'); // More than 30 days ago
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const result = DateHandler.recent(date, 30, compareDate);
         
         expect(result.pass).toBe(false);
         expect(result.value).toBe(date);
@@ -940,30 +940,30 @@ describe('DateHandler.recent', () => {
     });
 
     test('should fail when date is in the future', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-20');
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const result = DateHandler.recent(date, 30, compareDate);
         
         expect(result.pass).toBe(false);
     });
 
     test('should use default 30 days', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-10');
-        const result = DateHandler.recent(date, undefined, referenceDate);
+        const result = DateHandler.recent(date, undefined, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
     test('should work with custom days', () => {
-        const referenceDate = new Date('2024-01-15');
+        const compareDate = new Date('2024-01-15');
         const date = new Date('2024-01-13');
-        const result = DateHandler.recent(date, 7, referenceDate);
+        const result = DateHandler.recent(date, 7, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
-    test('should use current date when referenceDate not provided', () => {
+    test('should use current date when compareDate not provided', () => {
         const recentDate = new Date(Date.now() - 86400000); // Yesterday
         const result = DateHandler.recent(recentDate, 30);
         
@@ -971,24 +971,24 @@ describe('DateHandler.recent', () => {
     });
 
     test('should work with date strings', () => {
-        const referenceDate = '2024-01-15';
+        const compareDate = '2024-01-15';
         const date = '2024-01-10';
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const result = DateHandler.recent(date, 30, compareDate);
         
         expect(result.pass).toBe(true);
     });
 
-    test('should fail with invalid referenceDate', () => {
+    test('should fail with invalid compareDate', () => {
         const date = new Date('2024-01-10');
-        const referenceDate = 'invalid';
-        const result = DateHandler.recent(date, 30, referenceDate);
+        const compareDate = 'invalid';
+        const result = DateHandler.recent(date, 30, compareDate);
 
         expect(result.pass).toBe(false);
 
         const errors = [...result.errors];
         expect(errors).toHaveLength(1);
         expect(errors[0].key).toBe('date/base');
-        expect(errors[0].args).toEqual({ date: referenceDate });
+        expect(errors[0].args).toEqual({ date: compareDate });
     });
 
 });

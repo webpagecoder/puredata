@@ -1,6 +1,6 @@
 'use strict';
 
-import { CompilationMapper } from '../CompilationMapper.ts';
+import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Locale } from '../Locale.ts';
 import { PRESENCE } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
@@ -9,7 +9,7 @@ import { ValueTracker } from '../tracker/ValueTracker.ts';
 type ErrorMessages = Record<string, string>;
 
 export type FieldProps = {
-    compilationMapper: CompilationMapper;
+    compilationMapper: FieldProcessorFactory;
     defaultValue: unknown;
     errorMessages: ErrorMessages;
     label: string;
@@ -29,7 +29,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
     constructor(props: Partial<P> = {}) {
 
         const {
-            compilationMapper = new CompilationMapper(),
+            compilationMapper = new FieldProcessorFactory(),
             defaultValue = undefined,
             label = 'Value',
             locale = new Locale('en-US'),
@@ -60,14 +60,14 @@ abstract class Field<P extends FieldProps = FieldProps> {
         );
     }
 
-    process(valueOrValueTracker: ValueTracker | unknown, state: Record<string, unknown> = {}): ValueTracker {
+    process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
         if (!this.processor) {
             if (!this.props.compilationMapper) {
                 throw new Error('Field compilation mapper is not configured');
             }
             this.processor = this.props.compilationMapper.createProcessor(this).compile();
         }
-        return this.processor.process(valueOrValueTracker, state);
+        return this.processor.process(valueOrValueTracker);
     }
 
     setProps(props: Partial<P> = {}): this {
