@@ -5,7 +5,7 @@ import { Field } from '../fields/Field.ts';
 import { Path } from '../Path.ts';
 
 export type NestedStringRecord = {
-    [key: string]: NestedStringRecord | string | undefined;
+    [key: string]: NestedStringRecord | string | string[];
 };
 
 
@@ -441,10 +441,7 @@ class Utils {
      * Number utilities
      ***************************************************/
 
-    static getSign(x: unknown): number {
-        const num = +(x as any);
-        return Math.sign(num) === -1 || 1 / num === -Infinity ? -1 : 1;
-    }
+
 
     static parseNumber(value: unknown, {
         autoConvert = true,

@@ -24,8 +24,11 @@ import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './utils/Utils.ts';
+import { BetterDate } from './date/BetterDate.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
+
+BetterDate.setLocale(Locale.get('en-US'));
 
 class PureData {
     constructor(config, compilationMapper = new FieldProcessorFactory()) {

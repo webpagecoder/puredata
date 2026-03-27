@@ -1,6 +1,8 @@
 'use strict';
 
-const DEFAULT_LANGUAGE = {
+import type { NestedStringRecord } from "../utils/Utils.ts";
+
+const DEFAULT_LANGUAGE:NestedStringRecord = {
     calendar: {
         numberSuffixes: [
             'st',

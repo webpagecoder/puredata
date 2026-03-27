@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE_TYPE } from '../types/date/DateTypes.ts';
+import { DATE_TYPE } from '../date/DateTypes.ts';
 import { Chain } from './Chain.ts';
 
 class DateChain extends Chain {

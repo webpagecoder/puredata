@@ -32,12 +32,11 @@ class Locale {
         this.text = text;
     }
 
-    switchLanguage(language: string): Locale {
-        const Constructor = this.constructor as new (keyOrParentLocale: string | Locale) => Locale;
-        return new Constructor(language);
+    static get(language: string): Locale {
+        return new Locale(language);
     }
 
-    getText(path: string | Path): string {
+    translate(path: string | Path): string {
         if (!(path instanceof Path)) {
             path = Path.create(path).toRelative();
         }
@@ -48,7 +47,7 @@ class Locale {
             pathPointer = Utils.getRefByPath(this.text, path);
         }
         if (pathPointer == null && this.text instanceof Locale) {
-            return this.text.getText(path);
+            return this.text.translate(path);
         }
 
         if (pathPointer == null) {

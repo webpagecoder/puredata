@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE_TYPE } from '../types/date/DateTypes.ts';
+import { DATE_TYPE } from '../date/DateTypes.ts';
 import { Utils } from '../utils/Utils.ts';
 import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';

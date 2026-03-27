@@ -1,7 +1,6 @@
 'use strict';
 
 export enum DATE_TYPE {
-    ANY,
     HUMAN,
     ISO,
     ISO_WEEK,

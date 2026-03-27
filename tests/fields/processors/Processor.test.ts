@@ -12,7 +12,7 @@ function createEntity({ required = false, forbidden = false, defaultValue = null
             defaultValue,
             label: 'Test Field',
             locale: {
-                getText(path) {
+                translate(path) {
                     let pointer = DefaultLanguage;
                     for (const key of path.keys) {
                         pointer = pointer[key];
