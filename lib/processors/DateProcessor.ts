@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE_TYPE } from '../date/DateTypes.ts';
+import { DateType } from '../date/DateTypes.ts';
 import { Utils } from '../utils/Utils.ts';
 import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
@@ -8,12 +8,12 @@ import { State } from './Processor.ts';
 
 type DateProcessorState = State & {
     originalValue?: unknown;
-    inputType?: DATE_TYPE | null;
+    inputType?: DateType | null;
 };
 
 type DateFieldProps = ChainProcessorProps['field']['props'] & {
-    inputType?: DATE_TYPE | null;
-    outputType?: DATE_TYPE | null;
+    inputType?: DateType | null;
+    outputType?: DateType | null;
 };
 
 
@@ -87,10 +87,10 @@ class DateProcessor extends ChainProcessor {
         }
 
         switch (outputType) {
-            case DATE_TYPE.ISO:
+            case DateType.ISO:
                 tracker.setValue(dateValue.toISOString());
                 break;
-            case DATE_TYPE.ISO_WEEK:
+            case DateType.ISO_WEEK:
                 const target = new Date(dateValue);
                 const dayNum = target.getUTCDay() || 7;
                 target.setUTCDate(target.getUTCDate() + 4 - dayNum);
@@ -98,12 +98,12 @@ class DateProcessor extends ChainProcessor {
                 const weekNum = Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
                 tracker.setValue(`${target.getUTCFullYear()}-W${Utils.padLeft(weekNum.toString(), 2, '0')}-${dayNum}`);
                 break;
-            case DATE_TYPE.ISO_ORDINAL:
+            case DateType.ISO_ORDINAL:
                 const diff = dateValue.getTime() - new Date(Date.UTC(dateValue.getUTCFullYear(), 0, 0)).getTime();
                 const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
                 tracker.setValue(`${dateValue.getUTCFullYear()}-${Utils.padLeft(dayOfYear.toString(), 3, '0')}`);
                 break;
-            case DATE_TYPE.TIMESTAMP:
+            case DateType.TIMESTAMP:
                 tracker.setValue(dateValue.getTime());
                 break;
         }

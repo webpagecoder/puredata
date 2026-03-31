@@ -28,8 +28,6 @@ import { BetterDate } from './date/BetterDate.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
-BetterDate.setLocale(Locale.get('en-US'));
-
 class PureData {
     constructor(config, compilationMapper = new FieldProcessorFactory()) {
         this.config = Utils.clone(config);
@@ -38,7 +36,7 @@ class PureData {
 
         const { locale } = this.config.general;
 
-        this.locale = new Locale(locale, 'errors');
+        this.locale = new Locale(locale);
         this.compilationMapper = compilationMapper;
     }
 

@@ -5,7 +5,7 @@ import { Field } from '../fields/Field.ts';
 import { Path } from '../Path.ts';
 
 export type NestedStringRecord = {
-    [key: string]: NestedStringRecord | string | string[];
+    [key: string]: NestedStringRecord | string | undefined;
 };
 
 
@@ -315,7 +315,7 @@ class Utils {
 
     static setPathValue(obj: unknown, path: Path, value: unknown, create: boolean = true, overwrite: boolean = true): boolean {
         const result = Utils.getRefByPath(obj, path, create, overwrite);
-        if (result.length > 0) {
+        if (result && result.length > 0) {
             const [objRef, key] = result as [unknown, string];
             const objRefRecord = objRef as Record<string, unknown>;
             if (overwrite || create && objRefRecord[key] === undefined) {

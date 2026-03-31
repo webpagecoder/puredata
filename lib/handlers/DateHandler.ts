@@ -4,7 +4,7 @@ import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 import { Handler } from './Handler.ts';
 import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
-import { DATE_TYPE } from '../date/DateTypes.ts';
+import { DateType } from '../date/DateTypes.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 const { pass, fail } = HandlerResult;
 
@@ -26,10 +26,10 @@ export type DateParts = {
 export class ParsedDate {
     date: Date;
     parts: DateParts;
-    format: DATE_TYPE;
+    format: DateType;
     value: DateLike;
 
-    constructor({ date, parts, format, value }: { date: Date; parts: DateParts; format: DATE_TYPE; value: DateLike }) {
+    constructor({ date, parts, format, value }: { date: Date; parts: DateParts; format: DateType; value: DateLike }) {
         this.date = date;
         this.parts = parts;
         this.format = format;

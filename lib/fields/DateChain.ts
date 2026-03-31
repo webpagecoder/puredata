@@ -1,6 +1,6 @@
 'use strict';
 
-import { DATE_TYPE } from '../date/DateTypes.ts';
+import { DateType } from '../date/DateTypes.ts';
 import { Chain } from './Chain.ts';
 
 class DateChain extends Chain {
@@ -46,7 +46,7 @@ class DateChain extends Chain {
      */
     human(options = {}) {
         this.ensureEmptyQueue('human');
-        return this.setProps({ inputType: DATE_TYPES.HUMAN }).addStep('human', function () {
+        return this.setProps({ inputType: DateTypeS.HUMAN }).addStep('human', function () {
             const {
                 numberSuffixes,
                 months: {
@@ -80,7 +80,7 @@ class DateChain extends Chain {
     iso(options = {}) {
         this.ensureEmptyQueue('iso');
         return this
-            .setProps({ inputType: DATE_TYPES.ISO })
+            .setProps({ inputType: DateTypeS.ISO })
             .addStep('iso', [options]);
     }
 
@@ -96,7 +96,7 @@ class DateChain extends Chain {
     isoOrdinal(options = {}) {
         this.ensureEmptyQueue('isoOrdinal');
         return this
-            .setProps({ inputType: DATE_TYPES.ISO_ORDINAL })
+            .setProps({ inputType: DateTypeS.ISO_ORDINAL })
             .addStep('isoOrdinal', [options]);
     }
 
@@ -112,7 +112,7 @@ class DateChain extends Chain {
     isoWeek(options = {}) {
         this.ensureEmptyQueue('isoWeek');
         return this
-            .setProps({ inputType: DATE_TYPES.ISO_WEEK })
+            .setProps({ inputType: DateTypeS.ISO_WEEK })
             .addStep('isoWeek', [options]);
     }
 
@@ -128,7 +128,7 @@ class DateChain extends Chain {
     timestamp(jsType = true) {
         this.ensureEmptyQueue('timestamp');
         return this
-            .setProps({ inputType: DATE_TYPES.TIMESTAMP })
+            .setProps({ inputType: DateTypeS.TIMESTAMP })
             .addStep('timestamp', [jsType]);
     }
 
@@ -154,7 +154,7 @@ class DateChain extends Chain {
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
     toIso() {
-        return this.setProps({ outputType: DATE_TYPES.ISO });
+        return this.setProps({ outputType: DateTypeS.ISO });
     }
 
     /**
@@ -164,7 +164,7 @@ class DateChain extends Chain {
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
     toIsoOrdinal() {
-        return this.setProps({ outputType: DATE_TYPES.ISO_ORDINAL });
+        return this.setProps({ outputType: DateTypeS.ISO_ORDINAL });
     }
 
     /**
@@ -174,7 +174,7 @@ class DateChain extends Chain {
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
     toIsoWeek() {
-        return this.setProps({ outputType: DATE_TYPES.ISO_WEEK });
+        return this.setProps({ outputType: DateTypeS.ISO_WEEK });
     }
 
     /**
@@ -184,7 +184,7 @@ class DateChain extends Chain {
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
     toTimestamp() {
-        return this.setProps({ outputType: DATE_TYPES.TIMESTAMP });
+        return this.setProps({ outputType: DateTypeS.TIMESTAMP });
     }
 }
 

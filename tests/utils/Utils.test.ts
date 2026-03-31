@@ -2,7 +2,7 @@
 
 import { Field } from '../../lib/fields/Field.ts';
 import { Path } from '../../lib/Path.ts';
-import { DATE_TYPES } from '../../lib/utils/DateTypes.ts';
+import { DateTypeS } from '../../lib/utils/DateTypes.ts';
 import { Utils } from '../../lib/utils/Utils.ts';
 
 const pathObj = (...keys) => ({ keys: [...keys] });
@@ -338,11 +338,11 @@ describe('Utils string utilities', () => {
 });
 
 describe('Utils date utilities', () => {
-    test('areDayAndDateValid and isLeapYear validate dates', () => {
+    test('isValidDate and isLeapYear validate dates', () => {
         expect(Utils.isLeapYear(2024)).toBe(true);
         expect(Utils.isLeapYear(2023)).toBe(false);
-        expect(Utils.areDayAndDateValid({ YYYY: 2024, MM: 2, DD: 29 })).toBe(true);
-        expect(Utils.areDayAndDateValid({ YYYY: 2023, MM: 2, DD: 29 })).toBe(false);
+        expect(Utils.isValidDate({ YYYY: 2024, MM: 2, DD: 29 })).toBe(true);
+        expect(Utils.isValidDate({ YYYY: 2023, MM: 2, DD: 29 })).toBe(false);
     });
 
     test('parseDateFromHuman parses common formats and rejects invalid input', () => {
@@ -389,19 +389,19 @@ describe('Utils date utilities', () => {
         expect(Utils.parseDateFromTimestamp('1704067200000')).toBeNull();
 
         const objectDate = new Date('2024-01-01T00:00:00Z');
-        expect(Utils.parseDate(objectDate).type).toBe(DATE_TYPES.OBJECT);
-        expect(Utils.parseDate(1704067200000, [DATE_TYPES.TIMESTAMP]).type).toBe(DATE_TYPES.TIMESTAMP);
-        expect(Utils.parseDate('2024-01-01', [DATE_TYPES.ISO]).type).toBe(DATE_TYPES.ISO);
+        expect(Utils.parseDate(objectDate).type).toBe(DateTypeS.OBJECT);
+        expect(Utils.parseDate(1704067200000, [DateTypeS.TIMESTAMP]).type).toBe(DateTypeS.TIMESTAMP);
+        expect(Utils.parseDate('2024-01-01', [DateTypeS.ISO]).type).toBe(DateTypeS.ISO);
         expect(Utils.parseDate('not-a-date')).toBeNull();
     });
 });
 
 describe('Utils number utilities', () => {
-    test('getSign handles negatives including negative zero', () => {
-        expect(Utils.getSign(-1)).toBe(-1);
-        expect(Utils.getSign(-0)).toBe(-1);
-        expect(Utils.getSign(0)).toBe(1);
-        expect(Utils.getSign(10)).toBe(1);
+    test('getSignMultiplier handles negatives including negative zero', () => {
+        expect(Utils.getSignMultiplier(-1)).toBe(-1);
+        expect(Utils.getSignMultiplier(-0)).toBe(-1);
+        expect(Utils.getSignMultiplier(0)).toBe(1);
+        expect(Utils.getSignMultiplier(10)).toBe(1);
     });
 
     test('parseNumber validates conversion, safety, finiteness, and precision', () => {

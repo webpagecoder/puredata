@@ -1,6 +1,6 @@
 'use strict';
 
-export enum DATE_TYPE {
+export enum DateType {
     HUMAN,
     ISO,
     ISO_WEEK,

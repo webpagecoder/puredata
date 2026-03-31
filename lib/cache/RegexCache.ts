@@ -1,22 +1,20 @@
 'use strict';
 
-/** @typedef import('./typedefs.ts') */
-
 import { Cache } from './Cache.ts';
 
-const SYM_REGEX_CACHE_KEY = Symbol();
-const REGEX_CACHE = Cache.registerStore(SYM_REGEX_CACHE_KEY);
+const SYM_REGEX_CACHE_KEY: symbol = Symbol();
+const REGEX_STORE: Map<string, RegExp> = Cache.registerStore(SYM_REGEX_CACHE_KEY) as Map<string, RegExp>;
 
-const RegexCache = (() => {
-    return (regexStr, flags = '') => {
+const RegexCache: (regexStr: string, flags?: string) => RegExp =
+    (regexStr: string, flags: string = ''): RegExp => {
         const key = regexStr + flags;
-        if (REGEX_CACHE.has(key)) {
-            return REGEX_CACHE.get(key);
+        if (REGEX_STORE.has(key)) {
+            return REGEX_STORE.get(key) as RegExp;
         }
         const regex = new RegExp(regexStr, flags);
-        REGEX_CACHE.set(key, regex);
+        REGEX_STORE.set(key, regex);
         return regex;
-    }
-})();
+    };
+
 
 export { RegexCache };
