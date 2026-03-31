@@ -9,7 +9,7 @@ import { RegexCache } from '../cache/RegexCache.ts';
 const { pass, fail } = HandlerResult;
 
 export type DateLike = Date | string | number;
-export type DateParts = {
+export type DateMeta = {
     YYYY: number;
     MM?: number;
     ww?: number;
@@ -25,11 +25,11 @@ export type DateParts = {
 }
 export class ParsedDate {
     date: Date;
-    parts: DateParts;
+    parts: DateMeta;
     format: DateType;
     value: DateLike;
 
-    constructor({ date, parts, format, value }: { date: Date; parts: DateParts; format: DateType; value: DateLike }) {
+    constructor({ date, parts, format, value }: { date: Date; parts: DateMeta; format: DateType; value: DateLike }) {
         this.date = date;
         this.parts = parts;
         this.format = format;
@@ -216,7 +216,7 @@ class DateHandler extends Handler {
         forbidden = [],
         allowBasic = false,
     }: any = {}): HandlerResult {
-        const parsedDate = parseDateFromIso(dateString);
+        const parsedDate = parseFromIso(dateString);
         if (!parsedDate) {
             return fail(dateString, 'date/iso');
         }
@@ -239,7 +239,7 @@ class DateHandler extends Handler {
      * @returns
      */
     static isoOrdinal(dateString: any, allowBasic: any = false): HandlerResult {
-        const parsedDate = parseDateFromIsoOrdinal(dateString);
+        const parsedDate = parseFromIsoOrdinal(dateString);
         if (!parsedDate) {
             return fail(dateString, 'date/isoOrdinal');
         }
@@ -258,7 +258,7 @@ class DateHandler extends Handler {
      * @returns
      */
     static isoWeek(dateString: any, allowBasic: any = false): HandlerResult {
-        const parsedDate = parseDateFromIsoWeek(dateString);
+        const parsedDate = parseFromIsoWeek(dateString);
         if (!parsedDate) {
             return fail(dateString, 'date/isoWeek');
         }

@@ -12,43 +12,32 @@ export enum DateType {
     ISO,
     ISO_BASIC,
     ISO_WEEK,
-    ISO_WEEK_BASIC,
     ISO_ORDINAL,
-    ISO_ORDINAL_BASIC,
     OBJECT,
     TIME_ONLY,
-    TIME_ONLY_BASIC,
     TIMESTAMP,
 };
 
 
 
-export type DateParts = {
-    year?: number;
-    month?: number;
-    week?: number;
-    day?: number;
-    hour?: number;
-    minute?: number;
-    second?: number;
-    millisecond?: number;
+export type DateMeta = {
     hourOffset?: number;
     minuteOffset?: number;
-    isBasic?: boolean;
+    isoIsExtended?: boolean;
+    isoHasZulu?: boolean;
 }
-
 
 
 class BetterDate {
     
     private _date: Date;
-    private _parts: DateParts;
+    private _meta: DateMeta;
     private _type: DateType;
 
-    constructor(date: Date, type: DateType, parts?: DateParts) {
+    constructor(date: Date, type: DateType, meta?: DateMeta) {
         this._date = date;
         this._type = type;
-        this._parts = parts || {};
+        this._meta = meta || {};
     }
 
 
@@ -58,7 +47,7 @@ class BetterDate {
 
 
 
-// export type DateParts = {
+// export type DateMeta = {
 //     YYYY: number;
 //     MM?: number;
 //     ww?: number;

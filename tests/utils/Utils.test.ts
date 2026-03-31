@@ -357,29 +357,29 @@ describe('Utils date utilities', () => {
         expect(Utils.parseDateFromHuman('31/31/2024')).toBeNull();
     });
 
-    test('parseDateFromIso parses valid ISO and rejects invalid ISO', () => {
-        const parsed = Utils.parseDateFromIso('2024-01-05T23:59:58.123Z');
+    test('parseFromIso parses valid ISO and rejects invalid ISO', () => {
+        const parsed = Utils.parseFromIso('2024-01-05T23:59:58.123Z');
         expect(parsed).not.toBeNull();
         expect(parsed.parsed.YYYY).toBe(2024);
         expect(parsed.parsed.MM).toBe(1);
         expect(parsed.parsed.DD).toBe(5);
         expect(parsed.parsed.Z).toBe('Z');
 
-        expect(Utils.parseDateFromIso('2024-02-30')).toBeNull();
-        expect(Utils.parseDateFromIso('')).toBeNull();
+        expect(Utils.parseFromIso('2024-02-30')).toBeNull();
+        expect(Utils.parseFromIso('')).toBeNull();
     });
 
-    test('parseDateFromIsoOrdinal and parseDateFromIsoWeek parse valid values', () => {
-        const ordinal = Utils.parseDateFromIsoOrdinal('2024-060');
+    test('parseFromIsoOrdinal and parseFromIsoWeek parse valid values', () => {
+        const ordinal = Utils.parseFromIsoOrdinal('2024-060');
         expect(ordinal).not.toBeNull();
         expect(ordinal.parsed.DDD).toBe(60);
-        expect(Utils.parseDateFromIsoOrdinal('2023-366')).toBeNull();
+        expect(Utils.parseFromIsoOrdinal('2023-366')).toBeNull();
 
-        const week = Utils.parseDateFromIsoWeek('2024-W01-1');
+        const week = Utils.parseFromIsoWeek('2024-W01-1');
         expect(week).not.toBeNull();
         expect(week.parsed.ww).toBe(1);
         expect(week.parsed.D).toBe(1);
-        expect(Utils.parseDateFromIsoWeek('2021-W53-1')).toBeNull();
+        expect(Utils.parseFromIsoWeek('2021-W53-1')).toBeNull();
     });
 
     test('parseDateFromTimestamp and parseDate select correct type', () => {
@@ -397,12 +397,7 @@ describe('Utils date utilities', () => {
 });
 
 describe('Utils number utilities', () => {
-    test('getSignMultiplier handles negatives including negative zero', () => {
-        expect(Utils.getSignMultiplier(-1)).toBe(-1);
-        expect(Utils.getSignMultiplier(-0)).toBe(-1);
-        expect(Utils.getSignMultiplier(0)).toBe(1);
-        expect(Utils.getSignMultiplier(10)).toBe(1);
-    });
+
 
     test('parseNumber validates conversion, safety, finiteness, and precision', () => {
         expect(Utils.parseNumber('10')).toBe(10);

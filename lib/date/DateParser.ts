@@ -13,45 +13,145 @@ enum DateOrder {
 
 type DatePart = string | number | undefined;
 
+// Misc
+const MULTI_SPACE_REGEX = /\s+/g;
+const TRIM_SEPARATOR_SPACES_REGEX = / ?([/.:-]) ?/g;
+const LEADING_DIGIT_REGEX = /^[0-9]/;
+
+// Date building blocks
+const YEAR = '\\d{4}';
+const MONTH = '(0[1-9]|1[0-2])';
+const DAY = '(0[1-9]|[12][0-9]|3[01])';
+const HOUR = '(0[0-9]|1[0-9]|2[0-3])';
+const MINUTE = '(0[0-9]|[1-5][0-9])';
+const SECOND = '(0[0-9]|[1-5][0-9])';
+const ISO_MILLISECOND = '(?:\\.(\\d{1,3}))';
+
+const ISO_EXPANDED_REQUIRED_MONTH_DAY = `${YEAR}-${MONTH}-${DAY}`;
+const ISO_EXPANDED_OPTIONAL_MONTH_DAY = `${YEAR}(?:-${MONTH}(?:-${DAY})?)?`;
+const ISO_EXPANDED_TIME = `${HOUR}:${MINUTE}(?::${SECOND}(?:${ISO_MILLISECOND})?)?`;
+const ISO_EXPANDED_TZ = `(?:(Z)|(?:([+-])${HOUR}:${MINUTE}))?`;
+
+const ISO_BASIC_REQUIRED_MONTH_DAY = `${YEAR}${MONTH}${DAY}`;
+const ISO_BASIC_OPTIONAL_MONTH_DAY = `${YEAR}(?:${MONTH}(?:${DAY})?)?`;
+const ISO_BASIC_TIME = `${HOUR}${MINUTE}(?:${SECOND}(?:${ISO_MILLISECOND})?)?`;
+const ISO_BASIC_TZ = `(?:(Z)|(?:([+-])${HOUR}${MINUTE}))?`;
+
+// Final formats
+const ISO_DATE_TIME_EXPANDED =
+    `^${ISO_EXPANDED_REQUIRED_MONTH_DAY}(?:T${ISO_EXPANDED_TIME}(?:${ISO_EXPANDED_TZ})?)?$` +
+    `|` +
+    `^${ISO_EXPANDED_OPTIONAL_MONTH_DAY}$`;
+const ISO_DATE_TIME_BASIC =
+    `^${ISO_BASIC_REQUIRED_MONTH_DAY}(?:T${ISO_BASIC_TIME}(?:${ISO_BASIC_TZ})?)?$` +
+    `|` +
+    `^${ISO_BASIC_OPTIONAL_MONTH_DAY}$`;
+
+
+
+
 const HUMAN_TIME_REGEX =
-    '^(00|0?[1-9]|1[0-9]|2[0-3])' +
-    '(:?)([0-5][0-9])?' +
+    '^' +
+    // Capture group 1: Hours 00-23 (24-hour) or 0?[1-9], 10-19, 20-23
+    '(00|0?[1-9]|1[0-9]|2[0-3])' +
+    // Capture group 2: Optional colon between hours and minutes
+    '(:?)' +
+    // Capture group 3: Optional minutes 00-59
+    '([0-5][0-9])?' +
+    // Capture group 4: Optional seconds 00-59 (must use same separator as group 2)
     '(?:\\2([0-5][0-9]))?' +
+    // Capture group 5: Optional fractional seconds (1-3 digits)
     '(?:\\.(\\d{1,3}))?' +
-    '\\s?' +
+    '\\s?' +  // Optional whitespace
+    // Capture group 6: Optional AM/PM
     '(AM|PM)?' +
-    '\\s?' +
+    '\\s?' +  // Optional whitespace
+    // Optional timezone
     '(?:' +
+    // Match literal UTC/Z/GMT (no capture)
     '(?:Z|UTC|GMT)' +
     '|' +
+    // Capture group 7: timezone hours ±00-23
     '(?:([+-](?:0[0-9]|1[0-9]|2[0-3]))' +
+    // Capture group 8: optional timezone minutes 00-59
     ':?(?:(0[0-9]|[1-5][0-9]))?' +
     ')' +
     ')?' +
     '$';
 
-const MULTI_SPACE_REGEX = /\s+/g;
-const TRIM_SEPARATOR_SPACES_REGEX = / ?([/.:-]) ?/g;
-const LEADING_DIGIT_REGEX = /^[0-9]/;
+const ISO_TIME_REGEX =
+    '(?:T' +
+    // Reject invalid milliseconds
+    '(?!\\d{2}:.*?[^.]\\d{3,})' +
+    // Reject sequences of 3+ digits without colon  
+    '(?!\\d{3,}(?![^:]*$))' +
+    // Capture group 1: hours 00-23
+    '(?:(0[0-9]|1[0-9]|2[0-3])' +
+    // Capture group 2: optional colon before minutes, Capture group 3: minutes 00-59
+    '(?:(:)?(0[0-9]|[1-5][0-9])' +
+    // Capture group 4: seconds 00-59 (colon must match minutes)
+    '(?:(?:\\2(0[0-9]|[1-5][0-9])' +
+    // Capture group 5: optional fractional seconds (1-3 digits)
+    '(?:\\.(\\d{1,3}))?' +
+    ')?)?)?' +
+    // Capture group 6: optional timezone hours ±00-23
+    '(?:([+-](?:0[0-9]|1[0-9]|2[0-3]))' +
+    // Capture group 7: optional colon in timezone, capture group 8: optional timezone minutes 00-59
+    '(?:(:)?(0[0-9]|[1-5][0-9]))?' +
+    ')?' +
+    ')?' +
+    // Capture group 9: optional UTC 'Z'
+    '(Z)?' +
+    ')'
+
 const ISO_DATE_TIME_OFFSET_REGEX =
     '^' +
+    // Negative lookahead: reject exactly 6 digits (to avoid YYYYMMDD without separators)
     '(?!\\d{6}$)' +
+    // Negative lookahead: reject dates with '-' before 'T' that have invalid milliseconds (3+ digits)
     '(?![^-]*-[^T]*T.*?[^.]\\d{3,})' +
+    // Negative lookahead: reject 5+ digits immediately before 'T' if there’s no colon afterward
     '(?!\\d{5,}T(?![^:]*$))' +
-    '(?:(?:(?=((\\d{4})(?:(-)?(1[012]|0[1-9]))?(?:\\3(3[01]|[12]\\d|0[1-9]))?))\\1))' +
-    '(?:T' +
-    '(?!\\d{2}:.*?[^.]\\d{3,})' +
-    '(?!\\d{3,}(?![^:]*$))' +
-    '(?:(0[0-9]|1[0-9]|2[0-3])(?:(?:(:)?(0[0-9]|[1-5][0-9]))(?:(?:\\7(0[0-9]|[1-5][0-9])(?:\\.(\\d{1,3}))?)?)?)?)' +
-    '(?:' +
-    '(?![+-][^Z]*Z)' +
-    '(?:([+-](?:0[0-9]|1[0-9]|2[0-3]))(?:(?:(:)?(0[0-9]|[1-5][0-9])))?)' +
-    ')?' +
-    ')?' +
-    '(Z)?' +
+    // Main capture for the date
+    // Start outer non-capturing, inner positive lookahead
+    '(?:(?:(?=(' +
+    // Capture group 1: year (YYYY)
+    '(\\d{4})' +
+    // Optional month
+    // Capture group 2: optional dash separator before month
+    // Capture group 3: month (01-12)
+    '(?:(-)?(1[012]|0[0-9]))?' +
+    // Optional day (01-31), using same separator as month
+    // Capture group 4: day (01-31)
+    '(?:\\3(3[01]|[12]\\d|0[0-9]))?' +
+    '))\\1))' +
+    ISO_TIME_REGEX +
+    '$'
+
+const ISO_ORDINAL_TIME_REGEX =
+    '^' +
+    // 4-digit year (YYYY)
+    '(\\d{4})' +
+    // Optional ordinal day:
+    // (-)? Optional dash separator (capture group 2)
+    // (00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]) Day-of-year 001-366 (capture group 3)
+    '(?:(-)?(00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]))' +
+    ISO_TIME_REGEX +
     '$';
-const ISO_ORDINAL_REGEX = '^(\\d{4})(?:(-)?(00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]))$';
-const ISO_WEEK_REGEX = '^(\\d{4})(-)?W(0[1-9]|[1-4]\\d|5[0-3])(?:\\2([1-7]))?$';
+
+const ISO_WEEK_REGEX =
+    '^' +
+    // Capture group 1: 4-digit ISO year (YYYY)
+    '(\\d{4})' +
+    // Capture group 2: optional dash separator before 'W'
+    '(-)?' +
+    'W' +
+    // Capture group 3: ISO week number 01-53
+    '(0[1-9]|[1-4]\\d|5[0-3])' +
+    // Optional weekday
+    // Capture group 4: weekday 1-7, using same separator as group 2 if present
+    '(?:\\2([1-7]))?' +
+    '$';
 
 class DateParser {
 
@@ -63,7 +163,7 @@ class DateParser {
 
     parse(value: unknown, dateOrder: DateOrder = DateOrder.MDY, parseTypes: DateType[] = []): BetterDate | null {
         const anyType = parseTypes.length === 0;
-        const shouldParse = (dateType: DateType): boolean => anyType ||  new Set(parseTypes).has(dateType);
+        const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
         if (shouldParse(DateType.OBJECT)) {
             if (value instanceof Date && !isNaN(value.getTime())) {
@@ -78,7 +178,7 @@ class DateParser {
             }
         }
         if (shouldParse(DateType.ISO)) {
-            const result = this.parseDateFromIso(value);
+            const result = this.parseFromIso(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.ISO, parts);
@@ -92,7 +192,7 @@ class DateParser {
         }
 
         if (shouldParse(DateType.ISO_WEEK)) {
-            const result = this.parseDateFromIsoWeek(value);
+            const result = this.parseFromIsoWeek(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.ISO_WEEK, parts);
@@ -100,7 +200,7 @@ class DateParser {
         }
 
         if (shouldParse(DateType.ISO_ORDINAL)) {
-            const result = this.parseDateFromIsoOrdinal(value);
+            const result = this.parseFromIsoOrdinal(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.ISO_ORDINAL, parts);
@@ -244,24 +344,17 @@ class DateParser {
             new Date(
                 timestamp +
                 (Math.abs(hourOffsetNum) * 3600000 + minuteOffsetNum * 60000) *
-                DateHelpers.getSignMultiplier(hourOffsetNum)
+                Math.sign(hourOffsetNum)
             ),
             DateType.HUMAN,
             {
-                year: yearNum,
-                month: monthNum,
-                day: dayNum,
-                hour: hourNum,
-                minute: minuteNum,
-                second: secondNum,
-                millisecond: millisecondNum,
                 hourOffset: hourOffsetNum,
                 minuteOffset: minuteOffsetNum
             },
         );
     }
 
-    parseDateFromIso(dateString: unknown): BetterDate | null {
+    parseFromIso(dateString: unknown): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -274,7 +367,7 @@ class DateParser {
         if (!matchResult) {
             return null;
         }
-        let [, , year, dash, month, day, hour, , minute, second, millisecond, hourOffset, , minuteOffset, Z] = matchResult;
+        let [, , year, dash, month, day, hour, , minute, second, millisecond, hourOffset, , minuteOffset, zulu] = matchResult;
 
         const yearNum = +year;
         const monthNum = +(month || 0);
@@ -304,25 +397,19 @@ class DateParser {
             new Date(
                 timestamp +
                 (Math.abs(hourOffsetNum) * 3600000 + minuteOffsetNum * 60000) *
-                DateHelpers.getSignMultiplier(hourOffsetNum)
+                Math.sign(hourOffsetNum)
             ),
             DateType.ISO,
             {
-                year: yearNum,
-                month: monthNum,
-                day: dayNum,
-                hour: hourNum,
-                minute: minuteNum,
-                second: secondNum,
-                millisecond: millisecondNum,
                 hourOffset: hourOffsetNum,
                 minuteOffset: minuteOffsetNum,
-                isBasic: !dash
+                isoIsExtended: !!dash,
+                isoHasZulu: !!zulu
             }
         );
     }
 
-    parseDateFromIsoOrdinal(dateString: unknown): BetterDate | null {
+    parseFromIsoOrdinal(dateString: unknown): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -330,7 +417,7 @@ class DateParser {
         if (trimmedDateString.length === 0) {
             return null;
         }
-        const matchResult = RegexCache(ISO_ORDINAL_REGEX).exec(trimmedDateString);
+        const matchResult = RegexCache(ISO_ORDINAL_TIME_REGEX).exec(trimmedDateString);
         if (!matchResult) {
             return null;
         }
@@ -349,12 +436,12 @@ class DateParser {
             {
                 year: yearNum,
                 day: dayNum,
-                isBasic: !dash
+                isoIsExtended: !!dash
             }
         );
     }
 
-    parseDateFromIsoWeek(dateString: unknown): BetterDate | null {
+    parseFromIsoWeek(dateString: unknown): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
