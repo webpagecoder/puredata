@@ -1,5 +1,5 @@
 'use strict';
-
+//todo: date and string add auto trim
 import { RegexCache } from "../cache/RegexCache.ts";
 import { Locale } from "../Locale.ts";
 import { BetterDate, DateType } from "./BetterDate.ts";
@@ -19,121 +19,69 @@ const TRIM_SEPARATOR_SPACES_REGEX = / ?([/.:-]) ?/g;
 const LEADING_DIGIT_REGEX = /^[0-9]/;
 
 // Date building blocks
-const YEAR = '\\d{4}';
-const MONTH = '(0[1-9]|1[0-2])';
-const DAY = '(0[1-9]|[12][0-9]|3[01])';
-const HOUR = '(0[0-9]|1[0-9]|2[0-3])';
-const MINUTE = '(0[0-9]|[1-5][0-9])';
-const SECOND = '(0[0-9]|[1-5][0-9])';
-const ISO_MILLISECOND = '\\.(\\d{1,3})';
+const YEAR = '(\\d{4})';
+const MONTH = '(0?[1-9]|1[0-2])';
+const MONTH_LZ = '(0[1-9]|1[0-2])';
+const DAY_OF_MONTH = '(0?[1-9]|[12][0-9]|3[01])';
+const DAY_OF_MONTH_LZ = '(0[1-9]|[12][0-9]|3[01])';
+const DAY_OF_WEEK = '([1-7])';
+const DAY_OF_YEAR_LZ = '(00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6])';
+const WEEK_OF_YEAR_LZ = '(0[1-9]|[1-4]\\d|5[0-3])';
 
-const ISO_EXPANDED_REQUIRED_MONTH_DAY = `${YEAR}-${MONTH}-${DAY}`;
-const ISO_EXPANDED_OPTIONAL_MONTH_DAY = `${YEAR}(?:-${MONTH}(?:-${DAY})?)?`;
-const ISO_EXPANDED_TIME = `${HOUR}:${MINUTE}(?::${SECOND}(?:${ISO_MILLISECOND})?)?`;
-const ISO_EXPANDED_TZ = `(?:(Z)|(?:([+-])${HOUR}:${MINUTE}))?`;
+// Time building blocks
+const HOUR = '(0?[0-9]|1[0-9]|2[0-3])';
+const HOUR_LZ = '(0[0-9]|1[0-9]|2[0-3])';
+const MINUTE = '(0?[0-9]|[1-5][0-9])';
+const MINUTE_LZ = '(0[0-9]|[1-5][0-9])';
+const SECOND = '(0?[0-9]|[1-5][0-9])';
+const SECOND_LZ = '(0[0-9]|[1-5][0-9])';
+const THOUSANDTHS_OF_SECOND = '\\.(\\d{1,3})';
+const MERIDIEM = '([AaPp][Mm])';
+
+// ISO building blocks
+const ISO_BASIC_DATE_REQUIRED_MONTH_DAY = `${YEAR}${MONTH_LZ}${DAY_OF_MONTH_LZ}`;
+const ISO_BASIC_DATE_OPTIONAL_MONTH_DAY = `${YEAR}(?:${MONTH_LZ}(?:${DAY_OF_MONTH_LZ})?)?`;
+const ISO_BASIC_TIME = `${HOUR_LZ}${MINUTE_LZ}(?:${SECOND_LZ}(?:${THOUSANDTHS_OF_SECOND})?)?`;
+const ISO_BASIC_TZ = `(?:(Z)|(?:([+-])${HOUR_LZ}${MINUTE_LZ}))?`;
+const ISO_BASIC_TIME_TZ = `${ISO_BASIC_TIME}${ISO_BASIC_TZ}`;
+const ISO_EXPANDED_DATE_REQUIRED_MONTH_DAY = `${YEAR}-${MONTH_LZ}-${DAY_OF_MONTH_LZ}`;
+const ISO_EXPANDED_DATE_OPTIONAL_MONTH_DAY = `${YEAR}(?:-${MONTH_LZ}(?:-${DAY_OF_MONTH_LZ})?)?`;
+const ISO_EXPANDED_TIME = `${HOUR_LZ}:${MINUTE_LZ}(?::${SECOND_LZ}(?:${THOUSANDTHS_OF_SECOND})?)?`;
+const ISO_EXPANDED_TZ = `(?:(Z)|(?:([+-])${HOUR_LZ}:${MINUTE_LZ}))?`;
 const ISO_EXPANDED_TIME_TZ = `${ISO_EXPANDED_TIME}${ISO_EXPANDED_TZ}`;
 
-const ISO_BASIC_REQUIRED_MONTH_DAY = `${YEAR}${MONTH}${DAY}`;
-const ISO_BASIC_OPTIONAL_MONTH_DAY = `${YEAR}(?:${MONTH}(?:${DAY})?)?`;
-const ISO_BASIC_TIME = `${HOUR}${MINUTE}(?:${SECOND}(?:${ISO_MILLISECOND})?)?`;
-const ISO_BASIC_TZ = `(?:(Z)|(?:([+-])${HOUR}${MINUTE}))?`;
-const ISO_BASIC_TIME_TZ = `${ISO_BASIC_TIME}${ISO_BASIC_TZ}`;
+// ISO final formats
+const ISO_BASIC_DATE_TIME = `^${ISO_BASIC_DATE_REQUIRED_MONTH_DAY}(?:T${ISO_BASIC_TIME_TZ})?$|^${ISO_BASIC_DATE_OPTIONAL_MONTH_DAY}$`;
+const ISO_EXPANDED_DATE_TIME = `^${ISO_EXPANDED_DATE_REQUIRED_MONTH_DAY}(?:T${ISO_EXPANDED_TIME_TZ})?$|^${ISO_EXPANDED_DATE_OPTIONAL_MONTH_DAY}$`;
 
-// Final formats
-const ISO_EXPANDED_DATE_TIME =
-    `^${ISO_EXPANDED_REQUIRED_MONTH_DAY}(?:T${ISO_EXPANDED_TIME_TZ})?$` +
-    `|` +
-    `^${ISO_EXPANDED_OPTIONAL_MONTH_DAY}$`;
-const ISO_BASIC_DATE_TIME =
-    `^${ISO_BASIC_REQUIRED_MONTH_DAY}(?:T${ISO_BASIC_TIME_TZ})?$` +
-    `|` +
-    `^${ISO_BASIC_OPTIONAL_MONTH_DAY}$`;
+const ISO_EXPANDED_ORDINAL_DATE_TIME_REGEX = `^${YEAR}-${DAY_OF_YEAR_LZ}(?:T${ISO_EXPANDED_TIME_TZ})?$`;
+const ISO_BASIC_ORDINAL_DATE_TIME_REGEX = `^${YEAR}${DAY_OF_YEAR_LZ}(?:T${ISO_BASIC_TIME_TZ})?$`;
 
+const ISO_EXPANDED_WEEK_REGEX = `^${YEAR}-W${WEEK_OF_YEAR_LZ}(?:-${DAY_OF_WEEK})?$`;
+const ISO_BASIC_WEEK_REGEX = `^${YEAR}W${WEEK_OF_YEAR_LZ}(?:${DAY_OF_WEEK})?$`;
 
-const HUMAN_TIME = `/^(0?[1-9]|1[0-2]):?\s*([0-5][0-9])\s*([AaPp][Mm])$|^${ISO_EXPANDED_TIME_TZ}$|^${ISO_BASIC_TIME_TZ}$/`;
+// Human readable building blocks
+const HUMAN_TIME = `/^${HOUR}(?::\s*${MINUTE}(?::\s*${SECOND})?)?\s*${MERIDIEM}$|^${ISO_EXPANDED_TIME_TZ}$|^${ISO_BASIC_TIME_TZ}$/`;
+const SEPARATOR = '[/. -]+';
 
+// Human readable final formats
+const HUMAN_DATE_TIME_MDY_WRITTEN = `(#MONTH_NAMES#)\\s*${DAY_OF_MONTH}(?:\\s*(#NUMBER_SUFFIXES#))?\\s*,?\\s*${YEAR}(?:\\s+${HUMAN_TIME})?`;
+const HUMAN_DATE_TIME_DMY_WRITTEN = `${DAY_OF_MONTH}(?:\\s*(#NUMBER_SUFFIXES#))?\\s*(#MONTH_NAMES#)\\s*,?\\s*${YEAR}(?:\\s+${HUMAN_TIME})?`;
+const HUMAN_DATE_TIME_YMD_WRITTEN = `${YEAR}\\s*(#MONTH_NAMES#)\\s*${DAY_OF_MONTH}(?:\\s*(#NUMBER_SUFFIXES#))?(?:\\s+${HUMAN_TIME})?`;
 
+const HUMAN_DATE_TIME_MDY_SHORT = `${MONTH}${SEPARATOR}${DAY_OF_MONTH}${SEPARATOR}${YEAR}(?:\\s+${HUMAN_TIME})?`;
+const HUMAN_DATE_TIME_DMY_SHORT = `${DAY_OF_MONTH}${SEPARATOR}${MONTH}${SEPARATOR}${YEAR}(?:\\s+${HUMAN_TIME})?`;
+const HUMAN_DATE_TIME_YMD_SHORT = `${YEAR}${SEPARATOR}${MONTH}${SEPARATOR}${DAY_OF_MONTH}(?:\\s+${HUMAN_TIME})?`;
 
-const ISO_TIME_REGEX =
-    '(?:T' +
-    // Reject invalid milliseconds
-    '(?!\\d{2}:.*?[^.]\\d{3,})' +
-    // Reject sequences of 3+ digits without colon  
-    '(?!\\d{3,}(?![^:]*$))' +
-    // Capture group 1: hours 00-23
-    '(?:(0[0-9]|1[0-9]|2[0-3])' +
-    // Capture group 2: optional colon before minutes, Capture group 3: minutes 00-59
-    '(?:(:)?(0[0-9]|[1-5][0-9])' +
-    // Capture group 4: seconds 00-59 (colon must match minutes)
-    '(?:(?:\\2(0[0-9]|[1-5][0-9])' +
-    // Capture group 5: optional fractional seconds (1-3 digits)
-    '(?:\\.(\\d{1,3}))?' +
-    ')?)?)?' +
-    // Capture group 6: optional timezone hours ±00-23
-    '(?:([+-](?:0[0-9]|1[0-9]|2[0-3]))' +
-    // Capture group 7: optional colon in timezone, capture group 8: optional timezone minutes 00-59
-    '(?:(:)?(0[0-9]|[1-5][0-9]))?' +
-    ')?' +
-    ')?' +
-    // Capture group 9: optional UTC 'Z'
-    '(Z)?' +
-    ')'
-
-const ISO_DATE_TIME_OFFSET_REGEX =
-    '^' +
-    // Negative lookahead: reject exactly 6 digits (to avoid YYYYMMDD without separators)
-    '(?!\\d{6}$)' +
-    // Negative lookahead: reject dates with '-' before 'T' that have invalid milliseconds (3+ digits)
-    '(?![^-]*-[^T]*T.*?[^.]\\d{3,})' +
-    // Negative lookahead: reject 5+ digits immediately before 'T' if there’s no colon afterward
-    '(?!\\d{5,}T(?![^:]*$))' +
-    // Main capture for the date
-    // Start outer non-capturing, inner positive lookahead
-    '(?:(?:(?=(' +
-    // Capture group 1: year (YYYY)
-    '(\\d{4})' +
-    // Optional month
-    // Capture group 2: optional dash separator before month
-    // Capture group 3: month (01-12)
-    '(?:(-)?(1[012]|0[0-9]))?' +
-    // Optional day (01-31), using same separator as month
-    // Capture group 4: day (01-31)
-    '(?:\\3(3[01]|[12]\\d|0[0-9]))?' +
-    '))\\1))' +
-    ISO_TIME_REGEX +
-    '$'
-
-const ISO_ORDINAL_TIME_REGEX =
-    '^' +
-    // 4-digit year (YYYY)
-    '(\\d{4})' +
-    // Optional ordinal day:
-    // (-)? Optional dash separator (capture group 2)
-    // (00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]) Day-of-year 001-366 (capture group 3)
-    '(?:(-)?(00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]))' +
-    ISO_TIME_REGEX +
-    '$';
-
-const ISO_WEEK_REGEX =
-    '^' +
-    // Capture group 1: 4-digit ISO year (YYYY)
-    '(\\d{4})' +
-    // Capture group 2: optional dash separator before 'W'
-    '(-)?' +
-    'W' +
-    // Capture group 3: ISO week number 01-53
-    '(0[1-9]|[1-4]\\d|5[0-3])' +
-    // Optional weekday
-    // Capture group 4: weekday 1-7, using same separator as group 2 if present
-    '(?:\\2([1-7]))?' +
-    '$';
 
 class DateParser {
 
-    private locale: Locale;
+    private _locale: Locale;
+    private _humanWrittenDateTime: Record<string, RegExp> | null;
 
     constructor(locale: Locale) {
-        this.locale = locale;
+        this._locale = locale;
+        this._humanWrittenDateTime = null;
     }
 
     parse(value: unknown, dateOrder: DateOrder = DateOrder.MDY, parseTypes: DateType[] = []): BetterDate | null {
@@ -146,28 +94,28 @@ class DateParser {
             }
         }
         if (shouldParse(DateType.TIMESTAMP)) {
-            const result = this.parseFromTimestamp(value);
+            const result = this.parseTimestamp(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.TIMESTAMP, parts);
             }
         }
         if (shouldParse(DateType.ISO)) {
-            const result = this.parseFromIso(value);
+            const result = this.parseIso(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.ISO, parts);
             }
         }
         if (shouldParse(DateType.HUMAN)) {
-            const result = this.parseFromHuman(value, dateOrder);
+            const result = this.parseHuman(value, dateOrder);
             if (result) {
                 return result;
             }
         }
 
         if (shouldParse(DateType.ISO_WEEK)) {
-            const result = this.parseFromIsoWeek(value);
+            const result = this.parseIsoWeek(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.ISO_WEEK, parts);
@@ -175,7 +123,7 @@ class DateParser {
         }
 
         if (shouldParse(DateType.ISO_ORDINAL)) {
-            const result = this.parseFromIsoOrdinal(value);
+            const result = this.parseIsoOrdinal(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.ISO_ORDINAL, parts);
@@ -185,21 +133,44 @@ class DateParser {
         return null;
     }
 
-    parseFromHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): BetterDate | null {
+    parseHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): BetterDate | null {
         if (typeof dateString !== 'string' || dateString.trim().length === 0) {
             return null;
         }
-        const locale = this.locale;
-        const numberSuffixes = locale.translate('calendar/numberSuffixes') as string[] || [];
-        const fullMonths = locale.translate('calendar/months/full') as string[] || [];
-        const shortMonths = locale.translate('calendar/months/short') as string[] || [];
-        const allMonths = fullMonths.concat(shortMonths).map((name: string): string => name.toLowerCase());
 
-        const yearRegex = '(\\d{4})';
-        const monthRegex = '(1[012]|0?[1-9])';
-        const dayNumRegex = '(3[01]|[12]\\d|0?[1-9])(?:' + numberSuffixes.join('|') + ')?';
-        const namedDayRegex = '(?:[a-z]{1,20})';
-        const allMonthsRegex = '(' + allMonths.join('|') + ')';
+        
+        if (!this._humanWrittenDateTime) {
+            const { _locale: locale } = this;
+            const allMonths =
+                (locale.translate('calendar/months/full') as string[] || [])
+                    .concat(locale.translate('calendar/months/short') as string[] || [])
+                    .map((name: string): string => name.toLowerCase())
+                    .join('|');
+            const allNumberSuffixes =
+                (locale.translate('calendar/numberSuffixes') as string[] || [])
+                    .map((suffix: string): string => suffix.toLowerCase())
+                    .join('|');
+
+            switch (dateOrder) {
+                case DateOrder.MDY:
+                    dateOrderRegex = [[monthRegex, dayNumRegex, yearRegex], [4, 2, 3]];
+                    break;
+                case DateOrder.DMY:
+                    dateOrderRegex = [[dayNumRegex, monthRegex, yearRegex], [4, 3, 2]];
+                    break;
+                case DateOrder.YMD:
+                    dateOrderRegex = [[yearRegex, monthRegex, dayNumRegex], [2, 3, 4]];
+                    break;
+            }
+
+            this._humanWrittenDateTime = {
+                MDY: RegexCache(HUMAN_DATE_TIME_MDY_WRITTEN.replace('#MONTH_NAMES#', allMonths).replace('#NUMBER_SUFFIXES#', allNumberSuffixes)),
+                DMY: RegexCache(HUMAN_DATE_TIME_DMY_WRITTEN.replace('#MONTH_NAMES#', allMonths).replace('#NUMBER_SUFFIXES#', allNumberSuffixes)),
+                YMD: RegexCache(HUMAN_DATE_TIME_YMD_WRITTEN.replace('#MONTH_NAMES#', allMonths).replace('#NUMBER_SUFFIXES#', allNumberSuffixes))
+            };
+        }
+
+        const { MDY, DMY, YMD } = this._humanWrittenDateTime;
 
         const normalizedDateString = dateString
             .trim()
@@ -207,7 +178,7 @@ class DateParser {
             .replace(MULTI_SPACE_REGEX, ' ')
             .replace(TRIM_SEPARATOR_SPACES_REGEX, '$1');
 
-        let dateOrderRegex: [string[], number[]];
+        
         switch (dateOrder) {
             case DateOrder.MDY:
                 dateOrderRegex = [[monthRegex, dayNumRegex, yearRegex], [4, 2, 3]];
@@ -329,7 +300,7 @@ class DateParser {
         );
     }
 
-    parseFromIso(dateString: unknown): BetterDate | null {
+    parseIso(dateString: unknown): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -384,7 +355,7 @@ class DateParser {
         );
     }
 
-    parseFromIsoOrdinal(dateString: unknown): BetterDate | null {
+    parseIsoOrdinal(dateString: unknown): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -416,7 +387,7 @@ class DateParser {
         );
     }
 
-    parseFromIsoWeek(dateString: unknown): BetterDate | null {
+    parseIsoWeek(dateString: unknown): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -456,7 +427,7 @@ class DateParser {
         );
     }
 
-    parseFromTimestamp(value: unknown): BetterDate | null {
+    parseTimestamp(value: unknown): BetterDate | null {
         if (!Number.isInteger(value)) {
             return null;
         }
