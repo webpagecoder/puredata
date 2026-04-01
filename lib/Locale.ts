@@ -59,10 +59,10 @@ class Locale {
 
         const [pointer, key] = pathPointer;
         const value = pointer[key];
-        if (typeof value !== 'string' && !(allowMultiple && Array.isArray(value))) {
-            throw new Error('Invalid path for translation: ' + path.string);
+        if (typeof value === 'string' || Array.isArray(value) || (allowMultiple && Utils.isPlainObject(value))) {
+            return value;
         }
-        return value;
+        throw new Error('Invalid path for translation: ' + path.string);
     }
 
     override(overrides: TranslationRecord): void {

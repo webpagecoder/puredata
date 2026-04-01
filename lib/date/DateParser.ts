@@ -25,59 +25,34 @@ const DAY = '(0[1-9]|[12][0-9]|3[01])';
 const HOUR = '(0[0-9]|1[0-9]|2[0-3])';
 const MINUTE = '(0[0-9]|[1-5][0-9])';
 const SECOND = '(0[0-9]|[1-5][0-9])';
-const ISO_MILLISECOND = '(?:\\.(\\d{1,3}))';
+const ISO_MILLISECOND = '\\.(\\d{1,3})';
 
 const ISO_EXPANDED_REQUIRED_MONTH_DAY = `${YEAR}-${MONTH}-${DAY}`;
 const ISO_EXPANDED_OPTIONAL_MONTH_DAY = `${YEAR}(?:-${MONTH}(?:-${DAY})?)?`;
 const ISO_EXPANDED_TIME = `${HOUR}:${MINUTE}(?::${SECOND}(?:${ISO_MILLISECOND})?)?`;
 const ISO_EXPANDED_TZ = `(?:(Z)|(?:([+-])${HOUR}:${MINUTE}))?`;
+const ISO_EXPANDED_TIME_TZ = `${ISO_EXPANDED_TIME}${ISO_EXPANDED_TZ}`;
 
 const ISO_BASIC_REQUIRED_MONTH_DAY = `${YEAR}${MONTH}${DAY}`;
 const ISO_BASIC_OPTIONAL_MONTH_DAY = `${YEAR}(?:${MONTH}(?:${DAY})?)?`;
 const ISO_BASIC_TIME = `${HOUR}${MINUTE}(?:${SECOND}(?:${ISO_MILLISECOND})?)?`;
 const ISO_BASIC_TZ = `(?:(Z)|(?:([+-])${HOUR}${MINUTE}))?`;
+const ISO_BASIC_TIME_TZ = `${ISO_BASIC_TIME}${ISO_BASIC_TZ}`;
 
 // Final formats
-const ISO_DATE_TIME_EXPANDED =
-    `^${ISO_EXPANDED_REQUIRED_MONTH_DAY}(?:T${ISO_EXPANDED_TIME}(?:${ISO_EXPANDED_TZ})?)?$` +
+const ISO_EXPANDED_DATE_TIME =
+    `^${ISO_EXPANDED_REQUIRED_MONTH_DAY}(?:T${ISO_EXPANDED_TIME_TZ})?$` +
     `|` +
     `^${ISO_EXPANDED_OPTIONAL_MONTH_DAY}$`;
-const ISO_DATE_TIME_BASIC =
-    `^${ISO_BASIC_REQUIRED_MONTH_DAY}(?:T${ISO_BASIC_TIME}(?:${ISO_BASIC_TZ})?)?$` +
+const ISO_BASIC_DATE_TIME =
+    `^${ISO_BASIC_REQUIRED_MONTH_DAY}(?:T${ISO_BASIC_TIME_TZ})?$` +
     `|` +
     `^${ISO_BASIC_OPTIONAL_MONTH_DAY}$`;
 
 
+const HUMAN_TIME = `/^(0?[1-9]|1[0-2]):?\s*([0-5][0-9])\s*([AaPp][Mm])$|^${ISO_EXPANDED_TIME_TZ}$|^${ISO_BASIC_TIME_TZ}$/`;
 
 
-const HUMAN_TIME_REGEX =
-    '^' +
-    // Capture group 1: Hours 00-23 (24-hour) or 0?[1-9], 10-19, 20-23
-    '(00|0?[1-9]|1[0-9]|2[0-3])' +
-    // Capture group 2: Optional colon between hours and minutes
-    '(:?)' +
-    // Capture group 3: Optional minutes 00-59
-    '([0-5][0-9])?' +
-    // Capture group 4: Optional seconds 00-59 (must use same separator as group 2)
-    '(?:\\2([0-5][0-9]))?' +
-    // Capture group 5: Optional fractional seconds (1-3 digits)
-    '(?:\\.(\\d{1,3}))?' +
-    '\\s?' +  // Optional whitespace
-    // Capture group 6: Optional AM/PM
-    '(AM|PM)?' +
-    '\\s?' +  // Optional whitespace
-    // Optional timezone
-    '(?:' +
-    // Match literal UTC/Z/GMT (no capture)
-    '(?:Z|UTC|GMT)' +
-    '|' +
-    // Capture group 7: timezone hours ±00-23
-    '(?:([+-](?:0[0-9]|1[0-9]|2[0-3]))' +
-    // Capture group 8: optional timezone minutes 00-59
-    ':?(?:(0[0-9]|[1-5][0-9]))?' +
-    ')' +
-    ')?' +
-    '$';
 
 const ISO_TIME_REGEX =
     '(?:T' +
@@ -171,7 +146,7 @@ class DateParser {
             }
         }
         if (shouldParse(DateType.TIMESTAMP)) {
-            const result = this.parseDateFromTimestamp(value);
+            const result = this.parseFromTimestamp(value);
             if (result) {
                 const { date, parts } = result;
                 return new BetterDate(date, DateType.TIMESTAMP, parts);
@@ -185,7 +160,7 @@ class DateParser {
             }
         }
         if (shouldParse(DateType.HUMAN)) {
-            const result = this.parseDateFromHuman(value, dateOrder);
+            const result = this.parseFromHuman(value, dateOrder);
             if (result) {
                 return result;
             }
@@ -210,7 +185,7 @@ class DateParser {
         return null;
     }
 
-    parseDateFromHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): BetterDate | null {
+    parseFromHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): BetterDate | null {
         if (typeof dateString !== 'string' || dateString.trim().length === 0) {
             return null;
         }
@@ -481,7 +456,7 @@ class DateParser {
         );
     }
 
-    parseDateFromTimestamp(value: unknown): BetterDate | null {
+    parseFromTimestamp(value: unknown): BetterDate | null {
         if (!Number.isInteger(value)) {
             return null;
         }
