@@ -24,7 +24,7 @@ export type DateMeta = {
     hourOffset?: number;
     minuteOffset?: number;
     isoIsExtended?: boolean;
-    isoHasZulu?: boolean;
+    isoIsZulu?: boolean;
 }
 
 
