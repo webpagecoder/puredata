@@ -21,10 +21,10 @@ export enum DateType {
 
 
 export type DateMeta = {
-    hourOffset?: number;
-    minuteOffset?: number;
-    isoIsExtended?: boolean;
-    isoIsZulu?: boolean;
+    isoHourOffset?: number;
+    isoMinuteOffset?: number;
+    isoIsExpanded?: boolean;
+    isoHasZulu?: boolean;
 }
 
 
