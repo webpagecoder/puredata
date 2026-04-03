@@ -18,26 +18,25 @@ export enum DateType {
     TIMESTAMP,
 };
 
-
-
-export type DateMeta = {
-    isoHourOffset?: number;
-    isoMinuteOffset?: number;
-    isoIsExpanded?: boolean;
-    isoHasZulu?: boolean;
-}
-
+export type BetterDateConstructorParams = {
+    date: Date;
+    originalInput: unknown;
+    type: DateType;
+    meta?: Record<string, unknown>;
+};
 
 class BetterDate {
     
     private _date: Date;
-    private _meta: DateMeta;
+    private _meta?: Record<string, unknown>;
     private _type: DateType;
+    private _originalInput: unknown;
 
-    constructor(date: Date, type: DateType, meta?: DateMeta) {
+    constructor({date, originalInput, type, meta}: BetterDateConstructorParams) {
         this._date = date;
         this._type = type;
-        this._meta = meta || {};
+        this._meta = meta;
+        this._originalInput = originalInput;
     }
 
 
