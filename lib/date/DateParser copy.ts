@@ -6,9 +6,9 @@ import { BetterDate, DateMeta, DateType } from "./BetterDate.ts";
 import { DateHelpers } from "./DateHelpers.ts";
 
 enum DateOrder {
-    'MDY',
-    'DMY',
-    'YMD'
+    MDY,
+    DMY,
+    YMD
 };
 
 type DatePart = string | number | undefined;
@@ -55,39 +55,35 @@ const SEPARATOR = '[/. -,:]+';
 const HUMAN_TIME_12 = `${HOUR_12}(?::\\s*${MINUTE_LZ}(?::\\s*${SECOND_LZ})?)?\\s*${MERIDIEM}`;
 const HUMAN_TIME_24 = `${HOUR_24_LZ}(?::\\s*${MINUTE_LZ}(?::\\s*${SECOND_LZ})?)?`;
 
-// Human readable final date formats
-const HUMAN_MDY = [
-    `(?:#DAY_NAMES#${SEPARATOR})?(#MONTH_NAMES#)${SEPARATOR}${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?${SEPARATOR}${YEAR}(?:${SEPARATOR}(.*))?`,
-    `${MONTH}${SEPARATOR}${DAY_OF_MONTH}${SEPARATOR}${YEAR}(?:${SEPARATOR}(.*))?`
-];
-const HUMAN_DMY = [
-    `(?:#DAY_NAMES#${SEPARATOR})?${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?${SEPARATOR}(#MONTH_NAMES#)${SEPARATOR}${YEAR}(?:${SEPARATOR}(.*))?`,
-    `${DAY_OF_MONTH}${SEPARATOR}${MONTH}${SEPARATOR}${YEAR}(?:${SEPARATOR}(.*))?`
-];
-const HUMAN_YMD = [
-    `(?:#DAY_NAMES#${SEPARATOR})?${YEAR}${SEPARATOR}(#MONTH_NAMES#)${SEPARATOR}${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?(?:${SEPARATOR}(.*))?`,
-    `${YEAR}${SEPARATOR}${MONTH}${SEPARATOR}${DAY_OF_MONTH}(?:${SEPARATOR}(.*))?`
-];
-//(?:${SEPARATOR}${HUMAN_TIME_12})?
+// Human readable final formats
+const HUMAN_MDY_WORDS = `(#MONTH_NAMES#)${SEPARATOR}${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?${SEPARATOR}${YEAR}(?:${SEPARATOR}${HUMAN_TIME_12})?`;
+const HUMAN_DMY_WORDS = `${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?${SEPARATOR}(#MONTH_NAMES#)${SEPARATOR}${YEAR}(?:${SEPARATOR}${HUMAN_TIME_12})?`;
+const HUMAN_YMD_WORDS = `${YEAR}${SEPARATOR}(#MONTH_NAMES#)${SEPARATOR}${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?(?:${SEPARATOR}${HUMAN_TIME_12})?`;
 
+const HUMAN_MDY_NUMS = `${MONTH}${SEPARATOR}${DAY_OF_MONTH}${SEPARATOR}${YEAR}(?:${SEPARATOR}${HUMAN_TIME_12})?`;
+const HUMAN_DMY_NUMS = `${DAY_OF_MONTH}${SEPARATOR}${MONTH}${SEPARATOR}${YEAR}(?:${SEPARATOR}${HUMAN_TIME_12})?`;
+const HUMAN_YMD_NUMS = `${YEAR}${SEPARATOR}${MONTH}${SEPARATOR}${DAY_OF_MONTH}(?:${SEPARATOR}${HUMAN_TIME_12})?`;
 
-// const HUMAN_MDY_INDEXES = { month: 1, day: 2, year: 3 };
-// const HUMAN_DMY_INDEXES = { day: 1, month: 2, year: 3 };
-// const HUMAN_YMD_INDEXES = { year: 1, month: 2, day: 3 };
+const HUMAN_MDY_INDEXES = { month: 1, day: 2, year: 3 };
+const HUMAN_DMY_INDEXES = { day: 1, month: 2, year: 3 };
+const HUMAN_YMD_INDEXES = { year: 1, month: 2, day: 3 };
 
 class DateParser {
 
     private _locale: Locale;
-    private _cache: null | Record<string, unknown>;
+    private _allMonths: string[] = [];
+    private _humanIndexes: YMDIndexes | null;
+    private _humanWords: string | null;
+    private _humanNums: string | null;
 
     constructor(locale: Locale) {
         this._locale = locale;
-        // this._allMonthsRegexStr = null;
-        // this._allDayNamesRegexStr = null;
-        this._cache = null;
+        this._humanIndexes = null;
+        this._humanWords = null;
+        this._humanNums = null;
     }
 
-    parse(value: unknown, parseTypes: DateType[] = []): BetterDate | null {
+    parse(value: unknown, dateOrder: DateOrder = DateOrder.MDY, parseTypes: DateType[] = []): BetterDate | null {
         const anyType = parseTypes.length === 0;
         const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
@@ -136,7 +132,7 @@ class DateParser {
         return null;
     }
 
-    parseHuman(dateString: unknown): BetterDate | null {
+    parseHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): BetterDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -145,53 +141,48 @@ class DateParser {
             return null;
         }
 
-        if (!this._cache) {
+        if (!this._humanWords) {
             const { _locale: locale } = this;
 
-            const months = (locale.translate('calendar/months/full') || [])
-                .concat(locale.translate('calendar/months/short') || []);
-            const numberSuffixes = locale.translate('calendar/numberSuffixes') || [];
-            const dayNames = (locale.translate('calendar/dayNames/full') || [])
-                .concat(locale.translate('calendar/dayNames/short') || []);
-            const dateOrder = locale.translate('calendar/dateOrder') as DateOrder;
+            this._allMonths =
+                (locale.translate('calendar/months/full') as string[] || [])
+                    .concat(locale.translate('calendar/months/short') as string[] || [])
+                    .map(s => s.toLowerCase());
 
-            this._cache = {
-                dateOrder,
-            };
-
-            const dayNamesRegex = dayNames.map(s => s.toLowerCase()).join('|');
-            const monthsRegex = months.map(s => s.toLowerCase()).join('|');
-            const numberSuffixesRegex = numberSuffixes.map(s => s.toLowerCase()).join('|');
+            const allNumberSuffixesJoined =
+                (locale.translate('calendar/numberSuffixes') as string[] || [])
+                    .map(s => s.toLowerCase())
+                    .join('|');
 
             switch (dateOrder) {
                 case DateOrder.MDY:
-                    this._cachedHuman = HUMAN_MDY_INDEXES;
-                    this._humanWordsRegexStr = HUMAN_WORDS_MDY
-                        .replace('#MONTH_NAMES#', this._allMonthsRegexStr)
+                    this._humanIndexes = HUMAN_MDY_INDEXES;
+                    this._humanWords = HUMAN_MDY_WORDS
+                        .replace('#MONTH_NAMES#', this._allMonths.join('|'))
                         .replace('#NUMBER_SUFFIXES#', allNumberSuffixesJoined)
-                    this._humanNumsRegexStr = HUMAN_NUMS_MDY;
+                    this._humanNums = HUMAN_MDY_NUMS;
                     break;
                 case DateOrder.DMY:
-                    this._cachedHuman = HUMAN_DMY_INDEXES;
-                    this._humanWordsRegexStr = HUMAN_WORDS_DMY[0]
-                        .replace('#MONTH_NAMES#', this._allMonthsRegexStr)
+                    this._humanIndexes = HUMAN_DMY_INDEXES;
+                    this._humanWords = HUMAN_DMY_WORDS[0]
+                        .replace('#MONTH_NAMES#', this._allMonths.join('|'))
                         .replace('#NUMBER_SUFFIXES#', allNumberSuffixesJoined)
-                    this._humanNumsRegexStr = HUMAN_NUMS_DMY;
+                    this._humanNums = HUMAN_DMY_NUMS;
                     break;
                 case DateOrder.YMD:
-                    this._cachedHuman = HUMAN_YMD_INDEXES;
-                    this._humanWordsRegexStr = HUMAN_WORDS_YMD[0]
-                        .replace('#MONTH_NAMES#', this._allMonthsRegexStr)
+                    this._humanIndexes = HUMAN_YMD_INDEXES;
+                    this._humanWords = HUMAN_YMD_WORDS[0]
+                        .replace('#MONTH_NAMES#', this._allMonths.join('|'))
                         .replace('#NUMBER_SUFFIXES#', allNumberSuffixesJoined)
-                    this._humanNumsRegexStr = HUMAN_NUMS_YMD;
+                    this._humanNums = HUMAN_YMD_NUMS;
                     break;
             }
         }
 
-        let matchResult = RegexCache(this._humanWordsRegexStr!, 'i').exec(normalizedDateString);
+        let matchResult = RegexCache(this._humanWords!, 'i').exec(normalizedDateString);
         let isNumMatch = false;
         if (!matchResult) {
-            matchResult = RegexCache(this._humanNumsRegexStr!, 'i').exec(normalizedDateString);
+            matchResult = RegexCache(this._humanNums!, 'i').exec(normalizedDateString);
             console.log(matchResult);
             if (!matchResult) {
                 return null;
@@ -204,11 +195,11 @@ class DateParser {
             hour = null, minute = null, second = null, meridiem = null
         ] = matchResult;
 
-        const indexes = this._cachedHuman!;
+        const indexes = this._humanIndexes!;
         const year = +matchResult[indexes.year];
         const month = isNumMatch
             ? +matchResult[indexes.month]
-            : this._allMonthsRegexStr.indexOf(matchResult[indexes.month].toLowerCase()) % 12 + 1;
+            : this._allMonths.indexOf(matchResult[indexes.month].toLowerCase()) % 12 + 1;
         const day = +matchResult[indexes.day];
 
         const yearNum = +year;

@@ -39,7 +39,7 @@ class Locale {
         return new Locale(language);
     }
 
-    translate(path: string | Path, allowMultiple: boolean = false): string | TranslationRecord {
+    translate(path: string | Path, allowMultiple: boolean = false): string | string[] | TranslationRecord {
         if (!(path instanceof Path)) {
             path = Path.create(path).toRelative();
         }

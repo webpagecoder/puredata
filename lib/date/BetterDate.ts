@@ -20,7 +20,8 @@ export enum DateType {
 
 export type BetterDateConstructorParams = {
     date: Date;
-    originalInput: unknown;
+    dateOrder?: string;
+    value: unknown;
     type: DateType;
     meta?: Record<string, unknown>;
 };
@@ -28,15 +29,17 @@ export type BetterDateConstructorParams = {
 class BetterDate {
     
     private _date: Date;
+    private _dateOrder: string;
     private _meta?: Record<string, unknown>;
     private _type: DateType;
-    private _originalInput: unknown;
+    private _value: unknown;
 
-    constructor({date, originalInput, type, meta}: BetterDateConstructorParams) {
+    constructor({date, dateOrder = 'MDY', value, type, meta}: BetterDateConstructorParams) {
         this._date = date;
+        this._dateOrder = dateOrder;
         this._type = type;
         this._meta = meta;
-        this._originalInput = originalInput;
+        this._value = value;
     }
 
 

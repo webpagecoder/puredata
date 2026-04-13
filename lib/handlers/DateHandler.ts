@@ -4,7 +4,7 @@ import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../utils/Utils.ts';
 import { Handler } from './Handler.ts';
 import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
-import { DateType } from '../date/DateTypes.ts';
+import { DateType } from '../date/DateType.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 const { pass, fail } = HandlerResult;
 
