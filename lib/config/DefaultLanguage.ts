@@ -5,7 +5,7 @@ import type { NestedStringRecord } from "../utils/Utils.ts";
 const DEFAULT_LANGUAGE:NestedStringRecord = {
     calendar: {
         dateOrder: 'MDY',
-        days: {
+        dayNames: {
             full: [
                 'Sunday',
                 'Monday',
