@@ -2,7 +2,7 @@
 //todo: date and string add auto trim
 import { RegexCache } from "../cache/RegexCache.ts";
 import { Locale } from "../Locale.ts";
-import { BetterDate, DateMeta, DateType } from "./BetterDate.ts";
+import { MetaDate, DateMeta, DateType } from "./MetaDate.ts";
 import { DateHelpers } from "./DateHelpers.ts";
 
 enum DateOrder {
@@ -83,27 +83,27 @@ class DateParser {
         this._humanNums = null;
     }
 
-    parse(value: unknown, dateOrder: DateOrder = DateOrder.MDY, parseTypes: DateType[] = []): BetterDate | null {
+    parse(value: unknown, dateOrder: DateOrder = DateOrder.MDY, parseTypes: DateType[] = []): MetaDate | null {
         const anyType = parseTypes.length === 0;
         const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
         if (shouldParse(DateType.OBJECT)) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new BetterDate(value, DateType.OBJECT);
+                return new MetaDate(value, DateType.OBJECT);
             }
         }
         if (shouldParse(DateType.TIMESTAMP)) {
             const result = this.parseTimestamp(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.TIMESTAMP, parts);
+                return new MetaDate(date, DateType.TIMESTAMP, parts);
             }
         }
         if (shouldParse(DateType.ISO)) {
             const result = this.parseIso(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.ISO, parts);
+                return new MetaDate(date, DateType.ISO, parts);
             }
         }
         if (shouldParse(DateType.HUMAN)) {
@@ -117,7 +117,7 @@ class DateParser {
             const result = this.parseIsoWeek(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.ISO_WEEK, parts);
+                return new MetaDate(date, DateType.ISO_WEEK, parts);
             }
         }
 
@@ -125,14 +125,14 @@ class DateParser {
             const result = this.parseIsoOrdinal(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.ISO_ORDINAL, parts);
+                return new MetaDate(date, DateType.ISO_ORDINAL, parts);
             }
         }
 
         return null;
     }
 
-    parseHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): BetterDate | null {
+    parseHuman(dateString: unknown, dateOrder: DateOrder = DateOrder.MDY): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -222,7 +222,7 @@ class DateParser {
             +second!
         ));
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.HUMAN,
@@ -232,7 +232,7 @@ class DateParser {
         });
     }
 
-    parseIso(dateString: unknown): BetterDate | null {
+    parseIso(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -281,7 +281,7 @@ class DateParser {
             +millisecond!
         ));
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.ISO,
@@ -294,7 +294,7 @@ class DateParser {
         });
     }
 
-    parseIsoOrdinal(dateString: unknown): BetterDate | null {
+    parseIsoOrdinal(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -340,7 +340,7 @@ class DateParser {
             +millisecond!
         ));
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.ISO_ORDINAL,
@@ -353,7 +353,7 @@ class DateParser {
         });
     }
 
-    parseIsoWeek(dateString: unknown): BetterDate | null {
+    parseIsoWeek(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -399,7 +399,7 @@ class DateParser {
             +millisecond!
         );
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.ISO_WEEK,
@@ -412,7 +412,7 @@ class DateParser {
         });
     }
 
-    parseTimestamp(value: unknown): BetterDate | null {
+    parseTimestamp(value: unknown): MetaDate | null {
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
             return null;
@@ -425,7 +425,7 @@ class DateParser {
         if (isNaN(date.getTime())) {
             return null;
         }
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: value,
             type: DateType.TIMESTAMP,

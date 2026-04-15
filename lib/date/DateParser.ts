@@ -2,7 +2,7 @@
 //todo: date and string add auto trim
 import { RegexCache } from "../cache/RegexCache.ts";
 import { Locale } from "../Locale.ts";
-import { BetterDate, DateMeta, DateType } from "./BetterDate.ts";
+import { MetaDate, DateMeta, DateType } from "./MetaDate.ts";
 import { DateHelpers } from "./DateHelpers.ts";
 
 enum DateOrder {
@@ -24,55 +24,52 @@ const TRIM_SEPARATOR_SPACES_REGEX = / ?([/.:-]) ?/g;
 const LEADING_DIGIT_REGEX = /^[0-9]/;
 
 // Date building blocks
-const YEAR = '(\\d{4})';
-const MONTH = '(0?[1-9]|1[0-2])';
-const MONTH_LZ = '(0[1-9]|1[0-2])';
-const DAY_OF_MONTH = '(0?[1-9]|[12][0-9]|3[01])';
-const DAY_OF_MONTH_LZ = '(0[1-9]|[12][0-9]|3[01])';
-const DAY_OF_WEEK = '([1-7])';
-const DAY_OF_YEAR_LZ = '(00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6])';
-const WEEK_OF_YEAR_LZ = '(0[1-9]|[1-4]\\d|5[0-3])';
+const YEAR = '\\d{4}';
+const MONTH = '0?[1-9]|1[0-2]';
+const MONTH_LZ = '0[1-9]|1[0-2]';
+const DAY_OF_MONTH = '0?[1-9]|[12][0-9]|3[01]';
+const DAY_OF_MONTH_LZ = '0[1-9]|[12][0-9]|3[01]';
+const DAY_OF_WEEK = '[1-7]';
+const DAY_OF_YEAR_LZ = '00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]';
+const WEEK_OF_YEAR_LZ = '0[1-9]|[1-4]\\d|5[0-3]';
 
 // Time building blocks
-const HOUR_12 = '(0?[1-9]|1[0-2])';
-const HOUR_24_LZ = '(0[0-9]|1[0-9]|2[0-3])';
-const MINUTE_LZ = '(0[0-9]|[1-5][0-9])';
-const SECOND_LZ = '(0[0-9]|[1-5][0-9])';
-const THOUSANDTHS_OF_SECOND = '\\.(\\d{1,3})';
-const MERIDIEM = '([AaPp][Mm])';
+const HOUR_12 = '0?[1-9]|1[0-2]';
+const HOUR_24 = '0?[0-9]|1[0-9]|2[0-3]';
+const HOUR_24_LZ = '0[0-9]|1[0-9]|2[0-3]';
+const MINUTE_LZ = '0[0-9]|[1-5][0-9]';
+const SECOND_LZ = '0[0-9]|[1-5][0-9]';
+const THOUSANDTHS_OF_SECOND = '\\d{1,3}';
+const MERIDIEM = '[AaPp][Mm]';
 
 //todo: support UTC and GMT
 //todo: rfc2822
 
-// ISO building blocks
-const ISO_TIME = `${HOUR_24_LZ}(:?)${MINUTE_LZ}(?:(:?)${SECOND_LZ}(?:${THOUSANDTHS_OF_SECOND})?)?(?:(Z)|(?:([+-])${HOUR_24_LZ}(:?)${MINUTE_LZ}))?`;
-const ISO = `^${YEAR}(?:(-?)${MONTH_LZ}(?:$|(-?)${DAY_OF_MONTH_LZ}(?:T${ISO_TIME})?))?$`;
-const ISO_ORDINAL = `^${YEAR}(-?)${DAY_OF_YEAR_LZ}(?:T${ISO_TIME})?$`;
-const ISO_WEEK = `^${YEAR}(-?)W${WEEK_OF_YEAR_LZ}(?:(-?)${DAY_OF_WEEK}(?:T${ISO_TIME})?)?$`;
+// ISO regex
+const ISO_TZ = `(?:(Z)|(?:([+-]${HOUR_24_LZ})(:?)(${MINUTE_LZ})))`;
+const ISO_TIME = `(${HOUR_24_LZ})(:?)(${MINUTE_LZ})(?:(:?)(${SECOND_LZ})(?:\\.(${THOUSANDTHS_OF_SECOND}))?)?(?:${ISO_TZ})?`;
+const ISO = `^(${YEAR})(-?)(${MONTH_LZ})(?:$|(-?)(${DAY_OF_MONTH_LZ})(?:T${ISO_TIME})?)?$`;
+const ISO_ORDINAL = `^(${YEAR})(-?)(${DAY_OF_YEAR_LZ})(?:T${ISO_TIME})?$`;
+const ISO_WEEK = `^(${YEAR})(-?)W(${WEEK_OF_YEAR_LZ})(?:(-?)(${DAY_OF_WEEK})(?:T${ISO_TIME})?)?$`;
 
-// Human readable building blocks
+// Human readable regex for dates
 const DELIM = '[/. -,:]+';
-const HUMAN_TZ = '(?:GMT|UTC|Z|([+-])([0-9]{2}):?([0-9]{2}))';
-const HUMAN_TIME_12 = `${HOUR_12}(?::${MINUTE_LZ}(?::${SECOND_LZ})?)?\\s*${MERIDIEM}(?:\\s*${HUMAN_TZ})?`;
-const HUMAN_TIME_24 = `${HOUR_24_LZ}(?::${MINUTE_LZ}(?::${SECOND_LZ})?)?(?:\\s*${HUMAN_TZ})?`;
-const HUMAN_TIME = `(?:${HUMAN_TIME_12}|${HUMAN_TIME_24})${HUMAN_TZ}?`;
-
-// Human readable final date formats
 const HUMAN_MDY = [
-    `(?:#DAY_NAMES#${DELIM})?(#MONTH_NAMES#)${DELIM}${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?${DELIM}${YEAR}(?:${DELIM}(.*))?$`,
-    `(?:#DAY_NAMES#${DELIM})?${MONTH}${DELIM}${DAY_OF_MONTH}${DELIM}${YEAR}(?:${DELIM}(.*))?$`
+    `(?:#DAY_NAMES#${DELIM})?(#MONTH_NAMES#)${DELIM}(${DAY_OF_MONTH})(?:\\s*#NUMBER_SUFFIXES#)?${DELIM}(${YEAR})(?:${DELIM}(.*))?$`,
+    `(?:#DAY_NAMES#${DELIM})?(${MONTH})${DELIM}(${DAY_OF_MONTH})${DELIM}(${YEAR})(?:${DELIM}(.*))?$`
 ];
 const HUMAN_DMY = [
-    `(?:#DAY_NAMES#${DELIM})?${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?${DELIM}(#MONTH_NAMES#)${DELIM}${YEAR}(?:${DELIM}(.*))?$`,
-    `(?:#DAY_NAMES#${DELIM})?${DAY_OF_MONTH}${DELIM}${MONTH}${DELIM}${YEAR}(?:${DELIM}(.*))?$`
+    `(?:#DAY_NAMES#${DELIM})?(${DAY_OF_MONTH})(?:\\s*#NUMBER_SUFFIXES#)?${DELIM}(#MONTH_NAMES#)${DELIM}(${YEAR})(?:${DELIM}(.*))?$`,
+    `(?:#DAY_NAMES#${DELIM})?(${DAY_OF_MONTH})${DELIM}(${MONTH})${DELIM}(${YEAR})(?:${DELIM}(.*))?$`
 ];
 const HUMAN_YMD = [
-    `(?:#DAY_NAMES#${DELIM})?${YEAR}${DELIM}(#MONTH_NAMES#)${DELIM}${DAY_OF_MONTH}(?:\\s*#NUMBER_SUFFIXES#)?(?:${DELIM}(.*))?$`,
-    `(?:#DAY_NAMES#${DELIM})?${YEAR}${DELIM}${MONTH}${DELIM}${DAY_OF_MONTH}(?:${DELIM}(.*))?$`
+    `(?:#DAY_NAMES#${DELIM})?(${YEAR})${DELIM}(#MONTH_NAMES#)${DELIM}(${DAY_OF_MONTH})(?:\\s*#NUMBER_SUFFIXES#)?(?:${DELIM}(.*))?$`,
+    `(?:#DAY_NAMES#${DELIM})?(${YEAR})${DELIM}(${MONTH})${DELIM}(${DAY_OF_MONTH})(?:${DELIM}(.*))?$`
 ];
-//(?:${SEPARATOR}${HUMAN_TIME_12})?
 
-
+// Human readable regex for time
+const HUMAN_TZ = `(?:UTC|GMT|Z|([+-]${HOUR_24_LZ})(?::?(${MINUTE_LZ})))?`;
+const HUMAN_TIME = `^(${HOUR_24})(?::?(${MINUTE_LZ})(?::?(${SECOND_LZ}))?)?(?:\\s*(${MERIDIEM}))?(?:\\s*${HUMAN_TZ})?$`;
 
 type HumanDateCache = null | {
     dateIndexes: Record<string, number>;
@@ -93,27 +90,27 @@ class DateParser {
         this._cache = null;
     }
 
-    parse(value: unknown, parseTypes: DateType[] = []): BetterDate | null {
+    parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
         const anyType = parseTypes.length === 0;
         const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
         if (shouldParse(DateType.OBJECT)) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new BetterDate(value, DateType.OBJECT);
+                return new MetaDate(value, DateType.OBJECT);
             }
         }
         if (shouldParse(DateType.TIMESTAMP)) {
             const result = this.parseTimestamp(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.TIMESTAMP, parts);
+                return new MetaDate(date, DateType.TIMESTAMP, parts);
             }
         }
         if (shouldParse(DateType.ISO)) {
             const result = this.parseIso(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.ISO, parts);
+                return new MetaDate(date, DateType.ISO, parts);
             }
         }
         if (shouldParse(DateType.HUMAN)) {
@@ -127,7 +124,7 @@ class DateParser {
             const result = this.parseIsoWeek(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.ISO_WEEK, parts);
+                return new MetaDate(date, DateType.ISO_WEEK, parts);
             }
         }
 
@@ -135,14 +132,14 @@ class DateParser {
             const result = this.parseIsoOrdinal(value);
             if (result) {
                 const { date, parts } = result;
-                return new BetterDate(date, DateType.ISO_ORDINAL, parts);
+                return new MetaDate(date, DateType.ISO_ORDINAL, parts);
             }
         }
 
         return null;
     }
 
-    parseHuman(dateString: unknown): BetterDate | null {
+    parseHuman(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -209,86 +206,62 @@ class DateParser {
         }
 
         // Check date portion
-        const year = +matchResult[dateIndexes.year];
+        const year = Number(matchResult[dateIndexes.year]);
         const month = isNumMatch
-            ? +matchResult[dateIndexes.month]
+            ? Number(matchResult[dateIndexes.month])
             : monthNames.indexOf(matchResult[dateIndexes.month].toLowerCase()) % 12 + 1;
-        const day = +matchResult[dateIndexes.day];
-        const yearNum = +year;
-        const monthNum = +month;
-        const dayNum = +day;
+        const day = Number(matchResult[dateIndexes.day]);
+        const yearNum = Number(year);
+        const monthNum = Number(month);
+        const dayNum = Number(day);
         if (!DateHelpers.isValidDate(yearNum, monthNum, dayNum)) {
             return null;
         }
 
-        // Check time portion if it exists
+        let hour, minute, second, meridiem, offsetHour, offsetMinute;
+
+        // Check time portion (if it exists)
         const timeString = matchResult[4];
         if (timeString) {
             matchResult = RegexCache(HUMAN_TIME).exec(timeString);
-            if (matchResult) {
-                let [hour = null, minute = null, second = null, meridiem = null,
-                    offsetSign = null, offsetHour = null, offsetMinute = null] = matchResult;
-
-            }
             if (!matchResult) {
-                matchResult = RegexCache(HUMAN_TIME_24).exec(timeString);
-                if (matchResult) {
-                    let [hour = null, minute = null, second = null] = matchResult;
+                return null;
+            }
 
+            ([, hour, minute, second, meridiem, offsetHour, offsetMinute] = matchResult);
 
-
-                    meridiem = null,
-                        offsetSign = null, offsetHour = null, offsetMinute = null
-
-                    hour = matchResult[1];
-                    minute = matchResult[2];
-                    second = matchResult[3];
-                    meridiem = matchResult[4];
+            if (!meridiem) {
+                if (hour.length === 1) {
+                    // if the hourly time is 1 digit with no meridiem, time is too ambiguous
+                    return null;
                 }
-
+            }
+            else {
+                meridiem = meridiem!.toLowerCase();
             }
 
-            hour = matchResult[1];
-            minute = matchResult[2];
-            second = matchResult[3];
-
-
-
-            if (!matchResult) {
-
-            }
-            if (matchResult) {
-                let [
-                    , , , , // skip date
-                    hour = null, minute = null, second = null, meridiem = null
-                ] = matchResult;
-            }
+            hour = meridiem
+                ? (
+                    meridiem === 'pm' && hour !== '12'
+                        ? (Number(hour) || 0) + 12
+                        : Number(hour) || 0
+                )
+                : Number(hour) || 0;
         }
 
-
-        const adjustedHour = meridiem
-            ? (meridiem.toLowerCase() === 'pm' && hour !== '12' ? +hour! + 12 : +hour!)
-            : +hour!;
-        const date = new Date(Date.UTC(
-            yearNum,
-            monthNum,
-            dayNum,
-            adjustedHour,
-            +minute!,
-            +second!
-        ));
-
-        return new BetterDate({
-            date,
-            originalInput: dateString,
-            type: DateType.HUMAN,
-            meta: {
-                type: isNumMatch ? 'numbers' : 'words',
-            } as DateMeta
+        return new MetaDate({
+            year: yearNum,
+            month: monthNum,
+            day: dayNum,
+            hour,
+            minute: Number(minute) || 0,
+            second: Number(second) || 0,
+            offsetHour: Number(offsetHour) || 0,
+            offsetMinute: Number(offsetMinute) || 0
         });
     }
 
-    parseIso(dateString: unknown): BetterDate | null {
+    parseIso(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -305,7 +278,7 @@ class DateParser {
         const [
             , year, dateSep1 = '', month = null, dateSep2 = '', day = null,                                // date
             hour = null, timeSep1 = '', minute = null, timeSep2 = '', second = null, millisecond = null,   // time
-            zulu = null, offsetSign = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
+            zulu = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
@@ -319,9 +292,9 @@ class DateParser {
             return null;
         }
 
-        const yearNum = +year;
-        const monthNum = +month!;
-        const dayNum = +day!;
+        const yearNum = Number(year);
+        const monthNum = Number(month);
+        const dayNum = Number(day);
 
         if (dayNum > 0 && !DateHelpers.isValidDate(yearNum, monthNum, dayNum)) {
             return null;
@@ -331,13 +304,13 @@ class DateParser {
             yearNum,
             !monthNum ? 0 : monthNum - 1,
             !dayNum ? 1 : dayNum,
-            +hour!,
-            +minute!,
-            +second!,
-            +millisecond!
+            Number(hour) || 0,
+            Number(minute) || 0,
+            Number(second) || 0,
+            Number(millisecond) || 0
         ));
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.ISO,
@@ -345,12 +318,12 @@ class DateParser {
                 isoIsExpanded: sepLength > 0,
                 year, month, day,   // date
                 hour, minute, second, millisecond,             // time
-                zulu, offsetSign, offsetHour, offsetMinute,          // offset
+                zulu, offsetHour, offsetMinute,          // offset
             } as DateMeta
         });
     }
 
-    parseIsoOrdinal(dateString: unknown): BetterDate | null {
+    parseIsoOrdinal(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -367,7 +340,7 @@ class DateParser {
         const [
             , year, dateSep1 = '', day = null,                                                       // date
             hour = null, timeSep1 = '', minute = null, timeSep2 = '', second = null, millisecond = null,   // time
-            zulu = null, offsetSign = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
+            zulu = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
@@ -379,8 +352,8 @@ class DateParser {
             return null;
         }
 
-        const yearNum = +year;
-        const dayNum = +day!;
+        const yearNum = Number(year);
+        const dayNum = Number(day);
 
         if (dayNum === 366 && !DateHelpers.isLeapYear(yearNum)) {
             return null;
@@ -390,13 +363,13 @@ class DateParser {
             yearNum,
             0,
             dayNum,
-            +hour!,
-            +minute!,
-            +second!,
-            +millisecond!
+            Number(hour) || 0,
+            Number(minute) || 0,
+            Number(second) || 0,
+            Number(millisecond) || 0
         ));
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.ISO_ORDINAL,
@@ -404,12 +377,12 @@ class DateParser {
                 isoIsExpanded: sepLength > 0,
                 year, day,                                // date
                 hour, minute, second, millisecond,             // time
-                zulu, offsetSign, offsetHour, offsetMinute,          // offset
+                zulu, offsetHour, offsetMinute,          // offset
             } as DateMeta
         });
     }
 
-    parseIsoWeek(dateString: unknown): BetterDate | null {
+    parseIsoWeek(dateString: unknown): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -426,7 +399,7 @@ class DateParser {
         const [
             , year, dateSep1 = '', week, dateSep2 = '', day = null,                                   // date
             hour = null, timeSep1 = '', minute = null, timeSep2 = '', second = null, millisecond = null,   // time
-            zulu = null, offsetSign = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
+            zulu = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
@@ -439,9 +412,9 @@ class DateParser {
             return null;
         }
 
-        const yearNum = +year;
-        const weekNum = +week!;
-        const dayNum = +day!;
+        const yearNum = Number(year);
+        const weekNum = Number(week);
+        const dayNum = Number(day);
 
         if (weekNum === 53 && !DateHelpers.has53IsoWeeks(yearNum)) {
             return null;
@@ -449,13 +422,13 @@ class DateParser {
 
         const date = DateHelpers.isoWeekToDate(yearNum, weekNum, dayNum);
         date.setUTCHours(
-            +hour!,
-            +minute!,
-            +second!,
-            +millisecond!
+            Number(hour) || 0,
+            Number(minute) || 0,
+            Number(second) || 0,
+            Number(millisecond) || 0
         );
 
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: dateString,
             type: DateType.ISO_WEEK,
@@ -463,17 +436,17 @@ class DateParser {
                 isoIsExpanded: sepLength > 0,
                 year, week, day,                         // date
                 hour, minute, second, millisecond,             // time
-                zulu, offsetSign, offsetHour, offsetMinute          // offset
+                zulu, offsetHour, offsetMinute          // offset
             } as DateMeta
         });
     }
 
-    parseTimestamp(value: unknown): BetterDate | null {
+    parseTimestamp(value: unknown): MetaDate | null {
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
             return null;
         }
-        const valueNum = +value!;
+        const valueNum = Number(value);
         if (!Number.isInteger(valueNum)) {
             return null;
         }
@@ -481,7 +454,7 @@ class DateParser {
         if (isNaN(date.getTime())) {
             return null;
         }
-        return new BetterDate({
+        return new MetaDate({
             date,
             originalInput: value,
             type: DateType.TIMESTAMP,
