@@ -6,6 +6,7 @@ import { MetaDate } from "./MetaDate.ts";
 import { DateHelpers } from "./DateHelpers.ts";
 import { IsoMetaDate } from "./IsoMetaDate.ts";
 import { DateType } from "./DateType.ts";
+import { TimestampMetaDate } from "./TimestampMetaDate.ts";
 
 enum DateOrder {
     MDY = 'MDY',
@@ -245,10 +246,10 @@ class DateParser {
             hour = meridiem
                 ? (
                     meridiem === 'pm' && hour !== '12'
-                        ? (Number(hour) || 0) + 12
-                        : Number(hour) || 0
+                        ? Number(hour)+ 12
+                        : Number(hour)
                 )
-                : Number(hour) || 0;
+                : Number(hour);
         }
 
         return new MetaDate({
@@ -256,11 +257,11 @@ class DateParser {
                 yearNum,
                 monthNum - 1,
                 dayNum, hour,
-                Number(minute) || 0,
-                Number(second) || 0
+                Number(minute),
+                Number(second)
             )),
-            offsetHour: Number(offsetHour) || 0,
-            offsetMinute: Number(offsetMinute) || 0,
+            offsetHour: Number(offsetHour),
+            offsetMinute: Number(offsetMinute),
             locale
         });
     }
@@ -286,12 +287,12 @@ class DateParser {
         ] = matchResult;
 
         // check separators consistency
-        const sepSize = monthDelim.length;
+        const delimSize = monthDelim.length;
         if (
-            day && sepSize !== dayDelim.length ||
-            minute && sepSize !== minuteDelim.length ||
-            second && sepSize !== secondDelim.length ||
-            offsetHour && sepSize !== offsetMinuteDelim.length
+            day && delimSize !== dayDelim.length ||
+            minute && delimSize !== minuteDelim.length ||
+            second && delimSize !== secondDelim.length ||
+            offsetMinute && delimSize !== offsetMinuteDelim.length
         ) {
             return null;
         }
@@ -317,7 +318,7 @@ class DateParser {
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
             locale: this._locale,
-            isBasic: sepSize === 0,
+            isBasic: delimSize === 0,
         });
     }
 
@@ -342,10 +343,11 @@ class DateParser {
         ] = matchResult;
 
         // check separators consistency
-        const sepSize = dayDelim.length;
+        const delimSize = dayDelim.length;
         if (
-            (hour && (sepSize !== minuteDelim.length || (second && sepSize !== secondDelim.length))) ||
-            (offsetHour && sepSize !== offsetMinuteDelim.length)
+            minute && delimSize !== minuteDelim.length ||
+            second && delimSize !== secondDelim.length ||
+            offsetMinute && delimSize !== offsetMinuteDelim.length
         ) {
             return null;
         }
@@ -370,7 +372,7 @@ class DateParser {
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
             subType: 'ISO_ORDINAL',
-            isBasic: sepSize === 0,
+            isBasic: delimSize === 0,
             locale: this._locale
         });
     }
@@ -390,17 +392,18 @@ class DateParser {
         }
 
         const [
-            , year, monthDelim = '', week, dayDelim = '', day = null,                                   // date
+            , year, weekDelim = '', week, dayDelim = '', day = null,                                   // date
             hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
             zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
-        const sepSize = monthDelim.length;
+        const delimSize = weekDelim.length;
         if (
-            (day && (sepSize !== dayDelim.length)) ||
-            (hour && (sepSize !== minuteDelim.length || (second && sepSize !== secondDelim.length))) ||
-            (offsetHour && sepSize !== offsetMinuteDelim.length)
+            day && delimSize !== dayDelim.length ||
+            minute && delimSize !== minuteDelim.length ||
+            second && delimSize !== secondDelim.length ||
+            offsetMinute && delimSize !== offsetMinuteDelim.length
         ) {
             return null;
         }
@@ -415,10 +418,10 @@ class DateParser {
 
         const date = DateHelpers.isoWeekToDate(yearNum, weekNum, dayNum);
         date.setUTCHours(
-            Number(hour) || 0,
-            Number(minute) || 0,
-            Number(second) || 0,
-            Number(millisecond) || 0
+            Number(hour),
+            Number(minute),
+            Number(second),
+            Number(millisecond)
         );
 
         return new IsoMetaDate({
@@ -426,7 +429,7 @@ class DateParser {
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
             subType: 'ISO_WEEK',
-            isBasic: sepSize === 0,
+            isBasic: delimSize === 0,
             locale: this._locale
         });
     }
@@ -444,10 +447,9 @@ class DateParser {
         if (isNaN(date.getTime())) {
             return null;
         }
-        return new MetaDate({
+        return new TimestampMetaDate({
             date,
-            originalInput: value,
-            type: DateType.TIMESTAMP,
+            locale: this._locale
         });
     }
 }
