@@ -24,54 +24,17 @@ class DateProcessor extends ChainProcessor {
         this.props.hasPipelineHooks = true;
     }
 
-    ensureEmptyQueue(type: string): void {
-        if (this.props.field.props.pipeline.length > 0) {
-            throw new Error(type + ' processor must be the first processor in the chain, if used.');
-        }
-    }
+
 
     override preProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const originalValue = tracker.getValue();
-        
-        super.preProcess(tracker);
-
-        if(tracker.hasErrors()) {
-            return;
-        }
-
-        
-
-        console.log(originalValue, tracker.getValue());
-        console.log('errerererer')
-        
-        // const { field } = this.props;
-        // const { inputType } = field.props as DateFieldProps;
-
-        // state.originalValue = tracker.getValue();
-        // if (inputType) {
-        //     //todo something doesnt seem right here - shouldnt the date/base error be addded....
-        //     state.inputType = inputType;
-        // }
-        // else {
-        //     const parsedDate = Utils.parseDate(tracker.getValue());
-        //     if (!parsedDate) {
-        //         tracker.addError('date/base');
-        //         return;
-        //     }
-        //     else {
-        //         state.inputType = parsedDate.format;
-        //         tracker.setValue(parsedDate.date);
-        //     }
-        // }
-        // console.log('1');
+console.log("EEEE")
     }
 
-
-    override preStepHook(_tracker: ValueTracker, _state: State = {}): void {
+    override preStepHook(tracker: ValueTracker, state: State = {}): void {
         console.log('pr');
     }
 
-    override postStepHook(_tracker: ValueTracker, _state: State = {}): void {
+    override postStepHook(tracker: ValueTracker, state: State = {}): void {
         console.log('pos');
     }
 
@@ -113,3 +76,29 @@ class DateProcessor extends ChainProcessor {
 }
 
 export { DateProcessor };
+
+
+
+
+
+        
+        // const { field } = this.props;
+        // const { inputType } = field.props as DateFieldProps;
+
+        // state.originalValue = tracker.getValue();
+        // if (inputType) {
+        //     //todo something doesnt seem right here - shouldnt the date/base error be addded....
+        //     state.inputType = inputType;
+        // }
+        // else {
+        //     const parsedDate = Utils.parseDate(tracker.getValue());
+        //     if (!parsedDate) {
+        //         tracker.addError('date/base');
+        //         return;
+        //     }
+        //     else {
+        //         state.inputType = parsedDate.format;
+        //         tracker.setValue(parsedDate.date);
+        //     }
+        // }
+        // console.log('1');

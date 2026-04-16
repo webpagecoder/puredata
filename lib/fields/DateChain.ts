@@ -1,13 +1,18 @@
 'use strict';
 
 import { DateType } from '../date/DateType.ts';
-import { Chain } from './Chain.ts';
+import { DateHandler } from '../handlers/DateHandler.ts';
+import { Chain, ChainProps } from './Chain.ts';
 
-class DateChain extends Chain {
+export type DateChainProps = ChainProps<typeof DateHandler> & {
+    subType?: DateType | null;
+};
 
-    constructor(props = {}) {
+class DateChain extends Chain<DateChainProps> {
+
+    constructor(props: DateChainProps) {
         super(props);
-        this.props.inputType = null;
+        this.props.subType = null;
 
         let [hours, minutes] = this.props.utcOffset || [0, 0];
         hours = +hours;
@@ -18,6 +23,12 @@ class DateChain extends Chain {
             now.setUTCMinutes(now.getUTCMinutes() + minutes);
         }
         this.props.now = now;
+    }
+
+    assertEmptyPipeline(type: string): void {
+        if (this.props.pipeline.length > 0) {
+            throw new Error(type + '() processor must be the first processor in the chain, if used.');
+        }
     }
 
     // Configurators
@@ -45,7 +56,8 @@ class DateChain extends Chain {
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
     human(options = {}) {
-        this.ensureEmptyQueue('human');
+        this.assertEmptyPipeline('human');
+        
         return this.setProps({ inputType: DateTypeS.HUMAN }).addStep('human', function () {
             const {
                 numberSuffixes,
@@ -78,7 +90,7 @@ class DateChain extends Chain {
      * date.iso() // Accepts "2023-01-01", "2023-01-01T12:00:00Z", etc.
      */
     iso(options = {}) {
-        this.ensureEmptyQueue('iso');
+        this.assertEmptyPipeline('iso');
         return this
             .setProps({ inputType: DateTypeS.ISO })
             .addStep('iso', [options]);
@@ -94,7 +106,7 @@ class DateChain extends Chain {
      * date.isoOrdinal() // Accepts "2023-001", "2023-365", etc.
      */
     isoOrdinal(options = {}) {
-        this.ensureEmptyQueue('isoOrdinal');
+        this.assertEmptyPipeline('isoOrdinal');
         return this
             .setProps({ inputType: DateTypeS.ISO_ORDINAL })
             .addStep('isoOrdinal', [options]);
@@ -110,7 +122,7 @@ class DateChain extends Chain {
      * date.isoWeek() // Accepts "2023-W01-1", "2023-W52-7", etc.
      */
     isoWeek(options = {}) {
-        this.ensureEmptyQueue('isoWeek');
+        this.assertEmptyPipeline('isoWeek');
         return this
             .setProps({ inputType: DateTypeS.ISO_WEEK })
             .addStep('isoWeek', [options]);
@@ -126,7 +138,7 @@ class DateChain extends Chain {
      * date.timestamp(false) // Accepts Unix timestamps in seconds
      */
     timestamp(jsType = true) {
-        this.ensureEmptyQueue('timestamp');
+        this.assertEmptyPipeline('timestamp');
         return this
             .setProps({ inputType: DateTypeS.TIMESTAMP })
             .addStep('timestamp', [jsType]);
@@ -144,7 +156,7 @@ class DateChain extends Chain {
 
     // Transformers
 
-    
+
     // Exporters
 
     /**

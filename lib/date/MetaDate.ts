@@ -1,25 +1,9 @@
 'use strict';
 
-import { RegexCache } from '../cache/RegexCache.ts';
 import { Locale } from '../Locale.ts';
-import { NestedStringRecord } from '../utils/Utils.ts';
 import { Utils } from '../utils/Utils.ts';
-import { DateHelpers } from './DateHelpers.ts';
 
 export type DateLike = Date | string | number;
-
-// export enum DateType {
-//     HUMAN = 'HUMAN',
-//     ISO = 'ISO',
-//     ISO_BASIC = 'ISO_BASIC',
-//     ISO_WEEK = 'ISO_WEEK',
-//     ISO_WEEK_BASIC = 'ISO_WEEK_BASIC',
-//     ISO_ORDINAL = 'ISO_ORDINAL',
-//     ISO_ORDINAL_BASIC = 'ISO_ORDINAL_BASIC',
-//     OBJECT = 'OBJECT',
-//     TIME_ONLY = 'TIME_ONLY',
-//     TIMESTAMP = 'TIMESTAMP',
-// };
 
 export type MetaDateConstructorParams = {
     date: Date,
@@ -41,10 +25,19 @@ class MetaDate {
         offsetMinute = 0,
         locale,
     }: MetaDateConstructorParams) {
-        this._date = date;
+        this._date = new Date(Date.UTC(
+            date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate(),
+            date.getUTCHours() + offsetHour,
+            date.getUTCMinutes() + offsetMinute,
+            date.getUTCSeconds(),
+            date.getUTCMilliseconds()
+        ));
+        // memorize the shift
+        this._locale = locale!;
         this._offsetHour = offsetHour;
         this._offsetMinute = offsetMinute;
-        this._locale = locale!;
     }
 
     static FORMAT_TOKEN_MAP: Record<string, (p: { date: Date, locale: Locale, offsetHour: number, offsetMinute: number }) => string> = {

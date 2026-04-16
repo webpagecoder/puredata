@@ -91,7 +91,7 @@ class Processor<P extends ProcessorProps = ProcessorProps> {
         return tracker;
     }
 
-    _process(tracker: ValueTracker, _state: State = {}): ValueTracker {
+    _process(tracker: ValueTracker, state: State = {}): ValueTracker {
         return tracker;
     }
 

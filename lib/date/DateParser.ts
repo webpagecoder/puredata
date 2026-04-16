@@ -14,18 +14,6 @@ enum DateOrder {
     YMD = 'YMD'
 };
 
-type DatePart = string | number | undefined;
-type YMDIndexes = {
-    year: number;
-    month: number;
-    day: number;
-};
-
-// Misc
-const MULTI_SPACE_REGEX = /\s+/g;
-const TRIM_SEPARATOR_SPACES_REGEX = / ?([/.:-]) ?/g;
-const LEADING_DIGIT_REGEX = /^[0-9]/;
-
 // Date building blocks
 const YEAR = '\\d{4}';
 const MONTH = '0?[1-9]|1[0-2]';

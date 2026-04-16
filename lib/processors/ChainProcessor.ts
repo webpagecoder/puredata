@@ -34,7 +34,7 @@ class ChainProcessor extends Processor<ChainProcessorProps> {
         this.props.hasPipelineHooks = props.hasPipelineHooks;
     }
 
-    preProcess(tracker: ValueTracker, _state?: State): void {
+    preProcess(tracker: ValueTracker, state?: State): void {
         const result = this.props.field.props.chainHandler.format(tracker.getValue());
         if (result.fail) {
             for (const key of Object.keys(result.errors)) {
@@ -46,11 +46,11 @@ class ChainProcessor extends Processor<ChainProcessorProps> {
         }
     }
 
-    preStepHook(_tracker: ValueTracker, _state?: State): void { }
+    preStepHook(tracker: ValueTracker, state?: State): void { }
 
-    postStepHook(_tracker: ValueTracker, _state?: State): void { }
+    postStepHook(tracker: ValueTracker, state?: State): void { }
 
-    postProcess(_tracker: ValueTracker, _state?: State): void { }
+    postProcess(tracker: ValueTracker, state?: State): void { }
 
     override _process(tracker: ValueTracker, state: State = {}): ValueTracker {
         // const { failOnFirstError } = this.globalConfig;
