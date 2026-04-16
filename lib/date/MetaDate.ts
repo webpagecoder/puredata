@@ -22,51 +22,26 @@ export type DateLike = Date | string | number;
 // };
 
 export type MetaDateConstructorParams = {
-    month?: number,
-    day?: number,
-    hour?: number,
-    minute?: number,
-    second?: number,
-    millisecond?: number,
+    date: Date,
     offsetHour?: number,
     offsetMinute?: number,
     locale: Locale,
 } & ({ date: Date; year?: never } | { date?: never, year: number });
 
-abstract class MetaDate {
+class MetaDate {
 
     protected _date: Date;
     protected _offsetHour: number;
     protected _offsetMinute: number;
     protected _locale: Locale;
-    protected isValid: boolean;
 
     constructor({
-        date,
-        year,
-        month = 0,
-        day = 0,
-        hour = 0,
-        minute = 0,
-        second = 0,
-        millisecond = 0,
+        date = new Date(),
         offsetHour = 0,
         offsetMinute = 0,
         locale,
     }: MetaDateConstructorParams) {
-        if (year === undefined) {
-            date = new Date();
-        }
-        if (date) {
-            this._date = date;
-        }
-        else {
-            if(!DateHelpers.isValidDate(year, month, day)) {
-                this.isValid = false;
-            }
-
-            this._date = new Date(Date.UTC(year!, month, day, hour, minute, second, millisecond));
-        }
+        this._date = date;
         this._offsetHour = offsetHour;
         this._offsetMinute = offsetMinute;
         this._locale = locale!;
@@ -123,6 +98,10 @@ abstract class MetaDate {
         });
     }
 
+    // this should clone props with updated date obj
+    changeDate(newDate):void {
+
+    }
 }
 
 export { MetaDate };

@@ -6,7 +6,7 @@ export type IsoMetaDateSubType = 'ISO_WEEK' | 'ISO_ORDINAL';
 
 export type IsoMetaDateConstructorParams = MetaDateConstructorParams & {
     isBasic?: boolean;
-    type?: IsoMetaDateSubType;
+    subType?: IsoMetaDateSubType;
 };
 
 class IsoMetaDate extends MetaDate {
@@ -17,7 +17,7 @@ class IsoMetaDate extends MetaDate {
     constructor(props: IsoMetaDateConstructorParams) {
         super(props);
         this._isBasic = props.isBasic || false;
-        this._subType = props.type || null;
+        this._subType = props.subType || null;
     }
 
 }

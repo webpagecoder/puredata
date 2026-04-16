@@ -2,8 +2,10 @@
 //todo: date and string add auto trim
 import { RegexCache } from "../cache/RegexCache.ts";
 import { Locale } from "../Locale.ts";
-import { MetaDate, DateMeta, DateType } from "./MetaDate.ts";
+import { MetaDate } from "./MetaDate.ts";
 import { DateHelpers } from "./DateHelpers.ts";
+import { IsoMetaDate } from "./IsoMetaDate.ts";
+import { DateType } from "./DateType.ts";
 
 enum DateOrder {
     MDY = 'MDY',
@@ -40,14 +42,14 @@ const HOUR_24_LZ = '0[0-9]|1[0-9]|2[0-3]';
 const MINUTE_LZ = '0[0-9]|[1-5][0-9]';
 const SECOND_LZ = '0[0-9]|[1-5][0-9]';
 const THOUSANDTHS_OF_SECOND = '\\d{1,3}';
-const MERIDIEM = '[AaPp][Mm]';
+const MERIDIEM = '[ap]m';
 
 //todo: support UTC and GMT
 //todo: rfc2822
 
 // ISO regex
 const ISO_TZ = `(?:(Z)|(?:([+-]${HOUR_24_LZ})(:?)(${MINUTE_LZ})))`;
-const ISO_TIME = `(${HOUR_24_LZ})(:?)(${MINUTE_LZ})(?:(:?)(${SECOND_LZ})(?:\\.(${THOUSANDTHS_OF_SECOND}))?)?(?:${ISO_TZ})?`;
+const ISO_TIME = `(${HOUR_24_LZ})(:?)(?:(${MINUTE_LZ})(?:(:?)(${SECOND_LZ})(?:\\.(${THOUSANDTHS_OF_SECOND}))?)?)?(?:${ISO_TZ})?`;
 const ISO = `^(${YEAR})(-?)(${MONTH_LZ})(?:$|(-?)(${DAY_OF_MONTH_LZ})(?:T${ISO_TIME})?)?$`;
 const ISO_ORDINAL = `^(${YEAR})(-?)(${DAY_OF_YEAR_LZ})(?:T${ISO_TIME})?$`;
 const ISO_WEEK = `^(${YEAR})(-?)W(${WEEK_OF_YEAR_LZ})(?:(-?)(${DAY_OF_WEEK})(?:T${ISO_TIME})?)?$`;
@@ -68,7 +70,7 @@ const HUMAN_YMD = [
 ];
 
 // Human readable regex for time
-const HUMAN_TZ = `(?:UTC|GMT|Z|([+-]${HOUR_24_LZ})(?::?(${MINUTE_LZ})))?`;
+const HUMAN_TZ = `(?:utc|gmt|z|([+-]${HOUR_24_LZ})(?::?(${MINUTE_LZ})))?`;
 const HUMAN_TIME = `^(${HOUR_24})(?::?(${MINUTE_LZ})(?::?(${SECOND_LZ}))?)?(?:\\s*(${MERIDIEM}))?(?:\\s*${HUMAN_TZ})?$`;
 
 type HumanDateCache = null | {
@@ -148,9 +150,9 @@ class DateParser {
             return null;
         }
 
-        if (!this._cache) {
-            const { _locale: locale } = this;
+        const locale = this._locale;
 
+        if (!this._cache) {
             const monthNames = (locale.translate('calendar/months/full') || [])
                 .concat(locale.translate('calendar/months/short') || []);
             const numberSuffixes = locale.translate('calendar/numberSuffixes') || [];
@@ -250,14 +252,16 @@ class DateParser {
         }
 
         return new MetaDate({
-            year: yearNum,
-            month: monthNum,
-            day: dayNum,
-            hour,
-            minute: Number(minute) || 0,
-            second: Number(second) || 0,
+            date: new Date(Date.UTC(
+                yearNum,
+                monthNum - 1,
+                dayNum, hour,
+                Number(minute) || 0,
+                Number(second) || 0
+            )),
             offsetHour: Number(offsetHour) || 0,
-            offsetMinute: Number(offsetMinute) || 0
+            offsetMinute: Number(offsetMinute) || 0,
+            locale
         });
     }
 
@@ -276,18 +280,18 @@ class DateParser {
         }
 
         const [
-            , year, dateSep1 = '', month = null, dateSep2 = '', day = null,                                // date
-            hour = null, timeSep1 = '', minute = null, timeSep2 = '', second = null, millisecond = null,   // time
-            zulu = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
+            , year, monthDelim = '', month = null, dayDelim = '', day = null,                                // date
+            hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
+            zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
-        const sepLength = dateSep1.length;
+        const sepSize = monthDelim.length;
         if (
-            day &&
-            (sepLength !== dateSep2.length) ||
-            (hour && (sepLength !== timeSep1.length || (second && sepLength !== timeSep2.length))) ||
-            (offsetHour && sepLength !== timeSep3.length)
+            day && sepSize !== dayDelim.length ||
+            minute && sepSize !== minuteDelim.length ||
+            second && sepSize !== secondDelim.length ||
+            offsetHour && sepSize !== offsetMinuteDelim.length
         ) {
             return null;
         }
@@ -300,26 +304,20 @@ class DateParser {
             return null;
         }
 
-        const date = new Date(Date.UTC(
-            yearNum,
-            !monthNum ? 0 : monthNum - 1,
-            !dayNum ? 1 : dayNum,
-            Number(hour) || 0,
-            Number(minute) || 0,
-            Number(second) || 0,
-            Number(millisecond) || 0
-        ));
-
-        return new MetaDate({
-            date,
-            originalInput: dateString,
-            type: DateType.ISO,
-            meta: {
-                isoIsExpanded: sepLength > 0,
-                year, month, day,   // date
-                hour, minute, second, millisecond,             // time
-                zulu, offsetHour, offsetMinute,          // offset
-            } as DateMeta
+        return new IsoMetaDate({
+            date: new Date(Date.UTC(
+                yearNum,
+                !monthNum ? 0 : monthNum - 1,
+                !dayNum ? 1 : dayNum,
+                Number(hour),
+                Number(minute),
+                Number(second),
+                Number(millisecond)
+            )),
+            offsetHour: Number(offsetHour),
+            offsetMinute: Number(offsetMinute),
+            locale: this._locale,
+            isBasic: sepSize === 0,
         });
     }
 
@@ -338,16 +336,16 @@ class DateParser {
         }
 
         const [
-            , year, dateSep1 = '', day = null,                                                       // date
-            hour = null, timeSep1 = '', minute = null, timeSep2 = '', second = null, millisecond = null,   // time
-            zulu = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
+            , year, dayDelim = '', day = null,                                                       // date
+            hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
+            zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
-        const sepLength = dateSep1.length;
+        const sepSize = dayDelim.length;
         if (
-            (hour && (sepLength !== timeSep1.length || (second && sepLength !== timeSep2.length))) ||
-            (offsetHour && sepLength !== timeSep3.length)
+            (hour && (sepSize !== minuteDelim.length || (second && sepSize !== secondDelim.length))) ||
+            (offsetHour && sepSize !== offsetMinuteDelim.length)
         ) {
             return null;
         }
@@ -359,26 +357,21 @@ class DateParser {
             return null;
         }
 
-        const date = new Date(Date.UTC(
-            yearNum,
-            0,
-            dayNum,
-            Number(hour) || 0,
-            Number(minute) || 0,
-            Number(second) || 0,
-            Number(millisecond) || 0
-        ));
-
-        return new MetaDate({
-            date,
-            originalInput: dateString,
-            type: DateType.ISO_ORDINAL,
-            meta: {
-                isoIsExpanded: sepLength > 0,
-                year, day,                                // date
-                hour, minute, second, millisecond,             // time
-                zulu, offsetHour, offsetMinute,          // offset
-            } as DateMeta
+        return new IsoMetaDate({
+            date: new Date(Date.UTC(
+                yearNum,
+                0,
+                dayNum,
+                Number(hour),
+                Number(minute),
+                Number(second),
+                Number(millisecond)
+            )),
+            offsetHour: Number(offsetHour),
+            offsetMinute: Number(offsetMinute),
+            subType: 'ISO_ORDINAL',
+            isBasic: sepSize === 0,
+            locale: this._locale
         });
     }
 
@@ -397,17 +390,17 @@ class DateParser {
         }
 
         const [
-            , year, dateSep1 = '', week, dateSep2 = '', day = null,                                   // date
-            hour = null, timeSep1 = '', minute = null, timeSep2 = '', second = null, millisecond = null,   // time
-            zulu = null, offsetHour = null, timeSep3 = '', offsetMinute = null,               // offset
+            , year, monthDelim = '', week, dayDelim = '', day = null,                                   // date
+            hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
+            zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
         ] = matchResult;
 
         // check separators consistency
-        const sepLength = dateSep1.length;
+        const sepSize = monthDelim.length;
         if (
-            (day && (sepLength !== dateSep2.length)) ||
-            (hour && (sepLength !== timeSep1.length || (second && sepLength !== timeSep2.length))) ||
-            (offsetHour && sepLength !== timeSep3.length)
+            (day && (sepSize !== dayDelim.length)) ||
+            (hour && (sepSize !== minuteDelim.length || (second && sepSize !== secondDelim.length))) ||
+            (offsetHour && sepSize !== offsetMinuteDelim.length)
         ) {
             return null;
         }
@@ -428,16 +421,13 @@ class DateParser {
             Number(millisecond) || 0
         );
 
-        return new MetaDate({
+        return new IsoMetaDate({
             date,
-            originalInput: dateString,
-            type: DateType.ISO_WEEK,
-            meta: {
-                isoIsExpanded: sepLength > 0,
-                year, week, day,                         // date
-                hour, minute, second, millisecond,             // time
-                zulu, offsetHour, offsetMinute          // offset
-            } as DateMeta
+            offsetHour: Number(offsetHour),
+            offsetMinute: Number(offsetMinute),
+            subType: 'ISO_WEEK',
+            isBasic: sepSize === 0,
+            locale: this._locale
         });
     }
 

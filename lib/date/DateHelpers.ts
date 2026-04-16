@@ -4,8 +4,8 @@ class DateHelpers {
 
     static isValidDate(year: number, month: number, day: number): boolean {
         year = Number(year) || 0;
-        month = Number(month) || 0;
-        day = Number(day) || 0;
+        month = Number(month) || 1;
+        day = Number(day) || 1;
         if (!year || !month || !day) {
             return false;
         }
