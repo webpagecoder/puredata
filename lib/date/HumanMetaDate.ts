@@ -1,24 +1,24 @@
 'use strict';
 
-import { MetaDate, MetaDateConstructorParams } from "./MetaDate.ts";
+import { NormalizedDate, NormalizedDateConstructorParams } from "./NormalizedDate.ts";
 
-export type HumanMetaDateType = 'MDY' | 'DMY' | 'YMD';
+export type HumanNormalizedDateType = 'MDY' | 'DMY' | 'YMD';
 
-export type HumanMetaDateConstructorParams = MetaDateConstructorParams & {
+export type HumanNormalizedDateConstructorParams = NormalizedDateConstructorParams & {
     isBasic?: boolean;
-    dateOrder?: HumanMetaDateType;
+    dateOrder?: HumanNormalizedDateType;
 };
 
-class HumanMetaDate extends MetaDate {
+class HumanNormalizedDate extends NormalizedDate {
 
     private _isBasic: boolean;
-    private _dateOrder: HumanMetaDateType;
+    private _dateOrder: HumanNormalizedDateType;
 
-    constructor(props: HumanMetaDateConstructorParams) {
+    constructor(props: HumanNormalizedDateConstructorParams) {
         super(props);
         this._isBasic = props.isBasic || false;
         this._dateOrder = props.dateOrder || 'MDY';
     }
 
 }
-export { HumanMetaDate };
+export { HumanNormalizedDate };

@@ -1,7 +1,7 @@
 'use strict';
 
-import { MetaDate } from "./MetaDate.ts";
+import { NormalizedDate } from "./NormalizedDate.ts";
 
-class TimestampMetaDate extends MetaDate { }
+class TimestampNormalizedDate extends NormalizedDate { }
 
-export { TimestampMetaDate };
+export { TimestampNormalizedDate };

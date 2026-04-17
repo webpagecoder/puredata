@@ -27,10 +27,7 @@ class DateProcessor extends ChainProcessor {
                 tracker.addError('date/base');
                 return;
             }
-            else {
-                // state.inputType = parsedDate.format;
-                // tracker.setValue(parsedDate.date);
-            }
+            tracker.setValue(parsedDate);
         }
     }
 

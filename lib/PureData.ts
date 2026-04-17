@@ -24,7 +24,7 @@ import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './utils/Utils.ts';
-import { MetaDate } from './date/MetaDate.ts';
+import { NormalizedDate } from './date/NormalizedDate.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 

@@ -1,24 +1,24 @@
 'use strict';
 
-import { MetaDate, MetaDateConstructorParams } from "./MetaDate.ts";
+import { NormalizedDate, NormalizedDateConstructorParams } from "./NormalizedDate.ts";
 
-export type IsoMetaDateSubType = 'ISO_WEEK' | 'ISO_ORDINAL';
+export type IsoNormalizedDateSubType = 'ISO_WEEK' | 'ISO_ORDINAL';
 
-export type IsoMetaDateConstructorParams = MetaDateConstructorParams & {
+export type IsoNormalizedDateConstructorParams = NormalizedDateConstructorParams & {
     isBasic?: boolean;
-    subType?: IsoMetaDateSubType;
+    subType?: IsoNormalizedDateSubType;
 };
 
-class IsoMetaDate extends MetaDate {
+class IsoNormalizedDate extends NormalizedDate {
 
     private _isBasic: boolean;
-    private _subType: IsoMetaDateSubType | null;
+    private _subType: IsoNormalizedDateSubType | null;
 
-    constructor(props: IsoMetaDateConstructorParams) {
+    constructor(props: IsoNormalizedDateConstructorParams) {
         super(props);
         this._isBasic = props.isBasic || false;
         this._subType = props.subType || null;
     }
 
 }
-export { IsoMetaDate };
+export { IsoNormalizedDate };

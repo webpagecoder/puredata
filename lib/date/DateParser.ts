@@ -2,11 +2,9 @@
 //todo: date and string add auto trim
 import { RegexCache } from "../cache/RegexCache.ts";
 import { Locale } from "../Locale.ts";
-import { MetaDate } from "./MetaDate.ts";
+import { NormalizedDate } from "./NormalizedDate.ts";
 import { DateHelpers } from "./DateHelpers.ts";
-import { IsoMetaDate } from "./IsoMetaDate.ts";
 import { DateType } from "./DateType.ts";
-import { TimestampMetaDate } from "./TimestampMetaDate.ts";
 
 enum DateOrder {
     MDY = 'MDY',
@@ -81,27 +79,27 @@ class DateParser {
         this._cache = null;
     }
 
-    parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
+    parse(value: unknown, parseTypes: DateType[] = []): NormalizedDate | null {
         const anyType = parseTypes.length === 0;
         const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
         if (shouldParse(DateType.OBJECT)) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new MetaDate(value, DateType.OBJECT);
+                return new NormalizedDate(value, DateType.OBJECT);
             }
         }
         if (shouldParse(DateType.TIMESTAMP)) {
             const result = this.parseTimestamp(value);
             if (result) {
                 const { date, parts } = result;
-                return new MetaDate(date, DateType.TIMESTAMP, parts);
+                return new NormalizedDate(date, DateType.TIMESTAMP, parts);
             }
         }
         if (shouldParse(DateType.ISO)) {
             const result = this.parseIso(value);
             if (result) {
                 const { date, parts } = result;
-                return new MetaDate(date, DateType.ISO, parts);
+                return new NormalizedDate(date, DateType.ISO, parts);
             }
         }
         if (shouldParse(DateType.HUMAN)) {
@@ -115,7 +113,7 @@ class DateParser {
             const result = this.parseIsoWeek(value);
             if (result) {
                 const { date, parts } = result;
-                return new MetaDate(date, DateType.ISO_WEEK, parts);
+                return new NormalizedDate(date, DateType.ISO_WEEK, parts);
             }
         }
 
@@ -123,14 +121,14 @@ class DateParser {
             const result = this.parseIsoOrdinal(value);
             if (result) {
                 const { date, parts } = result;
-                return new MetaDate(date, DateType.ISO_ORDINAL, parts);
+                return new NormalizedDate(date, DateType.ISO_ORDINAL, parts);
             }
         }
 
         return null;
     }
 
-    parseHuman(dateString: unknown): MetaDate | null {
+    parseHuman(dateString: unknown): NormalizedDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -234,13 +232,13 @@ class DateParser {
             hour = meridiem
                 ? (
                     meridiem === 'pm' && hour !== '12'
-                        ? Number(hour)+ 12
+                        ? Number(hour) + 12
                         : Number(hour)
                 )
                 : Number(hour);
         }
 
-        return new MetaDate({
+        return new NormalizedDate({
             date: new Date(Date.UTC(
                 yearNum,
                 monthNum - 1,
@@ -250,11 +248,11 @@ class DateParser {
             )),
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
-            locale
+            type: DateType.HUMAN
         });
     }
 
-    parseIso(dateString: unknown): MetaDate | null {
+    parseIso(dateString: unknown): NormalizedDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -293,7 +291,7 @@ class DateParser {
             return null;
         }
 
-        return new IsoMetaDate({
+        return new NormalizedDate({
             date: new Date(Date.UTC(
                 yearNum,
                 !monthNum ? 0 : monthNum - 1,
@@ -303,14 +301,16 @@ class DateParser {
                 Number(second),
                 Number(millisecond)
             )),
+            meta: {
+                isBasic: delimSize === 0,
+            },
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
-            locale: this._locale,
-            isBasic: delimSize === 0,
+            type: DateType.ISO
         });
     }
 
-    parseIsoOrdinal(dateString: unknown): MetaDate | null {
+    parseIsoOrdinal(dateString: unknown): NormalizedDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -347,7 +347,7 @@ class DateParser {
             return null;
         }
 
-        return new IsoMetaDate({
+        return new NormalizedDate({
             date: new Date(Date.UTC(
                 yearNum,
                 0,
@@ -357,15 +357,16 @@ class DateParser {
                 Number(second),
                 Number(millisecond)
             )),
+            meta: {
+                isBasic: delimSize === 0,
+            },
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
-            subType: 'ISO_ORDINAL',
-            isBasic: delimSize === 0,
-            locale: this._locale
+            type: DateType.ISO_ORDINAL
         });
     }
 
-    parseIsoWeek(dateString: unknown): MetaDate | null {
+    parseIsoWeek(dateString: unknown): NormalizedDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -412,17 +413,18 @@ class DateParser {
             Number(millisecond)
         );
 
-        return new IsoMetaDate({
+        return new NormalizedDate({
             date,
+            meta: {
+                isBasic: delimSize === 0,
+            },
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute),
-            subType: 'ISO_WEEK',
-            isBasic: delimSize === 0,
-            locale: this._locale
+            type: DateType.ISO_WEEK
         });
     }
 
-    parseTimestamp(value: unknown): MetaDate | null {
+    parseTimestamp(value: unknown): NormalizedDate | null {
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
             return null;
@@ -435,9 +437,10 @@ class DateParser {
         if (isNaN(date.getTime())) {
             return null;
         }
-        return new TimestampMetaDate({
+
+        return new NormalizedDate({
             date,
-            locale: this._locale
+            type: DateType.TIMESTAMP
         });
     }
 }
