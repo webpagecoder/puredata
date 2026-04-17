@@ -1,11 +1,11 @@
 'use strict';
 
 export enum DateType {
-    HUMAN,
-    ISO,
-    ISO_WEEK,
-    ISO_ORDINAL,
-    OBJECT,
-    TIMESTAMP,
+    HUMAN = 'HUMAN',
+    ISO = 'ISO',
+    ISO_WEEK = 'ISO_WEEK',
+    ISO_ORDINAL = 'ISO_ORDINAL',
+    OBJECT = 'OBJECT',
+    TIMESTAMP = 'TIMESTAMP',
 };
 

@@ -1,18 +1,28 @@
 'use strict';
 
+import { DateParser } from '../date/DateParser.ts';
 import { DateType } from '../date/DateType.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
 export type DateChainProps = ChainProps<typeof DateHandler> & {
-    subType?: DateType | null;
+    dateOrder?: 'MDY' | 'DMY' | 'YMD';
+    dateParser: DateParser;
+    inputType?: DateType | null;
+    now?: Date;
+    outputType?: DateType | null;
+    utcOffset?: [number, number];
 };
 
 class DateChain extends Chain<DateChainProps> {
 
     constructor(props: DateChainProps) {
         super(props);
-        this.props.subType = null;
+        this.props.dateOrder = props.dateOrder || 'MDY';
+        this.props.dateParser = props.dateParser || new DateParser(this.props.locale);
+        this.props.inputType = props.inputType || null;
+        this.props.outputType = props.outputType || null;
+        
 
         let [hours, minutes] = this.props.utcOffset || [0, 0];
         hours = +hours;
@@ -38,8 +48,8 @@ class DateChain extends Chain<DateChainProps> {
      * @param {boolean} autoConvert - Whether to enable automatic conversion
      * @returns {NumberChain} The chain instance for method chaining
      */
-    configMonthBeforeDay(monthBeforeDay = true) {
-        return this.setProps({ monthBeforeDay });
+    configDateOrder(dateOrder: 'MDY' | 'DMY' | 'YMD' = 'MDY') {
+        return this.setProps({ dateOrder });
     }
 
     // Validators
@@ -50,26 +60,28 @@ class DateChain extends Chain<DateChainProps> {
      * @param {Object} [options={}] - Parsing options
      * @param {string[]} [options.required] - Required date components
      * @param {string[]} [options.forbidden] - Forbidden date components
-     * @param {boolean} [options.monthBeforeDay] - Whether month comes before day
+     * @param {'MDY' | 'DMY' | 'YMD'} [options.dateOrder] - The order of date components
      * @returns {DateChain} Returns the chain for method chaining
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
     human(options = {}) {
         this.assertEmptyPipeline('human');
-        
-        return this.setProps({ inputType: DateTypeS.HUMAN }).addStep('human', function () {
+        const x = this.setProps({ inputType: DateType.HUMAN });
+
+        return this.setProps({ inputType: DateType.HUMAN }).addStep('human', () => {
             const {
+                dateOrder,
                 numberSuffixes,
                 months: {
                     full: fullMonths,
                     short: shortMonths
                 }
-            } = this.language.language.calendar;
+            } = this.props.locale.text.calendar;
 
             return [
                 Object.assign({
-                    monthBeforeDay: this.props.monthBeforeDay,
+                    dateOrder,
                     numberSuffixes,
                     fullMonths,
                     shortMonths
@@ -92,7 +104,7 @@ class DateChain extends Chain<DateChainProps> {
     iso(options = {}) {
         this.assertEmptyPipeline('iso');
         return this
-            .setProps({ inputType: DateTypeS.ISO })
+            .setProps({ inputType: DateType.ISO })
             .addStep('iso', [options]);
     }
 
@@ -108,7 +120,7 @@ class DateChain extends Chain<DateChainProps> {
     isoOrdinal(options = {}) {
         this.assertEmptyPipeline('isoOrdinal');
         return this
-            .setProps({ inputType: DateTypeS.ISO_ORDINAL })
+            .setProps({ inputType: DateType.ISO_ORDINAL })
             .addStep('isoOrdinal', [options]);
     }
 
@@ -124,7 +136,7 @@ class DateChain extends Chain<DateChainProps> {
     isoWeek(options = {}) {
         this.assertEmptyPipeline('isoWeek');
         return this
-            .setProps({ inputType: DateTypeS.ISO_WEEK })
+            .setProps({ inputType: DateType.ISO_WEEK })
             .addStep('isoWeek', [options]);
     }
 
@@ -140,7 +152,7 @@ class DateChain extends Chain<DateChainProps> {
     timestamp(jsType = true) {
         this.assertEmptyPipeline('timestamp');
         return this
-            .setProps({ inputType: DateTypeS.TIMESTAMP })
+            .setProps({ inputType: DateType.TIMESTAMP })
             .addStep('timestamp', [jsType]);
     }
 
@@ -166,7 +178,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
     toIso() {
-        return this.setProps({ outputType: DateTypeS.ISO });
+        return this.setProps({ outputType: DateType.ISO });
     }
 
     /**
@@ -176,7 +188,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
     toIsoOrdinal() {
-        return this.setProps({ outputType: DateTypeS.ISO_ORDINAL });
+        return this.setProps({ outputType: DateType.ISO_ORDINAL });
     }
 
     /**
@@ -186,7 +198,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
     toIsoWeek() {
-        return this.setProps({ outputType: DateTypeS.ISO_WEEK });
+        return this.setProps({ outputType: DateType.ISO_WEEK });
     }
 
     /**
@@ -196,7 +208,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
     toTimestamp() {
-        return this.setProps({ outputType: DateTypeS.TIMESTAMP });
+        return this.setProps({ outputType: DateType.TIMESTAMP });
     }
 }
 

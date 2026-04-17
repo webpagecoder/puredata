@@ -35,8 +35,6 @@ export class ParsedDate {
         this.format = format;
         this.value = value;
     }
-
-
 }
 
 /**
@@ -182,14 +180,14 @@ class DateHandler extends Handler {
     static human(dateString: unknown, {
         required = ['YYYY', 'MM', 'DD'],
         forbidden = ['HHOffset'],
-        monthBeforeDay = true,
+        dateOrder = true,
         numberSuffixes,
         fullMonths,
         shortMonths,
     }: any = {}): HandlerResult {
 
         const parsedDate = parseDateFromHuman(dateString, {
-            monthBeforeDay,
+            dateOrder,
             numberSuffixes,
             fullMonths,
             shortMonths,

@@ -418,10 +418,10 @@ describe('DateHandler.human', () => {
         expect([...result.errors][0].key).toBe('date/human');
     });
 
-    test('should parse day-before-month when monthBeforeDay is false', () => {
+    test('should parse day-before-month when dateOrder is false', () => {
         const dateString = '15 January 2024';
         const result = DateHandler.human(dateString, {
-            monthBeforeDay: false,
+            dateOrder: false,
             required: ['YYYY', 'MM', 'DD']
         });
 

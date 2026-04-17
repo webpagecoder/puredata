@@ -32,7 +32,6 @@ const GLOBAL_CONFIG = Object.seal({
         transformer: x => typeof x === 'string' ? x.toLowerCase() : x, // Transforms boolish strings if needed
     },
     date: {
-        monthBeforeDay: true,
         utcOffset: ['-03', '00'], // NOTE: Does *not* take into account any daylight savings
     },
     number: {

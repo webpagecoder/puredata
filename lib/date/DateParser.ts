@@ -105,7 +105,7 @@ class DateParser {
             }
         }
         if (shouldParse(DateType.HUMAN)) {
-            const result = this.parseHuman(value, dateOrder);
+            const result = this.parseHuman(value);
             if (result) {
                 return result;
             }
