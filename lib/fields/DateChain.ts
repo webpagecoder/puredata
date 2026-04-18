@@ -3,12 +3,13 @@
 import { DateParser } from '../date/DateParser.ts';
 import { DateType } from '../date/DateType.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
+import { Locale } from '../Locale.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
 export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateOrder?: 'MDY' | 'DMY' | 'YMD';
-    dateParser: DateParser;
     inputType?: DateType | null;
+    locale: Locale;
     now?: Date;
     outputType?: DateType | null;
     utcOffset?: [number, number];
@@ -19,10 +20,9 @@ class DateChain extends Chain<DateChainProps> {
     constructor(props: DateChainProps) {
         super(props);
         this.props.dateOrder = props.dateOrder || 'MDY';
-        this.props.dateParser = props.dateParser || new DateParser(this.props.locale);
         this.props.inputType = props.inputType || null;
+        this.props.locale = props.locale;
         this.props.outputType = props.outputType || null;
-        
 
         let [hours, minutes] = this.props.utcOffset || [0, 0];
         hours = +hours;
@@ -67,25 +67,10 @@ class DateChain extends Chain<DateChainProps> {
      */
     human(options = {}) {
         this.assertEmptyPipeline('human');
-        const x = this.setProps({ inputType: DateType.HUMAN });
 
         return this.setProps({ inputType: DateType.HUMAN }).addStep('human', () => {
-            const {
-                dateOrder,
-                numberSuffixes,
-                months: {
-                    full: fullMonths,
-                    short: shortMonths
-                }
-            } = this.props.locale.text.calendar;
-
             return [
-                Object.assign({
-                    dateOrder,
-                    numberSuffixes,
-                    fullMonths,
-                    shortMonths
-                }, options)
+                Object.assign({ locale: this.props.locale }, options)
             ];
         });
     }

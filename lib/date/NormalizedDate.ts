@@ -40,6 +40,25 @@ class NormalizedDate {
         this._type = type;
     }
 
+    get date(): Date {
+        return this._date;
+    }
+
+    get meta(): Record<string, string | number> {
+        return this._meta;
+    }
+
+    get offsetHour(): number {
+        return this._offsetHour;
+    }
+
+    get offsetMinute(): number {
+        return this._offsetMinute;
+    }
+
+    get type(): DateType {
+        return this._type;
+    }
     // static FORMAT_TOKEN_MAP: Record<string, (p: { date: Date, locale: Locale, offsetHour: number, offsetMinute: number }) => string> = {
     //     'YYYY': (p) => p.date.getUTCFullYear().toString(), // 4-digit year
     //     'YY': (p) => Utils.padLeft(String(p.date.getUTCFullYear() % 100), 2, '0'), // 2-digit year

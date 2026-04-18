@@ -83,48 +83,44 @@ class DateParser {
         const anyType = parseTypes.length === 0;
         const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
-        if (shouldParse(DateType.OBJECT)) {
+        if (anyType || parseTypes.indexOf(DateType.OBJECT) !== -1) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new NormalizedDate(value, DateType.OBJECT);
+                return new NormalizedDate({
+                    date: value,
+                    type: DateType.OBJECT
+                });
             }
         }
-        if (shouldParse(DateType.TIMESTAMP)) {
-            const result = this.parseTimestamp(value);
-            if (result) {
-                const { date, parts } = result;
-                return new NormalizedDate(date, DateType.TIMESTAMP, parts);
+        if (anyType || parseTypes.indexOf(DateType.TIMESTAMP) !== -1) {
+            const normalizedDate = this.parseTimestamp(value);
+            if (normalizedDate) {
+                return normalizedDate;
             }
         }
-        if (shouldParse(DateType.ISO)) {
-            const result = this.parseIso(value);
-            if (result) {
-                const { date, parts } = result;
-                return new NormalizedDate(date, DateType.ISO, parts);
+        if (anyType || parseTypes.indexOf(DateType.ISO) !== -1) {
+            const normalizedDate = this.parseIso(value);
+            if (normalizedDate) {
+                return normalizedDate;
             }
         }
-        if (shouldParse(DateType.HUMAN)) {
-            const result = this.parseHuman(value);
-            if (result) {
-                return result;
+        if (anyType || parseTypes.indexOf(DateType.HUMAN) !== -1) {
+            const normalizedDate = this.parseHuman(value);
+            if (normalizedDate) {
+                return normalizedDate;
             }
         }
-
-        if (shouldParse(DateType.ISO_WEEK)) {
-            const result = this.parseIsoWeek(value);
-            if (result) {
-                const { date, parts } = result;
-                return new NormalizedDate(date, DateType.ISO_WEEK, parts);
+        if (anyType || parseTypes.indexOf(DateType.ISO_WEEK) !== -1) {
+            const normalizedDate = this.parseIsoWeek(value);
+            if (normalizedDate) {
+                return normalizedDate;
             }
         }
-
-        if (shouldParse(DateType.ISO_ORDINAL)) {
-            const result = this.parseIsoOrdinal(value);
-            if (result) {
-                const { date, parts } = result;
-                return new NormalizedDate(date, DateType.ISO_ORDINAL, parts);
+        if (anyType || parseTypes.indexOf(DateType.ISO_ORDINAL) !== -1) {
+            const normalizedDate = this.parseIsoOrdinal(value);
+            if (normalizedDate) {
+                return normalizedDate;
             }
         }
-
         return null;
     }
 
@@ -207,7 +203,8 @@ class DateParser {
             return null;
         }
 
-        let hour, minute, second, meridiem, offsetHour, offsetMinute;
+        let hour = null, minute = null, second = null, meridiem = null,
+            offsetHour = null, offsetMinute = null;
 
         // Check time portion (if it exists)
         const timeString = matchResult[4];
@@ -217,7 +214,10 @@ class DateParser {
                 return null;
             }
 
-            ([, hour, minute, second, meridiem, offsetHour, offsetMinute] = matchResult);
+            ([
+                , hour, minute = null, second = null, meridiem = null, 
+                offsetHour = null, offsetMinute = null
+            ] = matchResult);
 
             if (!meridiem) {
                 if (hour.length === 1) {
@@ -242,7 +242,8 @@ class DateParser {
             date: new Date(Date.UTC(
                 yearNum,
                 monthNum - 1,
-                dayNum, hour,
+                dayNum,
+                Number(hour),
                 Number(minute),
                 Number(second)
             )),

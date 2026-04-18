@@ -6,6 +6,8 @@ import { Handler } from './Handler.ts';
 import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
 import { DateType } from '../date/DateType.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
+import { Locale } from '../Locale.ts';
+import { DateParser } from '../date/DateParser.ts';
 const { pass, fail } = HandlerResult;
 
 export type DateLike = Date | string | number;
@@ -178,25 +180,18 @@ class DateHandler extends Handler {
      * @returns
      */
     static human(dateString: unknown, {
+        locale,
         required = ['YYYY', 'MM', 'DD'],
         forbidden = ['HHOffset'],
-        dateOrder = true,
-        numberSuffixes,
-        fullMonths,
-        shortMonths,
     }: any = {}): HandlerResult {
 
-        const parsedDate = parseDateFromHuman(dateString, {
-            dateOrder,
-            numberSuffixes,
-            fullMonths,
-            shortMonths,
-        });
+        const dateParser = new DateParser(locale);
+        const parsedDate = dateParser.parseHuman(dateString);
+
         if (!parsedDate) {
             return fail(dateString, 'date/human');
         }
 
-        const { date, parts } = parsedDate;
         if (!areOptionsCompliant(parts, required, forbidden)) {
             return fail(dateString, 'date/human');
         }
