@@ -2,58 +2,86 @@
 
 import { DateType } from './DateType.ts';
 
-export type NormalizedDateConstructorParams = {
-    date: Date;
-    meta?: Record<string, any>
-    offsetHour?: number;
-    offsetMinute?: number;
-    type: DateType
-} & ({ date: Date; year?: never } | { date?: never, year: number });
+export type DateParts = {
+    year?: number | null;
+    month?: number | null;
+    day?: number | null;
+    hour?: number | null;
+    minute?: number | null;
+    second?: number | null;
+    millisecond?: number | null;
+    offsetHour?: number | null;
+    offsetMinute?: number | null;
+};
 
 class NormalizedDate {
 
     protected _date: Date;
-    protected _meta: Record<string, string | number>
-    protected _offsetHour: number;
-    protected _offsetMinute: number;
+    protected _meta: Record<string, any>;
+    protected _parts: DateParts;
     protected _type: DateType;
 
-    constructor({
-        date = new Date(),
-        offsetHour = 0,
-        offsetMinute = 0,
-        meta = {},
-        type = DateType.OBJECT
-    }: NormalizedDateConstructorParams) {
-        this._date = new Date(Date.UTC(
-            date.getUTCFullYear(),
-            date.getUTCMonth(),
-            date.getUTCDate(),
-            date.getUTCHours() + offsetHour,
-            date.getUTCMinutes() + offsetMinute,
-            date.getUTCSeconds(),
-            date.getUTCMilliseconds()
-        ));
+    constructor(
+        dateOrDateParts: Date = new Date(),
+        type: DateType = DateType.OBJECT,
+        meta: Record<string, any> = {}
+    ) {
         this._meta = meta;
-        this._offsetHour = offsetHour;
-        this._offsetMinute = offsetMinute;
-        this._type = type;
+        if(dateOrDateParts instanceof Date) {
+            this._date = dateOrDateParts;
+            this._parts = {};
+            this._type = DateType.OBJECT;
+        }
+        else {
+            this._type = type;
+            const {
+                year = null,
+                month = null,
+                day = null,
+                hour = null,
+                minute = null,
+                second = null,
+                millisecond = null,
+                offsetHour = null,
+                offsetMinute = null
+            } = dateOrDateParts;
+            this._date = new Date(Date.UTC(
+                Number(year),
+                month ? Number(month) - 1 : 0,
+                Number(day) || 1,
+                Number(hour) + Number(offsetHour),
+                Number(minute) + Number(offsetMinute),
+                Number(second),
+                Number(millisecond)
+            ));
+            this._parts = {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+                offsetHour,
+                offsetMinute
+            };
+        }
     }
 
-    get date(): Date {
-        return this._date;
+    get date(): Date | null {
+        return this._dateOrDateParts;
     }
 
     get meta(): Record<string, string | number> {
         return this._meta;
     }
 
-    get offsetHour(): number {
-        return this._offsetHour;
+    get offsetHour(): number | null {
+        return this._parts.offsetHour;
     }
 
-    get offsetMinute(): number {
-        return this._offsetMinute;
+    get offsetMinute(): number | null {
+        return this._parts.offsetMinute;
     }
 
     get type(): DateType {

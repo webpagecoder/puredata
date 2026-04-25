@@ -1,16 +1,16 @@
 'use strict';
 
-import { PRESENCE } from '../Presence.ts';
+import { Presence } from '../Presence.ts';
 import { HandlerResult } from './HandlerResult.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 import { Utils } from '../utils/Utils.ts';
 import { Handler } from './Handler.ts';
 import { NumberHandler } from './NumberHandler.ts';
 const { pass, fail } = HandlerResult;
-const { OPTIONAL, REQUIRED, FORBIDDEN } = PRESENCE;
-const optional = OPTIONAL;
-const required = REQUIRED;
-const forbidden = FORBIDDEN;
+const { Optional, Required, Forbidden } = Presence;
+const optional = Optional;
+const required = Required;
+const forbidden = Forbidden;
 
 
 class StringHandler extends Handler {

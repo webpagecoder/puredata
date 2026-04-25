@@ -16,7 +16,7 @@ import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
 import { ValueField } from './fields/ValueField.ts';
 import { Locale } from './Locale.ts';
 import { Path } from './Path.ts';
-import { PRESENCE } from './Presence.ts';
+import { Presence } from './Presence.ts';
 import { ArrayHandler } from './handlers/ArrayHandler.ts';
 import { BooleanHandler } from './handlers/BooleanHandler.ts';
 import { DateHandler } from './handlers/DateHandler.ts';
@@ -154,15 +154,15 @@ class PureData {
     }
 
     get optional() {
-        return PRESENCE.OPTIONAL;
+        return Presence.Optional;
     }
 
     get forbidden() {
-        return PRESENCE.FORBIDDEN;
+        return Presence.Forbidden;
     }
 
     get required() {
-        return PRESENCE.REQUIRED;
+        return Presence.Required;
     }
 
     get now() {

@@ -2,7 +2,7 @@
 
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Locale } from '../Locale.ts';
-import { PRESENCE } from '../Presence.ts';
+import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 
@@ -14,7 +14,7 @@ export type FieldProps = {
     errorMessages: ErrorMessages;
     label: string;
     locale: Locale;
-    presence: PRESENCE;
+    presence: Presence;
 };
 
 abstract class Field<P extends FieldProps = FieldProps> {
@@ -33,7 +33,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
             defaultValue = undefined,
             label = 'Value',
             locale = new Locale('en-US'),
-            presence = PRESENCE.REQUIRED,
+            presence = Presence.Required,
             errorMessages = {},
         } = props;
 
@@ -79,19 +79,19 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     isForbidden(): boolean {
-        return this.props.presence === PRESENCE.FORBIDDEN;
+        return this.props.presence === Presence.Forbidden;
     }
 
     isOptional(): boolean {
-        return this.props.presence === PRESENCE.OPTIONAL;
+        return this.props.presence === Presence.Optional;
     }
 
     isRequired(): boolean {
-        return this.props.presence === PRESENCE.REQUIRED;
+        return this.props.presence === Presence.Required;
     }
 
     default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: PRESENCE.OPTIONAL } as Partial<P>);
+        return this.clone({ defaultValue, presence: Presence.Optional } as Partial<P>);
     }
 
     errors(messages: ErrorMessages): this {
@@ -101,7 +101,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     forbidden(): this {
-        return this.clone({ presence: PRESENCE.FORBIDDEN } as Partial<P>);
+        return this.clone({ presence: Presence.Forbidden } as Partial<P>);
     }
 
     label(label: string): this {
@@ -109,11 +109,11 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     optional(): this {
-        return this.clone({ presence: PRESENCE.OPTIONAL } as Partial<P>);
+        return this.clone({ presence: Presence.Optional } as Partial<P>);
     }
 
     required(): this {
-        return this.clone({ presence: PRESENCE.REQUIRED } as Partial<P>);
+        return this.clone({ presence: Presence.Required } as Partial<P>);
     }
 }
 

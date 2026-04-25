@@ -1,28 +1,37 @@
 'use strict';
 
 import { DateParser } from '../date/DateParser.ts';
+import { DatePart } from '../date/DatePart.ts';
 import { DateType } from '../date/DateType.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Locale } from '../Locale.ts';
+import { Presence } from '../Presence.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
 export type DateChainProps = ChainProps<typeof DateHandler> & {
-    dateOrder?: 'MDY' | 'DMY' | 'YMD';
-    inputType?: DateType | null;
+    dateOrder: 'MDY' | 'DMY' | 'YMD';
+    inputType: DateType | null;
     locale: Locale;
-    now?: Date;
-    outputType?: DateType | null;
-    utcOffset?: [number, number];
+    now: Date;
+    outputType: DateType | null;
+    requiredParts: Set<DatePart>;
+    forbiddenParts: Set<DatePart>;
+    optionalParts: Set<DatePart>;
+    utcOffset: [number, number];
 };
 
 class DateChain extends Chain<DateChainProps> {
 
-    constructor(props: DateChainProps) {
+    constructor(props: Partial<DateChainProps> & Pick<DateChainProps, 'locale'>) {
         super(props);
         this.props.dateOrder = props.dateOrder || 'MDY';
         this.props.inputType = props.inputType || null;
         this.props.locale = props.locale;
         this.props.outputType = props.outputType || null;
+
+        this.props.forbiddenParts = new Set(props.forbiddenParts || []);
+        this.props.optionalParts = new Set(props.optionalParts || []);
+        this.props.requiredParts = new Set(props.requiredParts || [DatePart.year, DatePart.month, DatePart.day]);
 
         let [hours, minutes] = this.props.utcOffset || [0, 0];
         hours = +hours;
@@ -39,6 +48,27 @@ class DateChain extends Chain<DateChainProps> {
         if (this.props.pipeline.length > 0) {
             throw new Error(type + '() processor must be the first processor in the chain, if used.');
         }
+    }
+
+    // forbidParts(forbiddenParts: DatePart[]): this {
+    //     return this
+    //         .setProps({ forbiddenParts });
+    // }
+
+    // allowParts(optionalParts: DatePart[]): this {
+    //     return this
+    //         .setProps({ optionalParts });
+    // }
+
+    // requireParts(requiredParts: DatePart[]): this {
+    //     return this
+    //         .setProps({ requiredParts });
+    // }
+
+    year(presence: Presence = Presence.Required): this {
+        return this.setProps({
+            requiredParts: new Set([...this.props.requiredParts, DatePart.year])
+        });
     }
 
     // Configurators
@@ -65,12 +95,17 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
-    human(options = {}) {
+    human() {
         this.assertEmptyPipeline('human');
 
         return this.setProps({ inputType: DateType.HUMAN }).addStep('human', () => {
             return [
-                Object.assign({ locale: this.props.locale }, options)
+                this.props.locale,
+                {
+                    requiredParts: this.props.requiredParts,
+                    forbiddenParts: this.props.forbiddenParts,
+                    dateOrder: this.props.dateOrder
+                }
             ];
         });
     }

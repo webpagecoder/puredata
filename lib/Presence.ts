@@ -1,9 +1,10 @@
 'use strict';
 
-enum PRESENCE {
-    REQUIRED = 1,
-    OPTIONAL = 0,
-    FORBIDDEN = -1,
-}
+export const Presence = {
+    Required: 'required',
+    Optional: 'optional',
+    Forbidden: 'forbidden',
+} as const;
 
-export { PRESENCE };
+export type Presence = typeof Presence[keyof typeof Presence];
+

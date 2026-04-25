@@ -8,6 +8,7 @@ import { DateType } from '../date/DateType.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 import { Locale } from '../Locale.ts';
 import { DateParser } from '../date/DateParser.ts';
+import { DatePart } from '../date/DatePart.ts';
 const { pass, fail } = HandlerResult;
 
 export type DateLike = Date | string | number;
@@ -42,7 +43,7 @@ export class ParsedDate {
 /**
  * Checks that parsed date components include all required tokens and exclude forbidden tokens.
  */
-export function areOptionsCompliant(parts: any = {}, required: any = [], forbidden: any = []): boolean {
+export function areOptionsCompliant(parts: any = {}, required: DatePart[] = [], forbidden: DatePart[] = []): boolean {
     for (const option of required) {
         if (parts[option] === undefined) {
             return false;
@@ -63,12 +64,104 @@ export function areOptionsCompliant(parts: any = {}, required: any = [], forbidd
 class DateHandler extends Handler {
 
     // ====================================
-    // FORMATTER 
+    // DATE FORMAT CHECK
     // ====================================
-    static format(value: unknown): HandlerResult {
+
+    // sepcific format
+    static format(dateString: unknown): HandlerResult {
         const result = parseDate(value);
         return result ? pass(result) : fail(value, 'date/base');
     }
+
+    /**
+     * Parses human-readable date text and validates required and forbidden date components.
+     * @param dateString Human-readable date text to parse.
+     * @param options Parsing and token validation options.
+     * @returns
+     */
+    static human(dateString: unknown, locale: Locale, {
+        requiredParts = new Set<DatePart>(),
+        forbiddenParts = new Set<DatePart>(),
+    }: any = {}): HandlerResult {
+
+        const dateParser = new DateParser(locale);
+        const parsedDate = dateParser.parseHuman(dateString, requiredParts, forbiddenParts);
+
+        if (!parsedDate) {
+            return fail(dateString, 'date/human', {
+                requiredParts,
+                forbiddenParts
+            });
+        }
+        return pass(parsedDate);
+    }
+
+    /**
+     * Parses an ISO date string and validates component requirements and format strictness.
+     * @param dateString ISO date text to parse.
+     * @param options ISO parsing and validation options.
+     * @returns
+     */
+    static iso(dateString: any, {
+        required = ['YYYY', 'MM', 'DD'],
+        forbidden = [],
+        allowBasic = false,
+    }: any = {}): HandlerResult {
+        const parsedDate = parseFromIso(dateString);
+        if (!parsedDate) {
+            return fail(dateString, 'date/iso');
+        }
+
+        const { date, parts } = parsedDate;
+        if (!areOptionsCompliant(parts, required, forbidden)) {
+            return fail(dateString, 'date/iso');
+        }
+        if (!allowBasic && !parsedDate.parts.isExtended) {
+            return fail(dateString, 'date/iso');
+        }
+
+        return pass(date);
+    }
+
+    /**
+     * Parses an ISO ordinal date string and optionally enforces extended format only.
+     * @param dateString ISO ordinal date text to parse.
+     * @param allowBasic Whether basic (non-extended) ISO format is allowed.
+     * @returns
+     */
+    static isoOrdinal(dateString: any, allowBasic: any = false): HandlerResult {
+        const parsedDate = parseFromIsoOrdinal(dateString);
+        if (!parsedDate) {
+            return fail(dateString, 'date/isoOrdinal');
+        }
+
+        const { date, parts } = parsedDate;
+        if (!allowBasic && !parts.isExtended) {
+            return fail(dateString, 'date/isoOrdinal');
+        }
+        return pass(date);
+    }
+
+    /**
+     * Parses an ISO week date string and optionally enforces extended format only.
+     * @param dateString ISO week date text to parse.
+     * @param allowBasic Whether basic (non-extended) ISO format is allowed.
+     * @returns
+     */
+    static isoWeek(dateString: any, allowBasic: any = false): HandlerResult {
+        const parsedDate = parseFromIsoWeek(dateString);
+        if (!parsedDate) {
+            return fail(dateString, 'date/isoWeek');
+        }
+
+        const { date, parts } = parsedDate;
+        if (!allowBasic && !parts.isExtended) {
+            return fail(dateString, 'date/isoWeek');
+        }
+        return pass(date);
+    }
+
+
 
     /**
      * Validates that the input date occurs strictly after the provided comparison date.
@@ -171,96 +264,6 @@ class DateHandler extends Handler {
         return date > parsedReferenceDate.date
             ? pass(date)
             : fail(date, 'date/future', { compareDate });
-    }
-
-    /**
-     * Parses human-readable date text and validates required and forbidden date components.
-     * @param dateString Human-readable date text to parse.
-     * @param options Parsing and token validation options.
-     * @returns
-     */
-    static human(dateString: unknown, {
-        locale,
-        required = ['YYYY', 'MM', 'DD'],
-        forbidden = ['HHOffset'],
-    }: any = {}): HandlerResult {
-
-        const dateParser = new DateParser(locale);
-        const parsedDate = dateParser.parseHuman(dateString);
-
-        if (!parsedDate) {
-            return fail(dateString, 'date/human');
-        }
-
-        if (!areOptionsCompliant(parts, required, forbidden)) {
-            return fail(dateString, 'date/human');
-        }
-        return pass(date);
-    }
-
-    /**
-     * Parses an ISO date string and validates component requirements and format strictness.
-     * @param dateString ISO date text to parse.
-     * @param options ISO parsing and validation options.
-     * @returns
-     */
-    static iso(dateString: any, {
-        required = ['YYYY', 'MM', 'DD'],
-        forbidden = [],
-        allowBasic = false,
-    }: any = {}): HandlerResult {
-        const parsedDate = parseFromIso(dateString);
-        if (!parsedDate) {
-            return fail(dateString, 'date/iso');
-        }
-
-        const { date, parts } = parsedDate;
-        if (!areOptionsCompliant(parts, required, forbidden)) {
-            return fail(dateString, 'date/iso');
-        }
-        if (!allowBasic && !parsedDate.parts.isExtended) {
-            return fail(dateString, 'date/iso');
-        }
-
-        return pass(date);
-    }
-
-    /**
-     * Parses an ISO ordinal date string and optionally enforces extended format only.
-     * @param dateString ISO ordinal date text to parse.
-     * @param allowBasic Whether basic (non-extended) ISO format is allowed.
-     * @returns
-     */
-    static isoOrdinal(dateString: any, allowBasic: any = false): HandlerResult {
-        const parsedDate = parseFromIsoOrdinal(dateString);
-        if (!parsedDate) {
-            return fail(dateString, 'date/isoOrdinal');
-        }
-
-        const { date, parts } = parsedDate;
-        if (!allowBasic && !parts.isExtended) {
-            return fail(dateString, 'date/isoOrdinal');
-        }
-        return pass(date);
-    }
-
-    /**
-     * Parses an ISO week date string and optionally enforces extended format only.
-     * @param dateString ISO week date text to parse.
-     * @param allowBasic Whether basic (non-extended) ISO format is allowed.
-     * @returns
-     */
-    static isoWeek(dateString: any, allowBasic: any = false): HandlerResult {
-        const parsedDate = parseFromIsoWeek(dateString);
-        if (!parsedDate) {
-            return fail(dateString, 'date/isoWeek');
-        }
-
-        const { date, parts } = parsedDate;
-        if (!allowBasic && !parts.isExtended) {
-            return fail(dateString, 'date/isoWeek');
-        }
-        return pass(date);
     }
 
     /**
@@ -630,6 +633,10 @@ class DateHandler extends Handler {
         result.setUTCMonth(0, 1);
         result.setUTCHours(0, 0, 0, 0);
         return pass(result);
+    }
+
+    static clamp(date: any, minDate: Date, maxDate: Date) {
+        //todo - clamps date to window
     }
 
 }
