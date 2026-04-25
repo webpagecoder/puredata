@@ -13,82 +13,53 @@ enum DateOrder {
     YMD = 'YMD'
 };
 
-// Date building blocks/keys
-const YY = '(\\d{2})';
-const YYYY = '(\\d{4})';
-const M = '([1-9]|1[0-2])';
-const MM = '(0[1-9]|1[0-2])';
-const M_OR_MM = '(0?[1-9]|1[0-2])';
-const MMM = '(#SHORT_MONTH_NAMES#)'; // will be replaced with locale short month names in runtime
-const MMMM = '(#LONG_MONTH_NAMES#)'; // will be replaced with locale long month names in runtime
-const D = '([1-9]|[12][0-9]|3[01])';
-const DD = '(0[1-9]|[12][0-9]|3[01])';
-const D_OR_DD = '(0?[1-9]|[12][0-9]|3[01])';
-const Do = `${D}(#NUMBER_SUFFIXES#)?`; // will be replaced with D + locale number suffixes in runtime
-const DDD = '([1-9]|[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6])';
-const DDDD = '(00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6])';
-const W = '(0?[1-9]|[1-4]\\d|5[0-3])';
-const WW = '(0[1-9]|[1-4]\\d|5[0-3])';
-const E = '([1-7])';
-const ddd = '(#SHORT_DAY_NAMES#)'; // will be replaced with locale short day names in runtime
-const dddd = '(#LONG_DAY_NAMES#)'; // will be replaced with locale long day names in runtime
+// Date building blocks
+const YEAR = '\\d{4}';
+const MONTH = '0?[1-9]|1[0-2]';
+const MONTH_LZ = '0[1-9]|1[0-2]';
+const DAY_OF_MONTH = '0?[1-9]|[12][0-9]|3[01]';
+const DAY_OF_MONTH_LZ = '0[1-9]|[12][0-9]|3[01]';
+const DAY_OF_WEEK = '[1-7]';
+const DAY_OF_YEAR_LZ = '00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]';
+const WEEK_OF_YEAR_LZ = '0[1-9]|[1-4]\\d|5[0-3]';
 
-// Time building blocks/keys
-const H = '(0?[0-9]|1[0-9]|2[0-3])';
-const HH = '(0[0-9]|1[0-9]|2[0-3])';
-const h = '(0?[1-9]|1[0-2])';
-const hh = '(0[1-9]|1[0-2])';
-const m = '(0?[0-9]|[1-5][0-9])';
-const mm = '(0[0-9]|[1-5][0-9])';
-const s = '(0?[0-9]|[1-5][0-9])';
-const ss = '(0[0-9]|[1-5][0-9])';
-const S = '(\\d)';
-const SS = '(0[0-9]|[1-9][0-9]|[1-9][0-9]{2})';
-const SSS = '(\\d{3})';
-const A = '([AP]M)';
-const a = '([ap]m)';
-
-// Timezone building blocks/keys
-const Z = `([+-]${HH}${mm})`;
-const ZZ = `([+-]${HH}:${mm})`;
-const z = '(Z)';
+// Time building blocks
+const HOUR_12 = '0?[1-9]|1[0-2]';
+const HOUR_24 = '0?[0-9]|1[0-9]|2[0-3]';
+const HOUR_24_LZ = '0[0-9]|1[0-9]|2[0-3]';
+const MINUTE_LZ = '0[0-9]|[1-5][0-9]';
+const SECOND_LZ = '0[0-9]|[1-5][0-9]';
+const THOUSANDTHS_OF_SECOND = '\\d{1,3}';
+const MERIDIEM = '[ap]m';
 
 //todo: support UTC and GMT
 //todo: rfc2822
 
-// ISO time + TZ
-const ISO_TZ = `(?:${Z}|${ZZ}|${z})?`;
-const ISO_TIME_TZ = `${HH}(:?)(?:${mm}(?:(:?)${ss}(?:\\.${SSS})?)?)?(?:${ISO_TZ})?`;
-
-// ISO date + time + TZ
-const ISO = `^${YYYY}(-?)${MM}(?:$|(-?)${DD}(?:T${ISO_TIME_TZ})?)?$`;
-const ISO_ORDINAL = `^${YYYY}(-?)${DDDD}(?:T${ISO_TIME_TZ})?$`;
-const ISO_WEEK = `^${YYYY}(-?)W${WW}(?:(-?)${E}(?:T${ISO_TIME_TZ})?)?$`;
+// ISO regex
+const ISO_TZ = `(?:(Z)|(?:([+-]${HOUR_24_LZ})(:?)(${MINUTE_LZ})))`;
+const ISO_TIME = `(${HOUR_24_LZ})(:?)(?:(${MINUTE_LZ})(?:(:?)(${SECOND_LZ})(?:\\.(${THOUSANDTHS_OF_SECOND}))?)?)?(?:${ISO_TZ})?`;
+const ISO = `^(${YEAR})(-?)(${MONTH_LZ})(?:$|(-?)(${DAY_OF_MONTH_LZ})(?:T${ISO_TIME})?)?$`;
+const ISO_ORDINAL = `^(${YEAR})(-?)(${DAY_OF_YEAR_LZ})(?:T${ISO_TIME})?$`;
+const ISO_WEEK = `^(${YEAR})(-?)W(${WEEK_OF_YEAR_LZ})(?:(-?)(${DAY_OF_WEEK})(?:T${ISO_TIME})?)?$`;
 
 // Human readable regex for dates
 const DELIM = '[/. -,:]+';
-const HUMAN_MDY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}${DELIM})?(?:${allMonthNames})${DELIM}${D_OR_DD}(?:\\s*${numberSuffixes})?${DELIM}${YYYY}(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?${M_OR_MM}${DELIM}${D_OR_DD}${DELIM}(${YYYY})(?:${DELIM}(.*))?$`
-    ];
-};
-const HUMAN_DMY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}${DELIM})?${D_OR_DD}(?:\\s*${numberSuffixes})?${DELIM}(?:${allMonthNames})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?${D_OR_DD}${DELIM}${M_OR_MM}${DELIM}(${YYYY})(?:${DELIM}(.*))?$`
-    ];
-};
-const HUMAN_YMD = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}${DELIM})?(${YYYY})${DELIM}(?:${allMonthNames})${DELIM}(${D_OR_DD})(?:\\s*${numberSuffixes})?(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${YYYY})${DELIM}(${M_OR_MM})${DELIM}(${D_OR_DD})(?:${DELIM}(.*))?$`
-    ];
-};
+const HUMAN_MDY = [
+    `(?:#DAY_NAMES#${DELIM})?(#MONTH_NAMES#)${DELIM}(${DAY_OF_MONTH})(?:\\s*#NUMBER_SUFFIXES#)?${DELIM}(${YEAR})(?:${DELIM}(.*))?$`,
+    `(?:#DAY_NAMES#${DELIM})?(${MONTH})${DELIM}(${DAY_OF_MONTH})${DELIM}(${YEAR})(?:${DELIM}(.*))?$`
+];
+const HUMAN_DMY = [
+    `(?:#DAY_NAMES#${DELIM})?(${DAY_OF_MONTH})(?:\\s*#NUMBER_SUFFIXES#)?${DELIM}(#MONTH_NAMES#)${DELIM}(${YEAR})(?:${DELIM}(.*))?$`,
+    `(?:#DAY_NAMES#${DELIM})?(${DAY_OF_MONTH})${DELIM}(${MONTH})${DELIM}(${YEAR})(?:${DELIM}(.*))?$`
+];
+const HUMAN_YMD = [
+    `(?:#DAY_NAMES#${DELIM})?(${YEAR})${DELIM}(#MONTH_NAMES#)${DELIM}(${DAY_OF_MONTH})(?:\\s*#NUMBER_SUFFIXES#)?(?:${DELIM}(.*))?$`,
+    `(?:#DAY_NAMES#${DELIM})?(${YEAR})${DELIM}(${MONTH})${DELIM}(${DAY_OF_MONTH})(?:${DELIM}(.*))?$`
+];
 
 // Human readable regex for time
-const HUMAN_TZ = `(?:utc|gmt|z|([+-]${HH})(?::?(${mm})))?`;
-const HUMAN_TIME = `^(${H})(?::?(${mm})(?::?(${ss}))?)?(?:\\s*(${A}))?(?:\\s*${HUMAN_TZ})?$`;
+const HUMAN_TZ = `(?:utc|gmt|z|([+-]${HOUR_24_LZ})(?::?(${MINUTE_LZ})))?`;
+const HUMAN_TIME = `^(${HOUR_24})(?::?(${MINUTE_LZ})(?::?(${SECOND_LZ}))?)?(?:\\s*(${MERIDIEM}))?(?:\\s*${HUMAN_TZ})?$`;
 
 type HumanDateCache = null | {
     dateIndexes: Record<string, number>;
@@ -178,15 +149,15 @@ class DateParser {
             switch (dateOrder) {
                 case DateOrder.MDY:
                     dateIndexes = { day: 2, month: 1, year: 3 };
-                    humanRegex = HUMAN_MDY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
+                    humanRegex = HUMAN_MDY;
                     break;
                 case DateOrder.DMY:
                     dateIndexes = { day: 1, month: 2, year: 3 };
-                    humanRegex = HUMAN_DMY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
+                    humanRegex = HUMAN_DMY;
                     break;
                 default:
                     dateIndexes = { day: 3, month: 2, year: 1 };
-                    humanRegex = HUMAN_YMD(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
+                    humanRegex = HUMAN_YMD;
                     break;
             }
 
@@ -228,10 +199,10 @@ class DateParser {
             return null;
         }
 
-        if (month >= 0 && forbiddenParts.has(DatePart.month)) {
+        if(month >= 0 && forbiddenParts.has(DatePart.month)) {
             return null;
         }
-        if (day >= 1 && forbiddenParts.has(DatePart.day)) {
+        if(day >= 1 && forbiddenParts.has(DatePart.day)) {
             return null;
         }
 
