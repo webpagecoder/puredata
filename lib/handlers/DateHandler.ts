@@ -7,8 +7,8 @@ import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
 import { DateType } from '../date/DateType.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 import { Locale } from '../Locale.ts';
-import { DateParser } from '../date/DateParser.ts';
-import { DatePart } from '../date/DatePart.ts';
+import { DateParser, IsoParseOptions } from '../date/DateParser.ts';
+import { DatePart, DatePartPresence } from '../date/DatePart.ts';
 const { pass, fail } = HandlerResult;
 
 export type DateLike = Date | string | number;
@@ -102,25 +102,16 @@ class DateHandler extends Handler {
      * @param options ISO parsing and validation options.
      * @returns
      */
-    static iso(dateString: any, {
-        required = ['YYYY', 'MM', 'DD'],
-        forbidden = [],
-        allowBasic = false,
-    }: any = {}): HandlerResult {
-        const parsedDate = parseFromIso(dateString);
+    static iso(dateString: any, dateParser: DateParser, options: IsoParseOptions): HandlerResult {
+        const parsedDate = dateParser.parseIso(dateString, options);
         if (!parsedDate) {
             return fail(dateString, 'date/iso');
         }
+        // if (!allowBasic && !parsedDate.parts.isExtended) {
+        //     return fail(dateString, 'date/iso');
+        // }
 
-        const { date, parts } = parsedDate;
-        if (!areOptionsCompliant(parts, required, forbidden)) {
-            return fail(dateString, 'date/iso');
-        }
-        if (!allowBasic && !parsedDate.parts.isExtended) {
-            return fail(dateString, 'date/iso');
-        }
-
-        return pass(date);
+        return pass(parsedDate);
     }
 
     /**

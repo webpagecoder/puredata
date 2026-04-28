@@ -1,7 +1,7 @@
 'use strict';
 
-import { DateParser } from '../date/DateParser.ts';
-import { DatePart } from '../date/DatePart.ts';
+import { DateParser, IsoParseOptions } from '../date/DateParser.ts';
+import { DatePart, DatePartIso, DatePartPresence } from '../date/DatePart.ts';
 import { DateType } from '../date/DateType.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Locale } from '../Locale.ts';
@@ -18,6 +18,13 @@ export type DateChainProps = ChainProps<typeof DateHandler> & {
     forbiddenParts: Set<DatePart>;
     optionalParts: Set<DatePart>;
     utcOffset: [number, number];
+    dateParser: DateParser;
+};
+
+export type DateChainIsoOptions = DatePartIso[] & {
+    requiredParts?: DatePart[];
+    forbiddenParts?: DatePart[];
+    dateOrder?: 'MDY' | 'DMY' | 'YMD';
 };
 
 class DateChain extends Chain<DateChainProps> {
@@ -29,9 +36,10 @@ class DateChain extends Chain<DateChainProps> {
         this.props.locale = props.locale;
         this.props.outputType = props.outputType || null;
 
-        this.props.forbiddenParts = new Set(props.forbiddenParts || []);
-        this.props.optionalParts = new Set(props.optionalParts || []);
-        this.props.requiredParts = new Set(props.requiredParts || [DatePart.year, DatePart.month, DatePart.day]);
+        this.props.dateParser = new DateParser(this.props.locale);
+        // this.props.forbiddenParts = new Set(props.forbiddenParts || []);
+        // this.props.optionalParts = new Set(props.optionalParts || []);
+        // this.props.requiredParts = new Set(props.requiredParts || [DatePart.year, DatePart.month, DatePart.day]);
 
         let [hours, minutes] = this.props.utcOffset || [0, 0];
         hours = +hours;
@@ -95,10 +103,10 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
-    human() {
+    human({ requiredParts, forbiddenParts, dateOrder }: { requiredParts?: DatePart[]; forbiddenParts?: DatePart[]; dateOrder?: 'MDY' | 'DMY' | 'YMD' } = {}) {
         this.assertEmptyPipeline('human');
 
-        return this.setProps({ inputType: DateType.HUMAN }).addStep('human', () => {
+        return this.addStep('human', () => {
             return [
                 this.props.locale,
                 {
@@ -121,11 +129,11 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.iso() // Accepts "2023-01-01", "2023-01-01T12:00:00Z", etc.
      */
-    iso(options = {}) {
+    iso(options: IsoParseOptions = {}) {
         this.assertEmptyPipeline('iso');
         return this
             .setProps({ inputType: DateType.ISO })
-            .addStep('iso', [options]);
+            .addStep('iso', [this.props.dateParser,options]);
     }
 
     /**
