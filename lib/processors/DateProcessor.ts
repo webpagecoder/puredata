@@ -20,15 +20,16 @@ class DateProcessor extends ChainProcessor {
     }
 
     override preProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const { inputType, dateParser } = this.props.field.props as DateChainProps;
-        if (inputType === null) {
-            const parsedDate = dateParser.parse(tracker.getValue());
-            if (!parsedDate) {
-                tracker.addError('date/base');
-                return;
-            }
-            tracker.setValue(parsedDate);
+        const { skipPreProcess, dateParser } = this.props.field.props as DateChainProps;
+        if (skipPreProcess) {
+            return;
         }
+        const parsedDate = dateParser.parse(tracker.getValue());
+        if (!parsedDate) {
+            tracker.addError('date/base');
+            return;
+        }
+        tracker.setValue(parsedDate);
     }
 
     override preStepHook(tracker: ValueTracker, state: State = {}): void {

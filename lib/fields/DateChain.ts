@@ -1,6 +1,6 @@
 'use strict';
 
-import { DateParser, IsoParseOptions } from '../date/DateParser.ts';
+import { DateParser, HumanParseOptions, IsoParseOptions } from '../date/DateParser.ts';
 import { DatePart, DatePartIso, DatePartPresence } from '../date/DatePart.ts';
 import { DateType } from '../date/DateType.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
@@ -10,7 +10,8 @@ import { Chain, ChainProps } from './Chain.ts';
 
 export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateOrder: 'MDY' | 'DMY' | 'YMD';
-    inputType: DateType | null;
+    skipPreProcess: boolean;
+
     locale: Locale;
     now: Date;
     outputType: DateType | null;
@@ -21,22 +22,16 @@ export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateParser: DateParser;
 };
 
-export type DateChainIsoOptions = DatePartIso[] & {
-    requiredParts?: DatePart[];
-    forbiddenParts?: DatePart[];
-    dateOrder?: 'MDY' | 'DMY' | 'YMD';
-};
-
 class DateChain extends Chain<DateChainProps> {
 
     constructor(props: Partial<DateChainProps> & Pick<DateChainProps, 'locale'>) {
         super(props);
-        this.props.dateOrder = props.dateOrder || 'MDY';
-        this.props.inputType = props.inputType || null;
-        this.props.locale = props.locale;
-        this.props.outputType = props.outputType || null;
+        // this.props.dateOrder = props.dateOrder || 'MDY';
+        this.props.skipPreProcess = false;
+        // this.props.locale = props.locale;
+        // this.props.outputType = props.outputType || null;
 
-        this.props.dateParser = new DateParser(this.props.locale);
+        this.props.dateParser = new DateParser(props.locale);
         // this.props.forbiddenParts = new Set(props.forbiddenParts || []);
         // this.props.optionalParts = new Set(props.optionalParts || []);
         // this.props.requiredParts = new Set(props.requiredParts || [DatePart.year, DatePart.month, DatePart.day]);
@@ -52,32 +47,13 @@ class DateChain extends Chain<DateChainProps> {
         this.props.now = now;
     }
 
-    assertEmptyPipeline(type: string): void {
+    assertEmptyPipelineAndSkipPreprocess(dateSubType: string): void {
         if (this.props.pipeline.length > 0) {
-            throw new Error(type + '() processor must be the first processor in the chain, if used.');
+            throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
+        this.props.skipPreProcess = true;
     }
 
-    // forbidParts(forbiddenParts: DatePart[]): this {
-    //     return this
-    //         .setProps({ forbiddenParts });
-    // }
-
-    // allowParts(optionalParts: DatePart[]): this {
-    //     return this
-    //         .setProps({ optionalParts });
-    // }
-
-    // requireParts(requiredParts: DatePart[]): this {
-    //     return this
-    //         .setProps({ requiredParts });
-    // }
-
-    year(presence: Presence = Presence.Required): this {
-        return this.setProps({
-            requiredParts: new Set([...this.props.requiredParts, DatePart.year])
-        });
-    }
 
     // Configurators
 
@@ -103,19 +79,10 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
-    human({ requiredParts, forbiddenParts, dateOrder }: { requiredParts?: DatePart[]; forbiddenParts?: DatePart[]; dateOrder?: 'MDY' | 'DMY' | 'YMD' } = {}) {
-        this.assertEmptyPipeline('human');
+    human(options: HumanParseOptions = {}) {
+        this.assertEmptyPipelineAndSkipPreprocess('human');
 
-        return this.addStep('human', () => {
-            return [
-                this.props.locale,
-                {
-                    requiredParts: this.props.requiredParts,
-                    forbiddenParts: this.props.forbiddenParts,
-                    dateOrder: this.props.dateOrder
-                }
-            ];
-        });
+        return this.addStep('human', [this.props.dateParser, options]);
     }
 
     /**
@@ -130,10 +97,8 @@ class DateChain extends Chain<DateChainProps> {
      * date.iso() // Accepts "2023-01-01", "2023-01-01T12:00:00Z", etc.
      */
     iso(options: IsoParseOptions = {}) {
-        this.assertEmptyPipeline('iso');
-        return this
-            .setProps({ inputType: DateType.ISO })
-            .addStep('iso', [this.props.dateParser,options]);
+        this.assertEmptyPipelineAndSkipPreprocess('iso');
+        return this.addStep('iso', [this.props.dateParser, options]);
     }
 
     /**
@@ -146,10 +111,8 @@ class DateChain extends Chain<DateChainProps> {
      * date.isoOrdinal() // Accepts "2023-001", "2023-365", etc.
      */
     isoOrdinal(options = {}) {
-        this.assertEmptyPipeline('isoOrdinal');
-        return this
-            .setProps({ inputType: DateType.ISO_ORDINAL })
-            .addStep('isoOrdinal', [options]);
+        this.assertEmptyPipelineAndSkipPreprocess('isoOrdinal');
+        return this.addStep('isoOrdinal', [this.props.dateParser, options]);
     }
 
     /**
@@ -162,26 +125,22 @@ class DateChain extends Chain<DateChainProps> {
      * date.isoWeek() // Accepts "2023-W01-1", "2023-W52-7", etc.
      */
     isoWeek(options = {}) {
-        this.assertEmptyPipeline('isoWeek');
-        return this
-            .setProps({ inputType: DateType.ISO_WEEK })
-            .addStep('isoWeek', [options]);
+        this.assertEmptyPipelineAndSkipPreprocess('isoWeek');
+        return this.addStep('isoWeek', [this.props.dateParser, options]);
     }
 
     /**
      * Validates and parses timestamp formats.
      * Must be the first processor in the chain if used.
-     * @param {boolean} [jsType=true] - Whether to expect JavaScript timestamps (milliseconds)
+     * @param {boolean} [isMilliseconds] - Whether to expect JavaScript timestamps (milliseconds)
      * @returns {DateChain} Returns the chain for method chaining
      * @example
      * date.timestamp() // Accepts JavaScript timestamps in milliseconds
      * date.timestamp(false) // Accepts Unix timestamps in seconds
      */
-    timestamp(jsType = true) {
-        this.assertEmptyPipeline('timestamp');
-        return this
-            .setProps({ inputType: DateType.TIMESTAMP })
-            .addStep('timestamp', [jsType]);
+    timestamp(isMilliseconds: boolean) {
+        this.assertEmptyPipelineAndSkipPreprocess('timestamp');
+        return this.addStep('timestamp', [isMilliseconds]);
     }
 
     /**

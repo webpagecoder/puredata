@@ -7,7 +7,7 @@ import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
 import { DateType } from '../date/DateType.ts';
 import { RegexCache } from '../cache/RegexCache.ts';
 import { Locale } from '../Locale.ts';
-import { DateParser, IsoParseOptions } from '../date/DateParser.ts';
+import { DateParser, HumanParseOptions, IsoParseOptions } from '../date/DateParser.ts';
 import { DatePart, DatePartPresence } from '../date/DatePart.ts';
 const { pass, fail } = HandlerResult;
 
@@ -79,19 +79,12 @@ class DateHandler extends Handler {
      * @param options Parsing and token validation options.
      * @returns
      */
-    static human(dateString: unknown, locale: Locale, {
-        requiredParts = new Set<DatePart>(),
-        forbiddenParts = new Set<DatePart>(),
-    }: any = {}): HandlerResult {
+    static human(dateString: unknown, dateParser: DateParser, options: HumanParseOptions = {}): HandlerResult {
 
-        const dateParser = new DateParser(locale);
-        const parsedDate = dateParser.parseHuman(dateString, requiredParts, forbiddenParts);
+        const parsedDate = dateParser.parseHuman(dateString, options);
 
         if (!parsedDate) {
-            return fail(dateString, 'date/human', {
-                requiredParts,
-                forbiddenParts
-            });
+            return fail(dateString, 'date/human', { options });
         }
         return pass(parsedDate);
     }

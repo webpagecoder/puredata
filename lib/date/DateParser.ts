@@ -88,55 +88,80 @@ const HUMAN_YMD = (allMonthNames: string, allDayNames: string, numberSuffixes: s
 };
 
 // Human readable regex for time
-const HUMAN_TZ = `(?:utc|gmt|z|([+-]${HH})(?::?(${mm})))?`;
+const HUMAN_TZ = `(?:(utc|gmt|z)|([+-]${HH})(?::?(${mm})))?`;
 const HUMAN_TIME = `^(${H})(?::?(${mm})(?::?(${ss}))?)?(?:\\s*(${a}))?(?:\\s*${HUMAN_TZ})?$`;
 
 type HumanDateCache = null | {
     dateIndexes: Record<string, number>;
     humanRegex: string[];
-    monthNames: string[];
+    shortMonthNames: string[],
+    longMonthNames: string[],
+    shortDayNames: string[],
+    longDayNames: string[],
+    numberSuffixes: string[];
+    allMonthNamesLower: string[];
+    allDayNamesLower: string[];
 }
 
+export const HumanPrecision = {
+    Date: 'date',
+    Time: 'time',
+    Timezone: 'timezone',
+};
 export const IsoPrecision = {
+    Date: 'date',
     Year: 'year',
     Month: 'month',
     Day: 'day',
+
+    Time: 'time',
     Hour: 'hour',
     Minute: 'minute',
     Second: 'second',
     Millisecond: 'millisecond',
-    Timezone: 'timezone'
+
+    Timezone: 'timezone',
 };
-export const IsoWeekPrecision = {
-    Week: 'week',
-    Weekday: 'weekday',
-    Hour: 'hour',
-    Minute: 'minute',
-    Second: 'second',
-    Millisecond: 'millisecond',
-    Timezone: 'timezone'
-}
 export const IsoOrdinalPrecision = {
+    Date: 'date',
     DayOfYear: 'dayOfYear',
+
+    Time: 'time',
     Hour: 'hour',
     Minute: 'minute',
     Second: 'second',
     Millisecond: 'millisecond',
-    Timezone: 'timezone'
+
+    Timezone: 'timezone',
+}
+export const IsoWeekPrecision = {
+    Date: 'date',
+    Week: 'week',
+    DayOfWeek: 'dayOfWeek',
+
+    Time: 'time',
+    Hour: 'hour',
+    Minute: 'minute',
+    Second: 'second',
+    Millisecond: 'millisecond',
+
+    Timezone: 'timezone',
 }
 
+export type HumanPrecision = typeof HumanPrecision[keyof typeof HumanPrecision];
 export type IsoPrecision = typeof IsoPrecision[keyof typeof IsoPrecision];
 export type IsoWeekPrecision = typeof IsoWeekPrecision[keyof typeof IsoWeekPrecision];
 export type IsoOrdinalPrecision = typeof IsoOrdinalPrecision[keyof typeof IsoOrdinalPrecision];
 
+export type HumanParseOptions = {
+    dateOrder?: 'MDY' | 'DMY' | 'YMD';
+    minPrecision?: HumanPrecision;
+    maxPrecision?: HumanPrecision;
+    fixSpacing?: boolean;
+};
 export type IsoParseOptions = {
     minPrecision?: IsoPrecision;
     maxPrecision?: IsoPrecision;
-    expanded?: Presence
-};
-export type IsoWeekParseOptions = {
-    minPrecision?: IsoWeekPrecision;
-    maxPrecision?: IsoWeekPrecision;
     expanded?: Presence
 };
 export type IsoOrdinalParseOptions = {
@@ -144,7 +169,11 @@ export type IsoOrdinalParseOptions = {
     maxPrecision?: IsoOrdinalPrecision;
     expanded?: Presence
 };
-
+export type IsoWeekParseOptions = {
+    minPrecision?: IsoWeekPrecision;
+    maxPrecision?: IsoWeekPrecision;
+    expanded?: Presence
+};
 
 class DateParser {
 
@@ -158,7 +187,6 @@ class DateParser {
 
     parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
         const anyType = parseTypes.length === 0;
-        const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
         if (anyType || parseTypes.indexOf(DateType.OBJECT) !== -1) {
             if (value instanceof Date && !isNaN(value.getTime())) {
@@ -198,7 +226,63 @@ class DateParser {
         return null;
     }
 
-    parseHuman(dateString: unknown, requiredParts: Set<DatePart> = new Set(), forbiddenParts: Set<DatePart> = new Set()): MetaDate | null {
+    _loadCache() {
+        if (this._cache) {
+            return;
+        }
+
+        const locale = this._locale;
+        const longMonthNames = (locale.translate('calendar/months/full') || []) as string[];
+        const shortMonthNames = (locale.translate('calendar/months/short') || []) as string[];
+        const numberSuffixes = (locale.translate('calendar/numberSuffixes') || []) as string[];
+        const longDayNames = (locale.translate('calendar/dayNames/full') || []) as string[];
+        const shortDayNames = (locale.translate('calendar/dayNames/short') || []) as string[];
+        const dateOrder = locale.translate('calendar/dateOrder') as DateOrder;
+
+        const allMonthNamesLower = longMonthNames.concat(shortMonthNames).map(s => s.toLowerCase());
+        const allDayNamesLower = longDayNames.concat(shortDayNames).map(s => s.toLowerCase());
+
+        const dayNamesRegex = '(?:' + allDayNamesLower.join('|') + ')';
+        const monthNamesRegex = '(?:' + allMonthNamesLower.join('|') + ')';
+        const numberSuffixesRegex = '(?:' + numberSuffixes.map(s => s.toLowerCase()).join('|') + ')';
+
+        let humanRegex: string[], dateIndexes: Record<string, number>;
+        switch (dateOrder) {
+            case DateOrder.MDY:
+                dateIndexes = { day: 2, month: 1, year: 3 };
+                humanRegex = HUMAN_MDY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
+                break;
+            case DateOrder.DMY:
+                dateIndexes = { day: 1, month: 2, year: 3 };
+                humanRegex = HUMAN_DMY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
+                break;
+            default:
+                dateIndexes = { day: 3, month: 2, year: 1 };
+                humanRegex = HUMAN_YMD(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
+                break;
+        }
+
+        this._cache = {
+            dateIndexes,
+            humanRegex: [
+                humanRegex[0]
+                    .replace('#DAY_NAMES#', dayNamesRegex)
+                    .replace('#MONTH_NAMES#', monthNamesRegex)
+                    .replace('#NUMBER_SUFFIXES#', numberSuffixesRegex),
+                humanRegex[1]
+                    .replace('#DAY_NAMES#', dayNamesRegex)
+            ],
+            shortMonthNames,
+            longMonthNames,
+            shortDayNames,
+            longDayNames,
+            allMonthNamesLower,
+            allDayNamesLower,
+            numberSuffixes,
+        };
+    }
+
+    parseHuman(dateString: unknown, options: HumanParseOptions = {}): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -207,52 +291,8 @@ class DateParser {
             return null;
         }
 
-        const locale = this._locale;
-
-        if (!this._cache) {
-            const monthNames = (locale.translate('calendar/months/full') || [])
-                .concat(locale.translate('calendar/months/short') || []);
-            const numberSuffixes = locale.translate('calendar/numberSuffixes') || [];
-            const dayNames = (locale.translate('calendar/dayNames/full') || [])
-                .concat(locale.translate('calendar/dayNames/short') || []);
-            const dateOrder = locale.translate('calendar/dateOrder') as DateOrder;
-
-            const dayNamesRegex = '(?:' + dayNames.map(s => s.toLowerCase()).join('|') + ')';
-            const monthNamesRegex = '(?:' + monthNames.map(s => s.toLowerCase()).join('|') + ')';
-            const numberSuffixesRegex = '(?:' + numberSuffixes.map(s => s.toLowerCase()).join('|') + ')';
-
-            let humanRegex: string[], dateIndexes: Record<string, number>;
-            switch (dateOrder) {
-                case DateOrder.MDY:
-                    dateIndexes = { day: 2, month: 1, year: 3 };
-                    humanRegex = HUMAN_MDY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
-                    break;
-                case DateOrder.DMY:
-                    dateIndexes = { day: 1, month: 2, year: 3 };
-                    humanRegex = HUMAN_DMY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
-                    break;
-                default:
-                    dateIndexes = { day: 3, month: 2, year: 1 };
-                    humanRegex = HUMAN_YMD(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
-                    break;
-            }
-
-            this._cache = {
-                dateIndexes,
-                humanRegex: [
-                    humanRegex[0]
-                        .replace('#DAY_NAMES#', dayNamesRegex)
-                        .replace('#MONTH_NAMES#', monthNamesRegex)
-                        .replace('#NUMBER_SUFFIXES#', numberSuffixesRegex),
-                    humanRegex[1]
-                        .replace('#DAY_NAMES#', dayNamesRegex)
-                ],
-                monthNames
-            };
-
-        }
-
-        const { dateIndexes, humanRegex, monthNames } = this._cache;
+        this._loadCache();
+        const { dateIndexes, humanRegex, allMonthNamesLower } = this._cache!;
 
         let matchResult = RegexCache(humanRegex[0]).exec(normalizedDateString);
         let isNumMatch = false;
@@ -268,26 +308,24 @@ class DateParser {
         const year = Number(matchResult[dateIndexes.year]);
         const month = isNumMatch
             ? Number(matchResult[dateIndexes.month])
-            : monthNames.indexOf(matchResult[dateIndexes.month].toLowerCase()) % 12 + 1;
+            : allMonthNamesLower.indexOf(matchResult[dateIndexes.month].toLowerCase()) % 12 + 1;
         const day = Number(matchResult[dateIndexes.day]);
 
         if (!DateHelpers.isValidDate(year, month, day)) {
             return null;
         }
 
-        if (month >= 0 && forbiddenParts.has(DatePart.month)) {
-            return null;
-        }
-        if (day >= 1 && forbiddenParts.has(DatePart.day)) {
-            return null;
-        }
-
         let hour = null, minute = null, second = null, meridiem = null,
-            offsetHour = null, offsetMinute = null;
+            timezone = null, offsetHour = null, offsetMinute = null;
 
         // Check time portion (if it exists)
         const timeString = matchResult[4];
         if (timeString) {
+
+            if (options.maxPrecision === HumanPrecision.Date) {
+                return null;
+            }
+
             matchResult = RegexCache(HUMAN_TIME).exec(timeString);
             if (!matchResult) {
                 return null;
@@ -295,8 +333,15 @@ class DateParser {
 
             ([
                 , hour, minute = null, second = null, meridiem = null,
-                offsetHour = null, offsetMinute = null
+                timezone = null, offsetHour = null, offsetMinute = null
             ] = matchResult);
+
+            if (options.minPrecision === HumanPrecision.Timezone && !timezone && !offsetHour) {
+                return null;
+            }
+            if (options.maxPrecision === HumanPrecision.Time && (timezone || offsetHour)) {
+                return null;
+            }
 
             if (!meridiem) {
                 if (hour.length === 1) {
@@ -316,8 +361,16 @@ class DateParser {
                 )
                 : Number(hour);
         }
+        else if (options.minPrecision === HumanPrecision.Time) {
+            // if time is required but time portion doesn't exist, return null
+            return null;
+        }
 
-        return new MetaDate(dateString, {
+        if(options.fixSpacing) {
+            dateString = dateString.replace(/([/. -,:])\1+/g, '$1');
+        }
+        
+        return new MetaDate(dateString as string, {
             year,
             month,
             day,
@@ -354,14 +407,25 @@ class DateParser {
             return null;
         }
 
-        if (options.expanded === Presence.Required && !monthDelim) {
+        // Check delims
+        const delimSize = monthDelim.length;
+        if (options.expanded === Presence.Required && !delimSize) {
             return null;
         }
-        if (options.expanded === Presence.Forbidden && monthDelim) {
+        if (options.expanded === Presence.Forbidden && delimSize) {
+            return null;
+        }
+        if (
+            day && delimSize !== dayDelim.length ||
+            minute && delimSize !== minuteDelim.length ||
+            second && delimSize !== secondDelim.length ||
+            offsetMinute && delimSize !== offsetMinuteDelim.length
+        ) {
             return null;
         }
 
         switch (options.minPrecision) {
+            case IsoPrecision.Date:
             case IsoPrecision.Year:
                 if (!year) {
                     return null;
@@ -377,6 +441,7 @@ class DateParser {
                     return null;
                 }
                 break;
+            case IsoPrecision.Time:
             case IsoPrecision.Hour:
                 if (!hour) {
                     return null;
@@ -415,6 +480,7 @@ class DateParser {
                     return null;
                 }
                 break;
+            case IsoPrecision.Date:
             case IsoPrecision.Day:
                 if (hour) {
                     return null;
@@ -435,22 +501,12 @@ class DateParser {
                     return null;
                 }
                 break;
+            case IsoPrecision.Time:
             case IsoPrecision.Millisecond:
                 if (zulu || offsetHour) {
                     return null;
                 }
                 break;
-        }
-
-        // check separators consistency
-        const delimSize = monthDelim.length;
-        if (
-            day && delimSize !== dayDelim.length ||
-            minute && delimSize !== minuteDelim.length ||
-            second && delimSize !== secondDelim.length ||
-            offsetMinute && delimSize !== offsetMinuteDelim.length
-        ) {
-            return null;
         }
 
         const yearNum = Number(year);
@@ -494,15 +550,14 @@ class DateParser {
             zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
         ] = matchResult;
 
-        if (options.expanded === Presence.Required && !dayDelim) {
-            return null;
-        }
-        if (options.expanded === Presence.Forbidden && dayDelim) {
-            return null;
-        }
-
-        // check separators consistency
+        // Check delims
         const delimSize = dayDelim.length;
+        if (options.expanded === Presence.Required && !delimSize) {
+            return null;
+        }
+        if (options.expanded === Presence.Forbidden && delimSize) {
+            return null;
+        }
         if (
             minute && delimSize !== minuteDelim.length ||
             second && delimSize !== secondDelim.length ||
@@ -511,12 +566,14 @@ class DateParser {
             return null;
         }
 
-        switch(options.minPrecision) {
+        switch (options.minPrecision) {
+            case IsoOrdinalPrecision.Date:
             case IsoOrdinalPrecision.DayOfYear:
                 if (!dayOfYear) {
                     return null;
                 }
                 break;
+            case IsoOrdinalPrecision.Time:
             case IsoOrdinalPrecision.Hour:
                 if (!hour) {
                     return null;
@@ -544,27 +601,29 @@ class DateParser {
                 break;
         }
 
-        switch(options.maxPrecision) {
+        switch (options.maxPrecision) {
+            case IsoOrdinalPrecision.Date:
             case IsoOrdinalPrecision.DayOfYear:
                 if (hour) {
                     return null;
                 }
                 break;
             case IsoOrdinalPrecision.Hour:
-                if (minute) {   
+                if (minute) {
                     return null;
                 }
                 break;
             case IsoOrdinalPrecision.Minute:
                 if (second) {
                     return null;
-                }   
+                }
                 break;
             case IsoOrdinalPrecision.Second:
                 if (millisecond) {
                     return null;
                 }
                 break;
+            case IsoOrdinalPrecision.Time:
             case IsoOrdinalPrecision.Millisecond:
                 if (zulu || offsetHour) {
                     return null;
@@ -592,7 +651,7 @@ class DateParser {
         });
     }
 
-    parseIsoWeek(dateString: unknown): MetaDate | null {
+    parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -607,15 +666,21 @@ class DateParser {
         }
 
         const [
-            , year, weekDelim = '', week, dayDelim = '', day = null,                                   // date
+            , year, weekDelim = '', week, dayDelim = '', dayOfWeek = null,                                   // date
             hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
             zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
         ] = matchResult;
 
-        // check separators consistency
+        // check delims
         const delimSize = weekDelim.length;
+        if (options.expanded === Presence.Required && !delimSize) {
+            return null;
+        }
+        if (options.expanded === Presence.Forbidden && delimSize) {
+            return null;
+        }
         if (
-            day && delimSize !== dayDelim.length ||
+            dayOfWeek && delimSize !== dayDelim.length ||
             minute && delimSize !== minuteDelim.length ||
             second && delimSize !== secondDelim.length ||
             offsetMinute && delimSize !== offsetMinuteDelim.length
@@ -623,9 +688,85 @@ class DateParser {
             return null;
         }
 
+
+        switch (options.minPrecision) {
+            case IsoWeekPrecision.Date:
+            case IsoWeekPrecision.Week:
+                if (!week) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.DayOfWeek:
+                if (!dayOfWeek) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Time:
+            case IsoWeekPrecision.Hour:
+                if (!hour) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Minute:
+                if (!minute) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Second:
+                if (!second) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Millisecond:
+                if (!millisecond) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Timezone:
+                if (!zulu && !offsetHour) {
+                    return null;
+                }
+                break;
+        }
+
+        switch (options.maxPrecision) {
+            case IsoWeekPrecision.Week:
+                if (dayOfWeek) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Date:
+            case IsoWeekPrecision.DayOfWeek:
+                if (hour) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Hour:
+                if (minute) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Minute:
+                if (second) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Second:
+                if (millisecond) {
+                    return null;
+                }
+                break;
+            case IsoWeekPrecision.Time:
+            case IsoWeekPrecision.Millisecond:
+                if (zulu || offsetHour) {
+                    return null;
+                }
+                break;
+        }
+
         const yearNum = Number(year);
         const weekNum = Number(week);
-        const dayNum = Number(day);
+        const dayNum = Number(dayOfWeek);
 
         if (weekNum === 53 && !DateHelpers.has53IsoWeeks(yearNum)) {
             return null;
@@ -646,7 +787,7 @@ class DateParser {
         });
     }
 
-    parseTimestamp(value: unknown): MetaDate | null {
+    parseTimestamp(value: unknown, isMilliseconds: boolean = true): MetaDate | null {
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
             return null;
@@ -655,7 +796,7 @@ class DateParser {
         if (!Number.isInteger(valueNum)) {
             return null;
         }
-        const date = new Date(valueNum);
+        const date = new Date(isMilliseconds ? valueNum : valueNum * 1000);
         if (isNaN(date.getTime())) {
             return null;
         }
