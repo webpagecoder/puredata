@@ -1,6 +1,6 @@
 'use strict';
 
-import { DateParser, HumanParseOptions, IsoParseOptions } from '../date/DateParser.ts';
+import { DateParser, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision } from '../date/DateParser.ts';
 import { DatePart, DatePartIso, DatePartPresence } from '../date/DatePart.ts';
 import { DateType } from '../date/DateType.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
@@ -13,6 +13,7 @@ export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateParser: DateParser;
     now: Date;
     outputType: DateType | null;
+    outputPrecision: HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision | null;
     skipPreProcess: boolean;
     utcOffset: [number, number];
 };
@@ -146,7 +147,7 @@ class DateChain extends Chain<DateChainProps> {
     // Exporters
 
     toDateObj() {
-        return this.setProps({ outputType: DateType.OBJECT });
+        return this.setProps({ outputType: 'object' });
     }
     
     /**
@@ -155,8 +156,11 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
-    toIso() {
-        return this.setProps({ outputType: DateType.ISO });
+    toIso(precision: IsoPrecision = 'timezone') {
+        return this.setProps({ 
+            outputType: 'iso',
+            outputPrecision: precision
+        });
     }
 
     /**
@@ -166,7 +170,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
     toIsoOrdinal() {
-        return this.setProps({ outputType: DateType.ISO_ORDINAL });
+        return this.setProps({ outputType: 'isoOrdinal' });
     }
 
     /**
@@ -176,7 +180,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
     toIsoWeek() {
-        return this.setProps({ outputType: DateType.ISO_WEEK });
+        return this.setProps({ outputType: 'isoWeek' });
     }
 
     /**
@@ -186,7 +190,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
     toTimestamp() {
-        return this.setProps({ outputType: DateType.TIMESTAMP });
+        return this.setProps({ outputType: 'timestamp' });
     }
 }
 

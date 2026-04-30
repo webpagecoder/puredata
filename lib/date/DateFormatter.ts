@@ -1,19 +1,4 @@
 'use strict';
-//todo: date and string add auto trim
-import { RegexCache } from "../cache/RegexCache.ts";
-import { Locale } from "../Locale.ts";
-import { Presence } from "../Presence.ts";
-import { Utils } from "../utils/Utils.ts";
-import { DateHelpers } from "./DateHelpers.ts";
-import { DatePart, DatePartPresence } from "./DatePart.ts";
-import { DateType } from "./DateType.ts";
-import { MetaDate } from "./MetaDate.ts";
-
-enum DateOrder {
-    MDY = 'MDY',
-    DMY = 'DMY',
-    YMD = 'YMD'
-};
 
 // Date building blocks/keys
 const YY = '\\d{2}';
@@ -55,94 +40,7 @@ const Z = `[+-]${HH}${mm}`;
 const ZZ = `[+-]${HH}:${mm}`;
 const z = 'Z';
 
-//todo: support UTC and GMT
-//todo: rfc2822
-
-// ISO time + TZ
-const ISO_TZ = `(${Z}|${ZZ}|${z})?`;
-const ISO_TIME_TZ = `(${HH})(:?)(?:(${mm})(?:(:?)(${ss})(?:\\.(${SSS}))?)?)?(?:${ISO_TZ})?`;
-
-// ISO date + time + TZ
-const ISO = `^(${YYYY})(?:(-?)(${MM})(?:(-?)(${DD})(?:T${ISO_TIME_TZ})?)?)?$`;
-const ISO_ORDINAL = `^(${YYYY})(-?)(${DDDD})(?:T${ISO_TIME_TZ})?$`;
-const ISO_WEEK = `^(${YYYY})(-?)W(${WW})(?:(-?)(${E})(?:T${ISO_TIME_TZ})?)?$`;
-
-// Human readable regex for dates
-const DELIM = '[/. -,:]+';
-const HUMAN_MDY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}${DELIM})?(${allMonthNames})${DELIM}(${D_OR_DD})(?:\\s*${numberSuffixes})?${DELIM}(${YYYY})(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${M_OR_MM})${DELIM}(${D_OR_DD})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`
-    ];
-};
-const HUMAN_DMY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}${DELIM})?(${D_OR_DD})(?:\\s*${numberSuffixes})?${DELIM}(${allMonthNames})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${D_OR_DD})${DELIM}(${M_OR_MM})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`
-    ];
-};
-const HUMAN_YMD = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}${DELIM})?(${YYYY})${DELIM}(?:(${allMonthNames}))${DELIM}(${D_OR_DD})(?:\\s*${numberSuffixes})?(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${YYYY})${DELIM}(${M_OR_MM})${DELIM}(${D_OR_DD})(?:${DELIM}(.*))?$`
-    ];
-};
-
-// Human readable regex for time
-const HUMAN_TZ = `(?:(utc|gmt|z)|([+-]${HH})(?::?(${mm})))?`;
-const HUMAN_TIME = `^(${H})(?::?(${mm})(?::?(${ss}))?)?(?:\\s*(${a}))?(?:\\s*${HUMAN_TZ})?$`;
-
-
-
-
-
-
-// Cache for human date parsing regexes and locale-specific date components
-type HumanDateCache = null | {
-    dateIndexes: Record<string, number>;
-    humanRegex: string[];
-    shortMonthNames: string[],
-    longMonthNames: string[],
-    shortDayNames: string[],
-    longDayNames: string[],
-    numberSuffixes: string[];
-    allMonthNamesLower: string[];
-    allDayNamesLower: string[];
-}
-
-export const HumanPrecision = ['date', 'time', 'timezone'] as const;
-export const IsoPrecision = ['date', 'year', 'month', 'day', 'time', 'hour', 'minute', 'second', 'millisecond', 'timezone'] as const;
-export const IsoOrdinalPrecision = ['date', 'dayOfYear', 'time', 'hour', 'minute', 'second', 'millisecond', 'timezone'] as const;
-export const IsoWeekPrecision = ['date', 'week', 'dayOfWeek', 'time', 'hour', 'minute', 'second', 'millisecond', 'timezone'] as const;
-
-export type HumanPrecision = (typeof HumanPrecision)[number];
-export type IsoPrecision = (typeof IsoPrecision)[number];
-export type IsoWeekPrecision = (typeof IsoWeekPrecision)[number];
-export type IsoOrdinalPrecision = (typeof IsoOrdinalPrecision)[number];
-
-export type HumanParseOptions = {
-    dateOrder?: 'MDY' | 'DMY' | 'YMD';
-    minPrecision?: HumanPrecision;
-    maxPrecision?: HumanPrecision;
-    cleanInput?: boolean;
-};
-export type IsoParseOptions = {
-    minPrecision?: IsoPrecision;
-    maxPrecision?: IsoPrecision;
-    expanded?: Presence
-};
-export type IsoOrdinalParseOptions = {
-    minPrecision?: IsoOrdinalPrecision;
-    maxPrecision?: IsoOrdinalPrecision;
-    expanded?: Presence
-};
-export type IsoWeekParseOptions = {
-    minPrecision?: IsoWeekPrecision;
-    maxPrecision?: IsoWeekPrecision;
-    expanded?: Presence
-};
-
-class DateParser {
+class DateFormatter {
 
     private _locale: Locale;
     private _cache: HumanDateCache;
@@ -159,7 +57,7 @@ class DateParser {
 
         if (anyType || parseTypes.indexOf('object') !== -1) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new MetaDate({ date: value });
+                return new MetaDate(value);
             }
         }
         if (anyType || parseTypes.indexOf('timestamp') !== -1) {
@@ -338,18 +236,20 @@ class DateParser {
             dateString = dateString.replace(/([/. -,:])\1+/g, '$1');
         }
 
+        const offsetHourNum = Number(offsetHour);
+        const offsetMinuteNum = Number(offsetMinute);
         return new MetaDate({
             raw: dateString as string,
-            dateParts: [
-                year,
-                month,
-                day,
-                Number(hour),
-                Number(minute),
+            date: new Date(Date.UTC(
+                year, 
+                month - 1, 
+                day, 
+                Number(hour) + offsetHourNum, 
+                Number(minute) + offsetMinuteNum, 
                 Number(second)
-            ],
-            offsetHour: Number(offsetHour),
-            offsetMinute: Number(offsetMinute)
+            )),
+            offsetHour: offsetHourNum,
+            offsetMinute: offsetMinuteNum
         });
     }
 
@@ -488,19 +388,21 @@ class DateParser {
             return null;
         }
 
+        const offsetHourNum = Number(offsetHour);
+        const offsetMinuteNum = Number(offsetMinute);
         return new MetaDate({
             raw: dateString,
-            dateParts: [
+            date: new Date(Date.UTC(
                 yearNum,
-                monthNum,
+                monthNum - 1,
                 dayNum,
-                Number(hour),
-                Number(minute),
+                Number(hour) + offsetHourNum,
+                Number(minute) + offsetMinuteNum,
                 Number(second),
                 Number(millisecond)
-            ],
-            offsetHour: Number(offsetHour),
-            offsetMinute: Number(offsetMinute)
+            )),
+            offsetHour: offsetHourNum,
+            offsetMinute: offsetMinuteNum
         });
     }
 
@@ -607,26 +509,20 @@ class DateParser {
         }
 
         const yearNum = Number(year);
-        const dayOfYearNum = Number(dayOfYear);
+        const dayNum = Number(dayOfYear);
 
-        if (dayOfYearNum === 366 && !DateHelpers.isLeapYear(yearNum)) {
+        if (dayNum === 366 && !DateHelpers.isLeapYear(yearNum)) {
             return null;
         }
 
-        const offsetHourNum = Number(offsetHour);
-        const offsetMinuteNum = Number(offsetMinute);
-
-        return new MetaDate({
-            raw: dateString,
-            dateParts: [
-                yearNum,
-                0,
-                dayOfYearNum,
-                Number(hour),
-                Number(minute),
-                Number(second),
-                Number(millisecond)
-            ],
+        return new MetaDate(dateString, {
+            year: yearNum,
+            month: 0,
+            day: dayNum,
+            hour: Number(hour),
+            minute: Number(minute),
+            second: Number(second),
+            millisecond: Number(millisecond),
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute)
         });
@@ -755,18 +651,17 @@ class DateParser {
 
         const date = DateHelpers.isoWeekToDate(yearNum, weekNum, dayNum);
 
-        const offsetHourNum = Number(offsetHour);
-        const offsetMinuteNum = Number(offsetMinute);
-        date.setUTCHours(date.getUTCHours() + offsetHourNum);
-        date.setUTCMinutes(date.getUTCMinutes() + offsetMinuteNum);
-
-        return new MetaDate({
-            raw: dateString,
-            date,
+        return new MetaDate(dateString, {
+            year: date.getUTCFullYear(),
+            month: date.getUTCMonth(),
+            day: date.getUTCDate(),
+            hour: Number(hour),
+            minute: Number(minute),
+            second: Number(second),
+            millisecond: Number(millisecond),
             offsetHour: Number(offsetHour),
             offsetMinute: Number(offsetMinute)
         });
-
     }
 
     parseTimestamp(value: unknown, isMilliseconds: boolean = true): MetaDate | null {
@@ -783,40 +678,24 @@ class DateParser {
             return null;
         }
 
-        return new MetaDate({
-            date
-        });
+        return new MetaDate(date);
     }
 
     format(metaDate: MetaDate, formatString: string): string {
-        const {
-            raw,
-            offsetHour,
-            offsetMinute,
-            dateWithOffsetRemoved
-        } = metaDate;
+        const date = metaDate.date;
+        const offsetHour = metaDate.offsetHour || 0;
+        const offsetMinute = metaDate.offsetMinute || 0;
 
-        const yearNum = dateWithOffsetRemoved.getUTCFullYear();
-        const monthNum = dateWithOffsetRemoved.getUTCMonth() + 1;
-        const dayNum = dateWithOffsetRemoved.getUTCDate();
-        const hourNum = dateWithOffsetRemoved.getUTCHours();
-        const minuteNum = dateWithOffsetRemoved.getUTCMinutes();
-        const secondNum = dateWithOffsetRemoved.getUTCSeconds();
-        const millisecondNum = dateWithOffsetRemoved.getUTCMilliseconds();
-
-        return formatString
-            .replace('YYYY', Utils.padLeft(yearNum.toString(), 4, '0'))
-            .replace('MM', Utils.padLeft(monthNum.toString(), 2, '0'))
-            .replace('DD', Utils.padLeft(dayNum.toString(), 2, '0'))
-            .replace('HH', Utils.padLeft(hourNum.toString(), 2, '0'))
-            .replace('mm', Utils.padLeft(minuteNum.toString(), 2, '0'))
-            .replace('ss', Utils.padLeft(secondNum.toString(), 2, '0'))
-            .replace('SSS', Utils.padLeft(millisecondNum.toString(), 3, '0'))
-            .replace('Z', Utils.padLeft(offsetHour, 2, '0') + Utils.padLeft(offsetMinute, 2, '0'))
-            .replace('ZZ', Utils.padLeft(offsetHour, 2, '0') + ':' + Utils.padLeft(offsetMinute, 2, '0'));
+        const year = date.getUTCFullYear();
+        const month = date.getUTCMonth() + 1;
+        const day = date.getUTCDate();
+        const hour = date.getUTCHours();
+        const minute = date.getUTCMinutes();
+        const second = date.getUTCSeconds();
+        const millisecond = date.getUTCMilliseconds();
     }
 
 
 }
 
-export { DateParser };
+export { DateFormatter };

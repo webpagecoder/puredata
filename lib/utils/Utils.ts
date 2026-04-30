@@ -357,20 +357,22 @@ class Utils {
         return (mod - (sum % mod)) % mod;
     }
 
-    static padLeft(str: string, length: number, char: string = ' '): string {
+    static padLeft(str: unknown, length: number, char: string = ' '): string {
         let padding = '';
-        if (str.length < length) {
-            padding = new Array(length - str.length + 1).join(char);
+        const strValue = String(str);
+        if (strValue.length < length) {
+            padding = new Array(length - strValue.length + 1).join(char);
         }
-        return padding + str;
+        return padding + strValue;
     }
 
-    static padRight(str: string, length: number, char: string = ' '): string {
+    static padRight(str: unknown, length: number, char: string = ' '): string {
         let padding = '';
-        if (str.length < length) {
-            padding = new Array(length - str.length + 1).join(char);
+        const strValue = String(str);
+        if (strValue.length < length) {
+            padding = new Array(length - strValue.length + 1).join(char);
         }
-        return str + padding;
+        return strValue + padding;
     }
 
     static regexMatch(str: string, regex: RegExp | RegExp[] | string | string[], options: Record<string, unknown> = {}): RegExpExecArray | null {

@@ -1,11 +1,4 @@
 'use strict';
 
-export enum DateType {
-    HUMAN = 'HUMAN',
-    ISO = 'ISO',
-    ISO_WEEK = 'ISO_WEEK',
-    ISO_ORDINAL = 'ISO_ORDINAL',
-    OBJECT = 'OBJECT',
-    TIMESTAMP = 'TIMESTAMP',
-};
-
+export const DateType = ['human', 'iso', 'isoWeek', 'isoOrdinal', 'object', 'timestamp'] as const;
+export type DateType = typeof DateType[number];

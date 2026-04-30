@@ -84,36 +84,36 @@ class DateParser {
         const anyType = parseTypes.length === 0;
         const shouldParse = (dateType: DateType): boolean => anyType || new Set(parseTypes).has(dateType);
 
-        if (anyType || parseTypes.indexOf(DateType.OBJECT) !== -1) {
+        if (anyType || parseTypes.indexOf('object') !== -1) {
             if (value instanceof Date && !isNaN(value.getTime())) {
                 return new MetaDate(value);
             }
         }
-        if (anyType || parseTypes.indexOf(DateType.TIMESTAMP) !== -1) {
+        if (anyType || parseTypes.indexOf('timestamp') !== -1) {
             const normalizedDate = this.parseTimestamp(value);
             if (normalizedDate) {
                 return normalizedDate;
             }
         }
-        if (anyType || parseTypes.indexOf(DateType.ISO) !== -1) {
+        if (anyType || parseTypes.indexOf('iso') !== -1) {
             const normalizedDate = this.parseIso(value);
             if (normalizedDate) {
                 return normalizedDate;
             }
         }
-        if (anyType || parseTypes.indexOf(DateType.HUMAN) !== -1) {
+        if (anyType || parseTypes.indexOf('human') !== -1) {
             const normalizedDate = this.parseHuman(value);
             if (normalizedDate) {
                 return normalizedDate;
             }
         }
-        if (anyType || parseTypes.indexOf(DateType.ISO_WEEK) !== -1) {
+        if (anyType || parseTypes.indexOf('isoWeek') !== -1) {
             const normalizedDate = this.parseIsoWeek(value);
             if (normalizedDate) {
                 return normalizedDate;
             }
         }
-        if (anyType || parseTypes.indexOf(DateType.ISO_ORDINAL) !== -1) {
+        if (anyType || parseTypes.indexOf('isoOrdinal') !== -1) {
             const normalizedDate = this.parseIsoOrdinal(value);
             if (normalizedDate) {
                 return normalizedDate;

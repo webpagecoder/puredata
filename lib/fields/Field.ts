@@ -33,7 +33,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
             defaultValue = undefined,
             label = 'Value',
             locale = new Locale('en-US'),
-            presence = Presence.Required,
+            presence = 'required',
             errorMessages = {},
         } = props;
 
@@ -79,19 +79,19 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     isForbidden(): boolean {
-        return this.props.presence === Presence.Forbidden;
+        return this.props.presence === 'forbidden';
     }
 
     isOptional(): boolean {
-        return this.props.presence === Presence.Optional;
+        return this.props.presence === 'optional';
     }
 
     isRequired(): boolean {
-        return this.props.presence === Presence.Required;
+        return this.props.presence === 'required';
     }
 
     default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: Presence.Optional } as Partial<P>);
+        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
     }
 
     errors(messages: ErrorMessages): this {
@@ -101,7 +101,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     forbidden(): this {
-        return this.clone({ presence: Presence.Forbidden } as Partial<P>);
+        return this.clone({ presence: 'forbidden' } as Partial<P>);
     }
 
     label(label: string): this {
@@ -109,11 +109,11 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     optional(): this {
-        return this.clone({ presence: Presence.Optional } as Partial<P>);
+        return this.clone({ presence: 'optional' } as Partial<P>);
     }
 
     required(): this {
-        return this.clone({ presence: Presence.Required } as Partial<P>);
+        return this.clone({ presence: 'required' } as Partial<P>);
     }
 }
 

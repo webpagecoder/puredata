@@ -23,14 +23,14 @@ class NormalizedDate {
 
     constructor(
         dateOrDateParts: Date = new Date(),
-        type: DateType = DateType.OBJECT,
+        type: DateType = 'object',
         meta: Record<string, any> = {}
     ) {
         this._meta = meta;
         if(dateOrDateParts instanceof Date) {
             this._date = dateOrDateParts;
             this._parts = {};
-            this._type = DateType.OBJECT;
+            this._type = 'object';
         }
         else {
             this._type = type;

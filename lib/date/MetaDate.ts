@@ -1,87 +1,66 @@
 'use strict';
 
+import { DateType } from "./DateType.ts";
+
 const now = new Date();
 
-export type DateParts = {
-    year?: number | null;
-    month?: number | null;
-    day?: number | null;
-    hour?: number | null;
-    minute?: number | null;
-    second?: number | null;
-    millisecond?: number | null;
-    offsetHour?: number | null;
-    offsetMinute?: number | null;
-};
+// export type DateParts = {
+//     raw?: Date | string | number;
+//     year?: number | null;
+//     month?: number | null;
+//     day?: number | null;
+//     hour?: number | null;
+//     minute?: number | null;
+//     second?: number | null;
+//     millisecond?: number | null;
+//     offsetHour?: number | null;
+//     offsetMinute?: number | null;
+// };
 
 export type MetaDateConstructorParams = {
-    raw: Date | string | number | null;
-    offsetHour?: number | null;
-    offsetMinute?: number | null;
-};
+    raw?: Date | string | number;
+    offsetHour?: number;
+    offsetMinute?: number;
+} & ({ dateParts: number[]; date?: never } | { dateParts?: never; date: Date });
 
 class MetaDate {
-    private _date: Date;
-    private _raw: Date | string | number | null;
-    private _offsetHour: number | null;
-    private _offsetMinute: number | null;
+    public date: Date;
+    public raw: Date | string | number | null;
+    public offsetHour: number;
+    public offsetMinute: number;
 
-    constructor(raw: Date | string | number | null, dateParts: DateParts = {}) {
-        if (raw instanceof Date) {
-            this._date = raw;
-        }
-        else {
-            this._date = new Date(Date.UTC(
-                dateParts.year || 0,
-                dateParts.month ? dateParts.month - 1 : 0,
-                dateParts.day || 1,
-                (dateParts.hour || 0) + (dateParts.offsetHour || 0),
-                (dateParts.minute || 0) + (dateParts.offsetMinute || 0),
-                dateParts.second || 0
-            ));
-        }
-        this._raw = raw;
-        this._offsetHour = dateParts.offsetHour || null;
-        this._offsetMinute = dateParts.offsetMinute || null;
+    constructor(dateInfo: MetaDateConstructorParams) {
+        const { raw, offsetHour = 0, offsetMinute = 0, date, dateParts: [
+            year = 0,
+            month = 1,
+            day = 1,
+            hour = 0,
+            minute = 0,
+            second = 0,
+            millisecond = 0
+        ] = [] } = dateInfo;
+
+        this.date = date ? date : new Date(Date.UTC(
+            year,
+            month - 1,
+            day,
+            hour + offsetHour,
+            minute + Math.sign(offsetHour) * offsetMinute,
+            second,
+            millisecond
+        ));
+        this.raw = raw || this.date;
+        this.offsetHour = offsetHour;
+        this.offsetMinute = offsetMinute;
     }
 
-    get date(): Date {
-        return this._date;
-    }
-
-    get raw(): Date | string | number | null {
-        return this._raw;
-    }
-
-    modifyDate(dateParts: Omit<DateParts, 'offsetHour' | 'offsetMinute'>): MetaDate {
-        const modifiedDate = new Date(this._date);
-        if (dateParts.year) {
-            modifiedDate.setUTCFullYear(Number(dateParts.year));
-        }
-        if (dateParts.month) {
-            modifiedDate.setUTCMonth(Number(dateParts.month) - 1);
-        }
-        if (dateParts.day) {
-            modifiedDate.setUTCDate(Number(dateParts.day));
-        }
-        if (dateParts.hour) {
-            modifiedDate.setUTCHours(Number(dateParts.hour));
-        }
-        if (dateParts.minute) {
-            modifiedDate.setUTCMinutes(Number(dateParts.minute));
-        }
-        if (dateParts.second) {
-            modifiedDate.setUTCSeconds(Number(dateParts.second));
-        }
-        if (dateParts.millisecond) {
-            modifiedDate.setUTCMilliseconds(Number(dateParts.millisecond));
-        }
-        return new MetaDate({
-            date: modifiedDate,
-            offsetHour: this._offsetHour,
-            offsetMinute: this._offsetMinute,
-            raw: null
-        });
+    get dateWithOffsetRemoved(): Date {
+        const target = new Date(this.date);
+        target.setUTCHours(target.getUTCHours() + this.offsetHour);
+        target.setUTCMinutes(
+            target.getUTCMinutes() + Math.sign(this.offsetHour) * this.offsetMinute
+        );
+        return target;
     }
 
 }

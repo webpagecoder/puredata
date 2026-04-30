@@ -154,15 +154,15 @@ class PureData {
     }
 
     get optional() {
-        return Presence.Optional;
+        return 'optional';
     }
 
     get forbidden() {
-        return Presence.Forbidden;
+        return 'forbidden';
     }
 
     get required() {
-        return Presence.Required;
+        return 'required';
     }
 
     get now() {

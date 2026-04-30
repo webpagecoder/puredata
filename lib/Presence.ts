@@ -1,10 +1,10 @@
 'use strict';
 
-export const Presence = {
-    Required: 'required',
-    Optional: 'optional',
-    Forbidden: 'forbidden',
-};
+export const Presence = [
+    'required',
+    'optional',
+    'forbidden',
+] as const;
 
-export type Presence = typeof Presence[keyof typeof Presence];
+export type Presence = typeof Presence[number];
 
