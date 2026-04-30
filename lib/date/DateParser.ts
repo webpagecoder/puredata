@@ -157,7 +157,7 @@ export type HumanParseOptions = {
     dateOrder?: 'MDY' | 'DMY' | 'YMD';
     minPrecision?: HumanPrecision;
     maxPrecision?: HumanPrecision;
-    fixSpacing?: boolean;
+    cleanInput?: boolean;
 };
 export type IsoParseOptions = {
     minPrecision?: IsoPrecision;
@@ -179,10 +179,12 @@ class DateParser {
 
     private _locale: Locale;
     private _cache: HumanDateCache;
+    private _dateOrder: 'MDY' | 'DMY' | 'YMD';
 
-    constructor(locale: Locale) {
+    constructor(locale: Locale, dateOrder: 'MDY' | 'DMY' | 'YMD' = 'MDY') {
         this._locale = locale;
         this._cache = null;
+        this._dateOrder = dateOrder;
     }
 
     parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
@@ -237,7 +239,6 @@ class DateParser {
         const numberSuffixes = (locale.translate('calendar/numberSuffixes') || []) as string[];
         const longDayNames = (locale.translate('calendar/dayNames/full') || []) as string[];
         const shortDayNames = (locale.translate('calendar/dayNames/short') || []) as string[];
-        const dateOrder = locale.translate('calendar/dateOrder') as DateOrder;
 
         const allMonthNamesLower = longMonthNames.concat(shortMonthNames).map(s => s.toLowerCase());
         const allDayNamesLower = longDayNames.concat(shortDayNames).map(s => s.toLowerCase());
@@ -247,12 +248,12 @@ class DateParser {
         const numberSuffixesRegex = '(?:' + numberSuffixes.map(s => s.toLowerCase()).join('|') + ')';
 
         let humanRegex: string[], dateIndexes: Record<string, number>;
-        switch (dateOrder) {
-            case DateOrder.MDY:
+        switch (this._dateOrder) {
+            case 'MDY':
                 dateIndexes = { day: 2, month: 1, year: 3 };
                 humanRegex = HUMAN_MDY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
                 break;
-            case DateOrder.DMY:
+            case 'DMY':
                 dateIndexes = { day: 1, month: 2, year: 3 };
                 humanRegex = HUMAN_DMY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
                 break;
@@ -366,10 +367,10 @@ class DateParser {
             return null;
         }
 
-        if(options.fixSpacing) {
+        if (options.cleanInput === undefined || options.cleanInput) {
             dateString = dateString.replace(/([/. -,:])\1+/g, '$1');
         }
-        
+
         return new MetaDate(dateString as string, {
             year,
             month,

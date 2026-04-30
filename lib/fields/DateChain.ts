@@ -10,31 +10,19 @@ import { Chain, ChainProps } from './Chain.ts';
 
 export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateOrder: 'MDY' | 'DMY' | 'YMD';
-    skipPreProcess: boolean;
-
-    locale: Locale;
+    dateParser: DateParser;
     now: Date;
     outputType: DateType | null;
-    requiredParts: Set<DatePart>;
-    forbiddenParts: Set<DatePart>;
-    optionalParts: Set<DatePart>;
+    skipPreProcess: boolean;
     utcOffset: [number, number];
-    dateParser: DateParser;
 };
 
 class DateChain extends Chain<DateChainProps> {
 
     constructor(props: Partial<DateChainProps> & Pick<DateChainProps, 'locale'>) {
         super(props);
-        // this.props.dateOrder = props.dateOrder || 'MDY';
-        this.props.skipPreProcess = false;
-        // this.props.locale = props.locale;
-        // this.props.outputType = props.outputType || null;
-
-        this.props.dateParser = new DateParser(props.locale);
-        // this.props.forbiddenParts = new Set(props.forbiddenParts || []);
-        // this.props.optionalParts = new Set(props.optionalParts || []);
-        // this.props.requiredParts = new Set(props.requiredParts || [DatePart.year, DatePart.month, DatePart.day]);
+        this.props.dateParser = new DateParser(props.locale, props.dateOrder);
+        this.props.skipPreProcess = this.props.skipPreProcess || false;
 
         let [hours, minutes] = this.props.utcOffset || [0, 0];
         hours = +hours;
@@ -81,7 +69,6 @@ class DateChain extends Chain<DateChainProps> {
      */
     human(options: HumanParseOptions = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('human');
-
         return this.addStep('human', [this.props.dateParser, options]);
     }
 
@@ -138,7 +125,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.timestamp() // Accepts JavaScript timestamps in milliseconds
      * date.timestamp(false) // Accepts Unix timestamps in seconds
      */
-    timestamp(isMilliseconds: boolean) {
+    timestamp(isMilliseconds: boolean = true) {
         this.assertEmptyPipelineAndSkipPreprocess('timestamp');
         return this.addStep('timestamp', [isMilliseconds]);
     }
@@ -158,6 +145,10 @@ class DateChain extends Chain<DateChainProps> {
 
     // Exporters
 
+    toDateObj() {
+        return this.setProps({ outputType: DateType.OBJECT });
+    }
+    
     /**
      * Configures the output to be in ISO 8601 format.
      * @returns {DateChain} Returns the chain for method chaining

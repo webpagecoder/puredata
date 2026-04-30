@@ -5,16 +5,19 @@ import { Utils } from '../utils/Utils.ts';
 import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { State } from './Processor.ts';
-import { DateChainProps } from '../fields/DateChain.ts';
+import { DateChain, DateChainProps } from '../fields/DateChain.ts';
+import { MetaDate } from '../date copy/MetaDate.ts';
 
 type DateProcessorState = State & {
     originalValue?: unknown;
     inputType?: DateType | null;
 };
 
-class DateProcessor extends ChainProcessor {
+export type DateProcessorProps = ChainProcessorProps<DateChain>;
 
-    constructor(props: ChainProcessorProps) {
+class DateProcessor extends ChainProcessor<DateProcessorProps> {
+
+    constructor(props: DateProcessorProps) {
         super(props);
         this.props.hasPipelineHooks = true;
     }
@@ -41,22 +44,15 @@ class DateProcessor extends ChainProcessor {
     }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        console.log('2');
-        const { field } = this.props;
-        const { inputType } = state;
-        const outputType = (field.props as DateFieldProps).outputType || inputType;
-        const dateValue = tracker.getValue();
-        if (!(dateValue instanceof Date) || isNaN(dateValue.getTime())) {
-            tracker.addError('date/base');
-            return;
-        }
+        const { outputType } = this.props.field.props; 
+        const metaDate = tracker.getValue() as MetaDate;
 
         switch (outputType) {
-            case DateType.ISO:
-                tracker.setValue(dateValue.toISOString());
+            case  DateType.ISO:
+                tracker.setValue(metaDate.date);
                 break;
             case DateType.ISO_WEEK:
-                const target = new Date(dateValue);
+                const target = new Date(metaDate.date);
                 const dayNum = target.getUTCDay() || 7;
                 target.setUTCDate(target.getUTCDate() + 4 - dayNum);
                 const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));

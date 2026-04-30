@@ -22,14 +22,13 @@ type PipelineStep = {
     args?: unknown[] | ((this: Field) => unknown[]);
 };
 
-export type ChainProcessorProps = ProcessorProps & {
+export type ChainProcessorProps<F extends Chain = Chain> = ProcessorProps<F> & {
     hasPipelineHooks: boolean;
-    field: Chain;
 };
 
-class ChainProcessor extends Processor<ChainProcessorProps> {
+class ChainProcessor<P extends ChainProcessorProps = ChainProcessorProps> extends Processor<P> {
 
-    constructor(props: ChainProcessorProps) {
+    constructor(props: P) {
         super(props);
         this.props.hasPipelineHooks = props.hasPipelineHooks;
     }

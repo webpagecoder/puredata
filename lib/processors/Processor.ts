@@ -6,8 +6,8 @@ import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 
-export type ProcessorProps = {
-    field: Field;
+export type ProcessorProps<F extends Field = Field> = {
+    field: F;
     compilationMapper: FieldProcessorFactory;
     defaultValueReference?: Processor;
 };
