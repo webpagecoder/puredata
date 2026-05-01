@@ -12,8 +12,8 @@ export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateOrder: 'MDY' | 'DMY' | 'YMD';
     dateParser: DateParser;
     now: Date;
-    outputType: DateType | null;
-    outputPrecision: HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision | null;
+    outputType: DateType | 'custom' | null;
+    outputFormat: HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision | string | null;
     skipPreProcess: boolean;
     utcOffset: [number, number];
 };
@@ -145,6 +145,12 @@ class DateChain extends Chain<DateChainProps> {
 
 
     // Exporters
+    format(formatString: string) {
+        return this.setProps({ 
+            outputType: 'custom',
+            outputFormat: formatString
+        });
+    }
 
     toDateObj() {
         return this.setProps({ outputType: 'object' });
@@ -159,7 +165,7 @@ class DateChain extends Chain<DateChainProps> {
     toIso(precision: IsoPrecision = 'timezone') {
         return this.setProps({ 
             outputType: 'iso',
-            outputPrecision: precision
+            outputFormat: precision
         });
     }
 

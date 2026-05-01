@@ -44,6 +44,21 @@ class DateHelpers {
         // Add weeks and days
         return new Date(mondayOfWeek1.getTime() + ((week - 1) * 7 + (day - 1)) * 86400000);
     }
+
+    static getIsoWeek(date: Date): number {
+        // Calculate ISO week number
+        const target = new Date(date);
+        const dayNum = target.getUTCDay() || 7; // 1=Monday, 7=Sunday
+        target.setUTCDate(target.getUTCDate() + 4 - dayNum); // Thursday of this week
+        const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+        return Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    }
+
+    static getDayOfYear(date: Date): number {
+        const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
+        const diff = date.getTime() - startOfYear.getTime();
+        return Math.floor(diff / 86400000);
+    }
 }
 
 export { DateHelpers };

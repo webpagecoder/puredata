@@ -59,15 +59,18 @@ class DateProcessor extends ChainProcessor<DateProcessorProps> {
     }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const { outputType, outputPrecision, dateParser } = this.props.field.props;
+        const { outputType,  outputFormat, dateParser } = this.props.field.props;
         const metaDate = tracker.getValue() as MetaDate;
 
         switch (outputType) {
+            case 'custom':
+                tracker.setValue(dateParser.format(metaDate, outputFormat as string));
+                break;
             case 'object':
                 tracker.setValue(metaDate.date);
                 break;
             case 'iso':
-                const format = isoFormatStrings[outputPrecision as IsoPrecision || 'date'];
+                const format = isoFormatStrings[outputFormat as IsoPrecision || 'date'];
                 tracker.setValue(dateParser.format(metaDate, format));
                 break;
             case 'isoWeek':
