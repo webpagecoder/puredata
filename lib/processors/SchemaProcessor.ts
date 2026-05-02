@@ -12,7 +12,7 @@ class SchemaProcessor extends ObjectProcessor {
     constructor(props = {}) {
         const {
             field,
-            compilationMapper,
+            processorMapper,
             depth = 0,
             path = Path.create('/'),
             parent,
@@ -33,7 +33,7 @@ class SchemaProcessor extends ObjectProcessor {
         const compiledSchema = new Map();
         this.props.schema = compiledSchema;
         for (let [key, childField] of schema) {
-            const compiledChild = compilationMapper.createProcessor(childField, {
+            const compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
                 path: path.move(key),
                 parent: this,

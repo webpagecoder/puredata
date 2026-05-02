@@ -8,7 +8,7 @@ import { Field } from '../fields/Field.ts';
 
 export type ProcessorProps<F extends Field = Field> = {
     field: F;
-    compilationMapper: FieldProcessorFactory;
+    processorMapper: FieldProcessorFactory;
     defaultValueReference?: Processor;
 };
 
@@ -25,9 +25,9 @@ class Processor<P extends ProcessorProps = ProcessorProps> {
     state: Record<string, unknown> = {};
 
     constructor(props: P) {
-        const { field, compilationMapper } = props;
+        const { field, processorMapper } = props;
         this.props = {
-            compilationMapper,
+            processorMapper,
             field,
         } as P;
         this.id = ++Processor.id;
@@ -41,10 +41,10 @@ class Processor<P extends ProcessorProps = ProcessorProps> {
     }
 
     compile(): this {
-        const { field, compilationMapper } = this.props;
+        const { field, processorMapper } = this.props;
         const { defaultValue } = field.props;
         if (defaultValue instanceof PathReferenceField) {
-            this.props.defaultValueReference = compilationMapper.createProcessor(defaultValue);
+            this.props.defaultValueReference = processorMapper.createProcessor(defaultValue);
         }
         return this;
     }

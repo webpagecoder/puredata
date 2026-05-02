@@ -5,79 +5,101 @@ import { Field } from './Field.ts';
 import { ValueField } from './ValueField.ts';
 import { ArrayChain } from './ArrayChain.ts';
 import { ObjectChain, ObjectChainProps, ResolvedObjectChainProps } from './ObjectChain.ts';
+import { ChainProps } from './Chain copy.ts';
+import { ObjectHandler } from '../handlers/ObjectHandler.ts';
+import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 
-type SchemaChainProps = ObjectChainProps & {
-    structure?: Record<string, unknown>;
-};
+// type SchemaChainProps = ObjectChainProps & {
+//     schema?: Record<string, unknown>;
+// };
 type ResolvedSchemaChainProps = ResolvedObjectChainProps & {
-    structure: Record<string, unknown>;
+    schema: Record<string, unknown>;
 };
 type DescriptionBuilder = {
     setChild(key: string, child: unknown): void;
 };
 
+export type Schema = {
+    [key: string]: Schema | unknown;
+};
+
+
+export type SchemaChainProps = ObjectChainProps & {
+    schema?: Schema;
+    stripUnknownKeys?: boolean;
+};
+
 class SchemaChain extends ObjectChain {
+    protected _schema: Map<string, Field>;
+    protected _stripUnknownKeys: boolean;
 
-    declare props: ResolvedSchemaChainProps & {
-        clone: boolean;
-        ensurePlain: boolean;
-        schema: Map<string, Field>;
-        stripUnknownKeys?: boolean;
-    };
-
-    constructor(props: SchemaChainProps = {}) {
+    constructor(props: SchemaChainProps) {
         super(props);
 
-        let {
-            compilationMapper,
-            locale,
-            structure = {},
+        const {
+            schema = {},
+            stripUnknownKeys = true,
         } = props;
 
-        const schema = new Map<string, Field>();
-        for (const key of Object.keys(structure)) {
-            let value = structure[key];
+        this._cloneObject = true;
+        this._ensurePlain = true;
+        this._stripUnknownKeys = stripUnknownKeys;
+        this._schema = this._createSchemaMap(schema);
+    }
+
+    public override clone(props: Partial<SchemaChainProps> = {}): this {
+        const clone = super.clone(props);
+        const {
+            schema,
+            stripUnknownKeys = this._stripUnknownKeys,
+        } = props;
+
+        clone._schema = schema ? this._createSchemaMap(schema) : this._schema;
+        clone._stripUnknownKeys = stripUnknownKeys;
+        return clone;
+    }
+
+    protected _createSchemaMap(schema: Schema): Map<string, Field> {
+        const schemaMap = new Map<string, Field>();
+        for (const key of Object.keys(schema)) {
+            let value = schema[key];
             let field: Field;
 
             if (value instanceof Field) {
                 field = value;
             }
             else if (Utils.isPlainObject(value)) {
-                field = new SchemaChain({
-                    compilationMapper,
-                    locale,
-                    structure: value as Record<string, unknown>
+                field = this.clone({
+                    schema: value as Schema
                 });
             }
             else if (Array.isArray(value)) {
                 field = new ArrayChain({
-                    compilationMapper,
-                    locale
+                    chainHandler: ArrayHandler, //todo - this is a bit hacky, we should probably have a way to specify the chain handler to use for nested schemas instead of hardcoding ArrayChain here
+                    locale: this._locale,
+                    processorMapper: this._processorMapper,
                 }).tuple(value) as Field;
             }
             else {
                 field = new ValueField({
-                    compilationMapper,
-                    locale,
+                    locale: this._locale,
+                    processorMapper: this._processorMapper,
                     value
                 });
             }
-            schema.set(key, field);
+            schemaMap.set(key, field);
         }
-
-        this.props.clone = true;
-        this.props.ensurePlain = true;
-        this.props.schema = schema;
+        return schemaMap;
     }
 
-    get schema(): Map<string, Field> {
-        return this.props.schema;
+    public get schema(): Map<string, Field> {
+        return this._schema;
     }
 
     // Configurators
 
-    configStripUnknownKeys(stripUnknownKeys: boolean = true): this {
-        return this.setProps({ stripUnknownKeys });
+    public configStripUnknownKeys(stripUnknownKeys: boolean = true): this {
+        return this.clone({ stripUnknownKeys });
     }
 
     // getRawDescription(): DescriptionBuilder {

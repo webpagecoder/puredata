@@ -8,63 +8,41 @@ import { Locale } from '../Locale.ts';
 import { Presence } from '../Presence.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
-type OutputFormat = [
-    type: DateType,
-    precision: HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision
-] | string | null;
-
-type DateOrder = 'MDY' | 'DMY' | 'YMD';
-
 export type DateChainProps = ChainProps<typeof DateHandler> & {
-    dateOrder?: DateOrder;
-    dateParser?: DateParser;
-    outputFormat?: OutputFormat;
-    utcOffset?: [number, number];
+    dateOrder: 'MDY' | 'DMY' | 'YMD';
+    dateParser: DateParser;
+    now: Date;
+    outputType: DateType | 'custom' | null;
+    outputFormat: HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision | string | null;
+    skipPreProcess: boolean;
+    utcOffset: [number, number];
 };
 
 class DateChain extends Chain<DateChainProps> {
-    protected _dateParser: DateParser;
-    protected _outputFormat: OutputFormat;
-    protected _utcOffset: [number, number];
 
-    constructor(props: DateChainProps) {
+    constructor(props: Partial<DateChainProps> & Pick<DateChainProps, 'locale'>) {
         super(props);
+        this.props.dateParser = new DateParser(props.locale, props.dateOrder);
+        this.props.skipPreProcess = this.props.skipPreProcess || false;
 
-        const {
-            dateOrder = 'MDY',
-            dateParser = new DateParser(this._locale, dateOrder),
-            outputFormat = null,
-            utcOffset = [0, 0]
-        } = props;
-
-        this._dateParser = dateParser;
-        this._outputFormat = outputFormat;
-        this._utcOffset = utcOffset;
+        let [hours, minutes] = this.props.utcOffset || [0, 0];
+        hours = +hours;
+        minutes = +minutes;
+        const now = new Date();
+        if (hours || minutes) {
+            now.setUTCHours(now.getUTCHours() + hours);
+            now.setUTCMinutes(now.getUTCMinutes() + minutes);
+        }
+        this.props.now = now;
     }
 
-    public override clone(props: Partial<DateChainProps> = {}): this {
-        const clone = super.clone(props);
-        const {
-            dateOrder,
-            dateParser = this._dateParser,
-            outputFormat = this._outputFormat,
-            utcOffset = this._utcOffset
-        } = props;
-
-        clone._dateParser = dateOrder
-            ? new DateParser(this._locale, dateOrder)
-            : dateParser;
-        clone._dateParser = dateParser;
-        clone._outputFormat = outputFormat;
-        clone._utcOffset = utcOffset;
-        return clone;
-    }
-
-    public assertEmptyPipelineAndSkipPreprocess(dateSubType: string): void {
-        if (this._pipeline.length > 0) {
+    assertEmptyPipelineAndSkipPreprocess(dateSubType: string): void {
+        if (this.props.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
+        this.props.skipPreProcess = true;
     }
+
 
     // Configurators
 
@@ -73,7 +51,7 @@ class DateChain extends Chain<DateChainProps> {
      * @param {boolean} autoConvert - Whether to enable automatic conversion
      * @returns {NumberChain} The chain instance for method chaining
      */
-    public configDateOrder(dateOrder: DateOrder): this {
+    configDateOrder(dateOrder: 'MDY' | 'DMY' | 'YMD' = 'MDY') {
         return this.clone({ dateOrder });
     }
 
@@ -92,7 +70,7 @@ class DateChain extends Chain<DateChainProps> {
      */
     human(options: HumanParseOptions = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('human');
-        return this.addStep('human', [this._dateParser, options]);
+        return this.addStep('human', [this.props.dateParser, options]);
     }
 
     /**
@@ -106,9 +84,9 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.iso() // Accepts "2023-01-01", "2023-01-01T12:00:00Z", etc.
      */
-    public iso(options: IsoParseOptions = {}) {
+    iso(options: IsoParseOptions = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('iso');
-        return this.addStep('iso', [this._dateParser, options]);
+        return this.addStep('iso', [this.props.dateParser, options]);
     }
 
     /**
@@ -120,9 +98,9 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.isoOrdinal() // Accepts "2023-001", "2023-365", etc.
      */
-    public isoOrdinal(options = {}) {
+    isoOrdinal(options = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('isoOrdinal');
-        return this.addStep('isoOrdinal', [this._dateParser, options]);
+        return this.addStep('isoOrdinal', [this.props.dateParser, options]);
     }
 
     /**
@@ -134,9 +112,9 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.isoWeek() // Accepts "2023-W01-1", "2023-W52-7", etc.
      */
-    public isoWeek(options = {}) {
+    isoWeek(options = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('isoWeek');
-        return this.addStep('isoWeek', [this._dateParser, options]);
+        return this.addStep('isoWeek', [this.props.dateParser, options]);
     }
 
     /**
@@ -148,7 +126,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.timestamp() // Accepts JavaScript timestamps in milliseconds
      * date.timestamp(false) // Accepts Unix timestamps in seconds
      */
-    public timestamp(isMilliseconds: boolean = true) {
+    timestamp(isMilliseconds: boolean = true) {
         this.assertEmptyPipelineAndSkipPreprocess('timestamp');
         return this.addStep('timestamp', [isMilliseconds]);
     }
@@ -159,29 +137,25 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.today() // Must be today's date
      */
-    public today() {
-        const now = new Date();
-        let [hours, minutes] = this._utcOffset;
-        now.setUTCHours(now.getUTCHours() + hours);
-        now.setUTCMinutes(now.getUTCMinutes() + minutes);
-        return this.addStep('today', [now]);
+    today() {
+        return this.addStep('today', [this.props.now]);
     }
 
     // Transformers
 
 
     // Exporters
-    public format(formatString: string) {
-        return this.clone({
+    format(formatString: string){
+        return this.clone({ 
             outputType: 'custom',
             outputFormat: formatString
         });
     }
 
-    public toDateObj() {
+    toDateObj() {
         return this.clone({ outputType: 'object' });
     }
-
+    
     /**
      * Configures the output to be in ISO 8601 format.
      * @returns {DateChain} Returns the chain for method chaining
@@ -189,7 +163,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
     toIso(precision: IsoPrecision = 'timezone') {
-        return this.clone({
+        return this.clone({ 
             outputType: 'iso',
             outputFormat: precision
         });
@@ -201,7 +175,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
-    public toIsoOrdinal() {
+    toIsoOrdinal() {
         return this.clone({ outputType: 'isoOrdinal' });
     }
 
@@ -211,7 +185,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
-    public toIsoWeek() {
+    toIsoWeek() {
         return this.clone({ outputType: 'isoWeek' });
     }
 
@@ -221,7 +195,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
-    public toTimestamp() {
+    toTimestamp() {
         return this.clone({ outputType: 'timestamp' });
     }
 }

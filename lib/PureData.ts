@@ -29,7 +29,7 @@ import { NormalizedDate } from './date/NormalizedDate.ts';
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
-    constructor(config, compilationMapper = new FieldProcessorFactory()) {
+    constructor(config, processorMapper = new FieldProcessorFactory()) {
         this.config = Utils.clone(config);
 
         Path.delims(this.config.general.pathDelims);
@@ -37,10 +37,10 @@ class PureData {
         const { locale } = this.config.general;
 
         this.locale = new Locale(locale);
-        this.compilationMapper = compilationMapper;
+        this.processorMapper = processorMapper;
     }
 
-    setProps(updatedConfig) {
+    clone(updatedConfig) {
         this.config = Utils.mergeObjects(this.config, updatedConfig);
     }
 
@@ -49,10 +49,10 @@ class PureData {
     }
 
     composeProps(props = {}, chainType, chainHandler) {
-        const { config, compilationMapper, locale } = this;
+        const { config, processorMapper, locale } = this;
         return Object.assign(
             {
-                compilationMapper,
+                processorMapper,
                 locale,
                 chainHandler
             },

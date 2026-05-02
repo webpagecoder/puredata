@@ -13,68 +13,51 @@ type Step = {
 
 export type ChainProps<H extends typeof Handler = typeof Handler> = FieldProps & {
     chainHandler: H;
-    emptyValues?: unknown[];
-    pipeline?: Step[];
+    emptyValues: unknown[];
+    pipeline: Step[];
 };
 
-type CloneProps<P extends ChainProps = ChainProps> = Partial<P> & { step?: Step };
+type CloneProps<P extends ChainProps = ChainProps> = Partial<P> & { step: Step };
 
 abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
 
-    protected _chainHandler: P['chainHandler'];
-    protected _emptyValues: unknown[]
-    protected _pipeline: Step[];
-
-    constructor(props: P) {
-        super(props as FieldProps);
-
-        const {
-            chainHandler,
-            emptyValues = [null, undefined],
-            pipeline = [],
-        } = props;
-
-        this._chainHandler = chainHandler;
-        this._pipeline = pipeline;
-        this._emptyValues = emptyValues;
-
+    constructor(props: Partial<P> = {}) {
+        super(props);
+        this.props.chainHandler = props.chainHandler || {} as P['chainHandler'];
+        this.props.pipeline = [];
+        this.props.emptyValues = props.emptyValues || [null, undefined];
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
-    public get(target: this, key: PropertyKey): unknown {
+    get(target: this, key: PropertyKey): unknown {
         if (key in target) {
             return (target as Record<PropertyKey, unknown>)[key];
         }
         return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
     }
 
-    public override clone(props: CloneProps<P> = {}): this {
+    override clone(props: CloneProps<P>): this {
         const clone = super.clone(props);
-        const { 
-            chainHandler = this._chainHandler,
-            emptyValues = this._emptyValues,
+        const {
             step,
-         } = props;
-        const pipelineClone = [...this._pipeline];
+        } = props;
+        const updatedPipeline = [...this.props.pipeline];
 
         if (step) {
             if (step.prioritize) {
-                pipelineClone.unshift(step);
+                updatedPipeline.unshift(step);
             }
             else {
-                pipelineClone.push(step);
+                updatedPipeline.push(step);
             }
         }
-
-        clone._pipeline = pipelineClone;
-        clone._chainHandler = chainHandler;
-        clone._emptyValues = emptyValues;
+        clone.props.pipeline = updatedPipeline;
 
         return clone;
     }
 
-    public addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = [], prioritize: boolean = false): this {
-        const chainHandler = this._chainHandler as P['chainHandler'];
+    addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = [], prioritize: boolean = false): this{
+        const chainHandler = this.props.chainHandler as P['chainHandler'];
         const fn = chainHandler?.[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
@@ -96,9 +79,9 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
      * @example
      * generic.empty()
      */
-    public empty(): this {
+    empty(): this {
         return this.addStep('empty', function (this: Chain<any>): unknown[] {
-            return [this._emptyValues];
+            return [this.props.emptyValues];
         });
     }
 
@@ -109,9 +92,9 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
      * @example
      * generic.notEmpty()
      */
-    public notEmpty(): this {
+    notEmpty(): this {
         return this.addStep('notEmpty', function (this: Chain<any>): unknown[] {
-            return [this._emptyValues];
+            return [this.props.emptyValues];
         });
     }
 

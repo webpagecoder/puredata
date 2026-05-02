@@ -6,23 +6,23 @@ import { Processor } from './Processor.ts';
 class SchemaConditionalProcessor extends Processor {
 
 
-    //todo - constructor should save compilationMapper - its not passed thru context anymore it is contsuctored.
+    //todo - constructor should save processorMapper - its not passed thru context anymore it is contsuctored.
 
     compile(context = {}) {
         super.compile(context);
 
-        const { field, compilationMapper } = this.props;
+        const { field, processorMapper } = this.props;
 
         const { comparisonField, chain, thenResult, otherwiseResult } = field.props;
 
         const clone = field.clone();
         Object.assign(clone.props, {
-            comparisonField: compilationMapper.createProcessor(comparisonField.clone()),
+            comparisonField: processorMapper.createProcessor(comparisonField.clone()),
             chain: chain.map(
-                ([operator, field]) => [operator, compilationMapper.createProcessor(field.clone())]
+                ([operator, field]) => [operator, processorMapper.createProcessor(field.clone())]
             ),
-            thenResult: compilationMapper.createProcessor(thenResult.clone()),
-            otherwiseResult: compilationMapper.createProcessor(otherwiseResult.clone()),
+            thenResult: processorMapper.createProcessor(thenResult.clone()),
+            otherwiseResult: processorMapper.createProcessor(otherwiseResult.clone()),
         });
 
         this.field = clone;

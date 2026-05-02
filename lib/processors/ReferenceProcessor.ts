@@ -11,7 +11,7 @@ class ReferenceProcessor extends Processor {
     }
 
     compile(context = {}) {
-        const { compilationMapper, field, parent, path, root } = this.props;
+        const { processorMapper, field, parent, path, root } = this.props;
         const { path: referencePath } = field.props;
 
         const compiledReference = parent.resolvePath(referencePath);
@@ -33,7 +33,7 @@ class ReferenceProcessor extends Processor {
         let processor;
 
         if (!isNest) {
-            processor = compilationMapper.createProcessor({
+            processor = processorMapper.createProcessor({
                 parent,
                 path,
                 root,

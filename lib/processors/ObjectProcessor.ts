@@ -12,7 +12,7 @@ class ObjectProcessor extends ChainProcessor {
             return tracker.addError('object/base');
         }
 
-        const { ensurePlain, clone, maxDepth, maxKeyCount } = this.props.field.props;
+        const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this.props.field.props;
 
         if (ensurePlain && !Utils.isPlainObject(tracker.getValue())) {
             return tracker.addError('object/plain');
@@ -28,7 +28,7 @@ class ObjectProcessor extends ChainProcessor {
             }
         }
 
-        if (clone) {
+        if (cloneObject) {
             // Clone object if transforms are to be performed
             tracker.setValue(Utils.clone(tracker.getValue()));
         }

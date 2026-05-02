@@ -78,7 +78,7 @@ class FieldProcessorFactory {
         return new ProcessorConstructor(Object.assign(
             {
                 field,
-                compilationMapper: this,
+                processorMapper: this,
             },
             context
         ));

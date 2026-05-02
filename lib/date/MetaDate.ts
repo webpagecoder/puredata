@@ -25,7 +25,7 @@ export type MetaDateConstructorParams = {
 
 class MetaDate {
     public date: Date;
-    public raw: Date | string | number | null;
+    public raw: Date | string | number | undefined;
     public offsetHour: number;
     public offsetMinute: number;
 
@@ -49,18 +49,26 @@ class MetaDate {
             second,
             millisecond
         ));
-        this.raw = raw || this.date;
+        this.raw = raw;
         this.offsetHour = offsetHour;
         this.offsetMinute = offsetMinute;
     }
 
-    get dateWithOffsetRemoved(): Date {
+    public get dateWithOffsetRemoved(): Date {
         const target = new Date(this.date);
-        target.setUTCHours(target.getUTCHours() + this.offsetHour);
+        target.setUTCHours(target.getUTCHours() - this.offsetHour);
         target.setUTCMinutes(
-            target.getUTCMinutes() + Math.sign(this.offsetHour) * this.offsetMinute
+            target.getUTCMinutes() - Math.sign(this.offsetHour) * this.offsetMinute
         );
         return target;
+    }
+
+    public cloneWithNewDate(date: Date): MetaDate {
+        return new MetaDate({
+            date,
+            offsetHour: this.offsetHour,
+            offsetMinute: this.offsetMinute
+        });
     }
 
 }

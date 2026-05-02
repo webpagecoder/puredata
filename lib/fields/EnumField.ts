@@ -2,12 +2,35 @@
 
 import { Field, FieldProps } from './Field.ts';
 
-class EnumField extends Field {
+type EnumStructure = unknown[] | Record<string, unknown>;
 
-    constructor(props: FieldProps = {}) {
+export type EnumFieldProps = FieldProps & {
+    structure?: EnumStructure;
+};
+
+class EnumField extends Field {
+    protected _structure: EnumStructure;
+    protected _isArray: boolean;
+
+    constructor(props: EnumFieldProps = {}) {
         super(props);
-        this.props.structure = props.structure || [];
-        this.props.isArray = Array.isArray(props.structure);
+        const {
+            structure = [],
+        } = props;
+
+        this._structure = structure;
+        this._isArray = Array.isArray(structure);
+    }
+
+    public override clone(props: Partial<EnumFieldProps> = {}): this {
+        const clone = super.clone(props);
+        const {
+            structure = this._structure,
+        } = props;
+
+        clone._structure = structure;
+        clone._isArray = Array.isArray(structure);
+        return clone;
     }
 
 }

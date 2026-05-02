@@ -80,7 +80,7 @@ class ConditionalField extends Field {
         if (this.props.stage !== 0) {
             throw new Error('Illegal placement of "or" in conditional chain');
         }
-        return this.setProps({
+        return this.clone({
             chain: this.props.chain.concat([['or', conditional]])
         });
     }
@@ -89,7 +89,7 @@ class ConditionalField extends Field {
         if (this.props.stage !== 0) {
             throw new Error('Illegal placement of "and" in conditional chain');
         }
-        return this.setProps({
+        return this.clone({
             chain: this.props.chain.concat([['and', conditional]])
         });
     }
@@ -98,10 +98,10 @@ class ConditionalField extends Field {
         if (this.props.stage !== 0) {
             throw new Error('Illegal placement of "then" in conditional chain');
         }
-        return this.setProps({
+        return this.clone({
             thenResult: thenResult instanceof Field
                 ? thenResult
-                : new ValueField({ value: thenResult, compilationMapper: this.props.compilationMapper }),
+                : new ValueField({ value: thenResult, processorMapper: this.props.processorMapper }),
             stage: 1
         });
     }
@@ -110,10 +110,10 @@ class ConditionalField extends Field {
         if (this.props.stage !== 1) {
             throw new Error('Illegal placement of "otherwise" in conditional chain');
         }
-        return this.setProps({
+        return this.clone({
             otherwiseResult: otherwiseResult instanceof Field
                 ? otherwiseResult
-                : new ValueField({ value: otherwiseResult , compilationMapper: this.props.compilationMapper}),
+                : new ValueField({ value: otherwiseResult , processorMapper: this.props.processorMapper}),
             stage: 2
         });
     }

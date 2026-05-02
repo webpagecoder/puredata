@@ -11,7 +11,31 @@ export type BooleanChainProps = ChainProps<typeof BooleanHandler> & {
 };
 
 class BooleanChain extends Chain<BooleanChainProps> {
+    protected _allowBoolish: boolean;
+    protected _boolishPairs: BoolishPair[];
 
+    constructor(props: BooleanChainProps) {
+        super(props);
+        const {
+            allowBoolish = false,
+            boolishPairs = []
+        } = props;
+
+        this._allowBoolish = allowBoolish;
+        this._boolishPairs = boolishPairs;
+    }
+
+    public override clone(props: Partial<BooleanChainProps> = {}): this {
+        const clone = super.clone(props);
+        const {
+            allowBoolish = this._allowBoolish,
+            boolishPairs = this._boolishPairs,
+        } = props;
+
+        clone._allowBoolish = allowBoolish;
+        clone._boolishPairs = boolishPairs;
+        return clone;
+    }
 
     // Configurators
 
@@ -22,10 +46,10 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * @example
      * schema.boolean().configBoolish(true) // Accepts 'yes', 'no', 1, 0, etc.
      */
-    configBoolish(allowBoolish: boolean = true, addBoolishPairs: BoolishPair[] = []): this {
+    public configBoolish(allowBoolish: boolean = true, addBoolishPairs: BoolishPair[] = []): this {
         this.getProp('allowBoolish');
         const existingPairs = (this.getProp('boolishPairs') as BoolishPair[] | undefined) || [];
-        return this.setProps({
+        return this.clone({
             allowBoolish,
             boolishPairs: [...existingPairs, ...addBoolishPairs]
         });
@@ -41,7 +65,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * schema.boolean().truthy()
      * // With boolish: accepts 'yes', 1, 'true', etc.
      */
-    truthy(): this {
+    public truthy(): this {
         return this.addStep('truthy', (function (this: BooleanChain): unknown[] {
             const { allowBoolish, boolishPairs = [] } = this.props;
             return [allowBoolish ? boolishPairs.map(([truthy,]: [unknown, unknown]): unknown => truthy) : []];
@@ -56,7 +80,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * schema.boolean().falsy()
      * // With boolish: accepts 'no', 0, 'false', etc.
      */
-    falsy(): this {
+    public falsy(): this {
         return this.addStep('falsy', (function (this: BooleanChain): unknown[] {
             const { allowBoolish, boolishPairs = [] } = this.props;
             return [allowBoolish ? boolishPairs.map(([, falsy]: [unknown, unknown]): unknown => falsy) : []];

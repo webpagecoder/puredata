@@ -1,7 +1,14 @@
 'use strict';
 
-import { Chain } from './Chain.ts';
+import { StringHandler } from '../handlers/StringHandler.ts';
+import { Chain, ChainProps } from './Chain.ts';
 
-class StringChain extends Chain { }
+export type StringChainProps = ChainProps<typeof StringHandler>;
+
+class StringChain extends Chain {
+    constructor(props: StringChainProps) {
+        super(props);
+    }
+}
 
 export { StringChain };

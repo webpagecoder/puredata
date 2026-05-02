@@ -6,113 +6,127 @@ import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 
-type ErrorMessages = Record<string, string>;
 
 export type FieldProps = {
-    compilationMapper: FieldProcessorFactory;
-    defaultValue: unknown;
-    errorMessages: ErrorMessages;
-    label: string;
-    locale: Locale;
-    presence: Presence;
+    defaultValue?: unknown;
+    label?: string;
+    locale?: Locale;
+    presence?: Presence;
+    processorMapper?: FieldProcessorFactory;
 };
 
 abstract class Field<P extends FieldProps = FieldProps> {
 
-    static id: number = 0;
-    static registry: Map<number, Field<FieldProps>> = new Map();
+    private static _id: number = 0;
 
-    id: number;
-    props: P;
-    processor: null | Processor;
+    protected _id: number;
+    protected _defaultValue: unknown;
+    protected _label: string
+    protected _locale: Locale;
+    protected _presence: Presence;
+    protected _processor: Processor | null;
+    protected _processorMapper: FieldProcessorFactory;
 
-    constructor(props: Partial<P> = {}) {
+    constructor(props: FieldProps) {
 
         const {
-            compilationMapper = new FieldProcessorFactory(),
             defaultValue = undefined,
             label = 'Value',
             locale = new Locale('en-US'),
             presence = 'required',
-            errorMessages = {},
+            processorMapper = new FieldProcessorFactory(),
         } = props;
 
-        this.id = ++Field.id;
-        this.props = Object.assign(props, {
-            compilationMapper,
+        this._defaultValue = defaultValue || undefined;
+        this._id = ++Field._id;
+        this._label = label || 'Field';
+        this._locale = locale;
+        this._presence = presence || 'required';
+        this._processor = null;
+        this._processorMapper = processorMapper;
+    }
+
+    public get id(): number {
+        return this._id;
+    }
+
+    public get defaultValue(): unknown {
+        return this._defaultValue;
+    }
+
+    public get locale(): Locale {
+        return this._locale;
+    }
+
+    public get presence(): Presence {
+        return this._presence;
+    }
+
+    public clone(props: Partial<P> = {}): this {
+        const Constructor = this.constructor as new (props?: P) => this;
+        const {
+            defaultValue = this._defaultValue,
+            label = this._label,
+            locale = this._locale,
+            presence = this._presence,
+            processorMapper = this._processorMapper
+        } = props;
+        const clone = new Constructor({
             defaultValue,
-            errorMessages,
             label,
-            locale: new Locale(locale),
+            locale,
             presence,
+            processorMapper,
         } as P);
-
-        this.processor = null;
-        Field.registry.set(this.id, this as unknown as Field<FieldProps>);
-    }
-
-    clone(props: Partial<P> = {}): this {
-        const Constructor = this.constructor as new (props?: Partial<P>) => this;
-        return new Constructor(
-            //todo: is this deepmerge necessary?
-            // Utils.mergeObjects(this.props, props || {}),
-            Object.assign({}, this.props, props || {}) as P
-        );
-    }
-
-    process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
-        if (!this.processor) {
-            if (!this.props.compilationMapper) {
-                throw new Error('Field compilation mapper is not configured');
-            }
-            this.processor = this.props.compilationMapper.createProcessor(this).compile();
-        }
-        return this.processor.process(valueOrValueTracker);
-    }
-
-    setProps(props: Partial<P> = {}): this {
-        return this.clone(props);
-    }
-
-    getProp(key: keyof P): P[typeof key] {
-        return (this.props as P)[key];
-    }
-
-    isForbidden(): boolean {
-        return this.props.presence === 'forbidden';
-    }
-
-    isOptional(): boolean {
-        return this.props.presence === 'optional';
-    }
-
-    isRequired(): boolean {
-        return this.props.presence === 'required';
-    }
-
-    default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
-    }
-
-    errors(messages: ErrorMessages): this {
-        const clone = this.clone();
-        clone.props.locale.override(messages);
+        clone._processor = this._processor;
         return clone;
     }
 
-    forbidden(): this {
+    public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
+        if (!this._processor) {
+            if (!this._processorMapper) {
+                throw new Error('Field compilation mapper is not configured');
+            }
+            this._processor = this._processorMapper.createProcessor(this).compile();
+        }
+        return this._processor.process(valueOrValueTracker);
+    }
+
+    public isForbidden(): boolean {
+        return this._presence === 'forbidden';
+    }
+
+    public isOptional(): boolean {
+        return this._presence === 'optional';
+    }
+
+    public isRequired(): boolean {
+        return this._presence === 'required';
+    }
+
+    public default(defaultValue: unknown): this {
+        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
+    }
+
+    public errors(messages: Record<string, string>): this {
+        const clone = this.clone();
+        clone._locale.override(messages);
+        return clone;
+    }
+
+    public forbidden(): this {
         return this.clone({ presence: 'forbidden' } as Partial<P>);
     }
 
-    label(label: string): this {
+    public label(label: string): this {
         return this.clone({ label } as Partial<P>);
     }
 
-    optional(): this {
+    public optional(): this {
         return this.clone({ presence: 'optional' } as Partial<P>);
     }
 
-    required(): this {
+    public required(): this {
         return this.clone({ presence: 'required' } as Partial<P>);
     }
 }
