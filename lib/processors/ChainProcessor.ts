@@ -22,19 +22,22 @@ type PipelineStep = {
     args?: unknown[] | ((this: Field) => unknown[]);
 };
 
-export type ChainProcessorProps<F extends Chain = Chain> = ProcessorProps<F> & {
+export type ChainProcessorProps<C extends Chain = Chain> = ProcessorProps<C> & {
     hasPipelineHooks: boolean;
 };
 
-class ChainProcessor<P extends ChainProcessorProps = ChainProcessorProps> extends Processor<P> {
+class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
-    constructor(props: P) {
+    protected _hasPipelineHooks: boolean;
+
+    constructor(props: ChainProcessorProps<C>) {
         super(props);
-        this.props.hasPipelineHooks = props.hasPipelineHooks;
+        this._hasPipelineHooks = props.hasPipelineHooks;
     }
 
-    preProcess(tracker: ValueTracker, state?: State): void {
-        const result = this.props.field.props.chainHandler.format(tracker.getValue());
+    public preProcess(tracker: ValueTracker, _state?: State): void {
+        //todo: rename to preFormat or something like that
+        const result = this._field.chainHandler.format(tracker.getValue());
         if (result.fail) {
             for (const key of Object.keys(result.errors)) {
                 tracker.addError(key, result.errors[key]);
@@ -45,13 +48,11 @@ class ChainProcessor<P extends ChainProcessorProps = ChainProcessorProps> extend
         }
     }
 
-    preStepHook(tracker: ValueTracker, state?: State): void { }
+    public postProcess(_tracker: ValueTracker, _state?: State): void { }
 
-    postStepHook(tracker: ValueTracker, state?: State): void { }
+    public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
+        super.actualProcess(tracker, state);
 
-    postProcess(tracker: ValueTracker, state?: State): void { }
-
-    override _process(tracker: ValueTracker, state: State = {}): ValueTracker {
         // const { failOnFirstError } = this.globalConfig;
         this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
@@ -64,14 +65,14 @@ class ChainProcessor<P extends ChainProcessorProps = ChainProcessorProps> extend
 
     private resolveStepArgs(args: PipelineStep['args']): unknown[] {
         if (typeof args === 'function') {
-            return args.call(this.props.field);
+            return args.call(this._field);
         }
         return args || [];
     }
 
-    executePipeline(tracker: ValueTracker, state: State = {}): void {
-        const pipeline = this.props.field.props.pipeline;
-        const { hasPipelineHooks } = this.props;
+    public executePipeline(tracker: ValueTracker, state: State = {}): void {
+        const pipeline = this._field.pipeline || [];
+        // const { _hasPipelineHooks } = this;
         for (const step of pipeline) {
             let { fn, args } = step;
             const finalArgs: unknown[] = [];
@@ -91,16 +92,16 @@ class ChainProcessor<P extends ChainProcessorProps = ChainProcessorProps> extend
                 }
             }
 
-            if (hasPipelineHooks) {
-                this.preStepHook(tracker, state);
-            }
+            // if (this._hasPipelineHooks) {
+            //     this.preStepHook(tracker, state);
+            // }
             const result = fn(...[
                 tracker.getValue(),
                 ...finalArgs
             ]);
-            if (hasPipelineHooks) {
-                this.postStepHook(tracker, state);
-            }
+            // if (this._hasPipelineHooks) {
+            //     this.postStepHook(tracker, state);
+            // }
 
             tracker.setValue(result.value);
 
@@ -116,9 +117,9 @@ class ChainProcessor<P extends ChainProcessorProps = ChainProcessorProps> extend
         }
     }
 
-    override getReferences(): Set<PathReferenceField> {
+    public override getReferences(): Set<PathReferenceField> {
         const references = super.getReferences();
-        const { pipeline } = this.props.field.props;
+        const { pipeline } = this._field;
         for (const { args } of pipeline) {
             for (const arg of this.resolveStepArgs(args)) {
                 if (arg instanceof PathReferenceField) {

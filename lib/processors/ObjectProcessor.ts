@@ -1,21 +1,35 @@
 'use strict';
 
+import { ObjectChain } from '../fields/ObjectChain.ts';
+import { Chain } from '../fields/Chain.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Utils } from '../utils/Utils.ts';
-import { ChainProcessor } from './ChainProcessor.ts';
+import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
+import { State } from './Processor.ts';
 
-class ObjectProcessor extends ChainProcessor {
+type ObjectFieldLike = Chain & {
+    ensurePlain: boolean;
+    cloneObject: boolean;
+    maxDepth?: number;
+    maxKeyCount?: number;
+};
 
+export type ObjectProcessorProps<F extends ObjectFieldLike = ObjectChain> = ChainProcessorProps<F>;
 
-    preProcess(tracker) {
+class ObjectProcessor<F extends ObjectFieldLike = ObjectChain> extends ChainProcessor<F> {
+
+    public override preProcess(tracker: ValueTracker, _state?: State): void {
         
         if (!Utils.isObject(tracker.getValue())) {
-            return tracker.addError('object/base');
+            tracker.addError('object/base');
+            return;
         }
 
-        const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this.props.field.props;
+        const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this._field;
 
         if (ensurePlain && !Utils.isPlainObject(tracker.getValue())) {
-            return tracker.addError('object/plain');
+            tracker.addError('object/plain');
+            return;
         }
 
         if (maxDepth != null || maxKeyCount != null) {
@@ -24,7 +38,8 @@ class ObjectProcessor extends ChainProcessor {
                 maxKeyCount
             });
             if (result === false) {
-                return tracker.addError('object/tooComplex', { maxDepth, maxKeyCount });
+                tracker.addError('object/tooComplex', { maxDepth, maxKeyCount });
+                return;
             }
         }
 
@@ -33,7 +48,6 @@ class ObjectProcessor extends ChainProcessor {
             tracker.setValue(Utils.clone(tracker.getValue()));
         }
     }
-
 }
 
 export { ObjectProcessor };

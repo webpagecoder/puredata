@@ -70,7 +70,7 @@ MAPPINGS.set(ValueField, ValueProcessor);
 
 class FieldProcessorFactory {
 
-    createProcessor(field: Field, context: Partial<ProcessorProps> = {}): Processor {
+    createProcessor(field: Field, context: Record<string, any> = {}): Processor {
         const ProcessorConstructor = MAPPINGS.get(field.constructor as FieldConstructor);
         if (!ProcessorConstructor) {
             throw new Error(`No processor found for field of type ${field.constructor.name}`);

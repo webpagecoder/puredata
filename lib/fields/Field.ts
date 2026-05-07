@@ -78,7 +78,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
             presence,
             processorMapper,
         } as P);
-        clone._processor = this._processor;
+        clone._processor = null;
         return clone;
     }
 

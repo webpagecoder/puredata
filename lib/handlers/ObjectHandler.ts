@@ -389,10 +389,10 @@ class ObjectHandler extends Handler {
      * @param {any} param4
      * @returns {HandlerResult}
      */
-    static renameKeys(obj: any, fromRegex: any, toRegex: any, {
+    static renameKeys(obj: Object, fromRegex: RegExp, toRegex: RegExp, {
         deleteOriginalKey = true,
         overrideExistingKey = true
-    }: any= {}): HandlerResult {
+    } = {}): HandlerResult {
         const objectCopy = Object.assign({}, obj);
         for (const originalKey of Object.keys(obj)) {
             let renamedKey = originalKey.replace(fromRegex, toRegex);

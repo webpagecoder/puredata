@@ -1,122 +1,107 @@
 'use strict';
 
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { Utils } from '../utils/Utils.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 
 export type ProcessorProps<F extends Field = Field> = {
     field: F;
-    processorMapper: FieldProcessorFactory;
+    processorMapper?: FieldProcessorFactory;
     defaultValueReference?: Processor;
 };
 
 export type State = Record<string, unknown>;
 
-class Processor<P extends ProcessorProps = ProcessorProps> {
+abstract class Processor<F extends Field = Field> {
 
-    static id: number = 0;
+    private static id: number = 0
 
-    declare props: P;
-
-    id: number;
-    cachedReferences: Set<any> | null = null;
-    state: Record<string, unknown> = {};
-
-    constructor(props: P) {
-        const { field, processorMapper } = props;
-        this.props = {
-            processorMapper,
+    protected _id: number;
+    protected _cachedReferences: Set<any> | null;
+    protected _defaultValueProcessor: Processor | null;
+    protected _field: F;
+    protected _processorMapper: FieldProcessorFactory;
+    // protected _state: Record<string, unknown>;
+    
+    constructor(props: ProcessorProps<F>) {
+        const {
+            processorMapper = new FieldProcessorFactory(),
             field,
-        } as P;
-        this.id = ++Processor.id;
+        } = props;
+
+        this._id = ++Processor.id;
+        this._cachedReferences = null;
+        this._defaultValueProcessor = null;
+        this._field = field;
+        this._processorMapper = processorMapper;
+        // this._state = {};
     }
 
-    clone(props: Partial<P>): this {
-        const Constructor = this.constructor as new (props?: Partial<P>) => this;
-        return new Constructor(
-            Object.assign({}, this.props, props || {}) as P
-        );
-    }
-
-    compile(): this {
-        const { field, processorMapper } = this.props;
-        const { defaultValue } = field.props;
+    public compile(_context: Record<string, unknown> = {}): this {
+        const { _field, _processorMapper } = this;
+        const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {
-            this.props.defaultValueReference = processorMapper.createProcessor(defaultValue);
+            this._defaultValueProcessor = _processorMapper.createProcessor(defaultValue);
         }
         return this;
     }
 
-    process(valueOrValueTracker: unknown | ValueTracker = undefined, state: State = {}): ValueTracker {
-
-        const { field } = this.props;
-        this.state = state;
-
-        let value, tracker;
-
-        if (valueOrValueTracker instanceof ValueTracker) {
-            value = valueOrValueTracker.value;
-            tracker = valueOrValueTracker;
-            // tracker.clearErrors();
-        }
-        else {
-            value = valueOrValueTracker;
-            tracker = new ValueTracker(value, this);
-        }
-        // tracker.field = field;
-
+    protected actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
+        const { _field } = this;
+        
         const isDefined = tracker.getValue() !== undefined;
 
-        if (field.isRequired() && !isDefined) {
+        if (_field.isRequired() && !isDefined) {
             return tracker.addError('generic/required');
         }
-        else if (field.isForbidden() && isDefined) {
+        else if (_field.isForbidden() && isDefined) {
             return tracker.addError('generic/forbidden');
         }
         else if (!isDefined) {
-            const { defaultValueReference } = this.props;
-            if (defaultValueReference) {
-                defaultValueReference.process(tracker, state);
+            const { _defaultValueProcessor } = this;
+            if (_defaultValueProcessor) {
+                _defaultValueProcessor.actualProcess(tracker, state);
             }
             else {
-                tracker.setValue(field.props.defaultValue);
+                tracker.setValue(_field.defaultValue);
             }
+            return tracker;
         }
-        else {
-            this._process(tracker, state);
-        }
-
+        
         return tracker;
     }
 
-    _process(tracker: ValueTracker, state: State = {}): ValueTracker {
-        return tracker;
+    public process(value: unknown = undefined): ValueTracker {
+        return this.actualProcess(new ValueTracker(value, this));
     }
 
-    hasReferences(): boolean {
+    public hasReferences(): boolean {
         return this.getReferences().size > 0;
     }
 
-    getReferences(): Set<PathReferenceField> {
-        if (this.cachedReferences) {
-            return this.cachedReferences;
+    public getReferences(): Set<PathReferenceField> {
+        if (this._cachedReferences) {
+            return this._cachedReferences;
         }
 
-        const { field } = this.props;
+        const { _field } = this;
         const references = new Set<PathReferenceField>();
-        if (field instanceof PathReferenceField) {
-            references.add(field);
+        if (_field instanceof PathReferenceField) {
+            references.add(_field);
         }
         else {
-            const { defaultValue } = field.props;
+            const { defaultValue } = _field;
             if (defaultValue instanceof PathReferenceField) {
                 references.add(defaultValue);
             }
         }
-        this.cachedReferences = references;
+        this._cachedReferences = references;
         return references;
+    }
+
+    public get field(): F {
+        return this._field;
     }
 
 }

@@ -1,94 +1,119 @@
 'use strict';
 
+import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
+import { SchemaChain } from '../fields/SchemaChain.ts';
 import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
 import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { ObjectProcessor } from './ObjectProcessor.ts';
+import { ChainProcessorProps } from './ChainProcessor.ts';
+import { ObjectProcessor, ObjectProcessorProps } from './ObjectProcessor.ts';
+import { Processor, State } from './Processor.ts';
 
+export type SchemaProcessorProps = ObjectProcessorProps<SchemaChain> & {
+    field: SchemaChain;
+    depth?: number;
+    path?: Path;
+    parent?: SchemaProcessor;
+    pubSub?: PubSub;
+    root?: SchemaProcessor;
+};
 
-class SchemaProcessor extends ObjectProcessor {
+export type CompilationContext = {
+    parentPubSubs?: {
+        pubSub: PubSub;
+        depth: number;
+    }[];
+};
 
-    constructor(props = {}) {
+class SchemaProcessor extends ObjectProcessor<SchemaChain> {
+
+    protected _depth: number;
+    protected _path: Path
+    protected _parent: SchemaProcessor;
+    protected _pubSub: PubSub;
+    protected _root: SchemaProcessor
+    protected _schema: Map<string, Processor>;
+
+    constructor(props: SchemaProcessorProps) {
         const {
             field,
-            processorMapper,
+            processorMapper = new FieldProcessorFactory(),
             depth = 0,
             path = Path.create('/'),
             parent,
-            referenceResolver = new PubSub(),
+            pubSub = new PubSub(),
             root
         } = props;
 
         super(props);
 
-        this.props.depth = depth;
-        this.props.path = path;
-        this.props.parent = parent || this;
-        this.props.referenceResolver = referenceResolver;
-        this.props.root = root || this;
+        this._depth = depth;
+        this._path = path;
+        this._parent = parent || this;
+        this._pubSub = pubSub;
+        this._root = root || this;
+        this._schema = new Map();
 
-        const { schema = new Map() } = field.props;
+        const { schema = new Map() } = field;
 
         const compiledSchema = new Map();
-        this.props.schema = compiledSchema;
+        this._schema = compiledSchema;
+
         for (let [key, childField] of schema) {
             const compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
                 path: path.move(key),
                 parent: this,
-                root: this.props.root,
+                root: this._root,
             });
             if (!(compiledChild instanceof SchemaProcessor)) {
                 // Set proper path/parent/root for non-schema chains
-                compiledChild.props.path = path.move(key);
-                compiledChild.props.parent = this;
-                compiledChild.props.root = this.props.root;
+                (compiledChild as SchemaProcessor)._path = path.move(key);
+                (compiledChild as SchemaProcessor)._parent = this;
+                (compiledChild as SchemaProcessor)._root = this._root;
             }
             compiledSchema.set(key, compiledChild);
         }
     }
 
-
-
-    compile(context = {}) {
-        super.compile(context);
+    public override compile(context: CompilationContext = {}): this {
+        super.compile();
 
         const {
-            depth,
-            path,
-            schema
-        } = this.props;
+            _depth,
+            _path,
+            _schema
+        } = this;
 
         let {
-            parentResolvers = [],
+            parentPubSubs = [],
+        }: CompilationContext = context;
 
-        } = context;
-
-        const allResolvers = [
+        const allPubSubs = [
             {
-                resolver: this.props.referenceResolver,
-                depth
+                pubSub: this._pubSub,
+                depth: _depth
             },
-            ...parentResolvers
+            ...parentPubSubs
         ];
 
 
-        for (let [key, childProcessor] of schema) {
-            const childPath = path.move(key);
+        for (let [key, childProcessor] of _schema) {
+            const childPath = _path.move(key);
 
             childProcessor = childProcessor.compile({
-                parentResolvers: allResolvers,
+                parentPubSubs: allPubSubs,
             });
 
-            schema.set(key, childProcessor);
+            _schema.set(key, childProcessor);
 
             if (childProcessor.hasReferences()) {
-                for (const { resolver, depth } of allResolvers) {
+                for (const { pubSub, depth } of allPubSubs) {
 
                     const adjustedRelativeSubPath = childPath.shiftKeys(depth).toRelative();
 
-                    const subNode = resolver.getOrCreateNode(
+                    const subNode = pubSub.getOrCreateNode(
                         childPath.string,
                         function ({ tracker, failOnFirstError, prependRootPath }) {
                             const activeValueTracker = tracker.getNodeByPath(adjustedRelativeSubPath);
@@ -101,47 +126,46 @@ class SchemaProcessor extends ObjectProcessor {
 
                     for (const reference of childProcessor.getReferences()) {
                         const publisherPath = childPath.parent().move(reference.path);
-                        const pubNode = resolver.getOrCreateNode(publisherPath.string);
-                        resolver.linkNodes(pubNode, subNode);
+                        const pubNode = pubSub.getOrCreateNode(publisherPath.string);
+                        pubSub.linkNodes(pubNode, subNode);
                     }
                 }
             }
-
-
         }
 
         return this;
     }
 
-    _process(tracker, state) {
+    public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
 
-        this.preProcess(tracker);
+        super.actualProcess(tracker, state);
         if (tracker.hasErrors()) {
             return tracker;
         }
 
-        const { field, referenceResolver } = this.props;
+        const { _field, _pubSub } = this;
 
         if (!state.localRoot) {
             state.localRoot = this;
             state.conditionals = [];
         }
 
-
-        const { chainHandler: { renameKeysArgs, stripUnknownKeys }, schema, failOnFirstError } = field.props;
+        const {
+            chainHandler: { renameKeys: renameKeysFn, stripUnknownKeys: stripUnknownKeysFn },
+            renameKeysArgs, stripUnknownKeys, schema, failOnFirstError
+        } = _field;
         const { value } = tracker;
 
 
         // Do any required key renaming
         if (renameKeysArgs) {
-            const { from, to, options = {} } = renameKeysArgs;
-            tracker.setValue(renameKeys(value, from, to, options).value);
+            tracker.setValue(renameKeysFn(...renameKeysArgs).value);
         }
 
         // Strip unknown keys if needed
         const schemaKeys = Array.from(schema.keys());
-        if (stripUnknownKeys) {
-            tracker.setValue(stripUnknownKeys(tracker.getValue(), schemaKeys).value);
+        if (stripUnknownKeysFn) {
+            tracker.setValue(stripUnknownKeysFn(tracker.getValue(), schemaKeys).value);
         }
         else {
             tracker.untrackedEntries = tracker.getValue();
@@ -150,15 +174,15 @@ class SchemaProcessor extends ObjectProcessor {
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
-        for (let [key, childProcessor] of this.props.schema) {
-            
+        for (let [key, childProcessor] of this._schema) {
+
             let childValueTracker = new ValueTracker(undefined, childProcessor);
             tracker.setChild(key, childValueTracker);
 
             childValueTracker.setValue(value[key]);
             // childValueTracker.path = tracker.path.move(key);
 
-            const childField = childProcessor.props.field;
+            const childField = childProcessor.field;
             if (childField instanceof SchemaConditionalField) {
                 state.conditionals.push([childProcessor, childValueTracker]);
             }
@@ -168,7 +192,7 @@ class SchemaProcessor extends ObjectProcessor {
         }
 
         if (state.localRoot === this) {
-            referenceResolver.execute({ tracker });
+            _pubSub.execute({ tracker });
 
             for (const [conditionalField, tracker] of state.conditionals) {
                 conditionalField.process(tracker); // fresh state
@@ -181,11 +205,7 @@ class SchemaProcessor extends ObjectProcessor {
         return tracker;
     }
 
-    parent() {
-        return this.parent;
-    }
-
-    resolvePath(path) {
+    public resolvePath(path: Path): Processor | null {
         if (typeof path === 'string') {
             path = Path.create(path);
         }
@@ -193,24 +213,28 @@ class SchemaProcessor extends ObjectProcessor {
             return this;
         }
 
-        let pointer = this;
+        let schemaProcessor: SchemaProcessor = this;
         if (path.isAbsolute) {
-            pointer = this.props.root;
+            schemaProcessor = this._root;
         }
         else {
             for (let i = 0; i < path.upCount; ++i) {
-                pointer = pointer.props.parent;
+                schemaProcessor = schemaProcessor._parent;
             }
         }
 
+        let target: Processor = schemaProcessor;
         for (const key of path.keys) {
-            const child = pointer.props.schema.get(key);
+            if (!(target instanceof SchemaProcessor)) {
+                return null;
+            }
+            const child = target._schema.get(key);
             if (!child) {
                 return null;
             }
-            pointer = child;
+            target = child;
         }
-        return pointer;
+        return target;
     }
 
 }

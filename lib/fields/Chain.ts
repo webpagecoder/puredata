@@ -115,6 +115,14 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
         });
     }
 
+    get pipeline(): Step[] {
+        return this._pipeline;
+    }
+
+    get chainHandler(): P['chainHandler'] {
+        return this._chainHandler;
+    }
+
 }
 
 export { Chain };

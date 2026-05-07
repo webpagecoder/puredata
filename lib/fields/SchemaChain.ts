@@ -27,11 +27,13 @@ export type Schema = {
 export type SchemaChainProps = ObjectChainProps & {
     schema?: Schema;
     stripUnknownKeys?: boolean;
+    renameKeysArgs?: Parameters<typeof ObjectHandler['renameKeys']>;
 };
 
-class SchemaChain extends ObjectChain {
+class SchemaChain extends ObjectChain<SchemaChainProps> {
     protected _schema: Map<string, Field>;
     protected _stripUnknownKeys: boolean;
+    protected _renameKeysArgs: Parameters<typeof ObjectHandler['renameKeys']> | null;
 
     constructor(props: SchemaChainProps) {
         super(props);
@@ -39,11 +41,13 @@ class SchemaChain extends ObjectChain {
         const {
             schema = {},
             stripUnknownKeys = true,
+            renameKeysArgs = null,
         } = props;
 
         this._cloneObject = true;
         this._ensurePlain = true;
         this._stripUnknownKeys = stripUnknownKeys;
+        this._renameKeysArgs = renameKeysArgs;
         this._schema = this._createSchemaMap(schema);
     }
 
@@ -52,10 +56,12 @@ class SchemaChain extends ObjectChain {
         const {
             schema,
             stripUnknownKeys = this._stripUnknownKeys,
+            renameKeysArgs = this._renameKeysArgs,
         } = props;
 
         clone._schema = schema ? this._createSchemaMap(schema) : this._schema;
         clone._stripUnknownKeys = stripUnknownKeys;
+        clone._renameKeysArgs = renameKeysArgs;
         return clone;
     }
 
@@ -102,17 +108,17 @@ class SchemaChain extends ObjectChain {
         return this.clone({ stripUnknownKeys });
     }
 
-    // getRawDescription(): DescriptionBuilder {
-    //     // @ts-ignore - getRawDescription will be defined on parent when fully typed
-    //     const builder: DescriptionBuilder = super.getRawDescription();
+    public configRenameKeys(renameKeysArgs: Parameters<typeof ObjectHandler['renameKeys']>): this {
+        return this.clone({ renameKeysArgs });
+    }
 
-    //     for (const [key, field] of this.props.schema) {
-    //         // @ts-ignore - getRawDescription will be defined on Field when fully typed
-    //         builder.setChild(key, field.getRawDescription());
-    //     }
+    public get stripUnknownKeys(): boolean {
+        return this._stripUnknownKeys;
+    }
 
-    //     return builder;
-    // }
+    public get renameKeysArgs(): Parameters<typeof ObjectHandler['renameKeys']> | null {
+        return this._renameKeysArgs;
+    }
 
 }
 

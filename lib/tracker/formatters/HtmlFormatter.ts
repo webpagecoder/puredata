@@ -7,8 +7,8 @@ class HtmlFormatter implements Formatter {
     format(tracker: ValueTracker, depth = 0): string {
         const {
             children,
-            errorCollection,
-            processor: {
+            _errorCollection: errorCollection,
+            _processor: {
                 props: {
                     field: {
                         props: { label }

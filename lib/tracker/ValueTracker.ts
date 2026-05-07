@@ -23,22 +23,22 @@ type ErrorTree = {
 
 class ValueTracker extends Node {
 
-    processor: Processor;
-    errorCollection: TrackerError[];
-    originalValue: unknown;
-    _value: unknown;
+    private _processor: Processor;
+    private _errorCollection: TrackerError[];
+    private _originalValue: unknown;
+    private _value: unknown;
 
 
     constructor(value: unknown, processor: Processor) {
         super();
-        this.processor = processor;
+        this._processor = processor;
         // this.cachedErrorMessages = null;
-        this.errorCollection = [];
-        this.originalValue = value;
+        this._errorCollection = [];
+        this._originalValue = value;
         this.setValue(value);
     }
 
-    setValue(value: unknown): void {
+    public setValue(value: unknown): void {
         // this.cachedErrorMessages = null;
         this._value = value;
         const children = this.children as unknown as Map<string, ValueTracker>;
@@ -57,7 +57,7 @@ class ValueTracker extends Node {
         }
     }
 
-    getValue(): unknown {
+    public getValue(): unknown {
         if (!this.hasChildren()) {
             return this._value;
         }
@@ -74,7 +74,7 @@ class ValueTracker extends Node {
         return final;
     }
 
-    hasValue(): boolean {
+    public hasValue(): boolean {
         if (!this.hasChildren()) {
             return this._value !== undefined;
         }
@@ -89,13 +89,13 @@ class ValueTracker extends Node {
         return false;
     }
 
-    addError(errorKey: string, args?: ArgumentCollection): this {
-        if (!this.processor) {
+    public addError(errorKey: string, args?: ArgumentCollection): this {
+        if (!this._processor) {
             throw new Error('ValueTracker compiled field is not configured');
         }
 
         const {
-            processor: { props: { field: { props: { label, locale } } } },
+            _processor: { props: { field: { props: { label, locale } } } },
             path,
         } = this;
         let text = locale.translate(Path.fromArray(['errors', errorKey])).replace('{label}', label);
@@ -105,7 +105,7 @@ class ValueTracker extends Node {
                 text = text.replace(`{${argKey}}`, Array.isArray(arg) ? arg.join(', ') : arg as string);
             }
         }
-        this.errorCollection.push({
+        this._errorCollection.push({
             args: args || {},
             errorKey,
             key: String(path.keys[path.keys.length - 1] ?? ''),
@@ -116,8 +116,8 @@ class ValueTracker extends Node {
         return this;
     }
 
-    hasErrors(): boolean {
-        if (this.errorCollection.length > 0) {
+    public hasErrors(): boolean {
+        if (this._errorCollection.length > 0) {
             return true;
         }
         const children = this.children as unknown as Map<string, ValueTracker>;
@@ -131,17 +131,17 @@ class ValueTracker extends Node {
         return false;
     }
 
-    isPass(): boolean {
+    public isPass(): boolean {
         return !this.hasErrors();
     }
 
-    isFail(): boolean {
+    public isFail(): boolean {
         return this.hasErrors();
     }
 
-    getErrors(): ErrorTree {
+    public getErrors(): ErrorTree {
         const obj: ErrorTree = {
-            errors: this.errorCollection,
+            errors: this._errorCollection,
             children: {}
         };
 
@@ -155,34 +155,34 @@ class ValueTracker extends Node {
         return obj;
     }
 
-    getLocalErrors(path?: string | Path): TrackerError[] {
+    public getLocalErrors(path?: string | Path): TrackerError[] {
         const tracker = path ? this.getNodeByPath(path) : this;
-        return tracker ? (tracker as ValueTracker).errorCollection : [];
+        return tracker ? (tracker as ValueTracker)._errorCollection : [];
     }
 
-    formatErrors(formatter: Formatter = new HtmlFormatter()): string {
+    public formatErrors(formatter: Formatter = new HtmlFormatter()): string {
         return formatter.format(this);
     }
 
-    formatLocalErrors(formatter: Formatter = new HtmlFormatter()): string {
+    public formatLocalErrors(formatter: Formatter = new HtmlFormatter()): string {
         return formatter.format(this);
     }
 
     // Convenience getters
 
-    get value(): unknown {
+    public get value(): unknown {
         return this.getValue();
     }
 
-    get errors(): ErrorTree {
+    public get errors(): ErrorTree {
         return this.getErrors();
     }
 
-    get fail(): boolean {
+    public get fail(): boolean {
         return this.hasErrors();
     }
 
-    get pass(): boolean {
+    public get pass(): boolean {
         return !this.fail;
     }
 }

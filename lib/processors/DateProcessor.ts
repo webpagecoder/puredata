@@ -50,13 +50,13 @@ class DateProcessor extends ChainProcessor<DateProcessorProps> {
         tracker.setValue(parsedDate);
     }
 
-    override preStepHook(tracker: ValueTracker, state: State = {}): void {
-        console.log('pr');
-    }
+    // override preStepHook(tracker: ValueTracker, state: State = {}): void {
+    //     console.log('pr');
+    // }
 
-    override postStepHook(tracker: ValueTracker, state: State = {}): void {
-        console.log('pos');
-    }
+    // override postStepHook(tracker: ValueTracker, state: State = {}): void {
+    //     console.log('pos');
+    // }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
         const { outputType,  outputFormat, dateParser } = this.props.field.props;
