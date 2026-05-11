@@ -438,12 +438,12 @@ class ObjectHandler extends Handler {
     /**
      * Executes the stripUnknownKeys handler step.
      * @param {any} obj
-     * @param {any} knownKeys
+     * @param {any} exceptFor
      * @returns {HandlerResult}
      */
-    static stripUnknownKeys(obj: any, knownKeys: any= []): HandlerResult {
+    static stripKeys(obj: any, exceptFor: any= []): HandlerResult {
         const copy: Record<string, any> = {};
-        for (const key of knownKeys) {
+        for (const key of exceptFor) {
             copy[key] = obj[key];
         }
         return pass(copy);

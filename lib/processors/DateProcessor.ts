@@ -8,6 +8,7 @@ import { State } from './Processor.ts';
 import { DateChain, DateChainProps } from '../fields/DateChain.ts';
 import { MetaDate } from '../date copy/MetaDate.ts';
 import { IsoPrecision } from '../date/DateParser.ts';
+import { DateHandler } from '../handlers/DateHandler.ts';
 
 type DateProcessorState = State & {
     originalValue?: unknown;
@@ -30,15 +31,15 @@ const isoFormatStrings: Record<IsoPrecision, string> = {
 
 export type DateProcessorProps = ChainProcessorProps<DateChain>;
 
-class DateProcessor extends ChainProcessor<DateProcessorProps> {
+class DateProcessor extends ChainProcessor<DateChain> {
 
     constructor(props: DateProcessorProps) {
         super(props);
-        this.props.hasPipelineHooks = true;
+        this._hasPipelineHooks = true;
     }
 
     override preProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const { skipPreProcess, dateParser } = this.props.field.props as DateChainProps;
+        const { dateParser, skipPreProcess } = this._field;
         if (skipPreProcess) {
             return;
         }
@@ -59,36 +60,18 @@ class DateProcessor extends ChainProcessor<DateProcessorProps> {
     // }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const { outputType,  outputFormat, dateParser } = this.props.field.props;
+        const { outputFormatString, dateParser } = this._field;
         const metaDate = tracker.getValue() as MetaDate;
 
-        switch (outputType) {
-            case 'custom':
-                tracker.setValue(dateParser.format(metaDate, outputFormat as string));
+        switch (outputFormatString) {
+            case 'timestamp':
+                tracker.setValue(metaDate.date.getTime());
                 break;
             case 'object':
-                tracker.setValue(metaDate.date);
+                tracker.setValue(new Date(metaDate.date));
                 break;
-            case 'iso':
-                const format = isoFormatStrings[outputFormat as IsoPrecision || 'date'];
-                tracker.setValue(dateParser.format(metaDate, format));
-                break;
-            case 'isoWeek':
-                const target = new Date(metaDate.date);
-                const dayNum = target.getUTCDay() || 7;
-                target.setUTCDate(target.getUTCDate() + 4 - dayNum);
-                const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
-                const weekNum = Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-                tracker.setValue(`${target.getUTCFullYear()}-W${Utils.padLeft(weekNum.toString(), 2, '0')}-${dayNum}`);
-                break;
-            case 'isoOrdinal':
-                const diff = dateValue.getTime() - new Date(Date.UTC(dateValue.getUTCFullYear(), 0, 0)).getTime();
-                const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-                tracker.setValue(`${dateValue.getUTCFullYear()}-${Utils.padLeft(dayOfYear.toString(), 3, '0')}`);
-                break;
-            case 'timestamp':
-                tracker.setValue(dateValue.getTime());
-                break;
+            default:
+                tracker.setValue(dateParser.format(metaDate, outputFormatString || ''));
         }
     }
 

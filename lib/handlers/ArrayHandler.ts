@@ -82,9 +82,9 @@ class ArrayHandler extends Handler {
     // VALIDATORS 
     // ====================================
 
-    static format(value: unknown): HandlerResult {
-        return Array.isArray(value) ? pass(value) : fail(value, 'array/base');
-    }
+    // static format(value: unknown): HandlerResult {
+    //     return Array.isArray(value) ? pass(value) : fail(value, 'array/base');
+    // }
 
     /**
      * Validates that the array contains every required value.

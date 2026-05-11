@@ -1,12 +1,12 @@
 'use strict';
 
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
+import { ObjectChain } from '../fields/ObjectChain.ts';
 import { SchemaChain } from '../fields/SchemaChain.ts';
 import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
 import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { ChainProcessorProps } from './ChainProcessor.ts';
 import { ObjectProcessor, ObjectProcessorProps } from './ObjectProcessor.ts';
 import { Processor, State } from './Processor.ts';
 
@@ -118,7 +118,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                         function ({ tracker, failOnFirstError, prependRootPath }) {
                             const activeValueTracker = tracker.getNodeByPath(adjustedRelativeSubPath);
                             if (activeValueTracker) {
-                                childProcessor.process(activeValueTracker);
+                                childProcessor.actualProcess(activeValueTracker);
                             }
                             return true;
                         }
@@ -138,7 +138,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
     public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
 
-        super.actualProcess(tracker, state);
+        this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
             return tracker;
         }
@@ -151,11 +151,9 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         const {
-            chainHandler: { renameKeys: renameKeysFn, stripUnknownKeys: stripUnknownKeysFn },
+            chainHandler: { renameKeys: renameKeysFn, stripKeys: stripUnknownKeysFn },
             renameKeysArgs, stripUnknownKeys, schema, failOnFirstError
         } = _field;
-        const { value } = tracker;
-
 
         // Do any required key renaming
         if (renameKeysArgs) {
@@ -174,6 +172,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
+        const value = tracker!.value;
         for (let [key, childProcessor] of this._schema) {
 
             let childValueTracker = new ValueTracker(undefined, childProcessor);
@@ -187,7 +186,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 state.conditionals.push([childProcessor, childValueTracker]);
             }
             else if (!childProcessor.hasReferences()) {
-                childProcessor.process(childValueTracker, state);
+                childProcessor.actualProcess(childValueTracker, state);
             }
         }
 
@@ -195,7 +194,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             _pubSub.execute({ tracker });
 
             for (const [conditionalField, tracker] of state.conditionals) {
-                conditionalField.process(tracker); // fresh state
+                conditionalField.actualProcess(tracker); // fresh state
             }
             // console.log(this.state.conditionals);
             state.conditionals = [];

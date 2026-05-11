@@ -34,9 +34,9 @@ class PureData {
 
         Path.delims(this.config.general.pathDelims);
 
-        const { locale } = this.config.general;
+        const { localeCode } = this.config.general;
 
-        this.locale = new Locale(locale);
+        this.locale = new Locale(localeCode);
         this.processorMapper = processorMapper;
     }
 
@@ -100,9 +100,9 @@ class PureData {
         }));
     }
 
-    schema(structure = {}, props = {}) {
+    schema(schema = {}, props = {}) {
         return new SchemaChain(this.composeProps(
-            Object.assign({ structure }, this.config.schema, props),
+            Object.assign({ schema }, this.config.schema, props),
             'object',
             ObjectHandler
         ));

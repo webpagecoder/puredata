@@ -3,7 +3,7 @@
 // Run: tsx ./generator/generate-arraychain-definitions.ts
 
 interface ChainGeneratedMethods {
-        format(): Chain;
+        
 
         /**
         * Executes the equals handler step.

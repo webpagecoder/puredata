@@ -86,6 +86,21 @@ class NumberChain extends Chain {
         return this.clone({ preservePrecision });
     }
 
+    public get autoConvert() {
+        return this._autoConvert;
+    }
+
+    public get ensureSafe() {
+        return this._ensureSafe;
+    }
+
+    public get ensureFinite() {
+        return this._ensureFinite;
+    }
+
+    public get preservePrecision() {
+        return this._preservePrecision;
+    }
 }
 
 export { NumberChain };

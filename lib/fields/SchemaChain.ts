@@ -4,25 +4,15 @@ import { Utils } from '../utils/Utils.ts';
 import { Field } from './Field.ts';
 import { ValueField } from './ValueField.ts';
 import { ArrayChain } from './ArrayChain.ts';
-import { ObjectChain, ObjectChainProps, ResolvedObjectChainProps } from './ObjectChain.ts';
+import { ObjectChain, ObjectChainProps } from './ObjectChain.ts';
 import { ChainProps } from './Chain copy.ts';
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 
-// type SchemaChainProps = ObjectChainProps & {
-//     schema?: Record<string, unknown>;
-// };
-type ResolvedSchemaChainProps = ResolvedObjectChainProps & {
-    schema: Record<string, unknown>;
-};
-type DescriptionBuilder = {
-    setChild(key: string, child: unknown): void;
-};
 
 export type Schema = {
     [key: string]: Schema | unknown;
 };
-
 
 export type SchemaChainProps = ObjectChainProps & {
     schema?: Schema;

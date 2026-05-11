@@ -3,7 +3,7 @@
 // Run: tsx ./generator/generate-arraychain-definitions.ts
 
 interface ArrayChainGeneratedMethods {
-        format(): ArrayChain;
+       
 
         /**
         * Validates that the array contains every required value.

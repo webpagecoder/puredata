@@ -95,7 +95,7 @@ class ValueTracker extends Node {
         }
 
         const {
-            _processor: { props: { field: { props: { label, locale } } } },
+            _processor: { field: { label, locale} },
             path,
         } = this;
         let text = locale.translate(Path.fromArray(['errors', errorKey])).replace('{label}', label);

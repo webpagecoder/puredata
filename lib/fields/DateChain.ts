@@ -8,23 +8,25 @@ import { Locale } from '../Locale.ts';
 import { Presence } from '../Presence.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
-type OutputFormat = [
-    type: DateType,
-    precision: HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision
-] | string | null;
+type OutputFormat = DateType | string;
+type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
 type DateOrder = 'MDY' | 'DMY' | 'YMD';
 
 export type DateChainProps = ChainProps<typeof DateHandler> & {
     dateOrder?: DateOrder;
     dateParser?: DateParser;
-    outputFormat?: OutputFormat;
+    outputFormatString?: OutputFormat;
+    outputPrecision?: OutputPrecision;
+    skipPreProcess?: boolean;
     utcOffset?: [number, number];
 };
 
 class DateChain extends Chain<DateChainProps> {
     protected _dateParser: DateParser;
-    protected _outputFormat: OutputFormat;
+    protected _outputFormatString: OutputFormat | null;
+    protected _outputPrecision: OutputPrecision | null;
+    protected _skipPreProcess: boolean;
     protected _utcOffset: [number, number];
 
     constructor(props: DateChainProps) {
@@ -33,29 +35,36 @@ class DateChain extends Chain<DateChainProps> {
         const {
             dateOrder = 'MDY',
             dateParser = new DateParser(this._locale, dateOrder),
-            outputFormat = null,
+            outputFormatString = null,
+            outputPrecision = null,
+            skipPreProcess = false,
             utcOffset = [0, 0]
         } = props;
 
         this._dateParser = dateParser;
-        this._outputFormat = outputFormat;
+        this._outputFormatString = outputFormatString;
+        this._outputPrecision = outputPrecision;
         this._utcOffset = utcOffset;
+        this._skipPreProcess = skipPreProcess;
     }
 
     public override clone(props: Partial<DateChainProps> = {}): this {
         const clone = super.clone(props);
         const {
-            dateOrder,
+            dateOrder = null,
             dateParser = this._dateParser,
-            outputFormat = this._outputFormat,
-            utcOffset = this._utcOffset
+            outputFormatString = this._outputFormatString,
+            outputPrecision = this._outputPrecision,
+            utcOffset = this._utcOffset,
+            skipPreProcess = this._skipPreProcess
         } = props;
 
         clone._dateParser = dateOrder
             ? new DateParser(this._locale, dateOrder)
             : dateParser;
-        clone._dateParser = dateParser;
-        clone._outputFormat = outputFormat;
+        clone._outputFormatString = outputFormatString;
+        clone._outputPrecision = outputPrecision;
+        clone._skipPreProcess = skipPreProcess;
         clone._utcOffset = utcOffset;
         return clone;
     }
@@ -64,6 +73,7 @@ class DateChain extends Chain<DateChainProps> {
         if (this._pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
+        this._skipPreProcess = true;
     }
 
     // Configurators
@@ -171,15 +181,12 @@ class DateChain extends Chain<DateChainProps> {
 
 
     // Exporters
-    public format(formatString: string) {
-        return this.clone({
-            outputType: 'custom',
-            outputFormat: formatString
-        });
+    public format(outputFormatString: string) {
+        return this.clone({ outputFormatString });
     }
 
-    public toDateObj() {
-        return this.clone({ outputType: 'object' });
+    public toDate() {
+        return this.clone({ outputFormatString: 'object' });
     }
 
     /**
@@ -188,11 +195,31 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
-    toIso(precision: IsoPrecision = 'timezone') {
-        return this.clone({
-            outputType: 'iso',
-            outputFormat: precision
-        });
+    public toIso(outputPrecision: IsoPrecision = 'timezone', expanded = true) {
+        let outputFormatString = '';
+        let dash = expanded ? '-' : '';
+        let colon = expanded ? ':' : '';
+        switch (outputPrecision) {
+            case 'timezone':
+                outputFormatString = dash ? 'ZZ' : 'Z';
+            case 'time':
+            case 'millisecond':
+                outputFormatString = '.SSS' + outputFormatString;
+            case 'second':
+                outputFormatString = `${colon}ss` + outputFormatString;
+            case 'minute':
+                outputFormatString = `${colon}mm` + outputFormatString;
+            case 'hour':
+                outputFormatString = 'THH' + outputFormatString;
+            case 'date':
+            case 'day':
+                outputFormatString = `${dash}DD` + outputFormatString;
+            case 'month':
+                outputFormatString = `${dash}MM` + outputFormatString;
+            case 'year':
+                outputFormatString = 'YYYY' + outputFormatString;
+        }
+        return this.clone({ outputFormatString });
     }
 
     /**
@@ -201,8 +228,27 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
-    public toIsoOrdinal() {
-        return this.clone({ outputType: 'isoOrdinal' });
+    public toIsoOrdinal(outputPrecision: IsoOrdinalPrecision = 'timezone', expanded = true) {
+        let outputFormatString = '';
+        let dash = expanded ? '-' : '';
+        let colon = expanded ? ':' : '';
+        switch (outputPrecision) {
+            case 'timezone':
+                outputFormatString = dash ? 'ZZ' : 'Z';
+            case 'time':
+            case 'millisecond':
+                outputFormatString = '.SSS' + outputFormatString;
+            case 'second':
+                outputFormatString = `${colon}ss` + outputFormatString;
+            case 'minute':
+                outputFormatString = `${colon}mm` + outputFormatString;
+            case 'hour':
+                outputFormatString = 'THH' + outputFormatString;
+            case 'date':
+            case 'dayOfYear':
+                outputFormatString = `YYYY${dash}DDD` + outputFormatString;
+        }
+        return this.clone({ outputFormatString });
     }
 
     /**
@@ -211,8 +257,29 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
-    public toIsoWeek() {
-        return this.clone({ outputType: 'isoWeek' });
+    public toIsoWeek(outputPrecision: IsoWeekPrecision = 'timezone', expanded = true) {
+        let outputFormatString = '';
+        let dash = expanded ? '-' : '';
+        let colon = expanded ? ':' : '';
+        switch (outputPrecision) {
+            case 'timezone':
+                outputFormatString = dash ? 'ZZ' : 'Z';
+            case 'time':
+            case 'millisecond':
+                outputFormatString = '.SSS' + outputFormatString;
+            case 'second':
+                outputFormatString = `${colon}ss` + outputFormatString;
+            case 'minute':
+                outputFormatString = `${colon}mm` + outputFormatString;
+            case 'hour':
+                outputFormatString = 'THH' + outputFormatString;
+            case 'date':
+            case 'dayOfWeek':
+                outputFormatString = `${dash}E` + outputFormatString;
+            case 'week':
+                outputFormatString = `YYYY${dash}Www` + outputFormatString;
+        }
+        return this.clone({ outputFormatString });
     }
 
     /**
@@ -222,7 +289,23 @@ class DateChain extends Chain<DateChainProps> {
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
     public toTimestamp() {
-        return this.clone({ outputType: 'timestamp' });
+        return this.clone({ outputFormatString: 'timestamp' });
+    }
+
+    public get dateParser() {
+        return this._dateParser;
+    }
+
+    public get outputFormatString() {
+        return this._outputFormatString;
+    }
+
+    public get skipPreProcess() {
+        return this._skipPreProcess;
+    }
+
+    public get utcOffset() {
+        return this._utcOffset;
     }
 }
 

@@ -191,11 +191,11 @@ interface ObjectChainGeneratedMethods {
         setPaths(pathValues?: any, overwrite?: any, create?: any): ObjectChain;
 
         /**
-        * Executes the stripUnknownKeys handler step.
-        * @param {any} knownKeys
+        * Executes the stripKeys handler step.
+        * @param {any} exceptFor
         * @returns {ObjectChain}
         */
-        stripUnknownKeys(knownKeys?: any): ObjectChain;
+        stripKeys(exceptFor?: any): ObjectChain;
 
 }
 

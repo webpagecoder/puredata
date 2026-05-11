@@ -26,7 +26,7 @@ export type ChainProcessorProps<C extends Chain = Chain> = ProcessorProps<C> & {
     hasPipelineHooks: boolean;
 };
 
-class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
+abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
     protected _hasPipelineHooks: boolean;
 
@@ -35,25 +35,7 @@ class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         this._hasPipelineHooks = props.hasPipelineHooks;
     }
 
-    public preProcess(tracker: ValueTracker, _state?: State): void {
-        //todo: rename to preFormat or something like that
-        const result = this._field.chainHandler.format(tracker.getValue());
-        if (result.fail) {
-            for (const key of Object.keys(result.errors)) {
-                tracker.addError(key, result.errors[key]);
-            }
-        }
-        else {
-            tracker.setValue(result.value);
-        }
-    }
-
-    public postProcess(_tracker: ValueTracker, _state?: State): void { }
-
     public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
-        super.actualProcess(tracker, state);
-
-        // const { failOnFirstError } = this.globalConfig;
         this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
             return tracker;

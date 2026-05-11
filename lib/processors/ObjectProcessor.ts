@@ -7,19 +7,17 @@ import { Utils } from '../utils/Utils.ts';
 import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
 import { State } from './Processor.ts';
 
-type ObjectFieldLike = Chain & {
+export type ObjectProcessorProps<C extends ObjectChain = ObjectChain> = ChainProcessorProps<C> & {
     ensurePlain: boolean;
     cloneObject: boolean;
     maxDepth?: number;
     maxKeyCount?: number;
 };
 
-export type ObjectProcessorProps<F extends ObjectFieldLike = ObjectChain> = ChainProcessorProps<F>;
-
-class ObjectProcessor<F extends ObjectFieldLike = ObjectChain> extends ChainProcessor<F> {
+class ObjectProcessor<C extends ObjectChain = ObjectChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker, _state?: State): void {
-        
+
         if (!Utils.isObject(tracker.getValue())) {
             tracker.addError('object/base');
             return;

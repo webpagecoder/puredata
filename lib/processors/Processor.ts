@@ -23,7 +23,7 @@ abstract class Processor<F extends Field = Field> {
     protected _field: F;
     protected _processorMapper: FieldProcessorFactory;
     // protected _state: Record<string, unknown>;
-    
+
     constructor(props: ProcessorProps<F>) {
         const {
             processorMapper = new FieldProcessorFactory(),
@@ -47,16 +47,30 @@ abstract class Processor<F extends Field = Field> {
         return this;
     }
 
-    protected actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
+    public process(value: unknown = undefined): ValueTracker {
+        const tracker = new ValueTracker(value, this);
+        return this.actualProcess(tracker);
+    }
+
+    public actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
+        this.preProcess(tracker, state);
+        if (tracker.hasErrors()) {
+            return tracker;
+        }
+        this.postProcess(tracker, state);
+        return tracker;
+    }
+
+    public preProcess(tracker: ValueTracker, state: State = {}): void {
         const { _field } = this;
-        
+
         const isDefined = tracker.getValue() !== undefined;
 
         if (_field.isRequired() && !isDefined) {
-            return tracker.addError('generic/required');
+            tracker.addError('generic/required');
         }
         else if (_field.isForbidden() && isDefined) {
-            return tracker.addError('generic/forbidden');
+            tracker.addError('generic/forbidden');
         }
         else if (!isDefined) {
             const { _defaultValueProcessor } = this;
@@ -66,15 +80,10 @@ abstract class Processor<F extends Field = Field> {
             else {
                 tracker.setValue(_field.defaultValue);
             }
-            return tracker;
         }
-        
-        return tracker;
     }
 
-    public process(value: unknown = undefined): ValueTracker {
-        return this.actualProcess(new ValueTracker(value, this));
-    }
+    public postProcess(_tracker: ValueTracker, _state?: State): void { };
 
     public hasReferences(): boolean {
         return this.getReferences().size > 0;

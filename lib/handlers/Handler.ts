@@ -11,12 +11,12 @@ type CustomHandlerFn = (value: unknown) => HandlerResult | unknown;
 
 abstract class Handler {
 
-    // ====================================
-    // FORMATTER
-    // ====================================
-    static format(value: unknown): HandlerResult {
-        return fail(value, 'generic/format');
-    }
+    // // ====================================
+    // // FORMATTER
+    // // ====================================
+    // static format(value: unknown): HandlerResult {
+    //     return fail(value, 'generic/format');
+    // }
 
     // ====================================
     // VALIDATORS

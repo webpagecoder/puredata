@@ -63,15 +63,9 @@ export function areOptionsCompliant(parts: any = {}, required: DatePart[] = [], 
 
 class DateHandler extends Handler {
 
-    // ====================================
-    // DATE FORMAT CHECK
-    // ====================================
-
-    // sepcific format
-    static format(dateString: unknown): HandlerResult {
-        const result = parseDate(value);
-        return result ? pass(result) : fail(value, 'date/base');
-    }
+    // ******************************* 
+    // VALIDATORS 
+    // *******************************
 
     /**
      * Parses human-readable date text and validates required and forbidden date components.
@@ -422,6 +416,8 @@ class DateHandler extends Handler {
             ? pass(date)
             : fail(date, 'date/weekend', { dayOfWeek });
     }
+
+
 
 
     // ====================================

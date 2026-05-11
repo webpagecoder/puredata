@@ -614,9 +614,6 @@ class DateParser {
             return null;
         }
 
-        const offsetHourNum = Number(offsetHour);
-        const offsetMinuteNum = Number(offsetMinute);
-
         return new MetaDate({
             raw: dateString,
             dateParts: [
@@ -808,46 +805,46 @@ class DateParser {
         const secondNum = dateWithOffsetRemoved.getUTCSeconds();
         const millisecondNum = dateWithOffsetRemoved.getUTCMilliseconds();
 
-        const tokens: Record<string, string> = {
-            YYYY: padLeft(String(yearNum), 4, '0'),
-            YY: padLeft(String(yearNum % 100), 2, '0'),
-            MMMM: this._cache!.longMonthNames[monthNum - 1],
-            MMM: this._cache!.shortMonthNames[monthNum - 1],
-            MM: padLeft(String(monthNum), 2, '0'),
-            M: String(monthNum),
-            DDD: padLeft(String(DateHelpers.getDayOfYear(date)), 3, '0'),
-            DD: padLeft(String(dayNum), 2, '0'),
-            D: String(dayNum),
-            dddd: this._cache!.longDayNames[date.getUTCDay() % 7],
-            ddd: this._cache!.shortDayNames[date.getUTCDay() % 7],
-            d: String(date.getUTCDay()),
-            WW: padLeft(String(DateHelpers.getIsoWeek(date)), 2, '0'),
-            W: String(DateHelpers.getIsoWeek(date)),
-            E: String(date.getUTCDay() || 7),
-            HH: padLeft(String(hourNum), 2, '0'),
-            H: String(hourNum),
-            hh: padLeft(String(hourNum % 12 || 12), 2, '0'),
-            h: String(hourNum % 12 || 12),
-            mm: padLeft(String(minuteNum), 2, '0'),
-            m: String(minuteNum),
-            ss: padLeft(String(secondNum), 2, '0'),
-            s: String(secondNum),
-            SSS: padLeft(String(millisecondNum), 3, '0'),
-            A: hourNum < 12 ? 'AM' : 'PM',
-            a: hourNum < 12 ? 'am' : 'pm',
-            ZZ:
+        const tokens: Record<string, () => string> = {
+            YYYY: () => padLeft(String(yearNum), 4, '0'),
+            YY: () => padLeft(String(yearNum % 100), 2, '0'),
+            MMMM: () => this._cache!.longMonthNames[monthNum - 1],
+            MMM: () => this._cache!.shortMonthNames[monthNum - 1],
+            MM: () => padLeft(String(monthNum), 2, '0'),
+            M: () => String(monthNum),
+            DDD: () => padLeft(String(DateHelpers.getDayOfYear(date)), 3, '0'),
+            DD: () => padLeft(String(dayNum), 2, '0'),
+            D: () => String(dayNum),
+            dddd: () => this._cache!.longDayNames[date.getUTCDay() % 7],
+            ddd: () => this._cache!.shortDayNames[date.getUTCDay() % 7],
+            d: () => String(date.getUTCDay()),
+            ww: () => padLeft(String(DateHelpers.getIsoWeek(date)), 2, '0'),
+            w: () => String(DateHelpers.getIsoWeek(date)),
+            E: () => String(date.getUTCDay() || 7),
+            HH: () => padLeft(String(hourNum), 2, '0'),
+            H: () => String(hourNum),
+            hh: () => padLeft(String(hourNum % 12 || 12), 2, '0'),
+            h: () => String(hourNum % 12 || 12),
+            mm: () => padLeft(String(minuteNum), 2, '0'),
+            m: () => String(minuteNum),
+            ss: () => padLeft(String(secondNum), 2, '0'),
+            s: () => String(secondNum),
+            SSS: () => padLeft(String(millisecondNum), 3, '0'),
+            A: () => hourNum < 12 ? 'AM' : 'PM',
+            a: () => hourNum < 12 ? 'am' : 'pm',
+            ZZ: () =>
                 (offsetHour >= 0 ? '+' : '-') +
                 padLeft(String(Math.abs(offsetHour)), 2, '0') +
                 ':' +
                 padLeft(String(offsetMinute), 2, '0'),
-            Z: 
+            Z: () =>
                 (offsetHour >= 0 ? '+' : '-') + 
                 padLeft(String(Math.abs(offsetHour)), 2, '0') + 
                 padLeft(String(offsetMinute), 2, '0')
         };
 
         // Replace all recognized tokens in one pass, matching longer overlapping tokens first.
-        return formatString.replace(/YYYY|YY|MMMM|MMM|MM|M|DDD|DD|D|dddd|ddd|d|WW|W|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|ZZ|Z/g, (token) => tokens[token]);
+        return formatString.replace(/YYYY|YY|MMMM|MMM|MM|M|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|ZZ|Z/g, (token) => tokens[token]());
     }
 }
 
