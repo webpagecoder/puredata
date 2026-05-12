@@ -62,6 +62,16 @@ export function areOptionsCompliant(parts: any = {}, required: DatePart[] = [], 
 
 
 class DateHandler extends Handler {
+    protected _dateParser: DateParser;
+
+    public constructor(dateParser: DateParser) {
+        super();
+        this._dateParser = dateParser;
+    }
+
+    public get dateParser(): DateParser {
+        return this._dateParser;
+    }
 
     // ******************************* 
     // VALIDATORS 
@@ -73,7 +83,7 @@ class DateHandler extends Handler {
      * @param options Parsing and token validation options.
      * @returns
      */
-    static human(dateString: unknown, dateParser: DateParser, options: HumanParseOptions = {}): HandlerResult {
+    public human(dateString: unknown, dateParser: DateParser, options: HumanParseOptions = {}): HandlerResult {
 
         const parsedDate = dateParser.parseHuman(dateString, options);
 
@@ -89,8 +99,8 @@ class DateHandler extends Handler {
      * @param options ISO parsing and validation options.
      * @returns
      */
-    static iso(dateString: any, dateParser: DateParser, options: IsoParseOptions): HandlerResult {
-        const parsedDate = dateParser.parseIso(dateString, options);
+    public iso(dateString: any, options: IsoParseOptions): HandlerResult {
+        const parsedDate = this._dateParser.parseIso(dateString, options);
         if (!parsedDate) {
             return fail(dateString, 'date/iso');
         }
@@ -107,7 +117,7 @@ class DateHandler extends Handler {
      * @param allowBasic Whether basic (non-extended) ISO format is allowed.
      * @returns
      */
-    static isoOrdinal(dateString: any, allowBasic: any = false): HandlerResult {
+    public isoOrdinal(dateString: any, allowBasic: any = false): HandlerResult {
         const parsedDate = parseFromIsoOrdinal(dateString);
         if (!parsedDate) {
             return fail(dateString, 'date/isoOrdinal');
@@ -126,7 +136,7 @@ class DateHandler extends Handler {
      * @param allowBasic Whether basic (non-extended) ISO format is allowed.
      * @returns
      */
-    static isoWeek(dateString: any, allowBasic: any = false): HandlerResult {
+    public isoWeek(dateString: any, allowBasic: any = false): HandlerResult {
         const parsedDate = parseFromIsoWeek(dateString);
         if (!parsedDate) {
             return fail(dateString, 'date/isoWeek');
@@ -147,7 +157,7 @@ class DateHandler extends Handler {
      * @param compareDate Lower-bound date that the input must be after.
      * @returns
      */
-    static after(date: Date, compareDate: any): HandlerResult {
+    public after(date: Date, compareDate: any): HandlerResult {
         const parsedCompareDate = parseDate(compareDate);
         if (!parsedCompareDate) {
             return fail(date, 'date/base', { date: compareDate });
@@ -164,7 +174,7 @@ class DateHandler extends Handler {
      * @param compareDate Upper-bound date that the input must be before.
      * @returns
      */
-    static before(date: Date, compareDate: any): HandlerResult {
+    public before(date: Date, compareDate: any): HandlerResult {
         const parsedCompareDate = parseDate(compareDate);
         if (!parsedCompareDate) {
             return fail(date, 'date/base', { date: compareDate });
@@ -182,7 +192,7 @@ class DateHandler extends Handler {
      * @param maxDate Inclusive upper-bound date.
      * @returns
      */
-    static between(date: Date, minDate: unknown, maxDate: unknown): HandlerResult {
+    public between(date: Date, minDate: unknown, maxDate: unknown): HandlerResult {
         const parsedMinDate = parseDate(minDate);
         const parsedMaxDate = parseDate(maxDate);
         if (!parsedMinDate) {
@@ -202,7 +212,7 @@ class DateHandler extends Handler {
      * @param dayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
      * @returns
      */
-    static dayOfWeek(date: Date, dayOfWeek: number): HandlerResult {
+    public dayOfWeek(date: Date, dayOfWeek: number): HandlerResult {
         const dayIndex = date.getUTCDay();
         return dayIndex === dayOfWeek
             ? pass(date)
@@ -215,7 +225,7 @@ class DateHandler extends Handler {
      * @param compareDate Date value to compare against.
      * @returns
      */
-    static equals(date: Date, compareDate: any): HandlerResult {
+    public equals(date: Date, compareDate: any): HandlerResult {
         const parsedCompareDate = parseDate(compareDate);
 
         if (!parsedCompareDate) {
@@ -233,7 +243,7 @@ class DateHandler extends Handler {
      * @param compareDate Reference date used as the "now" boundary.
      * @returns
      */
-    static future(date: Date, compareDate: any = new Date()): HandlerResult {
+    public future(date: Date, compareDate: any = new Date()): HandlerResult {
         const parsedReferenceDate = parseDate(compareDate);
         if (!parsedReferenceDate) {
             return fail(date, 'date/base', { date: compareDate });
@@ -249,7 +259,7 @@ class DateHandler extends Handler {
      * @param date Date value being validated.
      * @returns
      */
-    static leapYear(date: Date): HandlerResult {
+    public leapYear(date: Date): HandlerResult {
         const year = date.getUTCFullYear();
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)
             ? pass(date)
@@ -262,7 +272,7 @@ class DateHandler extends Handler {
      * @param compareDate Maximum allowed date.
      * @returns
      */
-    static max(date: Date, compareDate: Date): HandlerResult {
+    public max(date: Date, compareDate: Date): HandlerResult {
         const parsedCompareDate = parseDate(compareDate);
         if (!parsedCompareDate) {
             return fail(date, 'date/base', { date: compareDate });
@@ -279,7 +289,7 @@ class DateHandler extends Handler {
      * @param compareDate Minimum allowed date.
      * @returns
      */
-    static min(date: Date, compareDate: Date): HandlerResult {
+    public min(date: Date, compareDate: Date): HandlerResult {
         const parsedCompareDate = parseDate(compareDate);
         if (!parsedCompareDate) {
             return fail(date, 'date/base', { date: compareDate });
@@ -297,7 +307,7 @@ class DateHandler extends Handler {
      * @param compareDate Reference date used to calculate current age.
      * @returns
      */
-    static minAge(birthDate: any, minAge: any, compareDate: any = new Date()): HandlerResult {
+    public minAge(birthDate: any, minAge: any, compareDate: any = new Date()): HandlerResult {
         const parsedBirthDate = parseDate(birthDate);
         const parsedReferenceDate = parseDate(compareDate);
 
@@ -327,7 +337,7 @@ class DateHandler extends Handler {
      * @param compareDate Reference date used as the "now" boundary.
      * @returns
      */
-    static past(date: any, compareDate: any = new Date()): HandlerResult {
+    public past(date: any, compareDate: any = new Date()): HandlerResult {
         const parsedReferenceDate = parseDate(compareDate);
 
         if (!parsedReferenceDate) {
@@ -346,7 +356,7 @@ class DateHandler extends Handler {
      * @param compareDate Reference date used to compute elapsed days.
      * @returns
      */
-    static recent(date: any, days: any = 30, compareDate: any = new Date()): HandlerResult {
+    public recent(date: any, days: any = 30, compareDate: any = new Date()): HandlerResult {
         const parsedReferenceDate = parseDate(compareDate);
 
         if (!parsedReferenceDate) {
@@ -365,7 +375,7 @@ class DateHandler extends Handler {
      * @param jsType Whether to interpret numeric input using JavaScript timestamp conventions.
      * @returns
      */
-    static timestamp(value: any, jsType: any = true): HandlerResult {
+    public timestamp(value: any, jsType: boolean = true): HandlerResult {
         const parsedDate = parseDateFromTimestamp(value);
         if (!parsedDate) {
             return fail(value, 'date/timestamp');
@@ -379,7 +389,7 @@ class DateHandler extends Handler {
      * @param compareDate Reference date representing "today".
      * @returns
      */
-    static today(date: any, compareDate: any): HandlerResult {
+    public today(date: any, compareDate: any): HandlerResult {
         const parsedCompareDate = parseDate(compareDate);
         if (!parsedCompareDate) {
             return fail(date, 'date/base', { date: compareDate });
@@ -398,7 +408,7 @@ class DateHandler extends Handler {
      * @param date Date value being validated.
      * @returns
      */
-    static weekday(date: any): HandlerResult {
+    public weekday(date: any): HandlerResult {
         const dayOfWeek = parseDate(date)!.date.getUTCDay();
         return dayOfWeek >= 1 && dayOfWeek <= 5
             ? pass(date)
@@ -410,7 +420,7 @@ class DateHandler extends Handler {
      * @param date Date value being validated.
      * @returns
      */
-    static weekend(date: any): HandlerResult {
+    public weekend(date: any): HandlerResult {
         const dayOfWeek = parseDate(date)!.date.getUTCDay();
         return dayOfWeek === 0 || dayOfWeek === 6
             ? pass(date)
@@ -430,7 +440,7 @@ class DateHandler extends Handler {
      * @param numDays Whole number of days to add (or subtract if negative).
      * @returns
      */
-    static addDays(date: unknown, numDays: number): HandlerResult {
+    public addDays(date: unknown, numDays: number): HandlerResult {
         if (!Number.isInteger(numDays)) {
             return fail(date, 'date/addDays', { days: numDays });
         }
@@ -446,7 +456,7 @@ class DateHandler extends Handler {
      * @param numHours Whole number of hours to add (or subtract if negative).
      * @returns
      */
-    static addHours(date: unknown, numHours: number): HandlerResult {
+    public addHours(date: unknown, numHours: number): HandlerResult {
         if (!Number.isInteger(numHours)) {
             return fail(date, 'date/addHours', { hours: numHours });
         }
@@ -462,7 +472,7 @@ class DateHandler extends Handler {
      * @param numMinutes Whole number of minutes to add (or subtract if negative).
      * @returns
      */
-    static addMinutes(date: any, numMinutes: any): HandlerResult {
+    public addMinutes(date: any, numMinutes: any): HandlerResult {
         if (!Number.isInteger(numMinutes)) {
             return fail(date, 'date/addMinutes', { minutes: numMinutes });
         }
@@ -478,7 +488,7 @@ class DateHandler extends Handler {
      * @param numMonths Whole number of months to add (or subtract if negative).
      * @returns
      */
-    static addMonths(date: any, numMonths: any): HandlerResult {
+    public addMonths(date: any, numMonths: any): HandlerResult {
         if (!Number.isInteger(numMonths)) {
             return fail(date, 'date/addMonths', { months: numMonths });
         }
@@ -494,7 +504,7 @@ class DateHandler extends Handler {
      * @param years Whole number of years to add (or subtract if negative).
      * @returns
      */
-    static addYears(date: any, numYears: any): HandlerResult {
+    public addYears(date: any, numYears: any): HandlerResult {
         if (!Number.isInteger(numYears)) {
             return fail(date, 'date/addYears', { years: numYears });
         }
@@ -509,7 +519,7 @@ class DateHandler extends Handler {
      * @param date Base date to normalize.
      * @returns
      */
-    static toEndOfDay(date: any): HandlerResult {
+    public toEndOfDay(date: any): HandlerResult {
         const result = new Date(parseDate(date)!.date);
         result.setUTCHours(23, 59, 59, 999);
         return pass(result);
@@ -520,7 +530,7 @@ class DateHandler extends Handler {
      * @param date Base date to normalize.
      * @returns
      */
-    static toEndOfMonth(date: any): HandlerResult {
+    public toEndOfMonth(date: any): HandlerResult {
         const result = new Date(parseDate(date)!.date);
         result.setUTCMonth(result.getUTCMonth() + 1, 0);
         result.setUTCHours(23, 59, 59, 999);
@@ -533,7 +543,7 @@ class DateHandler extends Handler {
      * @param targetDay Target UTC day index where Sunday is 0 and Saturday is 6.
      * @returns
      */
-    static toNextDayOfWeek(date: any, targetDay: any): HandlerResult {
+    public toNextDayOfWeek(date: any, targetDay: any): HandlerResult {
         if (targetDay < 0 || targetDay > 6) {
             return fail(date, 'date/toNextDayOfWeek', { targetDay });
         }
@@ -555,7 +565,7 @@ class DateHandler extends Handler {
      * @param date Base date to adjust.
      * @returns
      */
-    static toNextWeekday(date: any): HandlerResult {
+    public toNextWeekday(date: any): HandlerResult {
         const result = new Date(parseDate(date)!.date);
         do {
             result.setUTCDate(result.getUTCDate() + 1);
@@ -570,7 +580,7 @@ class DateHandler extends Handler {
      * @param date Base date to adjust.
      * @returns
      */
-    static toPreviousWeekday(date: any): HandlerResult {
+    public toPreviousWeekday(date: any): HandlerResult {
         const result = new Date(parseDate(date)!.date);
         do {
             result.setUTCDate(result.getUTCDate() - 1);
@@ -585,7 +595,7 @@ class DateHandler extends Handler {
      * @param date Base date to normalize.
      * @returns
      */
-    static toStartOfDay(date: any): HandlerResult {
+    public toStartOfDay(date: any): HandlerResult {
         const result = new Date(parseDate(date)!.date);
         result.setUTCHours(0, 0, 0, 0);
         return pass(result);
@@ -596,7 +606,7 @@ class DateHandler extends Handler {
      * @param date Base date to normalize.
      * @returns
      */
-    static toStartOfMonth(date: any): HandlerResult {
+    public toStartOfMonth(date: any): HandlerResult {
         const result = new Date(parseDate(date)!.date);
         result.setUTCDate(1);
         result.setUTCHours(0, 0, 0, 0);
@@ -608,14 +618,14 @@ class DateHandler extends Handler {
      * @param date Base date to normalize.
      * @returns
      */
-    static toStartOfYear(date: any): HandlerResult {
+    public toStartOfYear(date: any): HandlerResult {
         const result = (parseDate(date) as ParsedDate).date;
         result.setUTCMonth(0, 1);
         result.setUTCHours(0, 0, 0, 0);
         return pass(result);
     }
 
-    static clamp(date: any, minDate: Date, maxDate: Date) {
+    public clamp(date: any, minDate: Date, maxDate: Date) {
         //todo - clamps date to window
     }
 

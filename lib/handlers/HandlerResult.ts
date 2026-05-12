@@ -18,7 +18,7 @@ class HandlerResult {
         this.value = props.value;
         this.pass = props.pass ?? false;
         this.fail = !this.pass;
-        this.errors =  {}
+        this.errors = {}
         if (!this.pass) {
             if (props.errorKey) {
                 this.addError(props.errorKey, props.args || {});
@@ -26,18 +26,18 @@ class HandlerResult {
         }
     }
 
-    addError(errorKey: string, args: ArgumentCollection): void {
-        if(this.pass) {
+    public addError(errorKey: string, args: ArgumentCollection): void {
+        if (this.pass) {
             throw new Error('Errors cannot be added to a Result that passed');
         }
         this.errors[errorKey] = args;
     }
 
-    static pass(value: unknown): HandlerResult {
+    public static pass(value: unknown): HandlerResult {
         return new HandlerResult({ value, pass: true });
     }
 
-    static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): HandlerResult {
+    public static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): HandlerResult {
         return new HandlerResult({ value, pass: false, errorKey, args });
     }
 

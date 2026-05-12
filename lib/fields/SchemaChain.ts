@@ -15,25 +15,33 @@ export type Schema = {
 };
 
 export type SchemaChainProps = ObjectChainProps & {
+    arrayChain?: ArrayChain;
+    renameKeysArgs?: Parameters<typeof ObjectHandler['renameKeys']>;
     schema?: Schema;
     stripUnknownKeys?: boolean;
-    renameKeysArgs?: Parameters<typeof ObjectHandler['renameKeys']>;
 };
 
 class SchemaChain extends ObjectChain<SchemaChainProps> {
+    protected _arrayChain: ArrayChain;
+    protected _renameKeysArgs: Parameters<typeof ObjectHandler['renameKeys']> | null;
     protected _schema: Map<string, Field>;
     protected _stripUnknownKeys: boolean;
-    protected _renameKeysArgs: Parameters<typeof ObjectHandler['renameKeys']> | null;
 
     constructor(props: SchemaChainProps) {
         super(props);
 
         const {
+            arrayChain = new ArrayChain({
+                chainHandler: new ArrayHandler(),
+                locale: this._locale,
+                processorMapper: this._processorMapper,
+            }), 
+            renameKeysArgs = null,
             schema = {},
             stripUnknownKeys = true,
-            renameKeysArgs = null,
         } = props;
 
+        this._arrayChain = arrayChain;
         this._cloneObject = true;
         this._ensurePlain = true;
         this._stripUnknownKeys = stripUnknownKeys;
@@ -70,11 +78,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
                 });
             }
             else if (Array.isArray(value)) {
-                field = new ArrayChain({
-                    chainHandler: ArrayHandler, //todo - this is a bit hacky, we should probably have a way to specify the chain handler to use for nested schemas instead of hardcoding ArrayChain here
-                    locale: this._locale,
-                    processorMapper: this._processorMapper,
-                }).tuple(value) as Field;
+                field = this._arrayChain.tuple(value) as Field;
             }
             else {
                 field = new ValueField({

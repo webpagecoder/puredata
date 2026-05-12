@@ -17,7 +17,7 @@ class ObjectHandler extends Handler {
      * @param {any} empties
      * @returns {HandlerResult}
      */
-    static empty(value: any, empties: any= [null, undefined]): HandlerResult {
+    public empty(value: any, empties: any= [null, undefined]): HandlerResult {
         return super.empty(value, empties).pass || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
     }
 
@@ -27,7 +27,7 @@ class ObjectHandler extends Handler {
      * @param {any} empties
      * @returns {HandlerResult}
      */
-    static notEmpty(value: any, empties: any= [null, undefined]): HandlerResult {
+    public notEmpty(value: any, empties: any= [null, undefined]): HandlerResult {
         return super.empty(value, empties).fail && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
     }
 
@@ -37,7 +37,7 @@ class ObjectHandler extends Handler {
      * @param {any} property
      * @returns {HandlerResult}
      */
-    static property(value: any, property: any): HandlerResult {
+    public property(value: any, property: any): HandlerResult {
         if (value == null) {
             return fail(value, 'object/property', { property });
         }
@@ -52,7 +52,7 @@ class ObjectHandler extends Handler {
      * @param {any} constructor
      * @returns {HandlerResult}
      */
-    static instanceOf(obj: any, constructor: any): HandlerResult {
+    public instanceOf(obj: any, constructor: any): HandlerResult {
         return obj.constructor === constructor
             ? pass(obj)
             : fail(obj, 'object/instanceOf', { constructor });
@@ -64,7 +64,7 @@ class ObjectHandler extends Handler {
      * @param {any} maxDepth
      * @returns {HandlerResult}
      */
-    static maxDepth(obj: any, maxDepth: any): HandlerResult {
+    public maxDepth(obj: any, maxDepth: any): HandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth > maxDepth
             ? fail(obj, 'object/maxDepth', { actualDepth, maxDepth })
@@ -77,7 +77,7 @@ class ObjectHandler extends Handler {
      * @param {any} minDepth
      * @returns {HandlerResult}
      */
-    static minDepth(obj: any, minDepth: any): HandlerResult {
+    public minDepth(obj: any, minDepth: any): HandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth < minDepth
             ? fail(obj, 'object/minDepth', { actualDepth, minDepth })
@@ -90,7 +90,7 @@ class ObjectHandler extends Handler {
      * @param {any} depth
      * @returns {HandlerResult}
      */
-    static depth(obj: any, depth: any): HandlerResult {
+    public depth(obj: any, depth: any): HandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth !== depth
             ? fail(obj, 'object/depth', { actualDepth, depth })
@@ -103,7 +103,7 @@ class ObjectHandler extends Handler {
      * @param {any} maxKeyCount
      * @returns {HandlerResult}
      */
-    static maxKeyCount(obj: any, maxKeyCount: any): HandlerResult {
+    public maxKeyCount(obj: any, maxKeyCount: any): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCount', { actualKeyCount, maxKeyCount })
@@ -116,7 +116,7 @@ class ObjectHandler extends Handler {
      * @param {any} maxKeyCount
      * @returns {HandlerResult}
      */
-    static maxKeyCountRecursive(obj: any, maxKeyCount: any): HandlerResult {
+    public maxKeyCountRecursive(obj: any, maxKeyCount: any): HandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCountRecursive', { actualKeyCount, maxKeyCount })
@@ -129,7 +129,7 @@ class ObjectHandler extends Handler {
      * @param {any} minKeyCount
      * @returns {HandlerResult}
      */
-    static minKeyCount(obj: any, minKeyCount: any): HandlerResult {
+    public minKeyCount(obj: any, minKeyCount: any): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCount', { actualKeyCount, minKeyCount })
@@ -142,7 +142,7 @@ class ObjectHandler extends Handler {
      * @param {any} minKeyCount
      * @returns {HandlerResult}
      */
-    static minKeyCountRecursive(obj: any, minKeyCount: any): HandlerResult {
+    public minKeyCountRecursive(obj: any, minKeyCount: any): HandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCountRecursive', { actualKeyCount, minKeyCount })
@@ -155,7 +155,7 @@ class ObjectHandler extends Handler {
      * @param {any} keyCount
      * @returns {HandlerResult}
      */
-    static keyCount(obj: any, keyCount: any): HandlerResult {
+    public keyCount(obj: any, keyCount: any): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCount', { actualKeyCount, keyCount })
@@ -168,7 +168,7 @@ class ObjectHandler extends Handler {
      * @param {any} keyCount
      * @returns {HandlerResult}
      */
-    static keyCountRecursive(obj: any, keyCount: any): HandlerResult {
+    public keyCountRecursive(obj: any, keyCount: any): HandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCountRecursive', { actualKeyCount, keyCount })
@@ -181,7 +181,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static noneOfPaths(obj: any, paths: any= []): HandlerResult {
+    public noneOfPaths(obj: any, paths: any= []): HandlerResult {
         return this.someOfPaths(obj, paths).pass
             ? fail(obj, 'object/noneOfPaths', { paths })
             : pass(obj);
@@ -193,7 +193,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static someOfPaths(obj: any, paths: any= []): HandlerResult {
+    public someOfPaths(obj: any, paths: any= []): HandlerResult {
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
                 return pass(obj);
@@ -208,7 +208,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static allOfPaths(obj: any, paths: any= []): HandlerResult {
+    public allOfPaths(obj: any, paths: any= []): HandlerResult {
         const missingPaths = [];
         const { hasPath } = Utils;
         for (const path of paths) {
@@ -227,7 +227,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static exactlyPaths(obj: any, paths: any= []): HandlerResult {
+    public exactlyPaths(obj: any, paths: any= []): HandlerResult {
         if (Utils.getPathCount(obj) !== paths.length) {
             return fail(obj, 'object/exactlyPaths', { paths });
         }
@@ -245,7 +245,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static onlyPaths(obj: any, paths: any= []): HandlerResult {
+    public onlyPaths(obj: any, paths: any= []): HandlerResult {
         let pathsFound = 0;
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
@@ -263,7 +263,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static pathsOtherThan(obj: any, paths: any= []): HandlerResult {
+    public pathsOtherThan(obj: any, paths: any= []): HandlerResult {
         return this.onlyPaths(obj, paths).pass
             ? fail(obj, 'object/pathsOtherThan', { paths })
             : pass(obj);
@@ -276,7 +276,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static xOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
+    public xOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
         let found = 0;
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
@@ -298,7 +298,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static allOfButXOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
+    public allOfButXOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
         return this.xOfPaths(obj, paths.length - count, paths).pass
             ? pass(obj)
             : fail(obj, 'object/allOfButXOfPaths', { count, paths });
@@ -309,7 +309,7 @@ class ObjectHandler extends Handler {
      * @param {any} obj
      * @returns {HandlerResult}
      */
-    static plain(obj: any): HandlerResult {
+    public plain(obj: any): HandlerResult {
         return Utils.isPlainObject(obj) ? pass(obj) : fail(obj, 'object/plain');
     }
 
@@ -325,7 +325,7 @@ class ObjectHandler extends Handler {
      * @param {any} count
      * @returns {HandlerResult}
      */
-    static pickRandom(obj: any, count: any): HandlerResult {
+    public pickRandom(obj: any, count: any): HandlerResult {
         const keys = Object.keys(obj);
         if (count >= keys.length) {
             return pass(Object.assign({}, obj));
@@ -347,7 +347,7 @@ class ObjectHandler extends Handler {
      * @param {any} emptyValues
      * @returns {any}
      */
-    static removeEmpties(obj: any, emptyValues: any= [null, undefined]): any {
+    public removeEmpties(obj: any, emptyValues: any= [null, undefined]): any {
         const newObj: Record<string, any> = {};
         for (const key of Object.keys(obj)) {
             const value = obj[key];
@@ -364,7 +364,7 @@ class ObjectHandler extends Handler {
      * @param {any} emptyValues
      * @returns {any}
      */
-    static removeEmptiesRecursive(obj: any, emptyValues: any= [null, undefined]): any {
+    public removeEmptiesRecursive(obj: any, emptyValues: any= [null, undefined]): any {
         const newObj: Record<string, any> = {};
         for (const key of Object.keys(obj)) {
             const value = obj[key];
@@ -389,7 +389,7 @@ class ObjectHandler extends Handler {
      * @param {any} param4
      * @returns {HandlerResult}
      */
-    static renameKeys(obj: Object, fromRegex: RegExp, toRegex: RegExp, {
+    public renameKeys(obj: Object, fromRegex: RegExp, toRegex: RegExp, {
         deleteOriginalKey = true,
         overrideExistingKey = true
     } = {}): HandlerResult {
@@ -413,7 +413,7 @@ class ObjectHandler extends Handler {
      * @param {any} paths
      * @returns {HandlerResult}
      */
-    static removePaths(obj: any, paths: any= []): HandlerResult {
+    public removePaths(obj: any, paths: any= []): HandlerResult {
         for (const path of paths) {
             Utils.removePath(obj, path);
         }
@@ -428,7 +428,7 @@ class ObjectHandler extends Handler {
      * @param {any} create
      * @returns {HandlerResult}
      */
-    static setPaths(obj: any, pathValues: any= {}, overwrite: any= true, create: any= true): HandlerResult {
+    public setPaths(obj: any, pathValues: any= {}, overwrite: any= true, create: any= true): HandlerResult {
         for (const path of Object.keys(pathValues)) {
             Utils.setPathValue(obj, path as any, pathValues[path], create, overwrite);
         }
@@ -441,7 +441,7 @@ class ObjectHandler extends Handler {
      * @param {any} exceptFor
      * @returns {HandlerResult}
      */
-    static stripKeys(obj: any, exceptFor: any= []): HandlerResult {
+    public stripKeys(obj: any, exceptFor: any= []): HandlerResult {
         const copy: Record<string, any> = {};
         for (const key of exceptFor) {
             copy[key] = obj[key];

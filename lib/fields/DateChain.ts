@@ -13,9 +13,8 @@ type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | Iso
 
 type DateOrder = 'MDY' | 'DMY' | 'YMD';
 
-export type DateChainProps = ChainProps<typeof DateHandler> & {
+export type DateChainProps = ChainProps<DateHandler> & {
     dateOrder?: DateOrder;
-    dateParser?: DateParser;
     outputFormatString?: OutputFormat;
     outputPrecision?: OutputPrecision;
     skipPreProcess?: boolean;
@@ -23,7 +22,6 @@ export type DateChainProps = ChainProps<typeof DateHandler> & {
 };
 
 class DateChain extends Chain<DateChainProps> {
-    protected _dateParser: DateParser;
     protected _outputFormatString: OutputFormat | null;
     protected _outputPrecision: OutputPrecision | null;
     protected _skipPreProcess: boolean;
@@ -34,14 +32,12 @@ class DateChain extends Chain<DateChainProps> {
 
         const {
             dateOrder = 'MDY',
-            dateParser = new DateParser(this._locale, dateOrder),
             outputFormatString = null,
             outputPrecision = null,
             skipPreProcess = false,
             utcOffset = [0, 0]
         } = props;
 
-        this._dateParser = dateParser;
         this._outputFormatString = outputFormatString;
         this._outputPrecision = outputPrecision;
         this._utcOffset = utcOffset;
@@ -52,16 +48,12 @@ class DateChain extends Chain<DateChainProps> {
         const clone = super.clone(props);
         const {
             dateOrder = null,
-            dateParser = this._dateParser,
             outputFormatString = this._outputFormatString,
             outputPrecision = this._outputPrecision,
             utcOffset = this._utcOffset,
             skipPreProcess = this._skipPreProcess
         } = props;
 
-        clone._dateParser = dateOrder
-            ? new DateParser(this._locale, dateOrder)
-            : dateParser;
         clone._outputFormatString = outputFormatString;
         clone._outputPrecision = outputPrecision;
         clone._skipPreProcess = skipPreProcess;
@@ -102,7 +94,7 @@ class DateChain extends Chain<DateChainProps> {
      */
     human(options: HumanParseOptions = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('human');
-        return this.addStep('human', [this._dateParser, options]);
+        return this.addStep('human', [ options]);
     }
 
     /**
@@ -118,7 +110,7 @@ class DateChain extends Chain<DateChainProps> {
      */
     public iso(options: IsoParseOptions = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('iso');
-        return this.addStep('iso', [this._dateParser, options]);
+        return this.addStep('iso', [ options]);
     }
 
     /**
@@ -132,7 +124,7 @@ class DateChain extends Chain<DateChainProps> {
      */
     public isoOrdinal(options = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('isoOrdinal');
-        return this.addStep('isoOrdinal', [this._dateParser, options]);
+        return this.addStep('isoOrdinal', [options]);
     }
 
     /**
@@ -146,7 +138,7 @@ class DateChain extends Chain<DateChainProps> {
      */
     public isoWeek(options = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('isoWeek');
-        return this.addStep('isoWeek', [this._dateParser, options]);
+        return this.addStep('isoWeek', [options]);
     }
 
     /**
@@ -181,7 +173,7 @@ class DateChain extends Chain<DateChainProps> {
 
 
     // Exporters
-    public format(outputFormatString: string) {
+    public toFormat(outputFormatString: string) {
         return this.clone({ outputFormatString });
     }
 
@@ -290,10 +282,6 @@ class DateChain extends Chain<DateChainProps> {
      */
     public toTimestamp() {
         return this.clone({ outputFormatString: 'timestamp' });
-    }
-
-    public get dateParser() {
-        return this._dateParser;
     }
 
     public get outputFormatString() {

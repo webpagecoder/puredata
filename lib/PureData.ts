@@ -25,6 +25,7 @@ import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './utils/Utils.ts';
 import { NormalizedDate } from './date/NormalizedDate.ts';
+import { DateParser } from './date/DateParser.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
@@ -65,15 +66,15 @@ class PureData {
 
     // Chains
     array(props = {}) {
-        return new ArrayChain(this.composeProps(props, 'array', ArrayHandler));
+        return new ArrayChain(this.composeProps(props, 'array', new ArrayHandler()));
     }
 
     boolean(props = {}) {
-        return new BooleanChain(this.composeProps(props, 'boolean', BooleanHandler));
+        return new BooleanChain(this.composeProps(props, 'boolean', new BooleanHandler()));
     }
 
     date(props = {}) {
-        return new DateChain(this.composeProps(props, 'date', DateHandler));
+        return new DateChain(this.composeProps(props, 'date', new DateHandler(new DateParser(this.locale))));
     }
 
     enum(structure = []) {
@@ -85,11 +86,11 @@ class PureData {
     }
 
     number(props = {}) {
-        return new NumberChain(this.composeProps(props, 'number', NumberHandler));
+        return new NumberChain(this.composeProps(props, 'number', new NumberHandler()));
     }
 
     object(props = {}) {
-        return new DateChain(this.composeProps(props, 'object', ObjectHandler));
+        return new DateChain(this.composeProps(props, 'object', new ObjectHandler()));
     }
 
     pointer(pathStr, minDepth, maxDepth) {
@@ -109,7 +110,7 @@ class PureData {
     }
 
     string(props = {}) {
-        return new StringChain(this.composeProps(props, 'string', StringHandler));
+        return new StringChain(this.composeProps(props, 'string', new StringHandler()));
     }
 
     // Other fields

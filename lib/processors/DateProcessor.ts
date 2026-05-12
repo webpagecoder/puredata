@@ -39,7 +39,7 @@ class DateProcessor extends ChainProcessor<DateChain> {
     }
 
     override preProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const { dateParser, skipPreProcess } = this._field;
+        const { chainHandler: { dateParser }, skipPreProcess } = this._field;
         if (skipPreProcess) {
             return;
         }
@@ -60,7 +60,7 @@ class DateProcessor extends ChainProcessor<DateChain> {
     // }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        const { outputFormatString, dateParser } = this._field;
+        const { chainHandler: { dateParser }, outputFormatString } = this._field;
         const metaDate = tracker.getValue() as MetaDate;
 
         switch (outputFormatString) {

@@ -19,7 +19,7 @@ class BooleanHandler extends Handler {
      * @param falsyValues - Additional values treated as falsy.
      * @returns A pass result for valid falsy values, otherwise a fail result.
      */
-    static falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
+    public falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
         return bool === false || falsyValues.indexOf(bool) > -1
             ? pass(bool)
             : fail(bool, 'boolean/falsy', { falsyValues });
@@ -32,7 +32,7 @@ class BooleanHandler extends Handler {
      * @param truthyValues - Additional values treated as truthy.
      * @returns A pass result for valid truthy values, otherwise a fail result.
      */
-    static truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
+    public truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
         return bool === true || truthyValues.indexOf(bool) > -1
             ? pass(bool)
             : fail(bool, 'boolean/truthy', { truthyValues });
@@ -52,7 +52,7 @@ class BooleanHandler extends Handler {
      * @param boolishPairs - Custom truthy/falsy tuple pairs.
      * @returns A pass result with the inverted value, otherwise a fail result.
      */
-    static invert(bool: unknown, boolishPairs: BoolishPair[] = []): HandlerResult {
+    public invert(bool: unknown, boolishPairs: BoolishPair[] = []): HandlerResult {
         boolishPairs.push([true, false]);
 
         const truthyMatchIndex = boolishPairs.map(([truthy, _]): unknown => truthy).indexOf(bool);

@@ -8,10 +8,9 @@ type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
     fn: (value: unknown, ...args: unknown[]) => HandlerResult;
     args?: StepArgsOrFn;
-    prioritize?: boolean;
 };
 
-export type ChainProps<H extends typeof Handler = typeof Handler> = FieldProps & {
+export type ChainProps<H extends Handler = Handler> = FieldProps & {
     chainHandler: H;
     emptyValues?: unknown[];
     pipeline?: Step[];
@@ -50,40 +49,34 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
 
     public override clone(props: CloneProps<P> = {}): this {
         const clone = super.clone(props);
-        const { 
+        const {
             chainHandler = this._chainHandler,
             emptyValues = this._emptyValues,
             step,
-         } = props;
-        const pipelineClone = [...this._pipeline];
+        } = props;
+        const pipelineCopy = [...this._pipeline];
 
         if (step) {
-            if (step.prioritize) {
-                pipelineClone.unshift(step);
-            }
-            else {
-                pipelineClone.push(step);
-            }
+            pipelineCopy.push(step);
         }
 
-        clone._pipeline = pipelineClone;
+        clone._pipeline = pipelineCopy;
         clone._chainHandler = chainHandler;
         clone._emptyValues = emptyValues;
 
         return clone;
     }
 
-    public addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = [], prioritize: boolean = false): this {
+    public addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = []): this {
         const chainHandler = this._chainHandler as P['chainHandler'];
-        const fn = chainHandler?.[fnKey];
+        const fn = chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }
         return this.clone({
             step: {
-                fn: fn as Step['fn'],
+                fn: (fn as Step['fn']).bind(chainHandler),
                 args,
-                prioritize,
             }
         } as CloneProps<P>);
     }

@@ -18,7 +18,7 @@ class NumberHandler extends Handler {
      * @param {any} tolerance
      * @returns {HandlerResult}
      */
-    static approx(num: any, comparison: any, tolerance: any= Number.EPSILON): HandlerResult {
+    public approx(num: any, comparison: any, tolerance: any= Number.EPSILON): HandlerResult {
         return Math.abs(num - comparison) < tolerance
             ? pass(num)
             : fail(num, 'number/approx', { comparison, tolerance });
@@ -29,7 +29,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static number(num: any): HandlerResult {
+    public number(num: any): HandlerResult {
         return typeof num === 'number' && !Number.isNaN(num)
             ? pass(num)
             : fail(num, 'number/base');
@@ -42,7 +42,7 @@ class NumberHandler extends Handler {
      * @param {any} max
      * @returns {HandlerResult}
      */
-    static between(num: any, min: any, max: any): HandlerResult {
+    public between(num: any, min: any, max: any): HandlerResult {
         return (num >= min && num <= max)
             ? pass(num)
             : fail(num, 'number/between', { num, min, max });
@@ -54,7 +54,7 @@ class NumberHandler extends Handler {
      * @param {any} param2
      * @returns {HandlerResult}
      */
-    static decimal(num: any, {
+    public decimal(num: any, {
         minDecimalPlaces = 0,
         maxDecimalPlaces = 20,
     }: any= {}): HandlerResult {
@@ -86,7 +86,7 @@ class NumberHandler extends Handler {
      * @param {any} comparison
      * @returns {HandlerResult}
      */
-    static equals(num: any, comparison: any): HandlerResult {
+    public equals(num: any, comparison: any): HandlerResult {
         return (num === comparison)
             ? pass(num)
             : fail(num, 'number/equals', { comparison });
@@ -97,7 +97,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static even(num: any): HandlerResult {
+    public even(num: any): HandlerResult {
         return (num % 2 === 0)
             ? pass(num)
             : fail(num, 'number/even');
@@ -109,7 +109,7 @@ class NumberHandler extends Handler {
      * @param {any} multiple
      * @returns {HandlerResult}
      */
-    static factor(num: any, multiple: any): HandlerResult {
+    public factor(num: any, multiple: any): HandlerResult {
         return (multiple % num === 0)
             ? pass(num)
             : fail(num, 'number/factor', { num, multiple });
@@ -120,7 +120,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static finite(num: any): HandlerResult {
+    public finite(num: any): HandlerResult {
         return Number.isFinite(num) ? pass(num) : fail(num, 'number/finite');
     }
 
@@ -130,7 +130,7 @@ class NumberHandler extends Handler {
      * @param {any} comparison
      * @returns {HandlerResult}
      */
-    static greaterThan(num: any, comparison: any): HandlerResult {
+    public greaterThan(num: any, comparison: any): HandlerResult {
         return (num > comparison)
             ? pass(num)
             : fail(num, 'number/greaterThan', { comparison });
@@ -141,7 +141,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static infinity(num: any): HandlerResult {
+    public infinity(num: any): HandlerResult {
         return (num === Infinity || num === -Infinity)
             ? pass(num)
             : fail(num, 'number/infinity');
@@ -152,7 +152,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static integer(num: any): HandlerResult {
+    public integer(num: any): HandlerResult {
         return Number.isInteger(num)
             ? pass(num)
             : fail(num, 'number/integer');
@@ -164,7 +164,7 @@ class NumberHandler extends Handler {
      * @param {any} comparison
      * @returns {HandlerResult}
      */
-    static lessThan(num: any, comparison: any): HandlerResult {
+    public lessThan(num: any, comparison: any): HandlerResult {
         return (num < comparison)
             ? pass(num)
             : fail(num, 'number/lessThan', { comparison });
@@ -176,7 +176,7 @@ class NumberHandler extends Handler {
      * @param {any} comparison
      * @returns {HandlerResult}
      */
-    static max(num: any, comparison: any): HandlerResult {
+    public max(num: any, comparison: any): HandlerResult {
         return (num <= comparison)
             ? pass(num)
             : fail(num, 'number/max', { comparison });
@@ -188,7 +188,7 @@ class NumberHandler extends Handler {
      * @param {any} comparison
      * @returns {HandlerResult}
      */
-    static min(num: any, comparison: any): HandlerResult {
+    public min(num: any, comparison: any): HandlerResult {
         return (num >= comparison)
             ? pass(num)
             : fail(num, 'number/min', { comparison });
@@ -199,7 +199,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static minusSign(num: any): HandlerResult {
+    public minusSign(num: any): HandlerResult {
         return String(num)[0] === '-'
             ? pass(num)
             : fail(num, 'number/minusSign');
@@ -211,7 +211,7 @@ class NumberHandler extends Handler {
      * @param {any} factor
      * @returns {HandlerResult}
      */
-    static multiple(num: any, factor: any): HandlerResult {
+    public multiple(num: any, factor: any): HandlerResult {
         return (num % factor === 0)
             ? pass(num)
             : fail(num, 'number/multiple', { num, factor });
@@ -222,7 +222,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static negative(num: any): HandlerResult {
+    public negative(num: any): HandlerResult {
         return (num < 0)
             ? pass(num)
             : fail(num, 'number/negative');
@@ -234,7 +234,7 @@ class NumberHandler extends Handler {
      * @param {any} comparison
      * @returns {HandlerResult}
      */
-    static notEquals(num: any, comparison: any): HandlerResult {
+    public notEquals(num: any, comparison: any): HandlerResult {
         return (num !== comparison)
             ? pass(num)
             : fail(num, 'number/notEquals', { comparison });
@@ -245,7 +245,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static odd(num: any): HandlerResult {
+    public odd(num: any): HandlerResult {
         return (num % 2 !== 0)
             ? pass(num)
             : fail(num, 'number/odd');
@@ -256,7 +256,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static plusSign(num: any): HandlerResult {
+    public plusSign(num: any): HandlerResult {
         return String(num)[0] === '+'
             ? pass(num)
             : fail(num, 'number/plusSign');
@@ -267,7 +267,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static positive(num: any): HandlerResult {
+    public positive(num: any): HandlerResult {
         return (num > 0)
             ? pass(num)
             : fail(num, 'number/positive');
@@ -279,7 +279,7 @@ class NumberHandler extends Handler {
      * @param {any} precision
      * @returns {HandlerResult}
      */
-    static precision(num: any, precision: any): HandlerResult {
+    public precision(num: any, precision: any): HandlerResult {
         const multiplier = Math.pow(10, precision);
         return (Math.round(num * multiplier) === num * multiplier)
             ? pass(num)
@@ -291,7 +291,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static prime(num: any): HandlerResult {
+    public prime(num: any): HandlerResult {
         if (!Number.isInteger(num) || num < 2) {
             return fail(num, 'number/prime');
         }
@@ -308,7 +308,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static safe(num: any): HandlerResult {
+    public safe(num: any): HandlerResult {
         return num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER
             ? fail(num, 'number/safe')
             : pass(num);
@@ -319,7 +319,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static safeInteger(num: any): HandlerResult {
+    public safeInteger(num: any): HandlerResult {
         return Number.isSafeInteger(num)
             ? pass(num)
             : fail(num, 'number/safeInteger');
@@ -330,7 +330,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static signed(num: any): HandlerResult {
+    public signed(num: any): HandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? pass(num)
@@ -342,7 +342,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static unsigned(num: any): HandlerResult {
+    public unsigned(num: any): HandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? fail(num, 'number/unsigned', { sign })
@@ -354,7 +354,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static zero(num: any): HandlerResult {
+    public zero(num: any): HandlerResult {
         return (num === 0)
             ? pass(num)
             : fail(num, 'number/zero');
@@ -372,7 +372,7 @@ class NumberHandler extends Handler {
      * @param {any} max
      * @returns {HandlerResult}
      */
-    static clampBetween(num: any, min: any, max: any): HandlerResult {
+    public clampBetween(num: any, min: any, max: any): HandlerResult {
         if(num > max) {
             return pass(max);
         }
@@ -389,7 +389,7 @@ class NumberHandler extends Handler {
      * @param {any} max
      * @returns {HandlerResult}
      */
-    static constrain(num: any, min: any, max: any): HandlerResult {
+    public constrain(num: any, min: any, max: any): HandlerResult {
         return pass(Math.min(Math.max(num, min), max));
     }
 
@@ -398,7 +398,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static negate(num: any): HandlerResult {
+    public negate(num: any): HandlerResult {
         return pass(-num);
     }
 
@@ -408,7 +408,7 @@ class NumberHandler extends Handler {
      * @param {any} numDecimals
      * @returns {HandlerResult}
      */
-    static round(num: any, numDecimals: any= 0): HandlerResult {
+    public round(num: any, numDecimals: any= 0): HandlerResult {
         const multiplier = Math.pow(10, numDecimals);
         return pass(Math.round(num * multiplier) / multiplier);
     }
@@ -418,7 +418,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static roundDown(num: any): HandlerResult {
+    public roundDown(num: any): HandlerResult {
         return pass(Math.floor(num));
     }
 
@@ -427,7 +427,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static roundUp(num: any): HandlerResult {
+    public roundUp(num: any): HandlerResult {
         return pass(Math.ceil(num));
     }
 
@@ -436,7 +436,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static stripSign(num: any): HandlerResult {
+    public stripSign(num: any): HandlerResult {
         return pass(Math.abs(num));
     }
 
@@ -446,7 +446,7 @@ class NumberHandler extends Handler {
      * @param {any} exponent
      * @returns {HandlerResult}
      */
-    static toPower(num: any, exponent: any): HandlerResult {
+    public toPower(num: any, exponent: any): HandlerResult {
         return pass(Math.pow(num, exponent));
     }
 
@@ -459,7 +459,7 @@ class NumberHandler extends Handler {
      * @param {any} toMax
      * @returns {HandlerResult}
      */
-    static toScale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
+    public toScale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
         const scaled = ((num - fromMin) / (fromMax - fromMin))
             * (toMax - toMin) + toMin;
         return pass(scaled);
@@ -470,7 +470,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static truncate(num: any): HandlerResult {
+    public truncate(num: any): HandlerResult {
         return pass(Math.trunc(num));
     }
 
@@ -479,7 +479,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static abs(num: any): HandlerResult {
+    public abs(num: any): HandlerResult {
         return this.stripSign(num);
     }
 
@@ -488,7 +488,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static ceil(num: any): HandlerResult {
+    public ceil(num: any): HandlerResult {
         return this.roundUp(num);
     }
 
@@ -499,7 +499,7 @@ class NumberHandler extends Handler {
      * @param {any} max
      * @returns {HandlerResult}
      */
-    static clamp(num: any, min: any, max: any): HandlerResult {
+    public clamp(num: any, min: any, max: any): HandlerResult {
         return this.clampBetween(num, min, max);
     }
 
@@ -508,7 +508,7 @@ class NumberHandler extends Handler {
      * @param {any} num
      * @returns {HandlerResult}
      */
-    static floor(num: any): HandlerResult {
+    public floor(num: any): HandlerResult {
         return this.roundDown(num);
     }
 
@@ -518,7 +518,7 @@ class NumberHandler extends Handler {
      * @param {any} exponent
      * @returns {HandlerResult}
      */
-    static pow(num: any, exponent: any): HandlerResult {
+    public pow(num: any, exponent: any): HandlerResult {
         return this.toPower(num, exponent);
     }
 
@@ -531,7 +531,7 @@ class NumberHandler extends Handler {
      * @param {any} toMax
      * @returns {HandlerResult}
      */
-    static scale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
+    public scale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
         return this.toScale(num, fromMin, fromMax, toMin, toMax);
     }
 }

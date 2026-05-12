@@ -155,48 +155,7 @@ class DateParser {
         this._dateOrder = dateOrder;
     }
 
-    parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
-        const anyType = parseTypes.length === 0;
-
-        if (anyType || parseTypes.indexOf('object') !== -1) {
-            if (value instanceof Date && !isNaN(value.getTime())) {
-                return new MetaDate({ date: value });
-            }
-        }
-        if (anyType || parseTypes.indexOf('timestamp') !== -1) {
-            const normalizedDate = this.parseTimestamp(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
-        }
-        if (anyType || parseTypes.indexOf('iso') !== -1) {
-            const normalizedDate = this.parseIso(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
-        }
-        if (anyType || parseTypes.indexOf('human') !== -1) {
-            const normalizedDate = this.parseHuman(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
-        }
-        if (anyType || parseTypes.indexOf('isoWeek') !== -1) {
-            const normalizedDate = this.parseIsoWeek(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
-        }
-        if (anyType || parseTypes.indexOf('isoOrdinal') !== -1) {
-            const normalizedDate = this.parseIsoOrdinal(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
-        }
-        return null;
-    }
-
-    _loadCache() {
+    private _loadCache() {
         if (this._cache) {
             return;
         }
@@ -251,7 +210,48 @@ class DateParser {
         };
     }
 
-    parseHuman(dateString: unknown, options: HumanParseOptions = {}): MetaDate | null {
+    public parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
+        const anyType = parseTypes.length === 0;
+
+        if (anyType || parseTypes.indexOf('object') !== -1) {
+            if (value instanceof Date && !isNaN(value.getTime())) {
+                return new MetaDate({ date: value });
+            }
+        }
+        if (anyType || parseTypes.indexOf('timestamp') !== -1) {
+            const normalizedDate = this.parseTimestamp(value);
+            if (normalizedDate) {
+                return normalizedDate;
+            }
+        }
+        if (anyType || parseTypes.indexOf('iso') !== -1) {
+            const normalizedDate = this.parseIso(value);
+            if (normalizedDate) {
+                return normalizedDate;
+            }
+        }
+        if (anyType || parseTypes.indexOf('human') !== -1) {
+            const normalizedDate = this.parseHuman(value);
+            if (normalizedDate) {
+                return normalizedDate;
+            }
+        }
+        if (anyType || parseTypes.indexOf('isoWeek') !== -1) {
+            const normalizedDate = this.parseIsoWeek(value);
+            if (normalizedDate) {
+                return normalizedDate;
+            }
+        }
+        if (anyType || parseTypes.indexOf('isoOrdinal') !== -1) {
+            const normalizedDate = this.parseIsoOrdinal(value);
+            if (normalizedDate) {
+                return normalizedDate;
+            }
+        }
+        return null;
+    }
+
+    public parseHuman(dateString: unknown, options: HumanParseOptions = {}): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -339,6 +339,8 @@ class DateParser {
             dateString = dateString.replace(/([/. -,:])\1+/g, '$1');
         }
 
+        const offsetHourNum = Number(offsetHour);
+
         return new MetaDate({
             raw: dateString as string,
             dateParts: [
@@ -349,12 +351,11 @@ class DateParser {
                 Number(minute),
                 Number(second)
             ],
-            offsetHour: Number(offsetHour),
-            offsetMinute: Number(offsetMinute)
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute))
         });
     }
 
-    parseIso(dateString: unknown, options: IsoParseOptions = {}): MetaDate | null {
+    public parseIso(dateString: unknown, options: IsoParseOptions = {}): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -489,6 +490,8 @@ class DateParser {
             return null;
         }
 
+        const offsetHourNum = Number(offsetHour);
+
         return new MetaDate({
             raw: dateString,
             dateParts: [
@@ -500,12 +503,11 @@ class DateParser {
                 Number(second),
                 Number(millisecond)
             ],
-            offsetHour: Number(offsetHour),
-            offsetMinute: Number(offsetMinute)
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute))
         });
     }
 
-    parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): MetaDate | null {
+    public parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -614,6 +616,8 @@ class DateParser {
             return null;
         }
 
+        const offsetHourNum = Number(offsetHour);
+
         return new MetaDate({
             raw: dateString,
             dateParts: [
@@ -625,12 +629,11 @@ class DateParser {
                 Number(second),
                 Number(millisecond)
             ],
-            offsetHour: Number(offsetHour),
-            offsetMinute: Number(offsetMinute)
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute))
         });
     }
 
-    parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): MetaDate | null {
+    public parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): MetaDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -761,13 +764,12 @@ class DateParser {
         return new MetaDate({
             raw: dateString,
             date,
-            offsetHour: Number(offsetHour),
-            offsetMinute: Number(offsetMinute)
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + offsetMinuteNum)
         });
 
     }
 
-    parseTimestamp(value: unknown, isMilliseconds: boolean = true): MetaDate | null {
+    public parseTimestamp(value: unknown, isMilliseconds: boolean = true): MetaDate | null {
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
             return null;
@@ -786,13 +788,12 @@ class DateParser {
         });
     }
 
-    format(metaDate: MetaDate, formatString: string): string {
+    public format(metaDate: MetaDate, formatString: string): string {
         const {
             raw,
-            offsetHour,
-            offsetMinute,
-            date,
-            dateWithOffsetRemoved
+            offsetMinutes,
+            globalDate: date,
+            localDate: dateWithOffsetRemoved
         } = metaDate;
 
         this._loadCache();
@@ -832,19 +833,24 @@ class DateParser {
             SSS: () => padLeft(String(millisecondNum), 3, '0'),
             A: () => hourNum < 12 ? 'AM' : 'PM',
             a: () => hourNum < 12 ? 'am' : 'pm',
-            ZZ: () =>
-                (offsetHour >= 0 ? '+' : '-') +
-                padLeft(String(Math.abs(offsetHour)), 2, '0') +
-                ':' +
-                padLeft(String(offsetMinute), 2, '0'),
             Z: () =>
-                (offsetHour >= 0 ? '+' : '-') + 
-                padLeft(String(Math.abs(offsetHour)), 2, '0') + 
-                padLeft(String(offsetMinute), 2, '0')
+                (offsetMinutes >= 0 ? '+' : '-') +
+                padLeft(String(Math.floor(Math.abs(offsetMinutes) / 60)), 2, '0') +
+                ':' +
+                padLeft(String(Math.abs(offsetMinutes) % 60), 2, '0'),
+            z: () =>
+                (offsetMinutes >= 0 ? '+' : '-') +
+                padLeft(String(Math.floor(Math.abs(offsetMinutes) / 60)), 2, '0') +
+                padLeft(String(Math.abs(offsetMinutes) % 60), 2, '0')
         };
 
-        // Replace all recognized tokens in one pass, matching longer overlapping tokens first.
-        return formatString.replace(/YYYY|YY|MMMM|MMM|MM|M|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|ZZ|Z/g, (token) => tokens[token]());
+        // Replace all recognized tokens in one pass, while preserving bracket-wrapped literals like [YYYY].
+        return formatString.replace(/\[?(?:YYYY|YY|MMMM|MMM|MM|M|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|Z|z)\]?/g, (token, offset, source) => {
+            if (token.slice(0, 1) === '[' && token.slice(-1) === ']') {
+                return token.slice(1, -1);
+            }
+            return tokens[token]();
+        });
     }
 }
 
