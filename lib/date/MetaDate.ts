@@ -40,10 +40,7 @@ class MetaDate {
 
     public get localDate(): Date {
         const target = new Date(this._date);
-        target.setUTCHours(target.getUTCHours() - Math.trunc(this._offsetMinutes / 60));
-        target.setUTCMinutes(
-            target.getUTCMinutes() - (this._offsetMinutes % 60)
-        );
+        target.setUTCMinutes(target.getUTCMinutes() - this._offsetMinutes);
         return target;
     }
 

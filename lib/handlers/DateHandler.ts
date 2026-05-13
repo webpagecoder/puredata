@@ -1,65 +1,9 @@
 'use strict';
 
-import { HandlerResult } from './HandlerResult.ts';
-import { Utils } from '../utils/Utils.ts';
-import { Handler } from './Handler.ts';
-import { DEFAULT_LANGUAGE } from '../config/DefaultLanguage.ts';
-import { DateType } from '../date/DateType.ts';
-import { RegexCache } from '../cache/RegexCache.ts';
-import { Locale } from '../Locale.ts';
 import { DateParser, HumanParseOptions, IsoParseOptions } from '../date/DateParser.ts';
-import { DatePart, DatePartPresence } from '../date/DatePart.ts';
+import { Handler } from './Handler.ts';
+import { HandlerResult } from './HandlerResult.ts';
 const { pass, fail } = HandlerResult;
-
-export type DateLike = Date | string | number;
-export type DateMeta = {
-    YYYY: number;
-    MM?: number;
-    ww?: number;
-    DD?: number;
-    HH?: number;
-    mm?: number;
-    ss?: number;
-    sss?: number;
-    HHOffset?: number;
-    mmOffset?: number;
-    dash?: string;
-
-}
-export class ParsedDate {
-    date: Date;
-    parts: DateMeta;
-    format: DateType;
-    value: DateLike;
-
-    constructor({ date, parts, format, value }: { date: Date; parts: DateMeta; format: DateType; value: DateLike }) {
-        this.date = date;
-        this.parts = parts;
-        this.format = format;
-        this.value = value;
-    }
-}
-
-/**
- * Checks that parsed date components include all required tokens and exclude forbidden tokens.
- */
-export function areOptionsCompliant(parts: any = {}, required: DatePart[] = [], forbidden: DatePart[] = []): boolean {
-    for (const option of required) {
-        if (parts[option] === undefined) {
-            return false;
-        }
-    }
-    for (const option of forbidden) {
-        if (parts[option] !== undefined) {
-            return false;
-        }
-    }
-    return true;
-}
-
-
-
-
 
 class DateHandler extends Handler {
     protected _dateParser: DateParser;
@@ -83,9 +27,9 @@ class DateHandler extends Handler {
      * @param options Parsing and token validation options.
      * @returns
      */
-    public human(dateString: unknown, dateParser: DateParser, options: HumanParseOptions = {}): HandlerResult {
+    public human(dateString: unknown, options: HumanParseOptions = {}): HandlerResult {
 
-        const parsedDate = dateParser.parseHuman(dateString, options);
+        const parsedDate = this._dateParser.parseHuman(dateString, options);
 
         if (!parsedDate) {
             return fail(dateString, 'date/human', { options });
@@ -633,3 +577,4 @@ class DateHandler extends Handler {
 
 
 export { DateHandler };
+

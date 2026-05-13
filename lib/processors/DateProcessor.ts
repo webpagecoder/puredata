@@ -1,14 +1,12 @@
 'use strict';
 
-import { DateType } from '../date/DateType.ts';
-import { Utils } from '../utils/Utils.ts';
-import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
-import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { State } from './Processor.ts';
-import { DateChain, DateChainProps } from '../fields/DateChain.ts';
 import { MetaDate } from '../date copy/MetaDate.ts';
 import { IsoPrecision } from '../date/DateParser.ts';
-import { DateHandler } from '../handlers/DateHandler.ts';
+import { DateType } from '../date/DateType.ts';
+import { DateChain } from '../fields/DateChain.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
+import { State } from './Processor.ts';
 
 type DateProcessorState = State & {
     originalValue?: unknown;
@@ -60,6 +58,10 @@ class DateProcessor extends ChainProcessor<DateChain> {
     // }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
+        if(tracker.fail) {
+            return;
+        }
+        
         const { chainHandler: { dateParser }, outputFormatString } = this._field;
         const metaDate = tracker.getValue() as MetaDate;
 
@@ -70,6 +72,8 @@ class DateProcessor extends ChainProcessor<DateChain> {
             case 'object':
                 tracker.setValue(new Date(metaDate.date));
                 break;
+            case '':
+                return;
             default:
                 tracker.setValue(dateParser.format(metaDate, outputFormatString || ''));
         }
