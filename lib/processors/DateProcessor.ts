@@ -58,24 +58,24 @@ class DateProcessor extends ChainProcessor<DateChain> {
     // }
 
     override postProcess(tracker: ValueTracker, state: DateProcessorState = {}): void {
-        if(tracker.fail) {
+        if (tracker.fail) {
             return;
         }
-        
+
         const { chainHandler: { dateParser }, outputFormatString } = this._field;
         const metaDate = tracker.getValue() as MetaDate;
 
-        switch (outputFormatString) {
-            case 'timestamp':
-                tracker.setValue(metaDate.date.getTime());
-                break;
-            case 'object':
-                tracker.setValue(new Date(metaDate.date));
-                break;
-            case '':
-                return;
-            default:
-                tracker.setValue(dateParser.format(metaDate, outputFormatString || ''));
+        if (outputFormatString === null) {
+            tracker.setValue(metaDate.raw);
+        }
+        else if (outputFormatString === 'timestamp') {
+            tracker.setValue(metaDate.date.getTime());
+        }
+        else if (outputFormatString === 'object') {
+            tracker.setValue(new Date(metaDate.date));
+        }
+        else {
+            tracker.setValue(dateParser.format(metaDate, outputFormatString || ''));
         }
     }
 
