@@ -1,7 +1,5 @@
 'use strict';
 
-import { DatePart } from "../date/DatePart.ts";
-
 const GLOBAL_CONFIG = Object.seal({
     general: {
         emptyValues: [null, undefined, ''],

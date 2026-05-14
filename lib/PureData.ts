@@ -1,22 +1,21 @@
 'use strict';
 
 import { FieldProcessorFactory } from './FieldProcessorFactory.ts';
+import { Locale } from './Locale.ts';
+import { Path } from './Path.ts';
 import { DEFAULT_LANGUAGE } from './config/DefaultLanguage.ts';
 import { ArrayChain } from './fields/ArrayChain.ts';
 import { BooleanChain } from './fields/BooleanChain.ts';
 import { Chain } from './fields/Chain.ts';
 import { DateChain } from './fields/DateChain.ts';
-import { NumberChain } from './fields/NumberChain.ts';
-import { SchemaChain } from './fields/SchemaChain.ts';
-import { StringChain } from './fields/StringChain.ts';
 import { EnumField } from './fields/EnumField.ts';
+import { NumberChain } from './fields/NumberChain.ts';
 import { PathReferenceField } from './fields/PathReferenceField.ts';
 import { ReferenceField } from './fields/ReferenceField.ts';
+import { SchemaChain } from './fields/SchemaChain.ts';
 import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
+import { StringChain } from './fields/StringChain.ts';
 import { ValueField } from './fields/ValueField.ts';
-import { Locale } from './Locale.ts';
-import { Path } from './Path.ts';
-import { Presence } from './Presence.ts';
 import { ArrayHandler } from './handlers/ArrayHandler.ts';
 import { BooleanHandler } from './handlers/BooleanHandler.ts';
 import { DateHandler } from './handlers/DateHandler.ts';
@@ -24,12 +23,15 @@ import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './utils/Utils.ts';
-import { NormalizedDate } from './date/NormalizedDate.ts';
-import { DateParser } from './date/DateParser.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
+
+    private _config: PureDataConfig;
+    private _locale: Locale
+    private _processorMapper: FieldProcessorFactory;
+
     constructor(config, processorMapper = new FieldProcessorFactory()) {
         this.config = Utils.clone(config);
 
@@ -74,7 +76,9 @@ class PureData {
     }
 
     date(props = {}) {
-        return new DateChain(this.composeProps(props, 'date', new DateHandler(new DateParser(this.locale))));
+        //todo: redo how props are configged. get rid of composeProps
+        const dateOrder = props.dateOrder || this.config.date.dateOrder;
+        return new DateChain(this.composeProps(props, 'date', new DateHandler(this.locale, dateOrder)));
     }
 
     enum(structure = []) {
@@ -172,3 +176,4 @@ class PureData {
 }
 
 export { PureData };
+

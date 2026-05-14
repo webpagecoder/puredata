@@ -21,15 +21,22 @@ class MetaDate {
             millisecond = 0
         ] = [] } = dateInfo;
 
-        this._date = date ? date : new Date(Date.UTC(
-            year,
-            month - 1,
-            day,
-            hour,
-            minute + offsetMinutes,
-            second,
-            millisecond
-        ));
+        if (date) {
+            this._date = offsetMinutes === 0
+                ? date
+                : new Date(date.getTime() + offsetMinutes * 60000);
+        }
+        else {
+            this._date = new Date(Date.UTC(
+                year,
+                month - 1,
+                day,
+                hour,
+                minute + offsetMinutes,
+                second,
+                millisecond
+            ));
+        }
         this._raw = raw;
         this._offsetMinutes = offsetMinutes;
     }

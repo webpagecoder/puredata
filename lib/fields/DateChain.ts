@@ -1,30 +1,25 @@
 'use strict';
 
-import { DateParser, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision } from '../date/DateParser.ts';
-import { DatePart, DatePartIso, DatePartPresence } from '../date/DatePart.ts';
-import { DateType } from '../date/DateType.ts';
+import { HumanParseOptions, HumanPrecision, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekPrecision } from '../date/DateConverter.ts';
+import { DateOrder, DateType } from '../date/DateTypes.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
-import { Locale } from '../Locale.ts';
-import { Presence } from '../Presence.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-type DateOrder = 'MDY' | 'DMY' | 'YMD';
-
 export type DateChainProps = ChainProps<DateHandler> & {
     dateOrder?: DateOrder;
     outputFormatString?: OutputFormat;
     outputPrecision?: OutputPrecision;
-    skipPreProcess?: boolean;
+    skipGenericParse?: boolean;
     utcOffset?: [number, number];
 };
 
 class DateChain extends Chain<DateChainProps> {
     protected _outputFormatString: OutputFormat | null;
     protected _outputPrecision: OutputPrecision | null;
-    protected _skipPreProcess: boolean;
+    protected _skipGenericParse: boolean;
     protected _utcOffset: [number, number];
 
     constructor(props: DateChainProps) {
@@ -34,14 +29,14 @@ class DateChain extends Chain<DateChainProps> {
             dateOrder = 'MDY',
             outputFormatString = null,
             outputPrecision = null,
-            skipPreProcess = false,
+            skipGenericParse = false,
             utcOffset = [0, 0]
         } = props;
 
         this._outputFormatString = outputFormatString;
         this._outputPrecision = outputPrecision;
         this._utcOffset = utcOffset;
-        this._skipPreProcess = skipPreProcess;
+        this._skipGenericParse = skipGenericParse;
     }
 
     public override clone(props: Partial<DateChainProps> = {}): this {
@@ -51,12 +46,12 @@ class DateChain extends Chain<DateChainProps> {
             outputFormatString = this._outputFormatString,
             outputPrecision = this._outputPrecision,
             utcOffset = this._utcOffset,
-            skipPreProcess = this._skipPreProcess
+            skipGenericParse = this._skipGenericParse
         } = props;
 
         clone._outputFormatString = outputFormatString;
         clone._outputPrecision = outputPrecision;
-        clone._skipPreProcess = skipPreProcess;
+        clone._skipGenericParse = skipGenericParse;
         clone._utcOffset = utcOffset;
         return clone;
     }
@@ -65,7 +60,7 @@ class DateChain extends Chain<DateChainProps> {
         if (this._pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
-        this._skipPreProcess = true;
+        this._skipGenericParse = true;
     }
 
     // Configurators
@@ -92,7 +87,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
-    human(options: HumanParseOptions = {}) {
+    public human(options: HumanParseOptions = {}) {
         this.assertEmptyPipelineAndSkipPreprocess('human');
         return this.addStep('human', [ options]);
     }
@@ -288,8 +283,8 @@ class DateChain extends Chain<DateChainProps> {
         return this._outputFormatString;
     }
 
-    public get skipPreProcess() {
-        return this._skipPreProcess;
+    public get skipGenericParse() {
+        return this._skipGenericParse;
     }
 
     public get utcOffset() {

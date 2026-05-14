@@ -6,49 +6,26 @@ import { Presence } from "../Presence.ts";
 import { Utils } from "../utils/Utils.ts";
 const padLeft = Utils.padLeft;
 import { DateHelpers } from "./DateHelpers.ts";
-import { DatePart, DatePartPresence } from "./DatePart.ts";
-import { DateType } from "./DateType.ts";
+import { DateType } from "./DateTypes.ts";
 import { MetaDate } from "./MetaDate.ts";
 
-enum DateOrder {
-    MDY = 'MDY',
-    DMY = 'DMY',
-    YMD = 'YMD'
-};
-
 // Date building blocks/keys
-const YY = '\\d{2}';
 const YYYY = '\\d{4}';
-const M = '[1-9]|1[0-2]';
 const MM = '0[1-9]|1[0-2]';
 const M_OR_MM = '0?[1-9]|1[0-2]';
-const MMM = '(?:#SHORT_MONTH_NAMES#)'; // will be replaced with locale short month names in runtime
-const MMMM = '(?:#LONG_MONTH_NAMES#)'; // will be replaced with locale long month names in runtime
-const D = '[1-9]|[12][0-9]|3[01]';
 const DD = '0[1-9]|[12][0-9]|3[01]';
 const D_OR_DD = '0?[1-9]|[12][0-9]|3[01]';
 // const Do = `${D}(?:#NUMBER_SUFFIXES#)?`; // will be replaced with D + locale number suffixes in runtime
-const DDD = '[1-9]|[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]';
 const DDDD = '00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]';
-const W = '0?[1-9]|[1-4]\\d|5[0-3]';
 const WW = '0[1-9]|[1-4]\\d|5[0-3]';
 const E = '[1-7]';
-const ddd = '(?:#SHORT_DAY_NAMES#)'; // will be replaced with locale short day names in runtime
-const dddd = '(?:#LONG_DAY_NAMES#)'; // will be replaced with locale long day names in runtime
 
 // Time building blocks/keys
 const H = '0?[0-9]|1[0-9]|2[0-3]';
 const HH = '0[0-9]|1[0-9]|2[0-3]';
-const h = '0?[1-9]|1[0-2]';
-const hh = '0[1-9]|1[0-2]';
-const m = '0?[0-9]|[1-5][0-9]';
 const mm = '0[0-9]|[1-5][0-9]';
-const s = '0?[0-9]|[1-5][0-9]';
 const ss = '0[0-9]|[1-5][0-9]';
-const S = '\\d';
-const SS = '0[0-9]|[1-9][0-9]|[1-9][0-9]{2}';
 const SSS = '\\d{3}';
-const A = '[AP]M';
 const a = '[ap]m';
 
 // Timezone building blocks/keys
@@ -69,34 +46,28 @@ const ISO_ORDINAL = `^(${YYYY})(-?)(${DDDD})(?:T${ISO_TIME_TZ})?$`;
 const ISO_WEEK = `^(${YYYY})(-?)W(${WW})(?:(-?)(${E})(?:T${ISO_TIME_TZ})?)?$`;
 
 // Human readable regex for dates
-const DELIM = '[/. -,:]+';
 const HUMAN_MDY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
     return [
-        `(?:${allDayNames}${DELIM})?(${allMonthNames})${DELIM}(${D_OR_DD})(?:\\s*${numberSuffixes})?${DELIM}(${YYYY})(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${M_OR_MM})${DELIM}(${D_OR_DD})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`
+        `(?:${allDayNames}[., ]+)?(${allMonthNames})[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${YYYY})(?:[, ]+(.*))?$`,
+        `(?:${allDayNames}[., ]+)?(${M_OR_MM})[/. -]+(${D_OR_DD})[/. -]+(${YYYY})(?:[, ]+(.*))?$`
     ];
 };
 const HUMAN_DMY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
     return [
-        `(?:${allDayNames}${DELIM})?(${D_OR_DD})(?:\\s*${numberSuffixes})?${DELIM}(${allMonthNames})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${D_OR_DD})${DELIM}(${M_OR_MM})${DELIM}(${YYYY})(?:${DELIM}(.*))?$`
+        `(?:${allDayNames}[., ]+)?(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[ ,]+(${YYYY})(?:[, ]+(.*))?$`,
+        `(?:${allDayNames}[., ]+)?(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+(${YYYY})(?:[, ]+(.*))?$`
     ];
 };
 const HUMAN_YMD = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
     return [
-        `(?:${allDayNames}${DELIM})?(${YYYY})${DELIM}(?:(${allMonthNames}))${DELIM}(${D_OR_DD})(?:\\s*${numberSuffixes})?(?:${DELIM}(.*))?$`,
-        `(?:${allDayNames}${DELIM})?(${YYYY})${DELIM}(${M_OR_MM})${DELIM}(${D_OR_DD})(?:${DELIM}(.*))?$`
+        `(?:${allDayNames}[., ]+)?(${YYYY})[ ,]+(?:(${allMonthNames}))[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?(?:[, ]+(.*))?$`,
+        `(?:${allDayNames}[., ]+)?(${YYYY})[/. -]+(${M_OR_MM})[/. -]+(${D_OR_DD})(?:[, ]+(.*))?$`
     ];
 };
 
 // Human readable regex for time
 const HUMAN_TZ = `(?:(utc|gmt|z)|([+-]${HH})(?::?(${mm})))?`;
-const HUMAN_TIME = `^(${H})(?::?(${mm})(?::?(${ss}))?)?(?:\\s*(${a}))?(?:\\s*${HUMAN_TZ})?$`;
-
-
-
-
-
+const HUMAN_TIME = `^(${H})(?:[.:]?(${mm})(?:[.:]?(${ss}))?)?(?:\\s*(${a}))?(?:\\s*${HUMAN_TZ})?$`;
 
 // Cache for human date parsing regexes and locale-specific date components
 type HumanDateCache = null | {
@@ -122,10 +93,10 @@ export type IsoWeekPrecision = (typeof IsoWeekPrecision)[number];
 export type IsoOrdinalPrecision = (typeof IsoOrdinalPrecision)[number];
 
 export type HumanParseOptions = {
-    dateOrder?: 'MDY' | 'DMY' | 'YMD';
+    dateOrder?: DateOrder;
     minPrecision?: HumanPrecision;
     maxPrecision?: HumanPrecision;
-    cleanInput?: boolean;
+    clean?: boolean;
 };
 export type IsoParseOptions = {
     minPrecision?: IsoPrecision;
@@ -142,14 +113,18 @@ export type IsoWeekParseOptions = {
     maxPrecision?: IsoWeekPrecision;
     expanded?: Presence
 };
+export type TimestampOptions = {
+    isMilliseconds?: boolean;
+};
 
-class DateParser {
+
+class DateConverter {
 
     private _locale: Locale;
     private _cache: HumanDateCache;
-    private _dateOrder: 'MDY' | 'DMY' | 'YMD';
+    private _dateOrder: DateOrder;
 
-    constructor(locale: Locale, dateOrder: 'MDY' | 'DMY' | 'YMD' = 'MDY') {
+    constructor(locale: Locale, dateOrder: DateOrder = 'MDY') {
         this._locale = locale;
         this._cache = null;
         this._dateOrder = dateOrder;
@@ -335,8 +310,11 @@ class DateParser {
             return null;
         }
 
-        if (options.cleanInput === undefined || options.cleanInput) {
-            dateString = dateString.replace(/([/. -,:])\1+/g, '$1');
+        if (options.clean === undefined || options.clean) {
+            dateString = dateString
+                .replace(/\s+/g, ' ')
+                .replace(/\s*,\s*/g, ', ')
+                .replace(/\s*([:/.-])\s*/g, '$1');
         }
 
         const offsetHourNum = Number(offsetHour);
@@ -769,7 +747,8 @@ class DateParser {
 
     }
 
-    public parseTimestamp(value: unknown, isMilliseconds: boolean = true): MetaDate | null {
+    public parseTimestamp(value: unknown, options: TimestampOptions = {}): MetaDate | null {
+        const { isMilliseconds = false } = options;
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
             return null;
@@ -812,7 +791,8 @@ class DateParser {
             MMM: () => this._cache!.shortMonthNames[monthNum - 1],
             MM: () => padLeft(String(monthNum), 2, '0'),
             M: () => String(monthNum),
-            DDD: () => padLeft(String(DateHelpers.getDayOfYear(globalDate)), 3, '0'),
+            DDDD: () => padLeft(String(DateHelpers.getDayOfYear(globalDate)), 3, '0'),
+            DDD: () => String(DateHelpers.getDayOfYear(globalDate)),
             DD: () => padLeft(String(dayNum), 2, '0'),
             D: () => String(dayNum),
             dddd: () => this._cache!.longDayNames[globalDate.getUTCDay() % 7],
@@ -844,7 +824,7 @@ class DateParser {
         };
 
         // Replace all recognized tokens in one pass, while preserving bracket-wrapped literals like [YYYY].
-        return formatString.replace(/\[?(?:YYYY|YY|MMMM|MMM|MM|M|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|Z|z)\]?/g, (token, offset, source) => {
+        return formatString.replace(/\[?(?:YYYY|YY|MMMM|MMM|MM|M|DDDD|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|Z|z)\]?/g, (token, offset, source) => {
             if (token.slice(0, 1) === '[' && token.slice(-1) === ']') {
                 return token.slice(1, -1);
             }
@@ -853,4 +833,4 @@ class DateParser {
     }
 }
 
-export { DateParser };
+export { DateConverter };

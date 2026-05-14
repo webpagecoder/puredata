@@ -5,6 +5,7 @@ import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Chain } from '../fields/Chain.ts';
 import { Field } from '../fields/Field.ts';
+import { HandlerResult } from '../handlers/HandlerResult.ts';
 
 type PipelineError = {
     key: string;
@@ -85,16 +86,19 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
             //     this.postStepHook(tracker, state);
             // }
 
-            tracker.setValue(result.value);
-
-            if (result.fail) {
-                for (const key of Object.keys(result.errors)) {
-                    tracker.addError(key, result.errors[key]);
-                }
-            }
+            this._copyResultToTracker(tracker, result);
 
             if (tracker.hasErrors()) {
                 return;
+            }
+        }
+    }
+
+    protected _copyResultToTracker(tracker: ValueTracker, result: HandlerResult): void {
+        tracker.setValue(result.value);
+        if (result.fail) {
+            for (const key of Object.keys(result.errors)) {
+                tracker.addError(key, result.errors[key]);
             }
         }
     }

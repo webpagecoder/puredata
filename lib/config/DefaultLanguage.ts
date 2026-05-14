@@ -2,7 +2,7 @@
 
 import type { NestedStringRecord } from "../utils/Utils.ts";
 
-const DEFAULT_LANGUAGE:NestedStringRecord = {
+const DEFAULT_LANGUAGE: NestedStringRecord = {
     calendar: {
         dateOrder: 'MDY',
         dayNames: {

@@ -1,25 +1,32 @@
 'use strict';
 
-import { DateParser, HumanParseOptions, IsoParseOptions } from '../date/DateParser.ts';
+import { DateConverter, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimestampOptions } from '../date/DateConverter.ts';
+import { DateOrder } from '../date/DateTypes.ts';
+import { MetaDate } from '../date/MetaDate.ts';
+import { Locale } from '../Locale.ts';
 import { Handler } from './Handler.ts';
 import { HandlerResult } from './HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
 class DateHandler extends Handler {
-    protected _dateParser: DateParser;
+    protected _dateConverter: DateConverter;
 
-    public constructor(dateParser: DateParser) {
+    public constructor(locale: Locale, dateOrder: DateOrder) {
         super();
-        this._dateParser = dateParser;
-    }
-
-    public get dateParser(): DateParser {
-        return this._dateParser;
+        this._dateConverter = new DateConverter(locale, dateOrder);
     }
 
     // ******************************* 
-    // VALIDATORS 
+    // DATE CATEGORY VALIDATORS 
     // *******************************
+
+    //todo: fix the puedata class to allow passing in of options
+    public date(value: unknown): HandlerResult {
+        const parsedDate = this._dateConverter.parse(value);
+        return !parsedDate
+            ? fail(value, 'date/base')
+            : pass(parsedDate);
+    }
 
     /**
      * Parses human-readable date text and validates required and forbidden date components.
@@ -28,13 +35,10 @@ class DateHandler extends Handler {
      * @returns
      */
     public human(dateString: unknown, options: HumanParseOptions = {}): HandlerResult {
-
-        const parsedDate = this._dateParser.parseHuman(dateString, options);
-
-        if (!parsedDate) {
-            return fail(dateString, 'date/human', { options });
-        }
-        return pass(parsedDate);
+        const parsedDate = this._dateConverter.parseHuman(dateString, options);
+        return !parsedDate
+            ? fail(dateString, 'date/human', { options })
+            : pass(parsedDate);
     }
 
     /**
@@ -44,15 +48,10 @@ class DateHandler extends Handler {
      * @returns
      */
     public iso(dateString: any, options: IsoParseOptions): HandlerResult {
-        const parsedDate = this._dateParser.parseIso(dateString, options);
-        if (!parsedDate) {
-            return fail(dateString, 'date/iso');
-        }
-        // if (!allowBasic && !parsedDate.parts.isExtended) {
-        //     return fail(dateString, 'date/iso');
-        // }
-
-        return pass(parsedDate);
+        const parsedDate = this._dateConverter.parseIso(dateString, options);
+        return !parsedDate
+            ? fail(dateString, 'date/iso', { options })
+            : pass(parsedDate);
     }
 
     /**
@@ -61,17 +60,11 @@ class DateHandler extends Handler {
      * @param allowBasic Whether basic (non-extended) ISO format is allowed.
      * @returns
      */
-    public isoOrdinal(dateString: any, allowBasic: any = false): HandlerResult {
-        const parsedDate = parseFromIsoOrdinal(dateString);
-        if (!parsedDate) {
-            return fail(dateString, 'date/isoOrdinal');
-        }
-
-        const { date, parts } = parsedDate;
-        if (!allowBasic && !parts.isExtended) {
-            return fail(dateString, 'date/isoOrdinal');
-        }
-        return pass(date);
+    public isoOrdinal(dateString: any, options: IsoOrdinalParseOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseIsoOrdinal(dateString, options);
+        return !parsedDate
+            ? fail(dateString, 'date/isoOrdinal', { options })
+            : pass(parsedDate);
     }
 
     /**
@@ -80,20 +73,49 @@ class DateHandler extends Handler {
      * @param allowBasic Whether basic (non-extended) ISO format is allowed.
      * @returns
      */
-    public isoWeek(dateString: any, allowBasic: any = false): HandlerResult {
-        const parsedDate = parseFromIsoWeek(dateString);
-        if (!parsedDate) {
-            return fail(dateString, 'date/isoWeek');
-        }
-
-        const { date, parts } = parsedDate;
-        if (!allowBasic && !parts.isExtended) {
-            return fail(dateString, 'date/isoWeek');
-        }
-        return pass(date);
+    public isoWeek(dateString: any, options: IsoWeekParseOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseIsoWeek(dateString, options);
+        return !parsedDate
+            ? fail(dateString, 'date/isoWeek', { options })
+            : pass(parsedDate);
     }
 
+    /**
+     * Parses a timestamp input into a valid Date instance.
+     * @param value Timestamp input value to parse.
+     * @param jsType Whether to interpret numeric input using JavaScript timestamp conventions.
+     * @returns
+     */
+    public timestamp(value: any, options: TimestampOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseTimestamp(value, options);
+        return !parsedDate
+            ? fail(value, 'date/timestamp', { options })
+            : pass(parsedDate);
+    }
 
+    // ******************************* 
+    // DATE STRING FORMATTER (last chain item to run)
+    // *******************************
+    public format(metaDate: MetaDate, formatString: string | null): HandlerResult {
+        let finalForm: unknown;
+        if (formatString === null) {
+            finalForm = metaDate.raw;
+        }
+        else if (formatString === 'timestamp') {
+            finalForm = metaDate.globalDate.getTime();
+        }
+        else if (formatString === 'object') {
+            finalForm = new Date(metaDate.globalDate);
+        }
+        else {
+            finalForm = this._dateConverter.format(metaDate, formatString);
+        }
+        return pass(finalForm);
+    }
+
+    // ******************************* 
+    // GLOBAL VALIDATORS 
+    // *******************************
 
     /**
      * Validates that the input date occurs strictly after the provided comparison date.
@@ -101,13 +123,13 @@ class DateHandler extends Handler {
      * @param compareDate Lower-bound date that the input must be after.
      * @returns
      */
-    public after(date: Date, compareDate: any): HandlerResult {
-        const parsedCompareDate = parseDate(compareDate);
+    public after(date: MetaDate, compareDate: any): HandlerResult {
+        const parsedCompareDate = this._dateConverter.parse(compareDate);
         if (!parsedCompareDate) {
-            return fail(date, 'date/base', { date: compareDate });
+            return fail(date, 'date/base', { date: parsedCompareDate });
         }
 
-        return date > parsedCompareDate.date
+        return date.globalDate > parsedCompareDate.globalDate
             ? pass(date)
             : fail(date, 'date/after', { afterDate: compareDate });
     }
@@ -313,19 +335,7 @@ class DateHandler extends Handler {
             : fail(date, 'date/recent', { daysDiff, days });
     }
 
-    /**
-     * Parses a timestamp input into a valid Date instance.
-     * @param value Timestamp input value to parse.
-     * @param jsType Whether to interpret numeric input using JavaScript timestamp conventions.
-     * @returns
-     */
-    public timestamp(value: any, jsType: boolean = true): HandlerResult {
-        const parsedDate = parseDateFromTimestamp(value);
-        if (!parsedDate) {
-            return fail(value, 'date/timestamp');
-        }
-        return pass(parsedDate.date);
-    }
+
 
     /**
      * Validates that the input date matches the same UTC calendar day as todaysDate.
