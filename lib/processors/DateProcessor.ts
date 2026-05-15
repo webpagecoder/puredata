@@ -19,7 +19,10 @@ class DateProcessor extends ChainProcessor<DateChain> {
         if (skipGenericParse) {
             return;
         }
-        this._copyResultToTracker(tracker, chainHandler.date(tracker.getValue()));
+        this._copyResultToTracker(
+            tracker, 
+            chainHandler.date(tracker.getValue())
+        );
     }
 
     override postProcess(tracker: ValueTracker): void {

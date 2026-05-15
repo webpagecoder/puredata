@@ -6,7 +6,7 @@ import { Presence } from "../Presence.ts";
 import { Utils } from "../utils/Utils.ts";
 const padLeft = Utils.padLeft;
 import { DateHelpers } from "./DateHelpers.ts";
-import { DateType } from "./DateTypes.ts";
+import { DateOrder, DateType } from "./DateTypes.ts";
 import { MetaDate } from "./MetaDate.ts";
 
 // Date building blocks/keys
@@ -185,7 +185,7 @@ class DateConverter {
         };
     }
 
-    public parse(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
+    public parseAuto(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
         const anyType = parseTypes.length === 0;
 
         if (anyType || parseTypes.indexOf('object') !== -1) {
@@ -770,7 +770,7 @@ class DateConverter {
     public format(metaDate: MetaDate, formatString: string): string {
         const {
             offsetMinutes,
-            globalDate,
+            utcDate,
             localDate
         } = metaDate;
 
@@ -791,16 +791,16 @@ class DateConverter {
             MMM: () => this._cache!.shortMonthNames[monthNum - 1],
             MM: () => padLeft(String(monthNum), 2, '0'),
             M: () => String(monthNum),
-            DDDD: () => padLeft(String(DateHelpers.getDayOfYear(globalDate)), 3, '0'),
-            DDD: () => String(DateHelpers.getDayOfYear(globalDate)),
+            DDDD: () => padLeft(String(DateHelpers.getDayOfYear(utcDate)), 3, '0'),
+            DDD: () => String(DateHelpers.getDayOfYear(utcDate)),
             DD: () => padLeft(String(dayNum), 2, '0'),
             D: () => String(dayNum),
-            dddd: () => this._cache!.longDayNames[globalDate.getUTCDay() % 7],
-            ddd: () => this._cache!.shortDayNames[globalDate.getUTCDay() % 7],
-            d: () => String(globalDate.getUTCDay()),
-            ww: () => padLeft(String(DateHelpers.getIsoWeek(globalDate)), 2, '0'),
-            w: () => String(DateHelpers.getIsoWeek(globalDate)),
-            E: () => String(globalDate.getUTCDay() || 7),
+            dddd: () => this._cache!.longDayNames[utcDate.getUTCDay() % 7],
+            ddd: () => this._cache!.shortDayNames[utcDate.getUTCDay() % 7],
+            d: () => String(utcDate.getUTCDay()),
+            ww: () => padLeft(String(DateHelpers.getIsoWeek(utcDate)), 2, '0'),
+            w: () => String(DateHelpers.getIsoWeek(utcDate)),
+            E: () => String(utcDate.getUTCDay() || 7),
             HH: () => padLeft(String(hourNum), 2, '0'),
             H: () => String(hourNum),
             hh: () => padLeft(String(hourNum % 12 || 12), 2, '0'),

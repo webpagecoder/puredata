@@ -21,87 +21,82 @@ class DateHandler extends Handler {
     // =============================================
 
     //todo: fix the puedata class to allow passing in of options
-    /**
-     * Parses a generic date input using automatic format detection.
-     * @param input Date input to parse.
-     */
-    public date(input: unknown): HandlerResult {
-        const parsedDate = this._dateConverter.parseAuto(input);
+    public date(value: GenericDateInput): HandlerResult {
+        const parsedDate = this._dateConverter.parseAuto(value);
         return !parsedDate
-            ? fail(input, 'date/base')
+            ? fail(value, 'date/base')
             : pass(parsedDate);
     }
 
     /**
      * Parses human-readable date text and validates required and forbidden date components.
-     * @param input Human-readable date text to parse.
+     * @param dateString Human-readable date text to parse.
      * @param options Parsing and token validation options.
+     * @returns
      */
-    public human(input: unknown, options: HumanParseOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter.parseHuman(input, options);
+    public human(dateString: GenericDateInput, options: HumanParseOptions = {}): HandlerResult {
+        const parsedDate = this._dateConverter.parseHuman(dateString, options);
         return !parsedDate
-            ? fail(input, 'date/human', { options })
+            ? fail(dateString, 'date/human', { options })
             : pass(parsedDate);
     }
 
     /**
      * Parses an ISO date string and validates component requirements and format strictness.
-     * @param input ISO date text to parse.
+     * @param dateString ISO date text to parse.
      * @param options ISO parsing and validation options.
+     * @returns
      */
-    public iso(input: unknown, options: IsoParseOptions): HandlerResult {
-        const parsedDate = this._dateConverter.parseIso(input, options);
+    public iso(dateString: GenericDateInput, options: IsoParseOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseIso(dateString, options);
         return !parsedDate
-            ? fail(input, 'date/iso', { options })
+            ? fail(dateString, 'date/iso', { options })
             : pass(parsedDate);
     }
 
     /**
      * Parses an ISO ordinal date string and optionally enforces extended format only.
-     * @param input ISO ordinal date text to parse.
-     * @param options ISO ordinal parsing and validation options.
+     * @param dateString ISO ordinal date text to parse.
+     * @param allowBasic Whether basic (non-extended) ISO format is allowed.
+     * @returns
      */
-    public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions): HandlerResult {
-        const parsedDate = this._dateConverter.parseIsoOrdinal(input, options);
+    public isoOrdinal(dateString: GenericDateInput, options: IsoOrdinalParseOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseIsoOrdinal(dateString, options);
         return !parsedDate
-            ? fail(input, 'date/isoOrdinal', { options })
+            ? fail(dateString, 'date/isoOrdinal', { options })
             : pass(parsedDate);
     }
 
     /**
      * Parses an ISO week date string and optionally enforces extended format only.
-     * @param input ISO week date text to parse.
-     * @param options ISO week parsing and validation options.
+     * @param dateString ISO week date text to parse.
+     * @param allowBasic Whether basic (non-extended) ISO format is allowed.
+     * @returns
      */
-    public isoWeek(input: unknown, options: IsoWeekParseOptions): HandlerResult {
-        const parsedDate = this._dateConverter.parseIsoWeek(input, options);
+    public isoWeek(dateString: GenericDateInput, options: IsoWeekParseOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseIsoWeek(dateString, options);
         return !parsedDate
-            ? fail(input, 'date/isoWeek', { options })
+            ? fail(dateString, 'date/isoWeek', { options })
             : pass(parsedDate);
     }
 
     /**
      * Parses a timestamp input into a valid Date instance.
-     * @param input Timestamp input value to parse.
-     * @param options Timestamp parsing options.
+     * @param value Timestamp input value to parse.
+     * @param jsType Whether to interpret numeric input using JavaScript timestamp conventions.
+     * @returns
      */
-    public timestamp(input: unknown, options: TimestampOptions): HandlerResult {
-        const parsedDate = this._dateConverter.parseTimestamp(input, options);
+    public timestamp(value: GenericDateInput, options: TimestampOptions): HandlerResult {
+        const parsedDate = this._dateConverter.parseTimestamp(value, options);
         return !parsedDate
-            ? fail(input, 'date/timestamp', { options })
+            ? fail(value, 'date/timestamp', { options })
             : pass(parsedDate);
     }
 
     // =============================================
-    // DATE STRING FORMATTER 
-    // Last chain item to run since it returns a string
+    // DATE STRING FORMATTER (last chain item to run)
     // =============================================
 
-    /**
-     * Formats a parsed date into the requested output representation.
-     * @param inputDate Parsed date to format.
-     * @param formatString Target output format, or null to preserve raw input.
-     */
     public format(inputDate: MetaDate, formatString: string | null): HandlerResult {
         let finalForm: unknown;
         if (formatString === null) {
@@ -125,8 +120,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date occurs strictly after the provided comparison date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Lower-bound date that the input must be after.
+     * @returns
      */
     public after(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -140,8 +136,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date occurs strictly before the provided comparison date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Upper-bound date that the input must be before.
+     * @returns
      */
     public before(inputDate: MetaDate, referenceDate: unknown): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -155,9 +152,10 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date falls within an inclusive min and max date range.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param minDate Inclusive lower-bound date.
      * @param maxDate Inclusive upper-bound date.
+     * @returns
      */
     public between(inputDate: MetaDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const parsedMinDate = this._dateConverter.parseAuto(minDate);
@@ -175,8 +173,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date resolves to a specific UTC day-of-week index.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param dayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
+     * @returns
      */
     public dayOfWeek(inputDate: MetaDate, dayOfWeek: number): HandlerResult {
         const dayIndex = inputDate.utcDate.getUTCDay();
@@ -187,8 +186,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date has the same exact timestamp as the comparison date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Date value to compare against.
+     * @returns
      */
     public override equals(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -202,8 +202,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date is in the future relative to the comparison date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Reference date used as the "now" boundary.
+     * @returns
      */
     public future(inputDate: MetaDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -217,7 +218,8 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date falls within a leap year.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
+     * @returns
      */
     public leapYear(inputDate: MetaDate): HandlerResult {
         const year = inputDate.utcDate.getUTCFullYear();
@@ -228,8 +230,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date is not later than the provided maximum date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Maximum allowed date.
+     * @returns
      */
     public max(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -243,8 +246,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date is not earlier than the provided minimum date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Minimum allowed date.
+     * @returns
      */
     public min(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -261,6 +265,7 @@ class DateHandler extends Handler {
      * @param birthDate Birth date used to calculate age.
      * @param minAge Minimum required age in years.
      * @param referenceDate Reference date used to calculate current age.
+     * @returns
      */
     public minAge(birthDate: MetaDate, minAge: number, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -281,8 +286,9 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date is in the past relative to the comparison date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param referenceDate Reference date used as the "now" boundary.
+     * @returns
      */
     public past(inputDate: MetaDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -296,9 +302,10 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date occurred within the last N days from the comparison date.
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
      * @param days Maximum number of elapsed days allowed.
-     * @param referenceDate Reference date used to compute elapsed days.
+     * @param compareDate Reference date used to compute elapsed days.
+     * @returns
      */
     public recent(inputDate: MetaDate, days: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -311,11 +318,6 @@ class DateHandler extends Handler {
             : fail(inputDate, 'date/recent', { daysDiff, days });
     }
 
-    /**
-     * Validates that two dates fall on the same UTC calendar day.
-     * @param inputDate Date value being validated.
-     * @param referenceDate Date value to compare against.
-     */
     public sameDay(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
@@ -330,11 +332,6 @@ class DateHandler extends Handler {
             : fail(inputDate, 'date/sameDay', { referenceDate });
     }
 
-    /**
-     * Validates that two dates fall within the same UTC calendar month.
-     * @param inputDate Date value being validated.
-     * @param referenceDate Date value to compare against.
-     */
     public sameMonth(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
@@ -351,12 +348,6 @@ class DateHandler extends Handler {
             : fail(inputDate, 'date/sameMonth', { referenceDate });
     }
 
-    /**
-     * Validates that two dates fall within the same UTC week.
-     * @param inputDate Date value being validated.
-     * @param referenceDate Date value to compare against.
-     * @param firstDayOfWeek First weekday used to calculate week boundaries.
-     */
     public sameWeek(inputDate: MetaDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
@@ -375,11 +366,6 @@ class DateHandler extends Handler {
             : fail(inputDate, 'date/sameWeek', { referenceDate, firstDayOfWeek });
     }
 
-    /**
-     * Validates that two dates fall within the same UTC calendar year.
-     * @param inputDate Date value being validated.
-     * @param referenceDate Date value to compare against.
-     */
     public sameYear(inputDate: MetaDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
@@ -397,9 +383,10 @@ class DateHandler extends Handler {
     }
 
     /**
-     * Validates that the input date matches the same UTC calendar day as today.
-     * @param inputDate Date value being validated.
+     * Validates that the input date matches the same UTC calendar day as todaysDate.
+     * @param date Date value being validated.
      * @param referenceDate Reference date representing "today".
+     * @returns
      */
     public today(inputDate: MetaDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
@@ -417,7 +404,8 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date falls on a weekday (Monday through Friday, UTC).
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
+     * @returns
      */
     public weekday(inputDate: MetaDate): HandlerResult {
         const dayOfWeek = inputDate.utcDate.getUTCDay();
@@ -428,7 +416,8 @@ class DateHandler extends Handler {
 
     /**
      * Validates that the input date falls on a weekend day (Saturday or Sunday, UTC).
-     * @param inputDate Date value being validated.
+     * @param date Date value being validated.
+     * @returns
      */
     public weekend(inputDate: MetaDate): HandlerResult {
         const dayOfWeek = inputDate.utcDate.getUTCDay();
@@ -444,8 +433,9 @@ class DateHandler extends Handler {
 
     /**
      * Returns a new date shifted forward or backward by a whole number of days.
-     * @param inputDate Base date to adjust.
+     * @param date Base date to adjust.
      * @param numDays Whole number of days to add (or subtract if negative).
+     * @returns
      */
     public addDays(inputDate: MetaDate, numDays: number): HandlerResult {
         const modifiedDate = new Date(inputDate.utcDate);
@@ -457,6 +447,7 @@ class DateHandler extends Handler {
      * Returns a new date shifted forward or backward by a whole number of hours.
      * @param inputDate Base date to adjust.
      * @param numHours Whole number of hours to add (or subtract if negative).
+     * @returns
      */
     public addHours(inputDate: MetaDate, numHours: number): HandlerResult {
         const modifiedDate = new Date(inputDate.utcDate);
@@ -468,6 +459,7 @@ class DateHandler extends Handler {
      * Returns a new date shifted forward or backward by a whole number of minutes.
      * @param inputDate Base date to adjust.
      * @param numMinutes Whole number of minutes to add (or subtract if negative).
+     * @returns
      */
     public addMinutes(inputDate: MetaDate, numMinutes: number): HandlerResult {
         const modifiedDate = new Date(inputDate.utcDate);
@@ -475,10 +467,17 @@ class DateHandler extends Handler {
         return pass(inputDate.clone(modifiedDate));
     }
 
+    public addWeeks(inputDate: MetaDate, numWeeks: number): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        modifiedDate.setUTCDate(modifiedDate.getUTCDate() + numWeeks * 7);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
     /**
      * Returns a new date shifted forward or backward by a whole number of months.
-     * @param inputDate Base date to adjust.
+     * @param date Base date to adjust.
      * @param numMonths Whole number of months to add (or subtract if negative).
+     * @returns
      */
     public addMonths(inputDate: MetaDate, numMonths: number): HandlerResult {
         const modifiedDate = new Date(inputDate.utcDate);
@@ -487,20 +486,10 @@ class DateHandler extends Handler {
     }
 
     /**
-     * Returns a new date shifted forward or backward by a whole number of weeks.
-     * @param inputDate Base date to adjust.
-     * @param numWeeks Whole number of weeks to add (or subtract if negative).
-     */
-    public addWeeks(inputDate: MetaDate, numWeeks: number): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        modifiedDate.setUTCDate(modifiedDate.getUTCDate() + numWeeks * 7);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
      * Returns a new date shifted forward or backward by a whole number of years.
-     * @param inputDate Base date to adjust.
-     * @param numYears Whole number of years to add (or subtract if negative).
+     * @param date Base date to adjust.
+     * @param years Whole number of years to add (or subtract if negative).
+     * @returns
      */
     public addYears(inputDate: MetaDate, numYears: number): HandlerResult {
         const modifiedDate = new Date(inputDate.utcDate);
@@ -509,11 +498,107 @@ class DateHandler extends Handler {
     }
 
     /**
-     * Clamps a date into an inclusive min/max range.
-     * @param inputDate Date value to clamp.
-     * @param minDate Inclusive lower-bound date.
-     * @param maxDate Inclusive upper-bound date.
+     * Normalizes a date to the final millisecond of its UTC day.
+     * @param date Base date to normalize.
+     * @returns
      */
+    public toEndOfDay(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        modifiedDate.setUTCHours(23, 59, 59, 999);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Normalizes a date to the final millisecond of its UTC month.
+     * @param date Base date to normalize.
+     * @returns
+     */
+    public toEndOfMonth(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        modifiedDate.setUTCMonth(modifiedDate.getUTCMonth() + 1, 0);
+        modifiedDate.setUTCHours(23, 59, 59, 999);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Moves a date forward to the next occurrence of the target UTC day of week.
+     * @param date Base date to adjust.
+     * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
+     * @returns
+     */
+    public toNextDayOfWeek(inputDate: MetaDate, targetDayOfWeek: DayOfWeek): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        let daysToAdd = targetDayOfWeek - modifiedDate.getUTCDay();
+        if (daysToAdd <= 0) {
+            daysToAdd += 7;
+        }
+        modifiedDate.setUTCDate(modifiedDate.getUTCDate() + daysToAdd);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Moves a date forward to the next weekday, skipping Saturday and Sunday.
+     * @param date Base date to adjust.
+     * @returns
+     */
+    public toNextWeekday(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        do {
+            modifiedDate.setUTCDate(modifiedDate.getUTCDate() + 1);
+        }
+        while (modifiedDate.getUTCDay() === 0 || modifiedDate.getUTCDay() === 6);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Moves a date backward to the previous weekday, skipping Saturday and Sunday.
+     * @param date Base date to adjust.
+     * @returns
+     */
+    public toPreviousWeekday(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        do {
+            modifiedDate.setUTCDate(modifiedDate.getUTCDate() - 1);
+        }
+        while (modifiedDate.getUTCDay() === 0 || modifiedDate.getUTCDay() === 6);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Normalizes a date to the first millisecond of its UTC day.
+     * @param date Base date to normalize.
+     * @returns
+     */
+    public toStartOfDay(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        modifiedDate.setUTCHours(0, 0, 0, 0);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Normalizes a date to the first millisecond of the first day of its UTC month.
+     * @param date Base date to normalize.
+     * @returns
+     */
+    public toStartOfMonth(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        modifiedDate.setUTCDate(1);
+        modifiedDate.setUTCHours(0, 0, 0, 0);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
+    /**
+     * Normalizes a date to the first millisecond of January 1st in its UTC year.
+     * @param date Base date to normalize.
+     * @returns
+     */
+    public toStartOfYear(inputDate: MetaDate): HandlerResult {
+        const modifiedDate = new Date(inputDate.utcDate);
+        modifiedDate.setUTCMonth(0, 1);
+        modifiedDate.setUTCHours(0, 0, 0, 0);
+        return pass(inputDate.clone(modifiedDate));
+    }
+
     public clamp(inputDate: MetaDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const minDateParsed = this._dateConverter.parseAuto(minDate);
         const maxDateParsed = this._dateConverter.parseAuto(maxDate);
@@ -530,100 +615,6 @@ class DateHandler extends Handler {
         else if (modifiedDate > maxDateParsed.utcDate) {
             modifiedDate.setTime(maxDateParsed.utcDate.getTime());
         }
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Normalizes a date to the final millisecond of its UTC day.
-     * @param inputDate Base date to normalize.
-     */
-    public toEndOfDay(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        modifiedDate.setUTCHours(23, 59, 59, 999);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Normalizes a date to the final millisecond of its UTC month.
-     * @param inputDate Base date to normalize.
-     */
-    public toEndOfMonth(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        modifiedDate.setUTCMonth(modifiedDate.getUTCMonth() + 1, 0);
-        modifiedDate.setUTCHours(23, 59, 59, 999);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Moves a date forward to the next occurrence of the target UTC day of week.
-     * @param inputDate Base date to adjust.
-     * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
-     */
-    public toNextDayOfWeek(inputDate: MetaDate, targetDayOfWeek: DayOfWeek): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        let daysToAdd = targetDayOfWeek - modifiedDate.getUTCDay();
-        if (daysToAdd <= 0) {
-            daysToAdd += 7;
-        }
-        modifiedDate.setUTCDate(modifiedDate.getUTCDate() + daysToAdd);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Moves a date forward to the next weekday, skipping Saturday and Sunday.
-     * @param inputDate Base date to adjust.
-     */
-    public toNextWeekday(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        do {
-            modifiedDate.setUTCDate(modifiedDate.getUTCDate() + 1);
-        }
-        while (modifiedDate.getUTCDay() === 0 || modifiedDate.getUTCDay() === 6);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Moves a date backward to the previous weekday, skipping Saturday and Sunday.
-     * @param inputDate Base date to adjust.
-     */
-    public toPreviousWeekday(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        do {
-            modifiedDate.setUTCDate(modifiedDate.getUTCDate() - 1);
-        }
-        while (modifiedDate.getUTCDay() === 0 || modifiedDate.getUTCDay() === 6);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Normalizes a date to the first millisecond of its UTC day.
-     * @param inputDate Base date to normalize.
-     */
-    public toStartOfDay(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        modifiedDate.setUTCHours(0, 0, 0, 0);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Normalizes a date to the first millisecond of the first day of its UTC month.
-     * @param inputDate Base date to normalize.
-     */
-    public toStartOfMonth(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        modifiedDate.setUTCDate(1);
-        modifiedDate.setUTCHours(0, 0, 0, 0);
-        return pass(inputDate.clone(modifiedDate));
-    }
-
-    /**
-     * Normalizes a date to the first millisecond of January 1st in its UTC year.
-     * @param inputDate Base date to normalize.
-     */
-    public toStartOfYear(inputDate: MetaDate): HandlerResult {
-        const modifiedDate = new Date(inputDate.utcDate);
-        modifiedDate.setUTCMonth(0, 1);
-        modifiedDate.setUTCHours(0, 0, 0, 0);
         return pass(inputDate.clone(modifiedDate));
     }
 

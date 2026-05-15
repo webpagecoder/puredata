@@ -1,17 +1,20 @@
 'use strict';
 
+import { GenericDateInput } from "./DateTypes.ts";
+
+export type DateOrDateParts = ({ dateParts: number[]; date?: never } | { dateParts?: never; date: Date });
 export type MetaDateConstructorParams = {
-    raw?: Date | string | number;
+    raw?: GenericDateInput | null;
     offsetMinutes?: number;
-} & ({ dateParts: number[]; date?: never } | { dateParts?: never; date: Date });
+} & DateOrDateParts;
 
 class MetaDate {
     private _date: Date;
-    private _raw: Date | string | number | undefined;
+    private _raw: GenericDateInput | null;
     private _offsetMinutes: number;
 
     constructor(dateInfo: MetaDateConstructorParams) {
-        const { raw, offsetMinutes = 0, date, dateParts: [
+        const { raw = null, offsetMinutes = 0, date, dateParts: [
             year = 0,
             month = 1,
             day = 1,
@@ -41,7 +44,7 @@ class MetaDate {
         this._offsetMinutes = offsetMinutes;
     }
 
-    public get globalDate(): Date {
+    public get utcDate(): Date {
         return this._date;
     }
 
@@ -57,6 +60,21 @@ class MetaDate {
 
     public get raw() {
         return this._raw;
+    }
+
+    public clone(swapDate: Date | null = null): MetaDate {
+        if (swapDate) {
+            return new MetaDate({
+                date: swapDate,
+                offsetMinutes: this._offsetMinutes,
+                raw: null
+            });
+        }
+        return new MetaDate({
+            date: new Date(this._date),
+            offsetMinutes: this._offsetMinutes,
+            raw: this._raw
+        });
     }
 
 }
