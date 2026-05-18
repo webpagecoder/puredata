@@ -2,7 +2,7 @@
 
 import { Path } from '../Path.ts';
 import { HandlerResult } from './HandlerResult.ts';
-import { Utils } from '../utils/Utils.ts';
+import { Utils } from '../Utils.ts';
 import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 

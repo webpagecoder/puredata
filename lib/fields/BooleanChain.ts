@@ -5,7 +5,7 @@ import { Chain, ChainProps } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainProps = ChainProps<typeof BooleanHandler> & {
+export type BooleanChainProps = ChainProps<BooleanHandler> & {
     allowBoolish?: boolean;
     boolishPairs?: BoolishPair[];
 };

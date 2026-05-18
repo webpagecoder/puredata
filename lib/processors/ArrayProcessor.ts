@@ -4,11 +4,10 @@ import { ArrayChain } from '../fields/ArrayChain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessor } from './ChainProcessor.ts';
 
-class ArrayProcessor extends ChainProcessor {
+class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
 
-    override preProcess(tracker: ValueTracker): void {
-        const field = this.props.field as ArrayChain;
-        const {chainHandler } = field.props;
+    public override preProcess(tracker: ValueTracker): void {
+        const field = this.field as ArrayChain;
         
         const { label } = field;
         const { castSingle } = field.props;

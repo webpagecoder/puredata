@@ -3,7 +3,7 @@
 import { NumberHandler } from '../handlers/NumberHandler.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
-export type NumberChainProps = ChainProps<typeof NumberHandler> & {
+export type NumberChainProps = ChainProps<NumberHandler> & {
     autoConvert?: boolean;
     ensureSafe?: boolean;
     ensureFinite?: boolean;

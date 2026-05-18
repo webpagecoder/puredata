@@ -4,7 +4,7 @@ import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 import { Path } from '../Path.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
-export type ObjectChainProps = ChainProps<typeof ObjectHandler> & {
+export type ObjectChainProps = ChainProps<ObjectHandler> & {
     cloneObject?: boolean;
     ensurePlain?: boolean;
     maxDepth?: number;

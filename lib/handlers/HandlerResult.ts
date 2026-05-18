@@ -1,6 +1,6 @@
 'use strict';
 
-import { ArgumentCollection, ErrorCollection } from '../types/types.ts';
+import { ArgumentCollection, ErrorCollection } from '../types.ts';
 
 class HandlerResult {
 

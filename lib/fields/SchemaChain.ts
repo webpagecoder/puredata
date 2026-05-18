@@ -1,6 +1,6 @@
 'use strict';
 
-import { Utils } from '../utils/Utils.ts';
+import { Utils } from '../Utils.ts';
 import { Field } from './Field.ts';
 import { ValueField } from './ValueField.ts';
 import { ArrayChain } from './ArrayChain.ts';
@@ -16,14 +16,14 @@ export type Schema = {
 
 export type SchemaChainProps = ObjectChainProps & {
     arrayChain?: ArrayChain;
-    renameKeysArgs?: Parameters<typeof ObjectHandler['renameKeys']>;
+    renameKeysArgs?: Parameters<ObjectHandler['renameKeys']>;
     schema?: Schema;
     stripUnknownKeys?: boolean;
 };
 
 class SchemaChain extends ObjectChain<SchemaChainProps> {
     protected _arrayChain: ArrayChain;
-    protected _renameKeysArgs: Parameters<typeof ObjectHandler['renameKeys']> | null;
+    protected _renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     protected _schema: Map<string, Field>;
     protected _stripUnknownKeys: boolean;
 
@@ -102,7 +102,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
         return this.clone({ stripUnknownKeys });
     }
 
-    public configRenameKeys(renameKeysArgs: Parameters<typeof ObjectHandler['renameKeys']>): this {
+    public configRenameKeys(renameKeysArgs: Parameters<ObjectHandler['renameKeys']>): this {
         return this.clone({ renameKeysArgs });
     }
 
@@ -110,7 +110,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
         return this._stripUnknownKeys;
     }
 
-    public get renameKeysArgs(): Parameters<typeof ObjectHandler['renameKeys']> | null {
+    public get renameKeysArgs(): Parameters<ObjectHandler['renameKeys']> | null {
         return this._renameKeysArgs;
     }
 

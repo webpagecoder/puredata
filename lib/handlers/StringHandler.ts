@@ -2,8 +2,8 @@
 
 import { Presence } from '../Presence.ts';
 import { HandlerResult } from './HandlerResult.ts';
-import { RegexCache } from '../cache/RegexCache.ts';
-import { Utils } from '../utils/Utils.ts';
+import { RegexCache } from '../RegexCache.ts';
+import { Utils } from '../Utils.ts';
 import { Handler } from './Handler.ts';
 import { NumberHandler } from './NumberHandler.ts';
 const { pass, fail } = HandlerResult;
@@ -190,7 +190,7 @@ class StringHandler extends Handler {
         if (specials < minSpecialChars) {
             return fail(str, 'string/complex/specialChars', { minSpecialChars });
         }
-        const failsRepeat = RegexCache('(.)\\1{' + maxRepeats + '}', 'g').test(str); // check repetition
+        const failsRepeat = RegexCache.get('(.)\\1{' + maxRepeats + '}', 'g').test(str); // check repetition
         if (failsRepeat) {
             return fail(str, 'string/complex/repeats', { maxRepeats });
         }

@@ -1,7 +1,6 @@
 'use strict';
 
-import { HumanParseOptions, HumanPrecision, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekPrecision } from '../date/DateConverter.ts';
-import { DateOrder, DateType } from '../date/DateTypes.ts';
+import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekPrecision, TimeMode } from '../date/DateConverter.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Chain, ChainProps } from './Chain.ts';
 
@@ -10,15 +9,17 @@ type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | Iso
 
 export type DateChainProps = ChainProps<DateHandler> & {
     dateOrder?: DateOrder;
-    outputFormatString?: OutputFormat;
+    outputStringFormat?: OutputFormat;
     outputPrecision?: OutputPrecision;
+    outputTimeMode?: TimeMode;
     skipGenericParse?: boolean;
     utcOffset?: [number, number];
 };
 
 class DateChain extends Chain<DateChainProps> {
-    protected _outputFormatString: OutputFormat | null;
+    protected _outputStringFormat: OutputFormat | null;
     protected _outputPrecision: OutputPrecision | null;
+    protected _outputTimeMode: TimeMode;
     protected _skipGenericParse: boolean;
     protected _utcOffset: [number, number];
 
@@ -27,14 +28,16 @@ class DateChain extends Chain<DateChainProps> {
 
         const {
             dateOrder = 'MDY',
-            outputFormatString = null,
+            outputStringFormat = null,
             outputPrecision = null,
+            outputTimeMode = 'utc',
             skipGenericParse = false,
             utcOffset = [0, 0]
         } = props;
 
-        this._outputFormatString = outputFormatString;
+        this._outputStringFormat = outputStringFormat;
         this._outputPrecision = outputPrecision;
+        this._outputTimeMode = outputTimeMode;
         this._utcOffset = utcOffset;
         this._skipGenericParse = skipGenericParse;
     }
@@ -43,14 +46,16 @@ class DateChain extends Chain<DateChainProps> {
         const clone = super.clone(props);
         const {
             dateOrder = null,
-            outputFormatString = this._outputFormatString,
+            outputStringFormat = this._outputStringFormat,
             outputPrecision = this._outputPrecision,
+            outputTimeMode = this._outputTimeMode,
             utcOffset = this._utcOffset,
             skipGenericParse = this._skipGenericParse
         } = props;
 
-        clone._outputFormatString = outputFormatString;
+        clone._outputStringFormat = outputStringFormat;
         clone._outputPrecision = outputPrecision;
+        clone._outputTimeMode = outputTimeMode;
         clone._skipGenericParse = skipGenericParse;
         clone._utcOffset = utcOffset;
         return clone;
@@ -168,12 +173,12 @@ class DateChain extends Chain<DateChainProps> {
 
 
     // Exporters
-    public toFormat(outputFormatString: string) {
-        return this.clone({ outputFormatString });
+    public toFormat(outputStringFormat: string, outputTimeMode: TimeMode = 'utc') {
+        return this.clone({ outputStringFormat, outputTimeMode });
     }
 
     public toDate() {
-        return this.clone({ outputFormatString: 'object' });
+        return this.clone({ outputStringFormat: 'object' });
     }
 
     /**
@@ -183,30 +188,30 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
     public toIso(outputPrecision: IsoPrecision = 'timezone', expanded = true) {
-        let outputFormatString = '';
+        let outputStringFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
         switch (outputPrecision) {
             case 'timezone':
-                outputFormatString = dash ? 'ZZ' : 'Z';
+                outputStringFormat = dash ? 'ZZ' : 'Z';
             case 'time':
             case 'millisecond':
-                outputFormatString = '.SSS' + outputFormatString;
+                outputStringFormat = '.SSS' + outputStringFormat;
             case 'second':
-                outputFormatString = `${colon}ss` + outputFormatString;
+                outputStringFormat = `${colon}ss` + outputStringFormat;
             case 'minute':
-                outputFormatString = `${colon}mm` + outputFormatString;
+                outputStringFormat = `${colon}mm` + outputStringFormat;
             case 'hour':
-                outputFormatString = 'THH' + outputFormatString;
+                outputStringFormat = 'THH' + outputStringFormat;
             case 'date':
             case 'day':
-                outputFormatString = `${dash}DD` + outputFormatString;
+                outputStringFormat = `${dash}DD` + outputStringFormat;
             case 'month':
-                outputFormatString = `${dash}MM` + outputFormatString;
+                outputStringFormat = `${dash}MM` + outputStringFormat;
             case 'year':
-                outputFormatString = 'YYYY' + outputFormatString;
+                outputStringFormat = 'YYYY' + outputStringFormat;
         }
-        return this.clone({ outputFormatString });
+        return this.clone({ outputStringFormat });
     }
 
     /**
@@ -216,26 +221,26 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
     public toIsoOrdinal(outputPrecision: IsoOrdinalPrecision = 'timezone', expanded = true) {
-        let outputFormatString = '';
+        let outputStringFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
         switch (outputPrecision) {
             case 'timezone':
-                outputFormatString = dash ? 'ZZ' : 'Z';
+                outputStringFormat = dash ? 'ZZ' : 'Z';
             case 'time':
             case 'millisecond':
-                outputFormatString = '.SSS' + outputFormatString;
+                outputStringFormat = '.SSS' + outputStringFormat;
             case 'second':
-                outputFormatString = `${colon}ss` + outputFormatString;
+                outputStringFormat = `${colon}ss` + outputStringFormat;
             case 'minute':
-                outputFormatString = `${colon}mm` + outputFormatString;
+                outputStringFormat = `${colon}mm` + outputStringFormat;
             case 'hour':
-                outputFormatString = 'THH' + outputFormatString;
+                outputStringFormat = 'THH' + outputStringFormat;
             case 'date':
             case 'dayOfYear':
-                outputFormatString = `YYYY${dash}DDD` + outputFormatString;
+                outputStringFormat = `YYYY${dash}DDD` + outputStringFormat;
         }
-        return this.clone({ outputFormatString });
+        return this.clone({ outputStringFormat });
     }
 
     /**
@@ -245,28 +250,28 @@ class DateChain extends Chain<DateChainProps> {
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
     public toIsoWeek(outputPrecision: IsoWeekPrecision = 'timezone', expanded = true) {
-        let outputFormatString = '';
+        let outputStringFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
         switch (outputPrecision) {
             case 'timezone':
-                outputFormatString = dash ? 'ZZ' : 'Z';
+                outputStringFormat = dash ? 'ZZ' : 'Z';
             case 'time':
             case 'millisecond':
-                outputFormatString = '.SSS' + outputFormatString;
+                outputStringFormat = '.SSS' + outputStringFormat;
             case 'second':
-                outputFormatString = `${colon}ss` + outputFormatString;
+                outputStringFormat = `${colon}ss` + outputStringFormat;
             case 'minute':
-                outputFormatString = `${colon}mm` + outputFormatString;
+                outputStringFormat = `${colon}mm` + outputStringFormat;
             case 'hour':
-                outputFormatString = 'THH' + outputFormatString;
+                outputStringFormat = 'THH' + outputStringFormat;
             case 'date':
             case 'dayOfWeek':
-                outputFormatString = `${dash}E` + outputFormatString;
+                outputStringFormat = `${dash}E` + outputStringFormat;
             case 'week':
-                outputFormatString = `YYYY${dash}Www` + outputFormatString;
+                outputStringFormat = `YYYY${dash}Www` + outputStringFormat;
         }
-        return this.clone({ outputFormatString });
+        return this.clone({ outputStringFormat });
     }
 
     /**
@@ -276,11 +281,19 @@ class DateChain extends Chain<DateChainProps> {
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
     public toTimestamp() {
-        return this.clone({ outputFormatString: 'timestamp' });
+        return this.clone({ outputStringFormat: 'timestamp' });
     }
 
-    public get outputFormatString() {
-        return this._outputFormatString;
+    public get outputTimeMode() {
+        return this._outputTimeMode;
+    }
+
+    public get outputStringFormat() {
+        return this._outputStringFormat;
+    }
+
+    public get outputPrecision() {
+        return this._outputPrecision;
     }
 
     public get skipGenericParse() {
@@ -293,3 +306,4 @@ class DateChain extends Chain<DateChainProps> {
 }
 
 export { DateChain };
+

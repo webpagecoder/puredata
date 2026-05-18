@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from './Path.ts';
-import { Utils, TranslationRecord } from './utils/Utils.ts';
+import { Utils, TranslationRecord } from './Utils.ts';
 
 export type TranslationRecord = {
     [key: string]: TranslationRecord | string | string[];

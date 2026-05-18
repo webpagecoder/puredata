@@ -2,7 +2,7 @@
 
 import { NumberChain } from '../fields/NumberChain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { Utils } from '../utils/Utils.ts';
+import { Utils } from '../Utils.ts';
 import { ChainProcessor } from './ChainProcessor.ts';
 import { State } from './Processor.ts';
 

@@ -22,7 +22,7 @@ import { DateHandler } from './handlers/DateHandler.ts';
 import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
-import { Utils } from './utils/Utils.ts';
+import { Utils } from './Utils.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 

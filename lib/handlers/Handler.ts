@@ -1,7 +1,7 @@
 'use strict';
 
 import { HandlerResult } from './HandlerResult.ts';
-import { Utils } from '../utils/Utils.ts';
+import { Utils } from '../Utils.ts';
 const { pass, fail } = HandlerResult;
 
 type PrimitiveTypeName = 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint';

@@ -1,13 +1,12 @@
 'use strict';
 //todo: date and string add auto trim
-import { RegexCache } from "../cache/RegexCache.ts";
+import { RegexCache } from "../RegexCache.ts";
 import { Locale } from "../Locale.ts";
 import { Presence } from "../Presence.ts";
-import { Utils } from "../utils/Utils.ts";
+import { Utils } from "../Utils.ts";
 const padLeft = Utils.padLeft;
 import { DateHelpers } from "./DateHelpers.ts";
-import { DateOrder, DateType } from "./DateTypes.ts";
-import { MetaDate } from "./MetaDate.ts";
+import { UtcDate } from "./UtcDate.ts";
 
 // Date building blocks/keys
 const YYYY = '\\d{4}';
@@ -82,15 +81,16 @@ type HumanDateCache = null | {
     allDayNamesLower: string[];
 }
 
-export const HumanPrecision = ['date', 'time', 'timezone'] as const;
-export const IsoPrecision = ['date', 'year', 'month', 'day', 'time', 'hour', 'minute', 'second', 'millisecond', 'timezone'] as const;
-export const IsoOrdinalPrecision = ['date', 'dayOfYear', 'time', 'hour', 'minute', 'second', 'millisecond', 'timezone'] as const;
-export const IsoWeekPrecision = ['date', 'week', 'dayOfWeek', 'time', 'hour', 'minute', 'second', 'millisecond', 'timezone'] as const;
+export type DateType = 'human' | 'iso' | 'isoWeek' | 'isoOrdinal' | 'object' | 'timestamp';
+export type DateOrder = 'MDY' | 'DMY' | 'YMD';
+export type GenericDateInput = Date | string | number;
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type TimeMode = 'utc' | 'local';
 
-export type HumanPrecision = (typeof HumanPrecision)[number];
-export type IsoPrecision = (typeof IsoPrecision)[number];
-export type IsoWeekPrecision = (typeof IsoWeekPrecision)[number];
-export type IsoOrdinalPrecision = (typeof IsoOrdinalPrecision)[number];
+export type HumanPrecision = 'date' | 'time' | 'timezone';
+export type IsoPrecision = 'date' | 'year' | 'month' | 'day' | 'time' | 'hour' | 'minute' | 'second' | 'millisecond' | 'timezone';
+export type IsoWeekPrecision = 'date' | 'week' | 'dayOfWeek' | 'time' | 'hour' | 'minute' | 'second' | 'millisecond' | 'timezone';
+export type IsoOrdinalPrecision = 'date' | 'dayOfYear' | 'time' | 'hour' | 'minute' | 'second' | 'millisecond' | 'timezone';
 
 export type HumanParseOptions = {
     dateOrder?: DateOrder;
@@ -116,7 +116,6 @@ export type IsoWeekParseOptions = {
 export type TimestampOptions = {
     isMilliseconds?: boolean;
 };
-
 
 class DateConverter {
 
@@ -185,12 +184,12 @@ class DateConverter {
         };
     }
 
-    public parseAuto(value: unknown, parseTypes: DateType[] = []): MetaDate | null {
+    public parseAuto(value: unknown, parseTypes: DateType[] = []): UtcDate | null {
         const anyType = parseTypes.length === 0;
 
         if (anyType || parseTypes.indexOf('object') !== -1) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new MetaDate({ date: value });
+                return new UtcDate({ localDate: value });
             }
         }
         if (anyType || parseTypes.indexOf('timestamp') !== -1) {
@@ -226,7 +225,7 @@ class DateConverter {
         return null;
     }
 
-    public parseHuman(dateString: unknown, options: HumanParseOptions = {}): MetaDate | null {
+    public parseHuman(dateString: unknown, options: HumanParseOptions = {}): UtcDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -238,10 +237,10 @@ class DateConverter {
         this._loadCache();
         const { dateIndexes, humanRegex, allMonthNamesLower } = this._cache!;
 
-        let matchResult = RegexCache(humanRegex[0]).exec(normalizedDateString);
+        let matchResult = RegexCache.get(humanRegex[0]).exec(normalizedDateString);
         let isNumMatch = false;
         if (!matchResult) {
-            matchResult = RegexCache(humanRegex[1]).exec(normalizedDateString);
+            matchResult = RegexCache.get(humanRegex[1]).exec(normalizedDateString);
             if (!matchResult) {
                 return null;
             }
@@ -270,7 +269,7 @@ class DateConverter {
                 return null;
             }
 
-            matchResult = RegexCache(HUMAN_TIME).exec(timeString);
+            matchResult = RegexCache.get(HUMAN_TIME).exec(timeString);
             if (!matchResult) {
                 return null;
             }
@@ -294,16 +293,18 @@ class DateConverter {
                 }
             }
             else {
+                hour = Number(hour);
+                if (hour > 12 || hour === 0) {
+                    return null;
+                }
                 meridiem = meridiem!.toLowerCase();
+                if (meridiem === 'pm' && hour < 12) {
+                    hour += 12;
+                }
+                else if (meridiem === 'am' && hour === 12) {
+                    hour = 0;
+                }
             }
-
-            hour = meridiem
-                ? (
-                    meridiem === 'pm' && hour !== '12'
-                        ? Number(hour) + 12
-                        : Number(hour)
-                )
-                : Number(hour);
         }
         else if (options.minPrecision === "time") {
             // if time is required but time portion doesn't exist, return null
@@ -319,21 +320,21 @@ class DateConverter {
 
         const offsetHourNum = Number(offsetHour);
 
-        return new MetaDate({
-            raw: dateString as string,
-            dateParts: [
+        return new UtcDate({
+            localDate: new Date(Date.UTC(
                 year,
-                month,
+                month - 1,
                 day,
                 Number(hour),
                 Number(minute),
                 Number(second)
-            ],
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute))
+            )),
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute)),
+            raw: dateString as string
         });
     }
 
-    public parseIso(dateString: unknown, options: IsoParseOptions = {}): MetaDate | null {
+    public parseIso(dateString: unknown, options: IsoParseOptions = {}): UtcDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -342,7 +343,7 @@ class DateConverter {
             return null;
         }
 
-        const matchResult = RegexCache(ISO).exec(trimmedDateString);
+        const matchResult = RegexCache.get(ISO).exec(trimmedDateString);
         if (!matchResult) {
             return null;
         }
@@ -470,22 +471,22 @@ class DateConverter {
 
         const offsetHourNum = Number(offsetHour);
 
-        return new MetaDate({
-            raw: dateString,
-            dateParts: [
+        return new UtcDate({
+            localDate: new Date(Date.UTC(
                 yearNum,
-                monthNum,
+                monthNum - 1,
                 dayNum,
                 Number(hour),
                 Number(minute),
                 Number(second),
                 Number(millisecond)
-            ],
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute))
+            )),
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute)),
+            raw: dateString,
         });
     }
 
-    public parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): MetaDate | null {
+    public parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): UtcDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -494,7 +495,7 @@ class DateConverter {
             return null;
         }
 
-        const matchResult = RegexCache(ISO_ORDINAL).exec(trimmedDateString);
+        const matchResult = RegexCache.get(ISO_ORDINAL).exec(trimmedDateString);
         if (!matchResult) {
             return null;
         }
@@ -596,9 +597,8 @@ class DateConverter {
 
         const offsetHourNum = Number(offsetHour);
 
-        return new MetaDate({
-            raw: dateString,
-            dateParts: [
+        return new UtcDate({
+            localDate: new Date(Date.UTC(
                 yearNum,
                 0,
                 dayOfYearNum,
@@ -606,12 +606,13 @@ class DateConverter {
                 Number(minute),
                 Number(second),
                 Number(millisecond)
-            ],
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute))
+            )),
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute)),
+            raw: dateString
         });
     }
 
-    public parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): MetaDate | null {
+    public parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): UtcDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -620,7 +621,7 @@ class DateConverter {
             return null;
         }
 
-        const matchResult = RegexCache(ISO_WEEK).exec(trimmedDateString);
+        const matchResult = RegexCache.get(ISO_WEEK).exec(trimmedDateString);
         if (!matchResult) {
             return null;
         }
@@ -736,18 +737,18 @@ class DateConverter {
 
         const offsetHourNum = Number(offsetHour);
         const offsetMinuteNum = Number(offsetMinute);
-        date.setUTCHours(date.getUTCHours() + offsetHourNum);
-        date.setUTCMinutes(date.getUTCMinutes() + offsetMinuteNum);
+        // date.setUTCHours(date.getUTCHours() + offsetHourNum);
+        // date.setUTCMinutes(date.getUTCMinutes() + offsetMinuteNum);
 
-        return new MetaDate({
+        return new UtcDate({
+            localDate: date,
+            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + offsetMinuteNum),
             raw: dateString,
-            date,
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + offsetMinuteNum)
         });
 
     }
 
-    public parseTimestamp(value: unknown, options: TimestampOptions = {}): MetaDate | null {
+    public parseTimestamp(value: unknown, options: TimestampOptions = {}): UtcDate | null {
         const { isMilliseconds = false } = options;
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
@@ -762,27 +763,32 @@ class DateConverter {
             return null;
         }
 
-        return new MetaDate({
-            date
+        return new UtcDate({
+            localDate: date
         });
     }
 
-    public format(metaDate: MetaDate, formatString: string): string {
-        const {
-            offsetMinutes,
-            utcDate,
-            localDate
-        } = metaDate;
+    public format(utcDate: UtcDate, formatString: string, mode: TimeMode = 'utc'): string {
+
+        let offsetMinutes, date;
+        if (mode === 'utc') {
+            offsetMinutes = 0;
+            date = utcDate.date;
+        }
+        else {
+            offsetMinutes = utcDate.offsetMinutes;
+            date = utcDate.localDate;
+        }
 
         this._loadCache();
 
-        const yearNum = localDate.getUTCFullYear();
-        const monthNum = localDate.getUTCMonth() + 1;
-        const dayNum = localDate.getUTCDate();
-        const hourNum = localDate.getUTCHours();
-        const minuteNum = localDate.getUTCMinutes();
-        const secondNum = localDate.getUTCSeconds();
-        const millisecondNum = localDate.getUTCMilliseconds();
+        const yearNum = date.getUTCFullYear();
+        const monthNum = date.getUTCMonth() + 1;
+        const dayNum = date.getUTCDate();
+        const hourNum = date.getUTCHours();
+        const minuteNum = date.getUTCMinutes();
+        const secondNum = date.getUTCSeconds();
+        const millisecondNum = date.getUTCMilliseconds();
 
         const tokens: Record<string, () => string> = {
             YYYY: () => padLeft(String(yearNum), 4, '0'),
@@ -791,16 +797,16 @@ class DateConverter {
             MMM: () => this._cache!.shortMonthNames[monthNum - 1],
             MM: () => padLeft(String(monthNum), 2, '0'),
             M: () => String(monthNum),
-            DDDD: () => padLeft(String(DateHelpers.getDayOfYear(utcDate)), 3, '0'),
-            DDD: () => String(DateHelpers.getDayOfYear(utcDate)),
+            DDDD: () => padLeft(String(DateHelpers.getDayOfYear(date)), 3, '0'),
+            DDD: () => String(DateHelpers.getDayOfYear(date)),
             DD: () => padLeft(String(dayNum), 2, '0'),
             D: () => String(dayNum),
-            dddd: () => this._cache!.longDayNames[utcDate.getUTCDay() % 7],
-            ddd: () => this._cache!.shortDayNames[utcDate.getUTCDay() % 7],
-            d: () => String(utcDate.getUTCDay()),
-            ww: () => padLeft(String(DateHelpers.getIsoWeek(utcDate)), 2, '0'),
-            w: () => String(DateHelpers.getIsoWeek(utcDate)),
-            E: () => String(utcDate.getUTCDay() || 7),
+            dddd: () => this._cache!.longDayNames[date.getUTCDay() % 7],
+            ddd: () => this._cache!.shortDayNames[date.getUTCDay() % 7],
+            d: () => String(date.getUTCDay()),
+            ww: () => padLeft(String(DateHelpers.getIsoWeek(date)), 2, '0'),
+            w: () => String(DateHelpers.getIsoWeek(date)),
+            E: () => String(date.getUTCDay() || 7),
             HH: () => padLeft(String(hourNum), 2, '0'),
             H: () => String(hourNum),
             hh: () => padLeft(String(hourNum % 12 || 12), 2, '0'),

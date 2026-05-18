@@ -1,8 +1,8 @@
 'use strict';
 
-import { RegexCache } from '../cache/RegexCache.ts';
-import { Field } from '../fields/Field.ts';
-import { Path } from '../Path.ts';
+import { RegexCache } from './RegexCache.ts';
+import { Field } from './fields/Field.ts';
+import { Path } from './Path.ts';
 
 export type NestedStringRecord = {
     [key: string]: NestedStringRecord | string | undefined;
@@ -390,14 +390,14 @@ class Utils {
         // Loose match
         if (allowLooseFormat) {
             matchData = Array.isArray(regex)
-                ? RegexCache('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')(') + ')$', 'i').exec(bareStr)
-                : RegexCache(toPattern(regex as RegExp | string), 'i').exec(bareStr);
+                ? RegexCache.get('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')(') + ')$', 'i').exec(bareStr)
+                : RegexCache.get(toPattern(regex as RegExp | string), 'i').exec(bareStr);
         }
         else {
             matchData = Array.isArray(regex)
-                ? RegexCache('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')' + Utils.escapeForRegex(delim || '') + '(') + ')$')
+                ? RegexCache.get('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')' + Utils.escapeForRegex(delim || '') + '(') + ')$')
                     .exec(str)
-                : RegexCache(toPattern(regex as RegExp | string)).exec(str);
+                : RegexCache.get(toPattern(regex as RegExp | string)).exec(str);
         }
 
         if (matchData) {
@@ -408,12 +408,12 @@ class Utils {
     }
 
     static replaceChars(str: string, delims: string, replacement: string = ''): string {
-        return str.replace(RegexCache('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);
+        return str.replace(RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);
     }
 
     static splitOnDelims(str: string, chars: string): string[] {
         const split = str.length > 0
-            ? str.split(RegexCache('[' + Utils.escapeForRegex(chars) + ']+'))
+            ? str.split(RegexCache.get('[' + Utils.escapeForRegex(chars) + ']+'))
             : [];
         const final: string[] = [];
         for (const part of split) {

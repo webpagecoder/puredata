@@ -6,7 +6,7 @@ import { Chain, ChainProps } from './Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainProps = ChainProps<typeof ArrayHandler> & {
+export type ArrayChainProps = ChainProps<ArrayHandler> & {
     castSingle?: boolean;
     maxLength?: number;
     removeEmpties?: boolean;

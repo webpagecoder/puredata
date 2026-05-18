@@ -1,6 +1,6 @@
 'use strict';
 
-import { MetaDate } from '../date/MetaDate.ts';
+import { UtcDate } from '../date/UtcDate.ts';
 import { DateChain } from '../fields/DateChain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
@@ -29,10 +29,10 @@ class DateProcessor extends ChainProcessor<DateChain> {
         if (tracker.fail) {
             return;
         }
-        const { chainHandler, outputFormatString } = this._field;
+        const { chainHandler, outputStringFormat, outputTimeMode } = this._field;
         this._copyResultToTracker(
             tracker,
-            chainHandler.format(tracker.getValue() as MetaDate, outputFormatString)
+            chainHandler.toFormat(tracker.getValue() as UtcDate, outputStringFormat, outputTimeMode)
         );
     }
 

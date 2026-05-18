@@ -1,6 +1,6 @@
 'use strict';
 
-import type { NestedStringRecord } from "../utils/Utils.ts";
+import type { NestedStringRecord } from "../Utils.ts";
 
 const DEFAULT_LANGUAGE: NestedStringRecord = {
     calendar: {

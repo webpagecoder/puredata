@@ -1,9 +1,8 @@
 'use strict';
 
 import { ObjectChain } from '../fields/ObjectChain.ts';
-import { Chain } from '../fields/Chain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { Utils } from '../utils/Utils.ts';
+import { Utils } from '../Utils.ts';
 import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
 import { State } from './Processor.ts';
 

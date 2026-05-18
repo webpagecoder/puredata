@@ -1,7 +1,7 @@
 'use strict';
 //todo: the paths below need to accept both strings and actual Path
 import { HandlerResult } from './HandlerResult.ts';
-import { Utils } from '../utils/Utils.ts';
+import { Utils } from '../Utils.ts';
 import { Handler } from './Handler.ts';
 const { pass, fail } = HandlerResult;
 
