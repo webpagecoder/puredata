@@ -23,45 +23,44 @@ import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './Utils.ts';
+import { Handler } from './handlers/Handler.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
 
-    private _config: PureDataConfig;
-    private _locale: Locale
+    private _locale: Locale;
     private _processorMapper: FieldProcessorFactory;
+    private _globalConfig: PureDataConfig;
 
-    constructor(config, processorMapper = new FieldProcessorFactory()) {
-        this.config = Utils.clone(config);
 
-        Path.delims(this.config.general.pathDelims);
+    constructor(globalConfig, processorMapper = new FieldProcessorFactory()) {
+        this._globalConfig = globalConfig;
 
-        const { localeCode } = this.config.general;
+        Path.delims(this._globalConfig.general.pathDelims);
 
-        this.locale = new Locale(localeCode);
-        this.processorMapper = processorMapper;
+        const { localeCode } = this._globalConfig.general;
+
+        this._locale = new Locale(localeCode);
+        this._processorMapper = processorMapper;
+
     }
 
-    clone(updatedConfig) {
-        this.config = Utils.mergeObjects(this.config, updatedConfig);
-    }
+    // clone(updatedConfig) {
+    //     this._config = Utils.mergeObjects(this._config, updatedConfig);
+    // }
 
     paths(delims) {
         Path.delims(delims);
     }
 
-    composeProps(props = {}, chainType, chainHandler) {
-        const { config, processorMapper, locale } = this;
+    composeProps(props = {}, chainType: string, chainHandler: Handler) {
         return Object.assign(
             {
-                processorMapper,
-                locale,
                 chainHandler
             },
-            config.general,
-            config[chainType],
-            chainHandler,
+            this._globalConfig['general'],
+            this._globalConfig[chainType],
             props
         );
     }
@@ -76,9 +75,7 @@ class PureData {
     }
 
     date(props = {}) {
-        //todo: redo how props are configged. get rid of composeProps
-        const dateOrder = props.dateOrder || this.config.date.dateOrder;
-        return new DateChain(this.composeProps(props, 'date', new DateHandler(this.locale, dateOrder)));
+        return new DateChain(this.composeProps(props, 'date', new DateHandler(this._locale)));
     }
 
     enum(structure = []) {
@@ -106,11 +103,8 @@ class PureData {
     }
 
     schema(schema = {}, props = {}) {
-        return new SchemaChain(this.composeProps(
-            Object.assign({ schema }, this.config.schema, props),
-            'object',
-            ObjectHandler
-        ));
+        const finalProps = Object.assign({ schema }, props);
+        return new SchemaChain(this.composeProps(finalProps, 'object', new ObjectHandler()));
     }
 
     string(props = {}) {

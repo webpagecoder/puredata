@@ -18,9 +18,9 @@ class DateHandler extends Handler {
      * @param locale Locale used by the date converter.
      * @param dateOrder Preferred component order for ambiguous numeric dates.
      */
-    public constructor(locale: Locale, dateOrder: DateOrder) {
+    public constructor(locale: Locale) {
         super();
-        this._dateConverter = new DateConverter(locale, dateOrder);
+        this._dateConverter = new DateConverter(locale);
     }
 
     // =============================================

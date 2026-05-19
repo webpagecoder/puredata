@@ -2,7 +2,7 @@
 
 import { Handler } from '../handlers/Handler.ts';
 import { HandlerResult } from '../handlers/HandlerResult.ts';
-import { Field, FieldProps } from './Field.ts';
+import { Field, FieldConstructorProps } from './Field.ts';
 
 type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
@@ -11,7 +11,7 @@ type Step = {
     prioritize?: boolean;
 };
 
-export type ChainProps<H extends typeof Handler = typeof Handler> = FieldProps & {
+export type ChainProps<H extends typeof Handler = typeof Handler> = FieldConstructorProps & {
     chainHandler: H;
     emptyValues: unknown[];
     pipeline: Step[];

@@ -1,9 +1,9 @@
 'use strict';
 
 import { NumberHandler } from '../handlers/NumberHandler.ts';
-import { Chain, ChainProps } from './Chain.ts';
+import { Chain, ChainConstructorProps } from './Chain.ts';
 
-export type NumberChainProps = ChainProps<NumberHandler> & {
+export type NumberChainProps = ChainConstructorProps<NumberHandler> & {
     autoConvert?: boolean;
     ensureSafe?: boolean;
     ensureFinite?: boolean;

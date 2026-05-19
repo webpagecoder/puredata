@@ -1,10 +1,10 @@
 'use strict';
 
-import { Field, FieldProps } from './Field.ts';
+import { Field, FieldConstructorProps } from './Field.ts';
 
 type EnumStructure = unknown[] | Record<string, unknown>;
 
-export type EnumFieldProps = FieldProps & {
+export type EnumFieldProps = FieldConstructorProps & {
     structure?: EnumStructure;
 };
 

@@ -1,9 +1,9 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Field, FieldProps } from './Field.ts';
+import { Field, FieldConstructorProps } from './Field.ts';
 
-export type PathReferenceFieldProps = FieldProps & {
+export type PathReferenceFieldProps = FieldConstructorProps & {
     pathStr: string;
     defaultOrCallback?: unknown | ((...args: unknown[]) => unknown);
 };

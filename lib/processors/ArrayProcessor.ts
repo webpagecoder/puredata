@@ -8,7 +8,7 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C
 
     public override preProcess(tracker: ValueTracker): void {
         const field = this.field as ArrayChain;
-        
+
         const { label } = field;
         const { castSingle } = field.props;
 

@@ -2,9 +2,9 @@
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 //todo: need to add a "clone" option to all methods that modify the object...
 import { Path } from '../Path.ts';
-import { Chain, ChainProps } from './Chain.ts';
+import { Chain, ChainConstructorProps } from './Chain.ts';
 
-export type ObjectChainProps = ChainProps<ObjectHandler> & {
+export type ObjectChainProps = ChainConstructorProps<ObjectHandler> & {
     cloneObject?: boolean;
     ensurePlain?: boolean;
     maxDepth?: number;

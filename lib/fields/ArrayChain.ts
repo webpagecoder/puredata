@@ -2,11 +2,11 @@
 
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 import { Path } from '../Path.ts';
-import { Chain, ChainProps } from './Chain.ts';
+import { Chain, ChainConstructorProps } from './Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainProps = ChainProps<ArrayHandler> & {
+export type ArrayChainProps = ChainConstructorProps<ArrayHandler> & {
     castSingle?: boolean;
     maxLength?: number;
     removeEmpties?: boolean;
@@ -17,7 +17,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
     protected _maxLength: number
     protected _removeEmpties: boolean;
 
-    constructor(props: ArrayChainProps) {
+    public constructor(props: ArrayChainProps) {
         super(props);
         const {
             castSingle = true,
@@ -140,6 +140,16 @@ class ArrayChain extends Chain<ArrayChainProps> {
             return [this.props.emptyValues];
         });
     }
+
+    public get castSingle(): boolean {
+        return this._castSingle;
+    }
+
+    public get maxLength(): number {
+        return this._maxLength;
+    }
+
+
 
 }
 

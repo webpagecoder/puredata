@@ -2,7 +2,8 @@
 
 import { Handler } from '../handlers/Handler.ts';
 import { HandlerResult } from '../handlers/HandlerResult.ts';
-import { Field, FieldProps } from './Field.ts';
+import { Field, FieldConstructorProps } from './Field.ts';
+import { Overwrite } from '../types.ts';
 
 type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
@@ -10,22 +11,36 @@ type Step = {
     args?: StepArgsOrFn;
 };
 
-export type ChainProps<H extends Handler = Handler> = FieldProps & {
-    chainHandler: H;
+export type ChainConfigProps = {
     emptyValues?: unknown[];
-    pipeline?: Step[];
 };
 
-type CloneProps<P extends ChainProps = ChainProps> = Partial<P> & { step?: Step };
+export type ChainConstructorProps<
+    P extends ChainConfigProps = ChainConfigProps,
+    H extends Handler = Handler
+> =
+    Overwrite<
+        FieldConstructorProps,
+        Overwrite<
+            P, {
+                chainHandler: H;
+                pipeline?: Step[];
+            }
+        >
+    >;
 
-abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
+export type ChainCloneProps<P extends ChainConstructorProps = ChainConstructorProps> = Partial<Overwrite<P, {
+    step?: Step;
+}>>;
+
+abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> extends Field<P> {
 
     protected _chainHandler: P['chainHandler'];
-    protected _emptyValues: unknown[]
+    protected _emptyValues: unknown[];
     protected _pipeline: Step[];
 
-    constructor(props: P) {
-        super(props as FieldProps);
+    public constructor(props: P) {
+        super(props);
 
         const {
             chainHandler,
@@ -47,7 +62,7 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
         return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
     }
 
-    public override clone(props: CloneProps<P> = {}): this {
+    public override clone(props: ChainCloneProps = {}): this {
         const clone = super.clone(props);
         const {
             chainHandler = this._chainHandler,
@@ -67,18 +82,23 @@ abstract class Chain<P extends ChainProps = ChainProps> extends Field<P> {
         return clone;
     }
 
+    public config(props: ChainConfigProps): this {
+        return this.clone(props);
+    }
+
     public addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = []): this {
         const chainHandler = this._chainHandler as P['chainHandler'];
         const fn = chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }
+
         return this.clone({
             step: {
                 fn: (fn as Step['fn']).bind(chainHandler),
                 args,
             }
-        } as CloneProps<P>);
+        });
     }
 
     // Validators

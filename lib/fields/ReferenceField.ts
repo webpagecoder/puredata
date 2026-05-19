@@ -1,9 +1,9 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Field, FieldProps } from './Field.ts';
+import { Field, FieldConstructorProps } from './Field.ts';
 
-export type ReferenceFieldProps = FieldProps & {
+export type ReferenceFieldProps = FieldConstructorProps & {
     path?: Path | string;
     minDepth?: number;
     maxDepth?: number;

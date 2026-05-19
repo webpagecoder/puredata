@@ -1,11 +1,11 @@
 'use strict';
 
 import { BooleanHandler } from '../handlers/BooleanHandler.ts';
-import { Chain, ChainProps } from './Chain.ts';
+import { Chain, ChainConstructorProps } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainProps = ChainProps<BooleanHandler> & {
+export type BooleanChainProps = ChainConstructorProps<BooleanHandler> & {
     allowBoolish?: boolean;
     boolishPairs?: BoolishPair[];
 };

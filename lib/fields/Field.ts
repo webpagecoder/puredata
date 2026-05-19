@@ -6,8 +6,7 @@ import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 
-
-export type FieldProps = {
+export type FieldConstructorProps = {
     defaultValue?: unknown;
     label?: string;
     locale?: Locale;
@@ -15,7 +14,9 @@ export type FieldProps = {
     processorMapper?: FieldProcessorFactory;
 };
 
-abstract class Field<P extends FieldProps = FieldProps> {
+export type FieldCloneProps<P extends FieldConstructorProps = FieldConstructorProps> = Partial<P>;
+
+abstract class Field<P extends FieldConstructorProps = FieldConstructorProps> {
 
     private static _id: number = 0;
 
@@ -27,7 +28,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
     protected _processor: Processor | null;
     protected _processorMapper: FieldProcessorFactory;
 
-    constructor(props: FieldProps) {
+    constructor(props: FieldConstructorProps) {
 
         const {
             defaultValue = undefined,
@@ -62,7 +63,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
         return this._presence;
     }
 
-    public clone(props: Partial<P> = {}): this {
+    public clone(props: FieldCloneProps = {}): this {
         const Constructor = this.constructor as new (props?: P) => this;
         const {
             defaultValue = this._defaultValue,
@@ -81,6 +82,10 @@ abstract class Field<P extends FieldProps = FieldProps> {
         clone._processor = null;
         return clone;
     }
+
+    // public config(props: FieldConfigProps): this {
+    //     return this.clone(props);
+    // }
 
     public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
         if (!this._processor) {
@@ -105,7 +110,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
+        return this.clone({ defaultValue, presence: 'optional' });
     }
 
     public errors(messages: Record<string, string>): this {
@@ -115,19 +120,19 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     public forbidden(): this {
-        return this.clone({ presence: 'forbidden' } as Partial<P>);
+        return this.clone({ presence: 'forbidden' });
     }
 
     public label(label: string): this {
-        return this.clone({ label } as Partial<P>);
+        return this.clone({ label });
     }
 
     public optional(): this {
-        return this.clone({ presence: 'optional' } as Partial<P>);
+        return this.clone({ presence: 'optional' });
     }
 
     public required(): this {
-        return this.clone({ presence: 'required' } as Partial<P>);
+        return this.clone({ presence: 'required' });
     }
 }
 

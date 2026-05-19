@@ -14,7 +14,6 @@ const MM = '0[1-9]|1[0-2]';
 const M_OR_MM = '0?[1-9]|1[0-2]';
 const DD = '0[1-9]|[12][0-9]|3[01]';
 const D_OR_DD = '0?[1-9]|[12][0-9]|3[01]';
-// const Do = `${D}(?:#NUMBER_SUFFIXES#)?`; // will be replaced with D + locale number suffixes in runtime
 const DDDD = '00[1-9]|0[1-9]\\d|[12]\\d{2}|3[0-5]\\d|36[0-6]';
 const WW = '0[1-9]|[1-4]\\d|5[0-3]';
 const E = '[1-7]';
@@ -45,23 +44,19 @@ const ISO_ORDINAL = `^(${YYYY})(-?)(${DDDD})(?:T${ISO_TIME_TZ})?$`;
 const ISO_WEEK = `^(${YYYY})(-?)W(${WW})(?:(-?)(${E})(?:T${ISO_TIME_TZ})?)?$`;
 
 // Human readable regex for dates
-const HUMAN_MDY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}[., ]+)?(${allMonthNames})[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${YYYY})(?:[, ]+(.*))?$`,
-        `(?:${allDayNames}[., ]+)?(${M_OR_MM})[/. -]+(${D_OR_DD})[/. -]+(${YYYY})(?:[, ]+(.*))?$`
-    ];
-};
-const HUMAN_DMY = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}[., ]+)?(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[ ,]+(${YYYY})(?:[, ]+(.*))?$`,
-        `(?:${allDayNames}[., ]+)?(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+(${YYYY})(?:[, ]+(.*))?$`
-    ];
-};
-const HUMAN_YMD = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
-    return [
-        `(?:${allDayNames}[., ]+)?(${YYYY})[ ,]+(?:(${allMonthNames}))[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?(?:[, ]+(.*))?$`,
-        `(?:${allDayNames}[., ]+)?(${YYYY})[/. -]+(${M_OR_MM})[/. -]+(${D_OR_DD})(?:[, ]+(.*))?$`
-    ];
+const HUMAN = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
+    return {
+        regexes: {
+            MDY: `(?:${allDayNames}[., ]+)?(?:(?:(${M_OR_MM})[/. -]+(${D_OR_DD})[/. -]+)|(?:(${allMonthNames})[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+))(${YYYY})(?:[, ]+(.*))?$`,
+            DMY: `(?:${allDayNames}[., ]+)?(?:(?:(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+)(?:(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[ ,]+))(${YYYY})(?:[, ]+(.*))?$`,
+            YMD: `(?:${allDayNames}[., ]+)?(${YYYY})(?:(?:[/. -]+(${M_OR_MM})[/. -]+(${D_OR_DD}))|(?:[ ,]+(?:(${allMonthNames}))[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?))(?:[, ]+(.*))?$`
+        },
+        indexes: {
+            MDY: { numStyleMonth: 1, numStyleDay: 2, wordStyleMonth: 3, wordStyleDay: 4, year: 5 },
+            DMY: { numStyleDay: 1, numStyleMonth: 2, wordStyleDay: 3, wordStyleMonth: 4, year: 5 },
+            YMD: { year: 1, numStyleMonth: 2, numStyleDay: 3, wordStyleMonth: 4, wordStyleDay: 5 }
+        }
+    };
 };
 
 // Human readable regex for time
@@ -70,8 +65,14 @@ const HUMAN_TIME = `^(${H})(?:[.:]?(${mm})(?:[.:]?(${ss}))?)?(?:\\s*(${a}))?(?:\
 
 // Cache for human date parsing regexes and locale-specific date components
 type HumanDateCache = null | {
-    dateIndexes: Record<string, number>;
-    humanRegex: string[];
+    humanRegexes: Record<DateOrder, string>;
+    humanIndexes: Record<DateOrder, {
+        numStyleMonth: number,
+        numStyleDay: number,
+        wordStyleMonth: number,
+        wordStyleDay: number,
+        year: number
+    }>;
     shortMonthNames: string[],
     longMonthNames: string[],
     shortDayNames: string[],
@@ -121,12 +122,10 @@ class DateConverter {
 
     private _locale: Locale;
     private _cache: HumanDateCache;
-    private _dateOrder: DateOrder;
 
-    constructor(locale: Locale, dateOrder: DateOrder = 'MDY') {
+    constructor(locale: Locale) {
         this._locale = locale;
         this._cache = null;
-        this._dateOrder = dateOrder;
     }
 
     private _loadCache() {
@@ -148,32 +147,11 @@ class DateConverter {
         const monthNamesRegex = '(?:' + allMonthNamesLower.join('|') + ')';
         const numberSuffixesRegex = '(?:' + numberSuffixes.map(s => s.toLowerCase()).join('|') + ')';
 
-        let humanRegex: string[], dateIndexes: Record<string, number>;
-        switch (this._dateOrder) {
-            case 'MDY':
-                dateIndexes = { day: 2, month: 1, year: 3 };
-                humanRegex = HUMAN_MDY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
-                break;
-            case 'DMY':
-                dateIndexes = { day: 1, month: 2, year: 3 };
-                humanRegex = HUMAN_DMY(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
-                break;
-            default:
-                dateIndexes = { day: 3, month: 2, year: 1 };
-                humanRegex = HUMAN_YMD(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
-                break;
-        }
+        const human = HUMAN(monthNamesRegex, dayNamesRegex, numberSuffixesRegex);
 
         this._cache = {
-            dateIndexes,
-            humanRegex: [
-                humanRegex[0]
-                    .replace('#DAY_NAMES#', dayNamesRegex)
-                    .replace('#MONTH_NAMES#', monthNamesRegex)
-                    .replace('#NUMBER_SUFFIXES#', numberSuffixesRegex),
-                humanRegex[1]
-                    .replace('#DAY_NAMES#', dayNamesRegex)
-            ],
+            humanRegexes: human.regexes,
+            humanIndexes: human.indexes,
             shortMonthNames,
             longMonthNames,
             shortDayNames,
@@ -235,24 +213,38 @@ class DateConverter {
         }
 
         this._loadCache();
-        const { dateIndexes, humanRegex, allMonthNamesLower } = this._cache!;
+        const { humanIndexes, humanRegexes, allMonthNamesLower } = this._cache!;
 
-        let matchResult = RegexCache.get(humanRegex[0]).exec(normalizedDateString);
-        let isNumMatch = false;
+        const { dateOrder = 'MDY' } = options;
+        let matchResult, dateIndexes;
+        switch (dateOrder) {
+            case 'DMY':
+                matchResult = RegexCache.get(humanRegexes.DMY).exec(normalizedDateString);
+                dateIndexes = humanIndexes.DMY;
+                break;
+            case 'YMD':
+                matchResult = RegexCache.get(humanRegexes.YMD).exec(normalizedDateString);
+                dateIndexes = humanIndexes.YMD;
+                break;
+            case 'MDY':
+            default:
+                matchResult = RegexCache.get(humanRegexes.MDY).exec(normalizedDateString);
+                dateIndexes = humanIndexes.MDY;
+                break;
+        }
         if (!matchResult) {
-            matchResult = RegexCache.get(humanRegex[1]).exec(normalizedDateString);
-            if (!matchResult) {
-                return null;
-            }
-            isNumMatch = true;
+            return null;
         }
 
-        // Check date portion
+        // Grab date portion
+        const isNumMatch = !!matchResult[dateIndexes.numStyleMonth];
         const year = Number(matchResult[dateIndexes.year]);
         const month = isNumMatch
-            ? Number(matchResult[dateIndexes.month])
-            : allMonthNamesLower.indexOf(matchResult[dateIndexes.month].toLowerCase()) % 12 + 1;
-        const day = Number(matchResult[dateIndexes.day]);
+            ? Number(matchResult[dateIndexes.numStyleMonth])
+            : allMonthNamesLower.indexOf(matchResult[dateIndexes.wordStyleMonth].toLowerCase()) % 12 + 1;
+        const day = isNumMatch
+            ? Number(matchResult[dateIndexes.numStyleDay])
+            : Number(matchResult[dateIndexes.wordStyleDay]);
 
         if (!DateHelpers.isValidDate(year, month, day)) {
             return null;
@@ -649,7 +641,6 @@ class DateConverter {
             return null;
         }
 
-
         switch (options.minPrecision) {
             case "date":
             case "week":
@@ -737,8 +728,6 @@ class DateConverter {
 
         const offsetHourNum = Number(offsetHour);
         const offsetMinuteNum = Number(offsetMinute);
-        // date.setUTCHours(date.getUTCHours() + offsetHourNum);
-        // date.setUTCMinutes(date.getUTCMinutes() + offsetMinuteNum);
 
         return new UtcDate({
             localDate: date,
