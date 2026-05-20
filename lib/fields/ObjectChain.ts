@@ -2,22 +2,28 @@
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 //todo: need to add a "clone" option to all methods that modify the object...
 import { Path } from '../Path.ts';
-import { Chain, ChainConstructorProps } from './Chain.ts';
+import { Overwrite } from '../types.ts';
+import { Chain, ChainCloneProps, ChainConfigProps, ChainConstructorProps } from './Chain.ts';
 
-export type ObjectChainProps = ChainConstructorProps<ObjectHandler> & {
-    cloneObject?: boolean;
-    ensurePlain?: boolean;
-    maxDepth?: number;
-    maxKeyCount?: number;
-};
+export type ObjectChainConfigProps = ChainConfigProps;
 
-class ObjectChain<P extends ObjectChainProps = ObjectChainProps> extends Chain<P> {
+export type ObjectChainConstructorProps =
+    Overwrite<ChainConstructorProps<ObjectChainConfigProps, ObjectHandler>, {
+        cloneObject?: boolean;
+        ensurePlain?: boolean;
+        maxDepth?: number;
+        maxKeyCount?: number;
+    }>;
+
+export type ObjectChainCloneProps = ChainCloneProps<ObjectChainConstructorProps>;
+
+class ObjectChain extends Chain<ObjectChainConstructorProps> {
     protected _cloneObject: boolean;
     protected _ensurePlain: boolean;
     protected _maxDepth?: number;
     protected _maxKeyCount?: number;
 
-    constructor(props: P) {
+    constructor(props: ObjectChainConstructorProps) {
         super(props);
         const {
             cloneObject = false,
@@ -32,7 +38,7 @@ class ObjectChain<P extends ObjectChainProps = ObjectChainProps> extends Chain<P
         this._maxKeyCount = maxKeyCount;
     }
 
-    public override clone(props: Partial<P> = {}): this {
+    public override clone(props: ObjectChainCloneProps= {}): this {
         const clone = super.clone(props);
         const {
             cloneObject = this._cloneObject,

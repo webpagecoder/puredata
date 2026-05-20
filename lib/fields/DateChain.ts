@@ -12,17 +12,18 @@ export type DateChainConfigProps = Overwrite<ChainConfigProps, {
     dateOrder?: DateOrder;
 }>;
 
-export type DateChainProps = Overwrite<ChainConstructorProps<DateChainConfigProps, DateHandler>, {
-    outputStringFormat?: OutputFormat;
-    outputPrecision?: OutputPrecision;
-    outputTimeMode?: TimeMode;
-    skipGenericParse?: boolean;
-    utcOffset?: [number, number];
-}>;
+export type DateChainConstructorProps =
+    Overwrite<ChainConstructorProps<DateChainConfigProps, DateHandler>, {
+        outputStringFormat?: OutputFormat;
+        outputPrecision?: OutputPrecision;
+        outputTimeMode?: TimeMode;
+        skipGenericParse?: boolean;
+        utcOffset?: [number, number];
+    }>;
 
-export type DateChainCloneProps = ChainCloneProps<DateChainProps>;
+export type DateChainCloneProps = ChainCloneProps<DateChainConstructorProps>;
 
-class DateChain extends Chain<DateChainProps> {
+class DateChain extends Chain<DateChainConstructorProps> {
     protected _dateOrder: DateOrder;
     protected _outputStringFormat: OutputFormat | null;
     protected _outputPrecision: OutputPrecision | null;
@@ -30,7 +31,7 @@ class DateChain extends Chain<DateChainProps> {
     protected _skipGenericParse: boolean;
     protected _utcOffset: [number, number];
 
-    constructor(props: DateChainProps) {
+    constructor(props: DateChainConstructorProps) {
         super(props);
 
         const {
