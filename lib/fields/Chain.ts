@@ -33,13 +33,13 @@ export type ChainCloneProps<P extends ChainConstructorProps = ChainConstructorPr
     step?: Step;
 }>>;
 
-abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> extends Field<P> {
+abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> extends Field {
 
     protected _chainHandler: P['chainHandler'];
     protected _emptyValues: unknown[];
     protected _pipeline: Step[];
 
-    public constructor(props: P) {
+    public constructor(props: ChainConstructorProps) {
         super(props);
 
         const {

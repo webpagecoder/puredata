@@ -14,9 +14,9 @@ export type FieldConstructorProps = {
     processorMapper?: FieldProcessorFactory;
 };
 
-export type FieldCloneProps<P extends FieldConstructorProps = FieldConstructorProps> = Partial<P>;
+export type FieldCloneProps = Partial<FieldConstructorProps>;
 
-abstract class Field<P extends FieldConstructorProps = FieldConstructorProps> {
+abstract class Field {
 
     private static _id: number = 0;
 
@@ -64,7 +64,7 @@ abstract class Field<P extends FieldConstructorProps = FieldConstructorProps> {
     }
 
     public clone(props: FieldCloneProps = {}): this {
-        const Constructor = this.constructor as new (props?: P) => this;
+        const Constructor = this.constructor as new (props?: FieldConstructorProps) => this;
         const {
             defaultValue = this._defaultValue,
             label = this._label,
@@ -78,7 +78,7 @@ abstract class Field<P extends FieldConstructorProps = FieldConstructorProps> {
             locale,
             presence,
             processorMapper,
-        } as P);
+        } as FieldConstructorProps);
         clone._processor = null;
         return clone;
     }
