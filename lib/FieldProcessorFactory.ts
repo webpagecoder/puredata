@@ -44,10 +44,10 @@ import { SchemaConditionalProcessor } from './processors/SchemaConditionalProces
 
 import { ValueField } from './fields/ValueField.ts';
 import { ValueProcessor } from './processors/ValueProcessor.ts';
-import { ProcessorProps } from './processors/Processor.ts';
+import { ProcessorConstructorParams } from './processors/Processor.ts';
 
 type FieldConstructor = abstract new (...args: any[]) => Field;
-type ProcessorConstructor = new (props: ProcessorProps) => Processor;
+type ProcessorConstructor = new (args: ProcessorConstructorParams) => Processor;
 
 const MAPPINGS = new Map<FieldConstructor, ProcessorConstructor>();
 

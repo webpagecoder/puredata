@@ -1,8 +1,8 @@
 'use strict';
 
-import { Field, FieldConstructorProps } from './Field.ts';
+import { Field, FieldConstructorParams } from './Field.ts';
 
-export type ValueFieldProps = FieldConstructorProps & {
+export type ValueFieldProps = FieldConstructorParams & {
     mutable?: boolean;
     value?: unknown;
 };
@@ -11,23 +11,23 @@ class ValueField extends Field {
     protected _mutable: boolean;
     protected _value: unknown;
 
-    constructor(props: ValueFieldProps = {}) {
-        super(props);
+    constructor(args: ValueFieldProps = {}) {
+        super(args);
         const {
             mutable = false,
             value = null,
-        } = props;
+        } = args;
 
         this._mutable = mutable;
         this._value = value;
     }
 
-    public override clone(props: Partial<ValueFieldProps> = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: Partial<ValueFieldProps> = {}): this {
+        const clone = super.clone(args);
         const {
             mutable = this._mutable,
             value = this._value,
-        } = props;
+        } = args;
 
         clone._mutable = mutable;
         clone._value = value;

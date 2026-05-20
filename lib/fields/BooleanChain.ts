@@ -1,36 +1,40 @@
 'use strict';
 
 import { BooleanHandler } from '../handlers/BooleanHandler.ts';
-import { Chain, ChainConstructorProps } from './Chain.ts';
+import { Overwrite } from '../types.ts';
+import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainProps = ChainConstructorProps<BooleanHandler> & {
-    allowBoolish?: boolean;
-    boolishPairs?: BoolishPair[];
-};
+export type BooleanChainConstructorParams =
+    Overwrite<ChainConstructorParams<BooleanHandler>, {
+        allowBoolish?: boolean;
+        boolishPairs?: BoolishPair[];
+    }>;
 
-class BooleanChain extends Chain<BooleanChainProps> {
+export type BooleanChainCloneParams = ChainCloneParams<BooleanChainConstructorParams>;
+
+class BooleanChain extends Chain<BooleanChainConstructorParams> {
     protected _allowBoolish: boolean;
     protected _boolishPairs: BoolishPair[];
 
-    constructor(props: BooleanChainProps) {
-        super(props);
+    public constructor(args: BooleanChainConstructorParams) {
+        super(args);
         const {
             allowBoolish = false,
             boolishPairs = []
-        } = props;
+        } = args;
 
         this._allowBoolish = allowBoolish;
         this._boolishPairs = boolishPairs;
     }
 
-    public override clone(props: Partial<BooleanChainProps> = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: BooleanChainCloneParams = {}): this {
+        const clone = super.clone(args);
         const {
             allowBoolish = this._allowBoolish,
             boolishPairs = this._boolishPairs,
-        } = props;
+        } = args;
 
         clone._allowBoolish = allowBoolish;
         clone._boolishPairs = boolishPairs;
@@ -47,11 +51,9 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * schema.boolean().configBoolish(true) // Accepts 'yes', 'no', 1, 0, etc.
      */
     public configBoolish(allowBoolish: boolean = true, addBoolishPairs: BoolishPair[] = []): this {
-        this.getProp('allowBoolish');
-        const existingPairs = (this.getProp('boolishPairs') as BoolishPair[] | undefined) || [];
         return this.clone({
             allowBoolish,
-            boolishPairs: [...existingPairs, ...addBoolishPairs]
+            boolishPairs: [...(this._boolishPairs || []), ...addBoolishPairs]
         });
     }
 
@@ -65,10 +67,10 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * schema.boolean().truthy()
      * // With boolish: accepts 'yes', 1, 'true', etc.
      */
-    public truthy(): this {
+    public override truthy(): this {
         return this.addStep('truthy', (function (this: BooleanChain): unknown[] {
-            const { allowBoolish, boolishPairs = [] } = this.props;
-            return [allowBoolish ? boolishPairs.map(([truthy,]: [unknown, unknown]): unknown => truthy) : []];
+            const { _allowBoolish, _boolishPairs = [] } = this;
+            return [_allowBoolish ? _boolishPairs.map(([truthy,]: [unknown, unknown]): unknown => truthy) : []];
         }));
     }
 
@@ -80,10 +82,10 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * schema.boolean().falsy()
      * // With boolish: accepts 'no', 0, 'false', etc.
      */
-    public falsy(): this {
+    public override falsy(): this {
         return this.addStep('falsy', (function (this: BooleanChain): unknown[] {
-            const { allowBoolish, boolishPairs = [] } = this.props;
-            return [allowBoolish ? boolishPairs.map(([, falsy]: [unknown, unknown]): unknown => falsy) : []];
+            const { _allowBoolish, _boolishPairs = [] } = this;
+            return [_allowBoolish ? _boolishPairs.map(([, falsy]: [unknown, unknown]): unknown => falsy) : []];
         }));
     }
 
@@ -98,10 +100,10 @@ class BooleanChain extends Chain<BooleanChainProps> {
      * // true -> false, false -> true
      * // With boolish: 'yes' -> 'no', 1 -> 0, etc.
      */
-    invert(): this {
+    public invert(): this {
         return this.addStep('invert', (function (this: BooleanChain): unknown[] {
-            const { allowBoolish, boolishPairs = [] } = this.props;
-            return [allowBoolish ? boolishPairs : []];
+            const { _allowBoolish, _boolishPairs = [] } = this;
+            return [_allowBoolish ? _boolishPairs : []];
         }));
     }
 

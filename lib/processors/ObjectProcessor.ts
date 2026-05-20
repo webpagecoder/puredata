@@ -3,10 +3,10 @@
 import { ObjectChain } from '../fields/ObjectChain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Utils } from '../Utils.ts';
-import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
+import { ChainProcessor, ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { State } from './Processor.ts';
 
-export type ObjectProcessorProps<C extends ObjectChain = ObjectChain> = ChainProcessorProps<C> & {
+export type ObjectProcessorProps<C extends ObjectChain = ObjectChain> = ChainProcessorConstructorParams<C> & {
     ensurePlain: boolean;
     cloneObject: boolean;
     maxDepth?: number;

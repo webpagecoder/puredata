@@ -7,10 +7,10 @@ import { ChainProcessor } from './ChainProcessor.ts';
 class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const field = this.field as ArrayChain;
+        const field = this.field;
 
         const { label } = field;
-        const { castSingle } = field.props;
+        const { castSingle } = field;
 
         if (!Array.isArray(tracker.getValue())) {
             if (castSingle && tracker.getValue() !== undefined) {
@@ -21,14 +21,14 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C
             }
         }
         else {
-            const { maxLength, removeEmpties, emptyValues } = field.props;
+            const { maxLength, removeEmpties, emptyValues } = field;
 
             if (removeEmpties) {
-                tracker.setValue(field.props.chainHandler.removeEmpties(tracker.getValue(), emptyValues).value);
+                tracker.setValue(field.chainHandler.removeEmpties(tracker.getValue(), emptyValues).value);
             }
 
             if (maxLength != null) {
-                const result = field.props.chainHandler.hasMaxLength(tracker.getValue(), maxLength);
+                const result = field.chainHandler.maxLength(tracker.getValue(), maxLength);
                 if (result.fail) {
                     tracker.addError('array/maxLength', {
                         maxLength,

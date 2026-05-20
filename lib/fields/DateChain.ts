@@ -3,83 +3,82 @@
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from '../date/DateConverter.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConstructorProps, ChainCloneProps, ChainConfigProps } from './Chain.ts';
+import { Chain, ChainConstructorParams, ChainCloneParams, ChainConfig } from './Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-export type DateChainConfigProps = Overwrite<ChainConfigProps, {
-    dateOrder?: DateOrder;
-}>;
-
-export type DateChainConstructorProps =
-    Overwrite<ChainConstructorProps<DateChainConfigProps, DateHandler>, {
-        outputStringFormat?: OutputFormat;
-        outputPrecision?: OutputPrecision;
+export type DateChainConstructorParams =
+    Overwrite<ChainConstructorParams<DateHandler>, {
+        dateOrder?: DateOrder;
+        outputStringFormat?: OutputFormat | null;
+        outputPrecision?: OutputPrecision | null;
         outputTimeMode?: TimeMode;
-        skipGenericParse?: boolean;
-        utcOffset?: [number, number];
+        utcOffsetMinutes?: number;
     }>;
 
-export type DateChainCloneProps = ChainCloneProps<DateChainConstructorProps>;
+export type DateChainCloneParams =
+    Overwrite<ChainCloneParams<DateChainConstructorParams>, {
+        skipGenericParse?: boolean;
+    }>;
 
-class DateChain extends Chain<DateChainConstructorProps> {
-    protected _dateOrder: DateOrder;
-    protected _outputStringFormat: OutputFormat | null;
-    protected _outputPrecision: OutputPrecision | null;
-    protected _outputTimeMode: TimeMode;
-    protected _skipGenericParse: boolean;
-    protected _utcOffset: [number, number];
+export type DateChainConfig = Required<ChainConfig & DateChainConstructorParams & DateChainCloneParams>;
 
-    constructor(props: DateChainConstructorProps) {
-        super(props);
+class DateChain extends Chain<DateChainConstructorParams, DateChainConfig> {
+    // protected _dateOrder: DateOrder;
+    // protected _outputStringFormat: OutputFormat | null;
+    // protected _outputPrecision: OutputPrecision | null;
+    // protected _outputTimeMode: TimeMode;
+    // protected _skipGenericParse: boolean;
+    // protected _utcOffsetMinutes: number;
+
+    constructor(args: DateChainConstructorParams) {
+        super(args);
 
         const {
             dateOrder = 'MDY',
             outputStringFormat = null,
             outputPrecision = null,
             outputTimeMode = 'utc',
-            skipGenericParse = false,
-            utcOffset = [0, 0]
-        } = props;
+            utcOffsetMinutes = 0,
+        } = args;
 
-        this._dateOrder = dateOrder;
-        this._outputStringFormat = outputStringFormat;
-        this._outputPrecision = outputPrecision;
-        this._outputTimeMode = outputTimeMode;
-        this._utcOffset = utcOffset;
-        this._skipGenericParse = skipGenericParse;
+        const config = this._config;
+        config.dateOrder = dateOrder;
+        config.outputStringFormat = outputStringFormat;
+        config.outputPrecision = outputPrecision;
+        config.outputTimeMode = outputTimeMode;
+        config.utcOffsetMinutes = utcOffsetMinutes;
+        config.skipGenericParse = false;
     }
 
-    public override clone(props: DateChainCloneProps = {}): this {
-        const clone = super.clone(props);
-        const {
-            dateOrder = this._dateOrder,
-            outputStringFormat = this._outputStringFormat,
-            outputPrecision = this._outputPrecision,
-            outputTimeMode = this._outputTimeMode,
-            utcOffset = this._utcOffset,
-            skipGenericParse = this._skipGenericParse
-        } = props;
+    public override clone(args: DateChainCloneParams = {}): this {
+        const clone = super.clone(args);
 
-        clone._dateOrder = dateOrder;
-        clone._outputStringFormat = outputStringFormat;
-        clone._outputPrecision = outputPrecision;
-        clone._outputTimeMode = outputTimeMode;
-        clone._skipGenericParse = skipGenericParse;
-        clone._utcOffset = utcOffset;
+        const config = this._config;
+        const {
+            dateOrder = config.dateOrder,
+            outputStringFormat = config.outputStringFormat,
+            outputPrecision = config.outputPrecision,
+            outputTimeMode = config.outputTimeMode,
+            utcOffsetMinutes = config.utcOffsetMinutes,
+            skipGenericParse = config.skipGenericParse
+        } = args;
+
+        const cloneConfig = clone._config;
+        cloneConfig.dateOrder = dateOrder;
+        cloneConfig.outputStringFormat = outputStringFormat;
+        cloneConfig.outputPrecision = outputPrecision;
+        cloneConfig.outputTimeMode = outputTimeMode;
+        cloneConfig.skipGenericParse = skipGenericParse;
+        cloneConfig.utcOffsetMinutes = utcOffsetMinutes;
         return clone;
     }
 
-    public override config(props: DateChainConfigProps): this {
-        return this.clone(props);
-    }
-
-    public assertEmptyPipelineAndSkipPreprocess(dateSubType: string): void {
+    public assertEmptyPipeline(dateSubType: string): void {
         if (this._pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
-        this._skipGenericParse = true;
     }
 
     // Validators
@@ -96,8 +95,8 @@ class DateChain extends Chain<DateChainConstructorProps> {
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
     public human(options: HumanParseOptions = {}) {
-        this.assertEmptyPipelineAndSkipPreprocess('human');
-        return this.addStep('human', [Object.assign({ dateOrder: this._dateOrder }, options)]);
+        this.assertEmptyPipeline('human');
+        return this.clone({ skipGenericParse: true }).addStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
     }
 
     /**
@@ -112,8 +111,8 @@ class DateChain extends Chain<DateChainConstructorProps> {
      * date.iso() // Accepts "2023-01-01", "2023-01-01T12:00:00Z", etc.
      */
     public iso(options: IsoParseOptions = {}) {
-        this.assertEmptyPipelineAndSkipPreprocess('iso');
-        return this.addStep('iso', [options]);
+        this.assertEmptyPipeline('iso');
+        return this.clone({ skipGenericParse: true }).addStep('iso', [options]);
     }
 
     /**
@@ -126,8 +125,8 @@ class DateChain extends Chain<DateChainConstructorProps> {
      * date.isoOrdinal() // Accepts "2023-001", "2023-365", etc.
      */
     public isoOrdinal(options: IsoOrdinalParseOptions = {}) {
-        this.assertEmptyPipelineAndSkipPreprocess('isoOrdinal');
-        return this.addStep('isoOrdinal', [options]);
+        this.assertEmptyPipeline('isoOrdinal');
+        return this.clone({ skipGenericParse: true }).addStep('isoOrdinal', [options]);
     }
 
     /**
@@ -140,8 +139,8 @@ class DateChain extends Chain<DateChainConstructorProps> {
      * date.isoWeek() // Accepts "2023-W01-1", "2023-W52-7", etc.
      */
     public isoWeek(options: IsoWeekParseOptions = {}) {
-        this.assertEmptyPipelineAndSkipPreprocess('isoWeek');
-        return this.addStep('isoWeek', [options]);
+        this.assertEmptyPipeline('isoWeek');
+        return this.clone({ skipGenericParse: true }).addStep('isoWeek', [options]);
     }
 
     /**
@@ -154,8 +153,8 @@ class DateChain extends Chain<DateChainConstructorProps> {
      * date.timestamp(false) // Accepts Unix timestamps in seconds
      */
     public timestamp(isMilliseconds: boolean = true) {
-        this.assertEmptyPipelineAndSkipPreprocess('timestamp');
-        return this.addStep('timestamp', [isMilliseconds]);
+        this.assertEmptyPipeline('timestamp');
+        return this.clone({ skipGenericParse: true }).addStep('timestamp', [isMilliseconds]);
     }
 
     /**
@@ -166,9 +165,7 @@ class DateChain extends Chain<DateChainConstructorProps> {
      */
     public today() {
         const now = new Date();
-        let [hours, minutes] = this._utcOffset;
-        now.setUTCHours(now.getUTCHours() + hours);
-        now.setUTCMinutes(now.getUTCMinutes() + minutes);
+        now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
         return this.addStep('today', [now]);
     }
 
@@ -287,25 +284,25 @@ class DateChain extends Chain<DateChainConstructorProps> {
         return this.clone({ outputStringFormat: 'timestamp' });
     }
 
-    public get outputTimeMode() {
-        return this._outputTimeMode;
-    }
+    // public get outputTimeMode() {
+    //     return this._outputTimeMode;
+    // }
 
-    public get outputStringFormat() {
-        return this._outputStringFormat;
-    }
+    // public get outputStringFormat() {
+    //     return this._outputStringFormat;
+    // }
 
-    public get outputPrecision() {
-        return this._outputPrecision;
-    }
+    // public get outputPrecision() {
+    //     return this._outputPrecision;
+    // }
 
-    public get skipGenericParse() {
-        return this._skipGenericParse;
-    }
+    // public get skipGenericParse() {
+    //     return this._skipGenericParse;
+    // }
 
-    public get utcOffset() {
-        return this._utcOffset;
-    }
+    // public get utcOffsetMinutes() {
+    //     return this._utcOffsetMinutes;
+    // }
 }
 
 export { DateChain };

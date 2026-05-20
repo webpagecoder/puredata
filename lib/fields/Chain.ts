@@ -2,7 +2,7 @@
 
 import { Handler } from '../handlers/Handler.ts';
 import { HandlerResult } from '../handlers/HandlerResult.ts';
-import { Field, FieldConstructorProps } from './Field.ts';
+import { Field, FieldConstructorParams } from './Field.ts';
 import { Overwrite } from '../types.ts';
 
 type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
@@ -11,46 +11,45 @@ type Step = {
     args?: StepArgsOrFn;
 };
 
-export type ChainConfigProps = {
-    emptyValues?: unknown[];
+export type ChainConstructorParams<H extends Handler = Handler> =
+    Overwrite<FieldConstructorParams, {
+        chainHandler: H;
+        emptyValues?: unknown[];
+        pipeline?: Step[];
+    }>;
+
+export type ChainCloneParams<P extends ChainConstructorParams = ChainConstructorParams> =
+    Partial<Overwrite<P, {
+        step?: Step;
+    }>>;
+
+export type ChainConfig = {
+    emptyValues: unknown[];
 };
 
-export type ChainConstructorProps<
-    P extends ChainConfigProps = ChainConfigProps,
-    H extends Handler = Handler
-> =
-    Overwrite<
-        FieldConstructorProps,
-        Overwrite<
-            P, {
-                chainHandler: H;
-                pipeline?: Step[];
-            }
-        >
-    >;
-
-export type ChainCloneProps<P extends ChainConstructorProps = ChainConstructorProps> = Partial<Overwrite<P, {
-    step?: Step;
-}>>;
-
-abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> extends Field {
+abstract class Chain<
+    P extends ChainConstructorParams = ChainConstructorParams,
+    C extends ChainConfig = ChainConfig
+> extends Field {
 
     protected _chainHandler: P['chainHandler'];
-    protected _emptyValues: unknown[];
     protected _pipeline: Step[];
+    protected _config: C;
 
-    public constructor(props: ChainConstructorProps) {
-        super(props);
+    public constructor(args: ChainConstructorParams) {
+        super(args);
 
         const {
             chainHandler,
             emptyValues = [null, undefined],
             pipeline = [],
-        } = props;
+        } = args;
 
         this._chainHandler = chainHandler;
         this._pipeline = pipeline;
-        this._emptyValues = emptyValues;
+        this._config = {
+            emptyValues
+        } as C;
 
         return new Proxy(this, this as ProxyHandler<this>);
     }
@@ -62,28 +61,24 @@ abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> ex
         return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
     }
 
-    public override clone(props: ChainCloneProps = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: ChainCloneParams = {}): this {
+        const clone = super.clone(args);
         const {
             chainHandler = this._chainHandler,
-            emptyValues = this._emptyValues,
+            emptyValues = this._config.emptyValues,
             step,
-        } = props;
+        } = args;
         const pipelineCopy = [...this._pipeline];
 
         if (step) {
             pipelineCopy.push(step);
         }
 
-        clone._pipeline = pipelineCopy;
         clone._chainHandler = chainHandler;
-        clone._emptyValues = emptyValues;
+        clone._pipeline = pipelineCopy;
+        clone._config.emptyValues = emptyValues;
 
         return clone;
-    }
-
-    public config(props: ChainConfigProps): this {
-        return this.clone(props);
     }
 
     public addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = []): this {
@@ -111,7 +106,7 @@ abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> ex
      */
     public empty(): this {
         return this.addStep('empty', function (this: Chain<any>): unknown[] {
-            return [this._emptyValues];
+            return [this._config.emptyValues];
         });
     }
 
@@ -124,18 +119,21 @@ abstract class Chain<P extends ChainConstructorProps = ChainConstructorProps> ex
      */
     public notEmpty(): this {
         return this.addStep('notEmpty', function (this: Chain<any>): unknown[] {
-            return [this._emptyValues];
+            return [this._config.emptyValues];
         });
     }
 
-    get pipeline(): Step[] {
+    public get pipeline(): Step[] {
         return this._pipeline;
     }
 
-    get chainHandler(): P['chainHandler'] {
+    public get chainHandler(): P['chainHandler'] {
         return this._chainHandler;
     }
 
+    public get config(): C {
+        return this._config;
+    }
 }
 
 export { Chain };

@@ -6,7 +6,7 @@ import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 
-export type FieldConstructorProps = {
+export type FieldConstructorParams = {
     defaultValue?: unknown;
     label?: string;
     locale?: Locale;
@@ -14,11 +14,11 @@ export type FieldConstructorProps = {
     processorMapper?: FieldProcessorFactory;
 };
 
-export type FieldCloneProps = Partial<FieldConstructorProps>;
+export type FieldCloneParams = Partial<FieldConstructorParams>;
 
 abstract class Field {
 
-    private static _id: number = 0;
+    private static _id: number;
 
     protected _id: number;
     protected _defaultValue: unknown;
@@ -28,18 +28,18 @@ abstract class Field {
     protected _processor: Processor | null;
     protected _processorMapper: FieldProcessorFactory;
 
-    constructor(props: FieldConstructorProps) {
+    constructor(args: FieldConstructorParams) {
 
         const {
             defaultValue = undefined,
-            label = 'Value',
+            label = 'Field',
             locale = new Locale('en-US'),
             presence = 'required',
             processorMapper = new FieldProcessorFactory(),
-        } = props;
+        } = args;
 
         this._defaultValue = defaultValue || undefined;
-        this._id = ++Field._id;
+        this._id = Field._id ? ++Field._id : Field._id = 1;
         this._label = label || 'Field';
         this._locale = locale;
         this._presence = presence || 'required';
@@ -63,29 +63,25 @@ abstract class Field {
         return this._presence;
     }
 
-    public clone(props: FieldCloneProps = {}): this {
-        const Constructor = this.constructor as new (props?: FieldConstructorProps) => this;
+    public clone(args: FieldCloneParams = {}): this {
+        const Constructor = this.constructor as new (props?: FieldConstructorParams) => this;
         const {
             defaultValue = this._defaultValue,
             label = this._label,
             locale = this._locale,
             presence = this._presence,
             processorMapper = this._processorMapper
-        } = props;
+        } = args;
         const clone = new Constructor({
             defaultValue,
             label,
             locale,
             presence,
             processorMapper,
-        } as FieldConstructorProps);
+        } as FieldConstructorParams);
         clone._processor = null;
         return clone;
     }
-
-    // public config(props: FieldConfigProps): this {
-    //     return this.clone(props);
-    // }
 
     public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
         if (!this._processor) {

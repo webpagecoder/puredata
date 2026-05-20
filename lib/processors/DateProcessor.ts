@@ -3,14 +3,14 @@
 import { UtcDate } from '../date/UtcDate.ts';
 import { DateChain } from '../fields/DateChain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { ChainProcessor, ChainProcessorProps } from './ChainProcessor.ts';
+import { ChainProcessor, ChainProcessorConstructorParams } from './ChainProcessor.ts';
 
-export type DateProcessorProps = ChainProcessorProps<DateChain>;
+export type DateProcessorConstructorParams = ChainProcessorConstructorParams<DateChain>;
 
 class DateProcessor extends ChainProcessor<DateChain> {
 
-    constructor(props: DateProcessorProps) {
-        super(props);
+    constructor(args: DateProcessorConstructorParams) {
+        super(args);
         this._hasPipelineHooks = true;
     }
 

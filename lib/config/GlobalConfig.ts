@@ -33,7 +33,7 @@ const GLOBAL_CONFIG = Object.seal({
     },
     date: {
         dateOrder: 'MDY',
-        utcOffset: ['-03', '00'], // NOTE: Does *not* take into account any daylight savings
+        utcOffsetMinutes: -180 // NOTE: Does *not* take into account any daylight savings
     },
     number: {
         autoConvert: true,

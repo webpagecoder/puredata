@@ -9,19 +9,19 @@ class HandlerResult {
     fail: boolean;
     errors: ErrorCollection;
 
-    constructor(props: {
+    constructor(args: {
         value?: unknown;
         pass?: boolean;
         errorKey?: string;
         args?: ArgumentCollection;
     } = {}) {
-        this.value = props.value;
-        this.pass = props.pass ?? false;
+        this.value = args.value;
+        this.pass = args.pass ?? false;
         this.fail = !this.pass;
         this.errors = {}
         if (!this.pass) {
-            if (props.errorKey) {
-                this.addError(props.errorKey, props.args || {});
+            if (args.errorKey) {
+                this.addError(args.errorKey, args.args || {});
             }
         }
     }

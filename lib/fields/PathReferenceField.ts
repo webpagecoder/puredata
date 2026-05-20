@@ -1,9 +1,9 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Field, FieldConstructorProps } from './Field.ts';
+import { Field, FieldConstructorParams } from './Field.ts';
 
-export type PathReferenceFieldProps = FieldConstructorProps & {
+export type PathReferenceFieldProps = FieldConstructorParams & {
     pathStr: string;
     defaultOrCallback?: unknown | ((...args: unknown[]) => unknown);
 };
@@ -12,13 +12,13 @@ class PathReferenceField extends Field {
     protected _path: Path;
     protected _defaultOrCallback?: null | Function;
 
-    constructor(props: PathReferenceFieldProps) {
-        super(props);
+    constructor(args: PathReferenceFieldProps) {
+        super(args);
 
         const {
             pathStr,
             defaultOrCallback
-        } = props;
+        } = args;
 
         this._path = Path.create(pathStr);
         this._defaultOrCallback = typeof defaultOrCallback === 'function'
@@ -26,12 +26,12 @@ class PathReferenceField extends Field {
             : null;
     }
 
-    public override clone(props: Partial<PathReferenceFieldProps> = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: Partial<PathReferenceFieldProps> = {}): this {
+        const clone = super.clone(args);
         const {
             pathStr,
             defaultOrCallback = this._defaultOrCallback,
-        } = props;
+        } = args;
 
         clone._path = pathStr ? Path.create(pathStr) : this._path;
         clone._defaultOrCallback = typeof defaultOrCallback === 'function'

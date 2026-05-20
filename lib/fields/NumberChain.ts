@@ -1,30 +1,34 @@
 'use strict';
 
 import { NumberHandler } from '../handlers/NumberHandler.ts';
-import { Chain, ChainConstructorProps } from './Chain.ts';
+import { Overwrite } from '../types.ts';
+import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
 
-export type NumberChainProps = ChainConstructorProps<NumberHandler> & {
-    autoConvert?: boolean;
-    ensureSafe?: boolean;
-    ensureFinite?: boolean;
-    preservePrecision?: boolean;
-};
+export type NumberChainConstructorParams =
+    Overwrite<ChainConstructorParams<NumberHandler>, {
+        autoConvert?: boolean;
+        ensureSafe?: boolean;
+        ensureFinite?: boolean;
+        preservePrecision?: boolean;
+    }>;
 
-class NumberChain extends Chain {
+export type NumberChainCloneParams = ChainCloneParams<NumberChainConstructorParams>;
+
+class NumberChain extends Chain<NumberChainConstructorParams> {
 
     protected _autoConvert: boolean;
     protected _ensureSafe: boolean;
     protected _ensureFinite: boolean;
     protected _preservePrecision: boolean;
 
-    constructor(props: NumberChainProps) {
-        super(props);
+    public constructor(args: NumberChainConstructorParams) {
+        super(args);
         const {
             autoConvert = true,
             ensureSafe = false,
             ensureFinite = false,
             preservePrecision = false,
-        } = props;
+        } = args;
 
         this._autoConvert = autoConvert;
         this._ensureSafe = ensureSafe;
@@ -32,14 +36,14 @@ class NumberChain extends Chain {
         this._preservePrecision = preservePrecision;
     }
 
-    public override clone(props: Partial<NumberChainProps> = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: NumberChainCloneParams = {}): this {
+        const clone = super.clone(args);
         const {
             autoConvert = this._autoConvert,
             ensureSafe = this._ensureSafe,
             ensureFinite = this._ensureFinite,
             preservePrecision = this._preservePrecision,
-        } = props;
+        } = args;
 
         clone._autoConvert = autoConvert;
         clone._ensureSafe = ensureSafe;

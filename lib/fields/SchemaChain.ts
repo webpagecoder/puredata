@@ -1,45 +1,48 @@
 'use strict';
 
-import { Utils } from '../Utils.ts';
-import { Field } from './Field.ts';
-import { ValueField } from './ValueField.ts';
-import { ArrayChain } from './ArrayChain.ts';
-import { ObjectChain, ObjectChainProps } from './ObjectChain.ts';
-import { ChainProps } from './Chain copy.ts';
-import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
-
+import { ObjectHandler } from '../handlers/ObjectHandler.ts';
+import { Overwrite } from '../types.ts';
+import { Utils } from '../Utils.ts';
+import { ArrayChain } from './ArrayChain.ts';
+import { ChainCloneParams } from './Chain.ts';
+import { Field } from './Field.ts';
+import { ObjectChain, ObjectChainConstructorParams } from './ObjectChain.ts';
+import { ValueField } from './ValueField.ts';
 
 export type Schema = {
     [key: string]: Schema | unknown;
 };
 
-export type SchemaChainProps = ObjectChainProps & {
-    arrayChain?: ArrayChain;
-    renameKeysArgs?: Parameters<ObjectHandler['renameKeys']>;
-    schema?: Schema;
-    stripUnknownKeys?: boolean;
-};
+export type SchemaChainConstructorParams =
+    Overwrite<ObjectChainConstructorParams, {
+        arrayChain?: ArrayChain;
+        renameKeysArgs?: Parameters<ObjectHandler['renameKeys']>;
+        schema?: Schema;
+        stripUnknownKeys?: boolean;
+    }>;
 
-class SchemaChain extends ObjectChain<SchemaChainProps> {
+export type SchemaChainCloneParams = ChainCloneParams<SchemaChainConstructorParams>;
+
+class SchemaChain extends ObjectChain {
     protected _arrayChain: ArrayChain;
     protected _renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     protected _schema: Map<string, Field>;
     protected _stripUnknownKeys: boolean;
 
-    constructor(props: SchemaChainProps) {
-        super(props);
+    constructor(args: SchemaChainConstructorParams) {
+        super(args);
 
         const {
             arrayChain = new ArrayChain({
                 chainHandler: new ArrayHandler(),
                 locale: this._locale,
                 processorMapper: this._processorMapper,
-            }), 
+            }),
             renameKeysArgs = null,
             schema = {},
             stripUnknownKeys = true,
-        } = props;
+        } = args;
 
         this._arrayChain = arrayChain;
         this._cloneObject = true;
@@ -49,13 +52,13 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
         this._schema = this._createSchemaMap(schema);
     }
 
-    public override clone(props: Partial<SchemaChainProps> = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: SchemaChainCloneParams = {}): this {
+        const clone = super.clone(args);
         const {
+            renameKeysArgs = this._renameKeysArgs,
             schema,
             stripUnknownKeys = this._stripUnknownKeys,
-            renameKeysArgs = this._renameKeysArgs,
-        } = props;
+        } = args;
 
         clone._schema = schema ? this._createSchemaMap(schema) : this._schema;
         clone._stripUnknownKeys = stripUnknownKeys;

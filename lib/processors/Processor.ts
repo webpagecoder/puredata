@@ -5,7 +5,7 @@ import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 
-export type ProcessorProps<F extends Field = Field> = {
+export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
     processorMapper?: FieldProcessorFactory;
     defaultValueReference?: Processor;
@@ -24,11 +24,11 @@ abstract class Processor<F extends Field = Field> {
     protected _processorMapper: FieldProcessorFactory;
     // protected _state: Record<string, unknown>;
 
-    constructor(props: ProcessorProps<F>) {
+    constructor(args: ProcessorConstructorParams<F>) {
         const {
             processorMapper = new FieldProcessorFactory(),
             field,
-        } = props;
+        } = args;
 
         this._id = ++Processor.id;
         this._cachedReferences = null;

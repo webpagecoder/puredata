@@ -1,13 +1,22 @@
 'use strict';
 
 import { StringHandler } from '../handlers/StringHandler.ts';
-import { Chain, ChainConstructorProps } from './Chain.ts';
+import { Overwrite } from '../types.ts';
+import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
 
-export type StringChainProps = ChainConstructorProps<StringHandler>;
+export type StringChainConstructorParams =
+    Overwrite<ChainConstructorParams<StringHandler>, {
+        cloneObject?: boolean;
+        ensurePlain?: boolean;
+        maxDepth?: number;
+        maxKeyCount?: number;
+    }>;
 
-class StringChain extends Chain<StringChainProps> {
-    constructor(props: StringChainProps) {
-        super(props);
+// export type StringChainCloneParams = ChainCloneParams<StringChainConstructorParams>;
+
+class StringChain extends Chain<StringChainConstructorParams> {
+    constructor(args: StringChainConstructorParams) {
+        super(args);
     }
 }
 

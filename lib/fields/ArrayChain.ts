@@ -2,41 +2,44 @@
 
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 import { Path } from '../Path.ts';
-import { Chain, ChainConstructorProps } from './Chain.ts';
+import { Overwrite } from '../types.ts';
+import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainProps = ChainConstructorProps<ArrayHandler> & {
+export type ArrayChainConstructorParams = ChainConstructorParams<ArrayHandler> & {
     castSingle?: boolean;
     maxLength?: number;
     removeEmpties?: boolean;
 };
 
-class ArrayChain extends Chain<ArrayChainProps> {
+export type ArrayChainCloneParams = ChainCloneParams<ArrayChainConstructorParams>;
+
+class ArrayChain extends Chain<ArrayChainConstructorParams> {
     protected _castSingle: boolean;
     protected _maxLength: number
     protected _removeEmpties: boolean;
 
-    public constructor(props: ArrayChainProps) {
-        super(props);
+    public constructor(args: ArrayChainConstructorParams) {
+        super(args);
         const {
             castSingle = true,
             maxLength = -1,
             removeEmpties = false,
-        } = props;
+        } = args;
 
         this._castSingle = castSingle;
         this._maxLength = maxLength;
         this._removeEmpties = removeEmpties;
     }
 
-    public override clone(props: Partial<ArrayChainProps> = {}): this {
-        const clone = super.clone(props);
+    public override clone(args: ArrayChainCloneParams = {}): this {
+        const clone = super.clone(args);
         const {
             castSingle = this._castSingle,
             maxLength = this._maxLength,
             removeEmpties = this._removeEmpties,
-        } = props;
+        } = args;
 
         clone._castSingle = castSingle;
         clone._maxLength = maxLength;
@@ -59,7 +62,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
     public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
         return this.clone({
             removeEmpties,
-            emptyValues: [...this.props.emptyValues, ...addEmptyValues],
+            emptyValues: [...this._emptyValues, ...addEmptyValues],
         });
     }
 
@@ -90,7 +93,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
      * array([1, 2, 3]).unique() // passes
      * array([1, 2, 1]).unique() // fails
      */
-   public unique(pathStringOrComparator?: string | SortComparator): this {
+    public unique(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             //todo: check this out...create
             ? Path.create(pathStringOrComparator)
@@ -136,8 +139,8 @@ class ArrayChain extends Chain<ArrayChainProps> {
      * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
      */
     public removeEmpties(): this {
-        return this.addStep('removeEmpties', function (this: Chain): unknown[] {
-            return [this.props.emptyValues];
+        return this.addStep('removeEmpties', function (this: ArrayChain): unknown[] {
+            return [this._emptyValues];
         });
     }
 

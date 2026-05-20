@@ -35,7 +35,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
     protected _root: SchemaProcessor
     protected _schema: Map<string, Processor>;
 
-    constructor(props: SchemaProcessorProps) {
+    constructor(args: SchemaProcessorProps) {
         const {
             field,
             processorMapper = new FieldProcessorFactory(),
@@ -44,9 +44,9 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             parent,
             pubSub = new PubSub(),
             root
-        } = props;
+        } = args;
 
-        super(props);
+        super(args);
 
         this._depth = depth;
         this._path = path;

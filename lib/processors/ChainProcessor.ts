@@ -1,6 +1,6 @@
 'use strict';
 
-import { Processor, ProcessorProps, State } from './Processor.ts';
+import { Processor, ProcessorConstructorParams, State } from './Processor.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Chain } from '../fields/Chain.ts';
@@ -23,7 +23,7 @@ type PipelineStep = {
     args?: unknown[] | ((this: Field) => unknown[]);
 };
 
-export type ChainProcessorProps<C extends Chain = Chain> = ProcessorProps<C> & {
+export type ChainProcessorConstructorParams<C extends Chain = Chain> = ProcessorConstructorParams<C> & {
     hasPipelineHooks: boolean;
 };
 
@@ -31,9 +31,9 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
     protected _hasPipelineHooks: boolean;
 
-    constructor(props: ChainProcessorProps<C>) {
-        super(props);
-        this._hasPipelineHooks = props.hasPipelineHooks;
+    constructor(args: ChainProcessorConstructorParams<C>) {
+        super(args);
+        this._hasPipelineHooks = args.hasPipelineHooks;
     }
 
     public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {

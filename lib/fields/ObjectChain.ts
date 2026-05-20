@@ -1,36 +1,34 @@
 'use strict';
+
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 //todo: need to add a "clone" option to all methods that modify the object...
-import { Path } from '../Path.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneProps, ChainConfigProps, ChainConstructorProps } from './Chain.ts';
+import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
 
-export type ObjectChainConfigProps = ChainConfigProps;
-
-export type ObjectChainConstructorProps =
-    Overwrite<ChainConstructorProps<ObjectChainConfigProps, ObjectHandler>, {
+export type ObjectChainConstructorParams =
+    Overwrite<ChainConstructorParams<ObjectHandler>, {
         cloneObject?: boolean;
         ensurePlain?: boolean;
         maxDepth?: number;
         maxKeyCount?: number;
     }>;
 
-export type ObjectChainCloneProps = ChainCloneProps<ObjectChainConstructorProps>;
+export type ObjectChainCloneParams = ChainCloneParams<ObjectChainConstructorParams>;
 
-class ObjectChain extends Chain<ObjectChainConstructorProps> {
+class ObjectChain extends Chain<ObjectChainConstructorParams> {
     protected _cloneObject: boolean;
     protected _ensurePlain: boolean;
     protected _maxDepth?: number;
     protected _maxKeyCount?: number;
 
-    constructor(props: ObjectChainConstructorProps) {
-        super(props);
+    constructor(args: ObjectChainConstructorParams) {
+        super(args);
         const {
             cloneObject = false,
             ensurePlain = false,
             maxDepth,
             maxKeyCount
-        } = props;
+        } = args;
 
         this._cloneObject = cloneObject;
         this._ensurePlain = ensurePlain;
@@ -38,25 +36,20 @@ class ObjectChain extends Chain<ObjectChainConstructorProps> {
         this._maxKeyCount = maxKeyCount;
     }
 
-    public override clone(props: ObjectChainCloneProps= {}): this {
-        const clone = super.clone(props);
+    public override clone(args: ObjectChainCloneParams= {}): this {
+        const clone = super.clone(args);
         const {
             cloneObject = this._cloneObject,
             ensurePlain = this._ensurePlain,
             maxDepth = this._maxDepth,
             maxKeyCount = this._maxKeyCount
-        } = props;
+        } = args;
 
         clone._cloneObject = cloneObject;
         clone._ensurePlain = ensurePlain;
         clone._maxDepth = maxDepth;
         clone._maxKeyCount = maxKeyCount;
         return clone;
-    }
-
-    // Configurators
-    public configClone(clone: boolean): this {
-        return this.clone({ cloneObject: clone } as Partial<P>);
     }
 
     // Transformers
@@ -104,3 +97,4 @@ class ObjectChain extends Chain<ObjectChainConstructorProps> {
 }
 
 export { ObjectChain };
+
