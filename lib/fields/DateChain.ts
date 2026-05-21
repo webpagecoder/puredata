@@ -3,34 +3,23 @@
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from '../date/DateConverter.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConstructorParams, ChainCloneParams, ChainConfig } from './Chain.ts';
+import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-export type DateChainConstructorParams =
-    Overwrite<ChainConstructorParams<DateHandler>, {
-        dateOrder?: DateOrder;
-        outputStringFormat?: OutputFormat | null;
-        outputPrecision?: OutputPrecision | null;
-        outputTimeMode?: TimeMode;
-        utcOffsetMinutes?: number;
-    }>;
+export type DateChainConfig = Overwrite<ChainConfig, {
+    dateOrder: DateOrder;
+    outputStringFormat: OutputFormat | null;
+    outputPrecision: OutputPrecision | null;
+    outputTimeMode: TimeMode;
+    skipGenericParse: boolean;
+    utcOffsetMinutes: number;
+}>;
 
-export type DateChainCloneParams =
-    Overwrite<ChainCloneParams<DateChainConstructorParams>, {
-        skipGenericParse?: boolean;
-    }>;
+export type DateChainConstructorParams = ChainConstructorParams<DateHandler, DateChainConfig>;
 
-export type DateChainConfig = Required<ChainConfig & DateChainConstructorParams & DateChainCloneParams>;
-
-class DateChain extends Chain<DateChainConstructorParams, DateChainConfig> {
-    // protected _dateOrder: DateOrder;
-    // protected _outputStringFormat: OutputFormat | null;
-    // protected _outputPrecision: OutputPrecision | null;
-    // protected _outputTimeMode: TimeMode;
-    // protected _skipGenericParse: boolean;
-    // protected _utcOffsetMinutes: number;
+class DateChain extends Chain<DateChainConfig, DateChainConstructorParams> {
 
     constructor(args: DateChainConstructorParams) {
         super(args);
@@ -50,29 +39,6 @@ class DateChain extends Chain<DateChainConstructorParams, DateChainConfig> {
         config.outputTimeMode = outputTimeMode;
         config.utcOffsetMinutes = utcOffsetMinutes;
         config.skipGenericParse = false;
-    }
-
-    public override clone(args: DateChainCloneParams = {}): this {
-        const clone = super.clone(args);
-
-        const config = this._config;
-        const {
-            dateOrder = config.dateOrder,
-            outputStringFormat = config.outputStringFormat,
-            outputPrecision = config.outputPrecision,
-            outputTimeMode = config.outputTimeMode,
-            utcOffsetMinutes = config.utcOffsetMinutes,
-            skipGenericParse = config.skipGenericParse
-        } = args;
-
-        const cloneConfig = clone._config;
-        cloneConfig.dateOrder = dateOrder;
-        cloneConfig.outputStringFormat = outputStringFormat;
-        cloneConfig.outputPrecision = outputPrecision;
-        cloneConfig.outputTimeMode = outputTimeMode;
-        cloneConfig.skipGenericParse = skipGenericParse;
-        cloneConfig.utcOffsetMinutes = utcOffsetMinutes;
-        return clone;
     }
 
     public assertEmptyPipeline(dateSubType: string): void {
@@ -96,7 +62,7 @@ class DateChain extends Chain<DateChainConstructorParams, DateChainConfig> {
      */
     public human(options: HumanParseOptions = {}) {
         this.assertEmptyPipeline('human');
-        return this.clone({ skipGenericParse: true }).addStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
+        return this.clone({ skipGenericParse: true, outputPrecision:null }).addStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
     }
 
     /**

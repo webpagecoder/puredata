@@ -30,8 +30,8 @@ export type ChainCloneParams<P extends ChainConstructorParams = ChainConstructor
     }>>;
 
 abstract class Chain<
-    C extends ChainConfig = ChainConfig,
-    P extends ChainConstructorParams = ChainConstructorParams
+    P extends ChainConstructorParams = ChainConstructorParams,
+    C extends ChainConfig = ChainConfig
 > extends Field {
 
     protected _chainHandler: P['chainHandler'];
@@ -81,7 +81,7 @@ abstract class Chain<
         const config = clone._config;
         for (const key of Object.keys(this._config) as (keyof C)[]) {
             config[key] = key in args
-                ? (args as Partial<C>)[key] as C[keyof C]
+                ? (args)[key]
                 : this._config[key];
         }
         return clone;

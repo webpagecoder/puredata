@@ -1,11 +1,11 @@
 'use strict';
 
 import { HandlerResult } from './HandlerResult.ts';
-import { Handler } from './Handler.ts';
+import { ChainHandler } from './ChainHandler.ts';
 const { pass, fail } = HandlerResult;
 
 
-class NumberHandler extends Handler {
+class NumberHandler extends ChainHandler {
 
     // ====================================
     // VALIDATORS

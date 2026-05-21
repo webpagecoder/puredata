@@ -5,30 +5,26 @@ import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 import { Overwrite } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { ArrayChain } from './ArrayChain.ts';
-import { ChainCloneParams } from './Chain.ts';
+import { ChainCloneParams, ChainConfig } from './Chain.ts';
 import { Field } from './Field.ts';
-import { ObjectChain, ObjectChainConstructorParams } from './ObjectChain.ts';
+import { ObjectChain, ObjectChainConfig, ObjectChainConstructorParams } from './ObjectChain.ts';
 import { ValueField } from './ValueField.ts';
 
 export type Schema = {
     [key: string]: Schema | unknown;
 };
 
-export type SchemaChainConstructorParams =
-    Overwrite<ObjectChainConstructorParams, {
-        arrayChain?: ArrayChain;
-        renameKeysArgs?: Parameters<ObjectHandler['renameKeys']>;
-        schema?: Schema;
-        stripUnknownKeys?: boolean;
-    }>;
+export type SchemaChainConfig = Overwrite<ObjectChainConfig, {
+    arrayChain?: ArrayChain;
+    renameKeysArgs?: Parameters<ObjectHandler['renameKeys']>;
+    schema?: Schema;
+    stripUnknownKeys?: boolean;
+}>;
 
-export type SchemaChainCloneParams = ChainCloneParams<SchemaChainConstructorParams>;
+export type SchemaChainConstructorParams = ObjectChainConstructorParams<SchemaChainConfig>;
 
 class SchemaChain extends ObjectChain {
-    protected _arrayChain: ArrayChain;
-    protected _renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
-    protected _schema: Map<string, Field>;
-    protected _stripUnknownKeys: boolean;
+
 
     constructor(args: SchemaChainConstructorParams) {
         super(args);
@@ -44,26 +40,13 @@ class SchemaChain extends ObjectChain {
             stripUnknownKeys = true,
         } = args;
 
-        this._arrayChain = arrayChain;
-        this._cloneObject = true;
-        this._ensurePlain = true;
-        this._stripUnknownKeys = stripUnknownKeys;
-        this._renameKeysArgs = renameKeysArgs;
-        this._schema = this._createSchemaMap(schema);
-    }
-
-    public override clone(args: SchemaChainCloneParams = {}): this {
-        const clone = super.clone(args);
-        const {
-            renameKeysArgs = this._renameKeysArgs,
-            schema,
-            stripUnknownKeys = this._stripUnknownKeys,
-        } = args;
-
-        clone._schema = schema ? this._createSchemaMap(schema) : this._schema;
-        clone._stripUnknownKeys = stripUnknownKeys;
-        clone._renameKeysArgs = renameKeysArgs;
-        return clone;
+        const config = this._config;
+        config.arrayChain = arrayChain;
+        config.cloneObject = true;
+        config.ensurePlain = true;
+        config.stripUnknownKeys = stripUnknownKeys;
+        config.renameKeysArgs = renameKeysArgs;
+        config.schema = this._createSchemaMap(schema);
     }
 
     protected _createSchemaMap(schema: Schema): Map<string, Field> {

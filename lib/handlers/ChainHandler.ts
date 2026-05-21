@@ -9,7 +9,7 @@ type PropertyKeyLike = string | number | symbol;
 type ConstructorLike = abstract new (...args: never[]) => object;
 type CustomHandlerFn = (value: unknown) => HandlerResult | unknown;
 
-abstract class Handler {
+abstract class ChainHandler {
 
     // // ====================================
     // // FORMATTER
@@ -50,7 +50,7 @@ abstract class Handler {
      * @returns {HandlerResult}
      */
     public empty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
-        return Handler.oneOf(value, empties).pass
+        return ChainHandler.oneOf(value, empties).pass
             ? pass(value)
             : fail(value, 'generic/empty');
     }
@@ -71,7 +71,7 @@ abstract class Handler {
      * @returns {HandlerResult}
      */
     public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
-        return Handler.oneOf(value, empties).fail
+        return ChainHandler.oneOf(value, empties).fail
             ? pass(value)
             : fail(value, 'generic/notEmpty');
     }
@@ -228,4 +228,4 @@ abstract class Handler {
 }
 
 
-export { Handler };
+export { ChainHandler };

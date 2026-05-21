@@ -4,7 +4,7 @@ import { Presence } from '../Presence.ts';
 import { HandlerResult } from './HandlerResult.ts';
 import { RegexCache } from '../RegexCache.ts';
 import { Utils } from '../Utils.ts';
-import { Handler } from './Handler.ts';
+import { ChainHandler } from './ChainHandler.ts';
 import { NumberHandler } from './NumberHandler.ts';
 const { pass, fail } = HandlerResult;
 const { Optional, Required, Forbidden } = Presence;
@@ -13,7 +13,7 @@ const required = Required;
 const forbidden = Forbidden;
 
 
-class StringHandler extends Handler {
+class StringHandler extends ChainHandler {
 
     public matchingDefaults: Record<string, any>;
 

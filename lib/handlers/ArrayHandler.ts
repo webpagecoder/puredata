@@ -3,7 +3,7 @@
 import { Path } from '../Path.ts';
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../Utils.ts';
-import { Handler } from './Handler.ts';
+import { ChainHandler } from './ChainHandler.ts';
 const { pass, fail } = HandlerResult;
 
 type SortComparator = (a: unknown, b: unknown) => number;
@@ -76,7 +76,7 @@ function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number
     return pass(arr);
 }
 
-class ArrayHandler extends Handler {
+class ArrayHandler extends ChainHandler {
 
     // ====================================
     // VALIDATORS 

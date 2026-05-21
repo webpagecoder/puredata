@@ -3,14 +3,14 @@
 import { DateConverter, DateOrder, DayOfWeek, GenericDateInput, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimeMode, TimestampOptions } from '../date/DateConverter.ts';
 import { UtcDate } from '../date/UtcDate.ts';
 import { Locale } from '../Locale.ts';
-import { Handler } from './Handler.ts';
+import { ChainHandler } from './ChainHandler.ts';
 import { HandlerResult } from './HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
 /**
  * Handles date parsing, validation, comparison, and mutation operations.
  */
-class DateHandler extends Handler {
+class DateHandler extends ChainHandler {
     protected _dateConverter: DateConverter;
 
     /**

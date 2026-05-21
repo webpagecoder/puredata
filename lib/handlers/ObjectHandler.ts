@@ -2,10 +2,10 @@
 //todo: the paths below need to accept both strings and actual Path
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../Utils.ts';
-import { Handler } from './Handler.ts';
+import { ChainHandler } from './ChainHandler.ts';
 const { pass, fail } = HandlerResult;
 
-class ObjectHandler extends Handler {
+class ObjectHandler extends ChainHandler {
 
     // ====================================
     // VALIDATORS
