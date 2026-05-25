@@ -19,7 +19,7 @@ export type ChainConstructorParams<
     H extends ChainHandler = ChainHandler,
     C extends ChainConfig = ChainConfig
 > =
-    Overwrite<FieldConstructorParams, Overwrite<C, {
+    Overwrite<FieldConstructorParams, Overwrite<Partial<C>, {
         chainHandler: H;
         pipeline?: Step[];
     }>>;
@@ -31,9 +31,10 @@ export type ChainCloneParams<P extends ChainConstructorParams = ChainConstructor
 
 abstract class Chain<
     C extends ChainConfig = ChainConfig,
-    P extends ChainConstructorParams = ChainConstructorParams
+    P extends ChainConstructorParams = ChainConstructorParams,
+    L extends ChainCloneParams<P> = ChainCloneParams<P>
 > extends Field {
-
+    
     protected _chainHandler: P['chainHandler'];
     protected _pipeline: Step[];
     protected _config: C;
@@ -63,7 +64,7 @@ abstract class Chain<
         return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
     }
 
-    public override clone(args: ChainCloneParams<P> = {}): this {
+    public override clone(args: L = {} as L): this {
         const clone = super.clone(args);
         const {
             chainHandler = this._chainHandler,
@@ -99,7 +100,7 @@ abstract class Chain<
                 fn: (fn as Step['fn']).bind(chainHandler),
                 args,
             }
-        } as ChainCloneParams<P>);
+        } as L);
     }
 
     // Validators

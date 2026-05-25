@@ -11,7 +11,7 @@ class ValueField extends Field {
     protected _mutable: boolean;
     protected _value: unknown;
 
-    constructor(args: ValueFieldProps = {}) {
+    public constructor(args: ValueFieldProps = {}) {
         super(args);
         const {
             mutable = false,
@@ -32,6 +32,27 @@ class ValueField extends Field {
         clone._mutable = mutable;
         clone._value = value;
         return clone;
+    }
+
+    //todo: come back to this...should mutable/immutable be allowed to be req/forb/opt?
+    // public override forbidden(): this {
+    //     return this.clone({ presence: 'forbidden' });
+    // }
+
+    // public override optional(): this {
+    //     return this.clone({ presence: 'optional' });
+    // }
+
+    // public override required(): this {
+    //     return this.clone({ presence: 'required' });
+    // }
+
+    get mutable(): boolean {
+        return this._mutable;
+    }
+
+    get value(): unknown {
+        return this._value;
     }
 }
 

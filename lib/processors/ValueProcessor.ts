@@ -1,12 +1,15 @@
 'use strict';
 
-import { Processor } from './Processor.ts';
+import { ValueField } from '../fields/ValueField.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { Processor, State } from './Processor.ts';
 
 
-class ValueProcessor extends Processor {
+class ValueProcessor extends Processor<ValueField> {
 
-    process(tracker) {
-        const { mutable, value } = this.props.field.props;
+    public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
+        this.preProcess(tracker, state);
+        const { mutable, value } = this._field;
         if (!mutable || tracker.getValue() === undefined) {
             tracker.setValue(value);
         }

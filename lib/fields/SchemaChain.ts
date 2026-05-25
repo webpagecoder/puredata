@@ -5,26 +5,27 @@ import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 import { Overwrite } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { ArrayChain } from './ArrayChain.ts';
-import { ChainCloneParams, ChainConfig } from './Chain.ts';
+import { ChainConstructorParams } from './Chain.ts';
 import { Field } from './Field.ts';
-import { ObjectChain, ObjectChainConfig, ObjectChainConstructorParams } from './ObjectChain.ts';
+import { ObjectChain, ObjectChainConfig } from './ObjectChain.ts';
 import { ValueField } from './ValueField.ts';
 
-export type Schema = {
-    [key: string]: Schema | unknown;
+export type SchemaObject = {
+    [key: string]: SchemaObject | unknown;
 };
 
+export type SchemaMap = Map<string, Field>;
+
 export type SchemaChainConfig = Overwrite<ObjectChainConfig, {
-    arrayChain?: ArrayChain;
-    renameKeysArgs?: Parameters<ObjectHandler['renameKeys']>;
-    schema?: Schema;
-    stripUnknownKeys?: boolean;
+    arrayChain: ArrayChain;
+    renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
+    schema: SchemaMap;
+    stripUnknownKeys: boolean;
 }>;
 
-export type SchemaChainConstructorParams = ObjectChainConstructorParams<SchemaChainConfig>;
+export type SchemaChainConstructorParams = ChainConstructorParams<ObjectHandler, SchemaChainConfig>;
 
-class SchemaChain extends ObjectChain {
-
+class SchemaChain extends ObjectChain<SchemaChainConfig, SchemaChainConstructorParams> {
 
     constructor(args: SchemaChainConstructorParams) {
         super(args);
@@ -46,10 +47,10 @@ class SchemaChain extends ObjectChain {
         config.ensurePlain = true;
         config.stripUnknownKeys = stripUnknownKeys;
         config.renameKeysArgs = renameKeysArgs;
-        config.schema = this._createSchemaMap(schema);
+        config.schema = this._createSchemaMap(schema) || new Map() as SchemaMap;
     }
 
-    protected _createSchemaMap(schema: Schema): Map<string, Field> {
+    protected _createSchemaMap(schema: SchemaObject): SchemaMap {
         const schemaMap = new Map<string, Field>();
         for (const key of Object.keys(schema)) {
             let value = schema[key];
@@ -60,11 +61,11 @@ class SchemaChain extends ObjectChain {
             }
             else if (Utils.isPlainObject(value)) {
                 field = this.clone({
-                    schema: value as Schema
+                    schema: this._createSchemaMap(value as SchemaObject)
                 });
             }
             else if (Array.isArray(value)) {
-                field = this._arrayChain.tuple(value) as Field;
+                field = this._config.arrayChain.tuple(value);
             }
             else {
                 field = new ValueField({
@@ -78,10 +79,6 @@ class SchemaChain extends ObjectChain {
         return schemaMap;
     }
 
-    public get schema(): Map<string, Field> {
-        return this._schema;
-    }
-
     // Configurators
 
     public configStripUnknownKeys(stripUnknownKeys: boolean = true): this {
@@ -90,14 +87,6 @@ class SchemaChain extends ObjectChain {
 
     public configRenameKeys(renameKeysArgs: Parameters<ObjectHandler['renameKeys']>): this {
         return this.clone({ renameKeysArgs });
-    }
-
-    public get stripUnknownKeys(): boolean {
-        return this._stripUnknownKeys;
-    }
-
-    public get renameKeysArgs(): Parameters<ObjectHandler['renameKeys']> | null {
-        return this._renameKeysArgs;
     }
 
 }

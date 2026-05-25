@@ -4,6 +4,7 @@ import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
+import { ArgumentCollection } from '../types.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
@@ -38,7 +39,7 @@ abstract class Processor<F extends Field = Field> {
         // this._state = {};
     }
 
-    public compile(_context: Record<string, unknown> = {}): this {
+    public compile(): this {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {
@@ -54,9 +55,6 @@ abstract class Processor<F extends Field = Field> {
 
     public actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
         this.preProcess(tracker, state);
-        if (tracker.hasErrors()) {
-            return tracker;
-        }
         this.postProcess(tracker, state);
         return tracker;
     }
@@ -83,7 +81,7 @@ abstract class Processor<F extends Field = Field> {
         }
     }
 
-    public postProcess(_tracker: ValueTracker, _state?: State): void { };
+    public postProcess(tracker: ValueTracker, state: State = {}): void { };
 
     public hasReferences(): boolean {
         return this.getReferences().size > 0;

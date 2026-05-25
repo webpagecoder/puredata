@@ -28,7 +28,7 @@ abstract class Field {
     protected _processor: Processor | null;
     protected _processorMapper: FieldProcessorFactory;
 
-    constructor(args: FieldConstructorParams) {
+    public constructor(args: FieldConstructorParams) {
 
         const {
             defaultValue = undefined,

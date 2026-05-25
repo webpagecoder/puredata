@@ -2,19 +2,18 @@
 
 import { NumberHandler } from '../handlers/NumberHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
-export type NumberChainConstructorParams =
-    Overwrite<ChainConstructorParams<NumberHandler>, {
-        autoConvert?: boolean;
-        ensureSafe?: boolean;
-        ensureFinite?: boolean;
-        preservePrecision?: boolean;
-    }>;
+export type NumberChainConfig = Overwrite<ChainConfig, {
+        autoConvert: boolean;
+        ensureSafe: boolean;
+        ensureFinite: boolean;
+        preservePrecision: boolean;
+}>;
 
-export type NumberChainCloneParams = ChainCloneParams<NumberChainConstructorParams>;
+export type NumberChainConstructorParams = ChainConstructorParams<NumberHandler, NumberChainConfig>;
 
-class NumberChain extends Chain<NumberChainConstructorParams> {
+class NumberChain extends Chain<NumberChainConfig, NumberChainConstructorParams> {
 
     protected _autoConvert: boolean;
     protected _ensureSafe: boolean;
@@ -34,22 +33,6 @@ class NumberChain extends Chain<NumberChainConstructorParams> {
         this._ensureSafe = ensureSafe;
         this._ensureFinite = ensureFinite;
         this._preservePrecision = preservePrecision;
-    }
-
-    public override clone(args: NumberChainCloneParams = {}): this {
-        const clone = super.clone(args);
-        const {
-            autoConvert = this._autoConvert,
-            ensureSafe = this._ensureSafe,
-            ensureFinite = this._ensureFinite,
-            preservePrecision = this._preservePrecision,
-        } = args;
-
-        clone._autoConvert = autoConvert;
-        clone._ensureSafe = ensureSafe;
-        clone._ensureFinite = ensureFinite;
-        clone._preservePrecision = preservePrecision;
-        return clone;
     }
 
     // Configurators
@@ -90,21 +73,6 @@ class NumberChain extends Chain<NumberChainConstructorParams> {
         return this.clone({ preservePrecision });
     }
 
-    public get autoConvert() {
-        return this._autoConvert;
-    }
-
-    public get ensureSafe() {
-        return this._ensureSafe;
-    }
-
-    public get ensureFinite() {
-        return this._ensureFinite;
-    }
-
-    public get preservePrecision() {
-        return this._preservePrecision;
-    }
 }
 
 export { NumberChain };

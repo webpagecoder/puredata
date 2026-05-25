@@ -1,6 +1,7 @@
 'use strict';
 
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
+import { ObjectChain } from '../fields/ObjectChain.ts';
 import { SchemaChain } from '../fields/SchemaChain.ts';
 import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
@@ -8,19 +9,15 @@ import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ObjectProcessor, ObjectProcessorProps } from './ObjectProcessor.ts';
 import { Processor, State } from './Processor.ts';
-import { SchemaNodeProcessor } from './SchemaNodeProcessor.ts';
-import { SchemaNodePosition } from './SchemaNodePosition.ts';
 
 export type SchemaProcessorProps = ObjectProcessorProps<SchemaChain> & {
     field: SchemaChain;
     depth?: number;
-    parent?: SchemaProcessor;
     path?: Path;
+    parent?: SchemaProcessor;
     pubSub?: PubSub;
     root?: SchemaProcessor;
 };
-
-export type CompiledSchemaMap = Map<string, SchemaNodeProcessor>;
 
 export type CompilationContext = {
     parentPubSubs?: {
@@ -29,15 +26,14 @@ export type CompilationContext = {
     }[];
 };
 
-class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNodePosition {
+class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
-    protected _parent: SchemaProcessor;
-    protected _path: Path
-    protected _root: SchemaProcessor;
-
-    protected _compiledSchemaMap: CompiledSchemaMap;
     protected _depth: number;
+    protected _path: Path
+    protected _parent: SchemaProcessor;
     protected _pubSub: PubSub;
+    protected _root: SchemaProcessor
+    protected _schema: Map<string, Processor>;
 
     constructor(args: SchemaProcessorProps) {
         const {
@@ -52,35 +48,33 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         super(args);
 
-        this._parent = parent || this;
-        this._path = path;
-        this._root = root || this;
-
-        this._compiledSchemaMap = new Map();
         this._depth = depth;
+        this._path = path;
+        this._parent = parent || this;
         this._pubSub = pubSub;
+        this._root = root || this;
+        this._schema = new Map();
 
-        const { schema } = field.config;
-        const compiledSchemaMap: CompiledSchemaMap = new Map();
+        const { schema = new Map() } = field;
+
+        const compiledSchema = new Map();
+        this._schema = compiledSchema;
 
         for (let [key, childField] of schema) {
-            let compiledChild = processorMapper.createProcessor(childField, {
+            const compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
+                path: path.move(key),
+                parent: this,
+                root: this._root,
             });
-
-            if(!(compiledChild instanceof SchemaProcessor)) {
-                compiledChild = new SchemaNodeProcessor({
-                    processor: compiledChild,
-                    parent: this,
-                    path: path.move(key),
-                    root: this._root
-                });
+            if (!(compiledChild instanceof SchemaProcessor)) {
+                // Set proper path/parent/root for non-schema chains
+                (compiledChild as SchemaProcessor)._path = path.move(key);
+                (compiledChild as SchemaProcessor)._parent = this;
+                (compiledChild as SchemaProcessor)._root = this._root;
             }
-            
-            compiledSchemaMap.set(key, compiledChild);
+            compiledSchema.set(key, compiledChild);
         }
-
-        this._compiledSchemaMap = compiledSchemaMap;
     }
 
     public override compile(context: CompilationContext = {}): this {
@@ -89,7 +83,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         const {
             _depth,
             _path,
-            _compiledSchemaMap
+            _schema
         } = this;
 
         let {
@@ -105,14 +99,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         ];
 
 
-        for (let [key, childProcessor] of _compiledSchemaMap) {
+        for (let [key, childProcessor] of _schema) {
             const childPath = _path.move(key);
 
             childProcessor = childProcessor.compile({
                 parentPubSubs: allPubSubs,
             });
 
-            _compiledSchemaMap.set(key, childProcessor);
+            _schema.set(key, childProcessor);
 
             if (childProcessor.hasReferences()) {
                 for (const { pubSub, depth } of allPubSubs) {
@@ -158,7 +152,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         const {
             chainHandler: { renameKeys: renameKeysFn, stripKeys: stripUnknownKeysFn },
-            config: { renameKeysArgs, stripUnknownKeys, schema, failOnFirstError }
+            renameKeysArgs, stripUnknownKeys, schema, failOnFirstError
         } = _field;
 
         // Do any required key renaming
@@ -179,7 +173,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         //todo: check if error and exit here?
 
         const value = tracker!.value;
-        for (let [key, childProcessor] of schema) {
+        for (let [key, childProcessor] of this._schema) {
 
             let childValueTracker = new ValueTracker(undefined, childProcessor);
             tracker.setChild(key, childValueTracker);
@@ -233,23 +227,13 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             if (!(target instanceof SchemaProcessor)) {
                 return null;
             }
-            const child = target._compiledSchemaMap.get(key);
+            const child = target._schema.get(key);
             if (!child) {
                 return null;
             }
             target = child;
         }
         return target;
-    }
-
-    public get parent(): SchemaProcessor {
-        return this._parent;
-    }
-    public get path(): Path {
-        return this._path;
-    }
-    public get root(): SchemaProcessor {
-        return this._root;
     }
 
 }

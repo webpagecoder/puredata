@@ -3,20 +3,23 @@
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 //todo: need to add a "clone" option to all methods that modify the object...
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 export type ObjectChainConfig = Overwrite<ChainConfig, {
-    cloneObject?: boolean;
-    ensurePlain?: boolean;
-    maxDepth?: number;
-    maxKeyCount?: number;
+    cloneObject: boolean;
+    ensurePlain: boolean;
+    maxDepth: number;
+    maxKeyCount: number;
 }>;
 
-export type ObjectChainConstructorParams<C extends ObjectChainConfig = ObjectChainConfig> = ChainConstructorParams<ObjectHandler, C>;
+export type ObjectChainConstructorParams = ChainConstructorParams<ObjectHandler, ObjectChainConfig>;
 
-class ObjectChain extends Chain<ObjectChainConfig, ObjectChainConstructorParams> {
+class ObjectChain<
+    C extends ObjectChainConfig = ObjectChainConfig,
+    P extends ObjectChainConstructorParams = ObjectChainConstructorParams
+> extends Chain<C, P> {
 
-    constructor(args: ObjectChainConstructorParams) {
+    constructor(args: P) {
         super(args);
         const {
             cloneObject = false,
@@ -41,7 +44,7 @@ class ObjectChain extends Chain<ObjectChainConfig, ObjectChainConstructorParams>
      * object.removeEmpties() // Removes keys with falsy or empty values
      */
     public removeEmpties(): this {
-        return this.clone({ cloneObject: true }).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
+        return this.clone({ cloneObject: true } as P).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
             return [this._config.emptyValues];
         });
     }
@@ -53,7 +56,7 @@ class ObjectChain extends Chain<ObjectChainConfig, ObjectChainConstructorParams>
      * object.removeEmptiesRecursive() // Deep clean of empty values in nested objects
      */
     public removeEmptiesRecursive(): this {
-        return this.clone({ cloneObject: true }).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
+        return this.clone({ cloneObject: true } as P).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
             return [this._config.emptyValues];
         });
     }

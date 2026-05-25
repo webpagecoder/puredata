@@ -3,7 +3,7 @@
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from '../date/DateConverter.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
@@ -250,25 +250,6 @@ class DateChain extends Chain<DateChainConfig, DateChainConstructorParams> {
         return this.clone({ outputStringFormat: 'timestamp' });
     }
 
-    // public get outputTimeMode() {
-    //     return this._outputTimeMode;
-    // }
-
-    // public get outputStringFormat() {
-    //     return this._outputStringFormat;
-    // }
-
-    // public get outputPrecision() {
-    //     return this._outputPrecision;
-    // }
-
-    // public get skipGenericParse() {
-    //     return this._skipGenericParse;
-    // }
-
-    // public get utcOffsetMinutes() {
-    //     return this._utcOffsetMinutes;
-    // }
 }
 
 export { DateChain };

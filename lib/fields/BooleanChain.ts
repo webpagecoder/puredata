@@ -2,19 +2,18 @@
 
 import { BooleanHandler } from '../handlers/BooleanHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainConstructorParams =
-    Overwrite<ChainConstructorParams<BooleanHandler>, {
-        allowBoolish?: boolean;
-        boolishPairs?: BoolishPair[];
-    }>;
+export type BooleanChainConfig = Overwrite<ChainConfig, {
+    allowBoolish: boolean;
+    boolishPairs: BoolishPair[];
+}>;
 
-export type BooleanChainCloneParams = ChainCloneParams<BooleanChainConstructorParams>;
+export type BooleanChainConstructorParams = ChainConstructorParams<BooleanHandler, BooleanChainConfig>;
 
-class BooleanChain extends Chain<BooleanChainConstructorParams> {
+class BooleanChain extends Chain<BooleanChainConfig, BooleanChainConstructorParams> {
     protected _allowBoolish: boolean;
     protected _boolishPairs: BoolishPair[];
 

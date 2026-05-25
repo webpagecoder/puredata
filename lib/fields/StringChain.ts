@@ -2,19 +2,14 @@
 
 import { StringHandler } from '../handlers/StringHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneParams, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
-export type StringChainConstructorParams =
-    Overwrite<ChainConstructorParams<StringHandler>, {
-        cloneObject?: boolean;
-        ensurePlain?: boolean;
-        maxDepth?: number;
-        maxKeyCount?: number;
-    }>;
 
-// export type StringChainCloneParams = ChainCloneParams<StringChainConstructorParams>;
+export type StringChainConfig = ChainConfig;
 
-class StringChain extends Chain<StringChainConstructorParams> {
+export type StringChainConstructorParams = ChainConstructorParams<StringHandler, StringChainConfig>;
+
+class StringChain extends Chain<StringChainConfig, StringChainConstructorParams> {
     constructor(args: StringChainConstructorParams) {
         super(args);
     }
