@@ -16,7 +16,7 @@ class HandlerResult {
         args?: ArgumentCollection;
     } = {}) {
         this.value = args.value;
-        this.pass = args.pass ?? false;
+        this.pass = args.pass || false;
         this.fail = !this.pass;
         this.errors = {}
         if (!this.pass) {

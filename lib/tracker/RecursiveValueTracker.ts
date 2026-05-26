@@ -10,14 +10,14 @@ class RecursiveValueTracker extends ValueTracker {
         this.nestParent = null;
         this.nestChild = null;
 
-        const { root } = this;
+        const { _root: root } = this;
 
         if (this === root) {
             return this;
         }
 
         // Wiring up parent/child/root relationships
-        let { parent } = this;
+        let { _parent: parent } = this;
 
         do {
             if (parent instanceof RecursiveValueTracker) {
@@ -29,7 +29,7 @@ class RecursiveValueTracker extends ValueTracker {
                 }
                 break;
             }
-            parent = parent.parent;
+            parent = parent._parent;
         } while (parent !== root);
 
     }

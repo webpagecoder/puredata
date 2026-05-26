@@ -149,7 +149,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             return tracker;
         }
 
-        const { _field, _pubSub } = this;
+        const { _field, _pubSub, _compiledSchemaMap } = this;
 
         if (!state.localRoot) {
             state.localRoot = this;
@@ -157,32 +157,29 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         }
 
         const {
-            chainHandler: { renameKeys: renameKeysFn, stripKeys: stripUnknownKeysFn },
-            config: { renameKeysArgs, stripUnknownKeys, schema, failOnFirstError }
+            chainHandler: { renameKeys, stripKeys },
+            config: { renameKeysArgs, stripUnknownKeys, failOnFirstError }
         } = _field;
 
         // Do any required key renaming
         if (renameKeysArgs) {
-            tracker.setValue(renameKeysFn(...renameKeysArgs).value);
+            tracker.setValue(renameKeys(...renameKeysArgs).value);
         }
 
         // Strip unknown keys if needed
-        const schemaKeys = Array.from(schema.keys());
-        if (stripUnknownKeysFn) {
-            tracker.setValue(stripUnknownKeysFn(tracker.getValue(), schemaKeys).value);
-        }
-        else {
-            tracker.untrackedEntries = tracker.getValue();
+        const schemaKeys = Array.from(_compiledSchemaMap.keys());
+        if (stripUnknownKeys) {
+            tracker.setValue(stripKeys(tracker.getValue(), schemaKeys).value);
         }
 
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
-        const value = tracker!.value;
-        for (let [key, childProcessor] of schema) {
+        const value = tracker.getValue();
+        for (let [key, childProcessor] of _compiledSchemaMap) {
 
             let childValueTracker = new ValueTracker(undefined, childProcessor);
-            tracker.setChild(key, childValueTracker);
+            
 
             childValueTracker.setValue(value[key]);
             // childValueTracker.path = tracker.path.move(key);
@@ -192,7 +189,10 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
                 state.conditionals.push([childProcessor, childValueTracker]);
             }
             else if (!childProcessor.hasReferences()) {
-                childProcessor.actualProcess(childValueTracker, state);
+                tracker.setChild(key, childProcessor.actualProcess(childValueTracker, state));
+            }
+            else {
+                tracker.setChild(key, childValueTracker);
             }
         }
 

@@ -6,7 +6,7 @@ import { Formatter } from "./Formatter.ts";
 class TextFormatter implements Formatter {
     format(tracker: ValueTracker, depth = 0): string {
         const {
-            children,
+            _children: children,
             _errorCollection: errorCollection,
             _processor: {
                 props: {

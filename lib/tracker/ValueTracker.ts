@@ -1,12 +1,12 @@
 'use strict';
 
-import { Utils } from '../Utils.ts';
-import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
-import { Node, NodeData } from './Node.ts';
 import { Path } from '../Path.ts';
 import type { Processor } from '../processors/Processor.ts';
-import { Formatter } from './formatters/Formatter.ts';
 import { ArgumentCollection } from '../types.ts';
+import { Utils } from '../Utils.ts';
+import { Formatter } from './formatters/Formatter.ts';
+import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
+import { Node } from './Node.ts';
 
 type TrackerError = {
     args: ArgumentCollection;
@@ -16,6 +16,7 @@ type TrackerError = {
     text: string;
     value: unknown;
 };
+
 type ErrorTree = {
     errors: TrackerError[];
     children: Record<string, ErrorTree>;
@@ -23,65 +24,53 @@ type ErrorTree = {
 
 class ValueTracker extends Node {
 
-    private _processor: Processor;
     private _errorCollection: TrackerError[];
-    private _originalValue: unknown;
-    private _value: unknown;
-
+    private _processor: Processor;
+    private _rawValue: unknown;
 
     constructor(value: unknown, processor: Processor) {
         super();
-        this._processor = processor;
-        // this.cachedErrorMessages = null;
         this._errorCollection = [];
-        this._originalValue = value;
+        this._processor = processor;
+        this._rawValue = value;
         this.setValue(value);
     }
 
-    public setValue(value: unknown): void {
+    public setValue(value: unknown = undefined): void {
         // this.cachedErrorMessages = null;
-        this._value = value;
-        const children = this.children as unknown as Map<string, ValueTracker>;
-
-        if (this.hasChildren()) {
-            if (!Utils.isPlainObject(value)) {
-                for (const [, tracker] of children) {
-                    tracker.setValue(undefined);
-                }
+        this._rawValue = value;
+        const children = this._children;
+        if (!Utils.isPlainObject(value)) {
+            for (const key of Object.keys(children)) {
+                children[key].setValue(undefined);
             }
-            else {
-                for (const [key, tracker] of children) {
-                    tracker.setValue((value as Record<string, unknown>)[key]);
-                }
+        }
+        else {
+            for (const key of Object.keys(children)) {
+                children[key].setValue((value as Record<string, unknown>)[key]);
             }
         }
     }
 
     public getValue(): unknown {
         if (!this.hasChildren()) {
-            return this._value;
+            return this._rawValue;
         }
-
-        const children = this.children as unknown as Map<string, ValueTracker>;
-        const final = Object.assign({}, this._value as Record<string, unknown>);
-        for (const [key, tracker] of children) {
-            const value = tracker.getValue();
-            // if (_value !== undefined) {
-            final[key] = value;
-            // }
+        const children = this._children;
+        const final = Object.assign({}, this._rawValue as Record<string, unknown>);
+        for (const key of Object.keys(children)) {
+            final[key] = children[key].getValue();
         }
-
         return final;
     }
 
     public hasValue(): boolean {
         if (!this.hasChildren()) {
-            return this._value !== undefined;
+            return this._rawValue !== undefined;
         }
-
-        const children = this.children as unknown as Map<string, ValueTracker>;
-        for (const [, tracker] of children) {
-            if (tracker.hasValue()) {
+        const children = this._children;
+        for (const key of Object.keys(children)) {
+            if (children[key].hasValue()) {
                 return true;
             }
         }
@@ -95,8 +84,8 @@ class ValueTracker extends Node {
         }
 
         const {
-            _processor: { field: { label, locale} },
-            path,
+            _processor: { field: { label, locale } },
+            _path: path,
         } = this;
         let text = locale.translate(Path.fromArray(['errors', errorKey])).replace('{label}', label);
         if (args) {
@@ -108,10 +97,10 @@ class ValueTracker extends Node {
         this._errorCollection.push({
             args: args || {},
             errorKey,
-            key: String(path.keys[path.keys.length - 1] ?? ''),
+            key: String(path.keys[path.keys.length - 1] || ''),
             path: path.string,
             text,
-            value: this.value
+            value: this._rawValue
         });
         return this;
     }
@@ -120,14 +109,14 @@ class ValueTracker extends Node {
         if (this._errorCollection.length > 0) {
             return true;
         }
-        const children = this.children as unknown as Map<string, ValueTracker>;
-        if (children) {
-            for (const [, tracker] of children) {
-                if (tracker.hasErrors()) {
-                    return true;
-                }
+        const children = this._children;
+        const keys = Object.keys(children);
+        for (const key of keys) {
+            if (children[key].hasErrors()) {
+                return true;
             }
         }
+
         return false;
     }
 
@@ -145,11 +134,9 @@ class ValueTracker extends Node {
             children: {}
         };
 
-        const children = this.children as unknown as Map<string, ValueTracker>;
-        if (children.size) {
-            for (const [key, tracker] of children) {
-                obj.children[key] = tracker.getErrors();
-            }
+        const children = this._children;
+        for (const key of Object.keys(children)) {
+            obj.children[key] = children[key].getErrors();
         }
 
         return obj;

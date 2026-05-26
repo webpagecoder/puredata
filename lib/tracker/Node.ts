@@ -2,62 +2,56 @@
 
 import { Path } from '../Path.ts';
 
-export type NodeData = Record<string, unknown>;
-
 class Node {
 
-    children: Map<string, Node>;
-    parent: Node;
-    root: Node;
-    path: Path;
+    protected _children: Record<string, this>;
+    protected _parent: this | null;
+    protected _root: this;
+    protected _path: Path;
 
     constructor() {
-        this.children = new Map();
-        this.parent = this.root = this;
-        this.path = Path.create('/');
+        this._children = {};
+        this._parent = this._root = this;
+        this._path = Path.create('/');
     }
 
-    removeChild(key: string): void {
-        this.children.delete(key);
+    public removeChild(key: string): void {
+        delete this._children[key];
     }
 
-    setChild(key: string, child: Node): void {
-        this.children.set(key, child);
-        child.parent = this;
-        child.root = this.root;
-        child.path = this.path.move(key);
+    public setChild(key: string, child: this): void {
+        this._children[key] = child;
+        child._parent = this;
+        child._root = this._root;
+        child._path = this._path.move(key);
     }
 
-    // getFormatted(formatter = new NodeFormatter()) {
-    //     return formatter.visit(this);
-    // }
-
-    hasChildren(): boolean {
-        return this.children.size > 0;
+    public hasChildren(): boolean {
+        return Object.keys(this._children).length > 0;
     }
 
-    getNodeByPath(path: string | Path, _context?: unknown): Node | null {
+    public getNodeByPath(path: string | Path, _context?: unknown): this | null {
         const resolvedPath = typeof path === 'string' ? Path.create(path) : path as Path;
 
         if (resolvedPath.isSelf) {
             return this;
         }
-        let tracker: Node = this;
+        let tracker: this = this;
         if (resolvedPath.isAbsolute) {
-            tracker = this.root;
+            tracker = this._root;
         }
         else {
             tracker = this;
             for (let i = 0; i < resolvedPath.upCount; ++i) {
-                if (!tracker.parent) {
+                if (!tracker._parent) {
                     break;
                 }
-                tracker = tracker.parent;
+                tracker = tracker._parent;
             }
         }
 
         for (const key of resolvedPath.keys) {
-            const child = tracker.children.get(key);
+            const child = tracker._children[key];
             if (!child) {
                 return null;
             }
@@ -66,6 +60,5 @@ class Node {
         return tracker;
     }
 }
-
 
 export { Node };

@@ -18,6 +18,7 @@ export type SchemaMap = Map<string, Field>;
 
 export type SchemaChainConfig = Overwrite<ObjectChainConfig, {
     arrayChain: ArrayChain;
+    failOnFirstError: boolean;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     schema: SchemaMap;
     stripUnknownKeys: boolean;
@@ -36,6 +37,7 @@ class SchemaChain extends ObjectChain<SchemaChainConfig, SchemaChainConstructorP
                 locale: this._locale,
                 processorMapper: this._processorMapper,
             }),
+            failOnFirstError = false,
             renameKeysArgs = null,
             schema = {},
             stripUnknownKeys = true,
@@ -45,6 +47,7 @@ class SchemaChain extends ObjectChain<SchemaChainConfig, SchemaChainConstructorP
         config.arrayChain = arrayChain;
         config.cloneObject = true;
         config.ensurePlain = true;
+        config.failOnFirstError = failOnFirstError;
         config.stripUnknownKeys = stripUnknownKeys;
         config.renameKeysArgs = renameKeysArgs;
         config.schema = this._createSchemaMap(schema) || new Map() as SchemaMap;
