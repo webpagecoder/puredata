@@ -1,26 +1,25 @@
 'use strict';
 
+import { BooleanHandler } from '../handlers/BooleanHandler.ts';
 import { NumberHandler } from '../handlers/NumberHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
-export type NumberChainConfig = Overwrite<ChainConfig, {
+export type NumberChainConfig = Overwrite<ChainConfig<NumberHandler>, {
         autoConvert: boolean;
         ensureSafe: boolean;
         ensureFinite: boolean;
         preservePrecision: boolean;
 }>;
 
-export type NumberChainConstructorParams = ChainConstructorParams<NumberHandler, NumberChainConfig>;
-
-class NumberChain extends Chain<NumberChainConfig, NumberChainConstructorParams> {
+class NumberChain extends Chain<NumberChainConfig> {
 
     protected _autoConvert: boolean;
     protected _ensureSafe: boolean;
     protected _ensureFinite: boolean;
     protected _preservePrecision: boolean;
 
-    public constructor(args: NumberChainConstructorParams) {
+    public constructor(args: NumberChainConfig) {
         super(args);
         const {
             autoConvert = true,

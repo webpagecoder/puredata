@@ -5,6 +5,9 @@ import { Locale } from '../Locale.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { Overwrite } from '../types.ts';
+
+export type FieldConfig = {};
 
 export type FieldConstructorParams = {
     defaultValue?: unknown;
@@ -14,22 +17,24 @@ export type FieldConstructorParams = {
     processorMapper?: FieldProcessorFactory;
 };
 
-export type FieldCloneParams = Partial<FieldConstructorParams>;
+export type FieldCloneParams<C extends FieldConfig = FieldConfig> = Partial<FieldConstructorParams & C>;
 
-abstract class Field {
+abstract class Field<C extends FieldConfig = FieldConfig> {
 
     private static _id: number;
 
+    protected _config: C;
+
     protected _id: number;
+    protected _processor: Processor | null;
+
     protected _defaultValue: unknown;
     protected _label: string
     protected _locale: Locale;
     protected _presence: Presence;
-    protected _processor: Processor | null;
     protected _processorMapper: FieldProcessorFactory;
 
     public constructor(args: FieldConstructorParams) {
-
         const {
             defaultValue = undefined,
             label = 'Field',
@@ -38,11 +43,12 @@ abstract class Field {
             processorMapper = new FieldProcessorFactory(),
         } = args;
 
-        this._defaultValue = defaultValue || undefined;
+        this._config = {} as C;
+        this._defaultValue = defaultValue;
         this._id = Field._id ? ++Field._id : Field._id = 1;
-        this._label = label || 'Field';
+        this._label = label;
         this._locale = locale;
-        this._presence = presence || 'required';
+        this._presence = presence;
         this._processor = null;
         this._processorMapper = processorMapper;
     }
@@ -63,7 +69,7 @@ abstract class Field {
         return this._presence;
     }
 
-    public clone(args: FieldCloneParams = {}): this {
+    public clone(args: FieldCloneParams<C> = {}): this {
         const Constructor = this.constructor as new (props?: FieldConstructorParams) => this;
         const {
             defaultValue = this._defaultValue,
@@ -79,14 +85,21 @@ abstract class Field {
             presence,
             processorMapper,
         } as FieldConstructorParams);
-        clone._processor = null;
+
+        const { _config } = this;
+        for (const key of Object.keys(_config) as (keyof C)[]) {
+            clone._config[key] = key in args
+                ? (args as Partial<C>)[key] as C[keyof C]
+                : _config[key];
+        }
+
         return clone;
     }
 
     public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
         if (!this._processor) {
             if (!this._processorMapper) {
-                throw new Error('Field compilation mapper is not configured');
+                throw new Error('Field/Processor compilation mapper is not configured');
             }
             this._processor = this._processorMapper.createProcessor(this).compile();
         }
@@ -106,7 +119,7 @@ abstract class Field {
     }
 
     public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' });
+        return this.clone({ defaultValue, presence: 'optional' } as FieldCloneParams<C>);
     }
 
     public errors(messages: Record<string, string>): this {
@@ -116,19 +129,19 @@ abstract class Field {
     }
 
     public forbidden(): this {
-        return this.clone({ presence: 'forbidden' });
+        return this.clone({ presence: 'forbidden' } as FieldCloneParams<C>);
     }
 
     public label(label: string): this {
-        return this.clone({ label });
+        return this.clone({ label } as FieldCloneParams<C>);
     }
 
     public optional(): this {
-        return this.clone({ presence: 'optional' });
+        return this.clone({ presence: 'optional' } as FieldCloneParams<C>);
     }
 
     public required(): this {
-        return this.clone({ presence: 'required' });
+        return this.clone({ presence: 'required' } as FieldCloneParams<C>);
     }
 }
 

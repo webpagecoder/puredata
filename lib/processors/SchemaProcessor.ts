@@ -60,15 +60,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         this._depth = depth;
         this._pubSub = pubSub;
 
-        const { schema } = field.config;
         const compiledSchemaMap: CompiledSchemaMap = new Map();
 
-        for (let [key, childField] of schema) {
+        for (let [key, childField] of field.config.schemaMap) {
             let compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
             });
 
-            if(!(compiledChild instanceof SchemaProcessor)) {
+            if (!(compiledChild instanceof SchemaProcessor)) {
                 compiledChild = new SchemaNodeProcessor({
                     processor: compiledChild,
                     parent: this,
@@ -76,7 +75,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
                     root: this._root
                 });
             }
-            
+
             compiledSchemaMap.set(key, compiledChild);
         }
 
@@ -179,7 +178,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         for (let [key, childProcessor] of _compiledSchemaMap) {
 
             let childValueTracker = new ValueTracker(undefined, childProcessor);
-            
+
 
             childValueTracker.setValue(value[key]);
             // childValueTracker.path = tracker.path.move(key);

@@ -1,20 +1,23 @@
 'use strict';
 
-import { Processor } from './Processor.ts';
+import { PathReferenceField } from '../fields/PathReferenceField.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { Processor, State } from './Processor.ts';
 
-class PathReferenceProcessor extends Processor {
+class PathReferenceProcessor extends Processor<PathReferenceField> {
 
-    process(tracker) {
-        const { field } = this.props;
-        const { path, callback = x => x, defaultValue } = field.props;
+    public override actualProcess(tracker: ValueTracker): ValueTracker {
+        const { path, defaultOrCallback } = this._field;
         const referencedValueTracker = tracker.parent.getNodeByPath(path);
         let resolvedValue = undefined;
         if (referencedValueTracker) {
-            resolvedValue = callback(referencedValueTracker.value);
+            resolvedValue = typeof defaultOrCallback === 'function'
+                ? defaultOrCallback(referencedValueTracker.getValue())
+                : referencedValueTracker.getValue();
         }
 
         if (resolvedValue === undefined) {
-            tracker.setValue(defaultValue);
+            tracker.setValue(typeof defaultOrCallback === 'function' ? defaultOrCallback() : defaultOrCallback);
         }
         else {
             tracker.setValue(resolvedValue);

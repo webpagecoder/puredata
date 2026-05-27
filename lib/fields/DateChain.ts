@@ -3,12 +3,12 @@
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from '../date/DateConverter.ts';
 import { DateHandler } from '../handlers/DateHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-export type DateChainConfig = Overwrite<ChainConfig, {
+export type DateChainConfig = Overwrite<ChainConfig<DateHandler>, {
     dateOrder: DateOrder;
     outputStringFormat: OutputFormat | null;
     outputPrecision: OutputPrecision | null;
@@ -17,11 +17,9 @@ export type DateChainConfig = Overwrite<ChainConfig, {
     utcOffsetMinutes: number;
 }>;
 
-export type DateChainConstructorParams = ChainConstructorParams<DateHandler, DateChainConfig>;
+class DateChain extends Chain<DateChainConfig> {
 
-class DateChain extends Chain<DateChainConfig, DateChainConstructorParams> {
-
-    constructor(args: DateChainConstructorParams) {
+    constructor(args: DateChainConfig) {
         super(args);
 
         const {
@@ -32,17 +30,17 @@ class DateChain extends Chain<DateChainConfig, DateChainConstructorParams> {
             utcOffsetMinutes = 0,
         } = args;
 
-        const config = this._config;
-        config.dateOrder = dateOrder;
-        config.outputStringFormat = outputStringFormat;
-        config.outputPrecision = outputPrecision;
-        config.outputTimeMode = outputTimeMode;
-        config.utcOffsetMinutes = utcOffsetMinutes;
-        config.skipGenericParse = false;
+        const { config: _config } = this;
+        _config.dateOrder = dateOrder;
+        _config.outputStringFormat = outputStringFormat;
+        _config.outputPrecision = outputPrecision;
+        _config.outputTimeMode = outputTimeMode;
+        _config.utcOffsetMinutes = utcOffsetMinutes;
+        _config.skipGenericParse = false;
     }
 
     public assertEmptyPipeline(dateSubType: string): void {
-        if (this._pipeline.length > 0) {
+        if (this._config.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
     }
@@ -62,7 +60,7 @@ class DateChain extends Chain<DateChainConfig, DateChainConstructorParams> {
      */
     public human(options: HumanParseOptions = {}) {
         this.assertEmptyPipeline('human');
-        return this.clone({ skipGenericParse: true, outputPrecision:null }).addStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
+        return this.clone({ skipGenericParse: true, outputPrecision: null }).addStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
     }
 
     /**
@@ -131,7 +129,7 @@ class DateChain extends Chain<DateChainConfig, DateChainConstructorParams> {
      */
     public today() {
         const now = new Date();
-        now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
+        now.setUTCMinutes(now.getUTCMinutes() + this._chainConfig.utcOffsetMinutes);
         return this.addStep('today', [now]);
     }
 

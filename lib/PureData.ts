@@ -24,6 +24,7 @@ import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './Utils.ts';
 import { Handler } from './handlers/Handler.ts';
+import { Field } from './fields/Field.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
@@ -123,7 +124,7 @@ class PureData {
 
     // conditionals
 
-    satisfies(pathStr, comparisonField) {
+    satisfies(pathStr: string, comparisonField: Field) {
         return new SchemaConditionalField(this.composeProps({
             areEqual: true,
             referencePath: this.value(pathStr),
@@ -131,7 +132,7 @@ class PureData {
         }));
     }
 
-    violates(pathStr, comparisonField) {
+    violates(pathStr: string, comparisonField: Field) {
         return new SchemaConditionalField(this.composeProps({
             areEqual: false,
             referencePath: this.value(pathStr),
@@ -139,8 +140,8 @@ class PureData {
         }));
     }
 
-    errors(overrides) {
-        const finalOverrides = {};
+    errors(overrides: Record<string, string>) {
+        const finalOverrides: Record<string, string> = {};
         for (const key of Object.keys(overrides)) {
             finalOverrides[Path.fromArray(['errors', key])] = overrides[key];
         }
@@ -148,7 +149,7 @@ class PureData {
         this.locale.override(finalOverrides);
     }
 
-    value(pathStr, defaultOrCallback) {
+    value(pathStr: string, defaultOrCallback: unknown) {
         return new PathReferenceField(this.composeProps({ pathStr, defaultOrCallback }));
     }
 
@@ -165,6 +166,7 @@ class PureData {
     }
 
     get now() {
+        //todo: date shift via utc setting here!
         return new Date();
     }
 }

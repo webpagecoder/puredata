@@ -2,22 +2,20 @@
 
 import { BooleanHandler } from '../handlers/BooleanHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainCloneParams, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainConfig = Overwrite<ChainConfig, {
+export type BooleanChainConfig = Overwrite<ChainConfig<BooleanHandler>, {
     allowBoolish: boolean;
     boolishPairs: BoolishPair[];
 }>;
 
-export type BooleanChainConstructorParams = ChainConstructorParams<BooleanHandler, BooleanChainConfig>;
-
-class BooleanChain extends Chain<BooleanChainConfig, BooleanChainConstructorParams> {
+class BooleanChain extends Chain<BooleanChainConfig> {
     protected _allowBoolish: boolean;
     protected _boolishPairs: BoolishPair[];
 
-    public constructor(args: BooleanChainConstructorParams) {
+    public constructor(args: BooleanChainConfig) {
         super(args);
         const {
             allowBoolish = false,
@@ -26,18 +24,6 @@ class BooleanChain extends Chain<BooleanChainConfig, BooleanChainConstructorPara
 
         this._allowBoolish = allowBoolish;
         this._boolishPairs = boolishPairs;
-    }
-
-    public override clone(args: BooleanChainCloneParams = {}): this {
-        const clone = super.clone(args);
-        const {
-            allowBoolish = this._allowBoolish,
-            boolishPairs = this._boolishPairs,
-        } = args;
-
-        clone._allowBoolish = allowBoolish;
-        clone._boolishPairs = boolishPairs;
-        return clone;
     }
 
     // Configurators

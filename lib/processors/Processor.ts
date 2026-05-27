@@ -50,14 +50,10 @@ abstract class Processor<F extends Field = Field> {
 
     public process(value: unknown = undefined): ValueTracker {
         const tracker = new ValueTracker(value, this);
-        return this.actualProcess(tracker);
+        return this.actualProcess(tracker, {});
     }
 
-    public actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
-        this.preProcess(tracker, state);
-        this.postProcess(tracker, state);
-        return tracker;
-    }
+    public abstract actualProcess(tracker: ValueTracker, state: State): ValueTracker;
 
     public preProcess(tracker: ValueTracker, state: State = {}): void {
         const { _field } = this;

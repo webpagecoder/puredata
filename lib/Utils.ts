@@ -173,12 +173,12 @@ class Utils {
         return count;
     }
 
-    static isObject(obj: unknown): boolean {
-        return !!obj && typeof obj === 'object';
+    static isObject(value: unknown): boolean {
+        return typeof value === 'object' && value !== null;
     }
 
-    static isPlainObject(obj: unknown): boolean {
-        return !!obj && (obj as Record<string, unknown>).constructor === Object;
+    static isPlainObject(value: unknown): boolean {
+        return typeof value === 'object' && value !== null && (value as Record<string, unknown>).constructor === Object;
     }
 
     static mergeObjects(parent: unknown, child: unknown): unknown {

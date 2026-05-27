@@ -10,7 +10,7 @@ export type PathReferenceFieldProps = FieldConstructorParams & {
 
 class PathReferenceField extends Field {
     protected _path: Path;
-    protected _defaultOrCallback?: null | Function;
+    protected _defaultOrCallback: unknown
 
     constructor(args: PathReferenceFieldProps) {
         super(args);
@@ -21,9 +21,7 @@ class PathReferenceField extends Field {
         } = args;
 
         this._path = Path.create(pathStr);
-        this._defaultOrCallback = typeof defaultOrCallback === 'function'
-            ? defaultOrCallback
-            : null;
+        this._defaultOrCallback = defaultOrCallback;
     }
 
     public override clone(args: Partial<PathReferenceFieldProps> = {}): this {
@@ -34,14 +32,16 @@ class PathReferenceField extends Field {
         } = args;
 
         clone._path = pathStr ? Path.create(pathStr) : this._path;
-        clone._defaultOrCallback = typeof defaultOrCallback === 'function'
-            ? defaultOrCallback
-            : null;
+        clone._defaultOrCallback = defaultOrCallback;
         return clone;
     }
 
     public get path() {
         return this._path;
+    }
+    
+    public get defaultOrCallback() {
+        return this._defaultOrCallback;
     }
 
     // public set path(pathStr) {

@@ -1,25 +1,29 @@
 'use strict';
 
+import { StringChain } from '../fields/StringChain.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessor } from './ChainProcessor.ts';
 
-class StringProcessor extends ChainProcessor {
+class StringProcessor extends ChainProcessor<StringChain> {
 
-
-    preProcess(tracker) {
-        const {field} = this.props;
-        const { trim, maxLength, truncate } = field.props;
+    public override preProcess(tracker: ValueTracker): void {
+        const { config: { trim, maxLength, truncate } } = this._field;
         if (typeof tracker.getValue() !== 'string') {
-            return tracker.addError('string/base');
+            tracker.addError('string/base');
+            return;
         }
+
+        const value = tracker.getValue() as string;
         if (trim) {
-            tracker.setValue(tracker.getValue().trim());
+            tracker.setValue(value.trim());
         }
-        if (maxLength != null && tracker.getValue().length > maxLength) {
+        if (maxLength != null && value.length > maxLength) {
             if (truncate) {
-                tracker.setValue(tracker.getValue().slice(0, maxLength));
+                tracker.setValue(value.slice(0, maxLength));
             }
             else {
-                return tracker.addError('string/maxLength');
+                tracker.addError('string/maxLength');
+                return;
             }
         }
     }

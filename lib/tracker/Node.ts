@@ -5,7 +5,7 @@ import { Path } from '../Path.ts';
 class Node {
 
     protected _children: Record<string, this>;
-    protected _parent: this | null;
+    protected _parent: this;
     protected _root: this;
     protected _path: Path;
 
@@ -43,7 +43,7 @@ class Node {
         else {
             tracker = this;
             for (let i = 0; i < resolvedPath.upCount; ++i) {
-                if (!tracker._parent) {
+                if (tracker._parent === tracker) {
                     break;
                 }
                 tracker = tracker._parent;
@@ -59,6 +59,19 @@ class Node {
         }
         return tracker;
     }
+
+    public get parent(): this {
+        return this._parent;
+    }
+
+    public get path(): Path {
+        return this._path;
+    }
+
+    public get root(): this {
+        return this._root;
+    }
+
 }
 
 export { Node };
