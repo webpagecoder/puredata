@@ -6,7 +6,7 @@ import { Overwrite } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { ArrayChain } from './ArrayChain.ts';
 import { Field } from './Field.ts';
-import { ObjectChain, ObjectChainConfig, ObjectConstructorParams } from './ObjectChain.ts';
+import { ObjectChain, ObjectChainConfig, ObjectChainConstructorParams } from './ObjectChain.ts';
 import { ValueField } from './ValueField.ts';
 
 export type SchemaObject = {
@@ -23,12 +23,12 @@ export type SchemaChainConfig = Overwrite<ObjectChainConfig, {
     stripUnknownKeys: boolean;
 }>;
 
-export type SchemaChainConstructorParams = ObjectConstructorParams<SchemaChainConfig> & {
+export type SchemaChainConstructorParams = ObjectChainConstructorParams<SchemaChainConfig> & {
     schema?: SchemaObject;
 };
 
 export type SchemaChainCloneParams = Partial<SchemaChainConstructorParams>;
-
+    
 class SchemaChain extends ObjectChain<SchemaChainConfig> {
 
     constructor(args: SchemaChainConstructorParams) {
@@ -46,14 +46,14 @@ class SchemaChain extends ObjectChain<SchemaChainConfig> {
             stripUnknownKeys = true,
         } = args;
 
-        const config = this._chainConfig;
-        config.arrayChain = arrayChain;
-        config.cloneObject = true;
-        config.ensurePlain = true;
-        config.failOnFirstError = failOnFirstError;
-        config.stripUnknownKeys = stripUnknownKeys;
-        config.renameKeysArgs = renameKeysArgs;
-        config.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
+        const { _config } = this;
+        _config.arrayChain = arrayChain;
+        _config.cloneObject = true;
+        _config.ensurePlain = true;
+        _config.failOnFirstError = failOnFirstError;
+        _config.stripUnknownKeys = stripUnknownKeys;
+        _config.renameKeysArgs = renameKeysArgs;
+        _config.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
     }
 
     public override clone(args: SchemaChainCloneParams = {}): this {
@@ -62,7 +62,7 @@ class SchemaChain extends ObjectChain<SchemaChainConfig> {
             schema = null
         } = args;
         if (schema) {
-            clone._chainConfig.schemaMap = this._createSchemaMap(schema);
+            clone._config.schemaMap = this._createSchemaMap(schema);
         }
         return clone;
     }
@@ -82,7 +82,7 @@ class SchemaChain extends ObjectChain<SchemaChainConfig> {
                 });
             }
             else if (Array.isArray(value)) {
-                field = this._chainConfig.arrayChain.tuple(value);
+                field = this._config.arrayChain.tuple(value);
             }
             else {
                 field = new ValueField({

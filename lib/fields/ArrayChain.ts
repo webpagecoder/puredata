@@ -7,18 +7,16 @@ import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainConfig = Overwrite<ChainConfig<ArrayHandler>, {
+export type ArrayChainConfig = ChainConfig<ArrayHandler> & {
     castSingle: boolean;
     maxLength: number;
     removeEmpties: boolean;
-}>;
+};
+export type ArrayChainConstructorParams = ChainConstructorParams<ArrayChainConfig>;
 
 class ArrayChain extends Chain<ArrayChainConfig> {
-    protected _castSingle: boolean;
-    protected _maxLength: number
-    protected _removeEmpties: boolean;
 
-    public constructor(args: ArrayChainConfig) {
+    public constructor(args: ArrayChainConstructorParams) {
         super(args);
         const {
             castSingle = true,
@@ -26,9 +24,10 @@ class ArrayChain extends Chain<ArrayChainConfig> {
             removeEmpties = false,
         } = args;
 
-        this._castSingle = castSingle;
-        this._maxLength = maxLength;
-        this._removeEmpties = removeEmpties;
+        const { _config } = this;
+        _config.castSingle = castSingle;
+        _config.maxLength = maxLength;
+        _config.removeEmpties = removeEmpties;
     }
 
     // Configurators
@@ -46,7 +45,7 @@ class ArrayChain extends Chain<ArrayChainConfig> {
     public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
         return this.clone({
             removeEmpties,
-            emptyValues: [...this._chainConfig.emptyValues, ...addEmptyValues],
+            emptyValues: [...this._config.emptyValues, ...addEmptyValues],
         });
     }
 
@@ -124,7 +123,7 @@ class ArrayChain extends Chain<ArrayChainConfig> {
      */
     public removeEmpties(): this {
         return this.addStep('removeEmpties', function (this: ArrayChain): unknown[] {
-            return [this._chainConfig.emptyValues];
+            return [this._config.emptyValues];
         });
     }
 

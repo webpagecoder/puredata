@@ -12,14 +12,11 @@ export type NumberChainConfig = Overwrite<ChainConfig<NumberHandler>, {
         preservePrecision: boolean;
 }>;
 
+export type NumberChainConstructorParams = ChainConstructorParams<NumberChainConfig>;
+
 class NumberChain extends Chain<NumberChainConfig> {
 
-    protected _autoConvert: boolean;
-    protected _ensureSafe: boolean;
-    protected _ensureFinite: boolean;
-    protected _preservePrecision: boolean;
-
-    public constructor(args: NumberChainConfig) {
+    public constructor(args: NumberChainConstructorParams) {
         super(args);
         const {
             autoConvert = true,
@@ -28,10 +25,11 @@ class NumberChain extends Chain<NumberChainConfig> {
             preservePrecision = false,
         } = args;
 
-        this._autoConvert = autoConvert;
-        this._ensureSafe = ensureSafe;
-        this._ensureFinite = ensureFinite;
-        this._preservePrecision = preservePrecision;
+        const { _config } = this;
+        _config.autoConvert = autoConvert;
+        _config.ensureSafe = ensureSafe;
+        _config.ensureFinite = ensureFinite;
+        _config.preservePrecision = preservePrecision;
     }
 
     // Configurators

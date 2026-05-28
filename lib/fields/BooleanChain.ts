@@ -6,24 +6,25 @@ import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainConfig = Overwrite<ChainConfig<BooleanHandler>, {
+export type BooleanChainConfig = ChainConfig<BooleanHandler>&{
     allowBoolish: boolean;
     boolishPairs: BoolishPair[];
-}>;
+};
+
+export type BooleanChainConstructorParams = ChainConstructorParams<BooleanChainConfig>;
 
 class BooleanChain extends Chain<BooleanChainConfig> {
-    protected _allowBoolish: boolean;
-    protected _boolishPairs: BoolishPair[];
 
-    public constructor(args: BooleanChainConfig) {
+    public constructor(args: BooleanChainConstructorParams) {
         super(args);
         const {
             allowBoolish = false,
             boolishPairs = []
         } = args;
 
-        this._allowBoolish = allowBoolish;
-        this._boolishPairs = boolishPairs;
+        const {_config} = this;
+        _config.allowBoolish = allowBoolish;
+        _config.boolishPairs = boolishPairs;
     }
 
     // Configurators

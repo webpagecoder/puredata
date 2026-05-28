@@ -8,18 +8,19 @@ import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-export type DateChainConfig = Overwrite<ChainConfig<DateHandler>, {
+export type DateChainConfig = ChainConfig<DateHandler> & {
     dateOrder: DateOrder;
     outputStringFormat: OutputFormat | null;
     outputPrecision: OutputPrecision | null;
     outputTimeMode: TimeMode;
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
-}>;
+};
+export type DateChainConstructorParams = ChainConstructorParams<DateChainConfig>;
 
 class DateChain extends Chain<DateChainConfig> {
 
-    constructor(args: DateChainConfig) {
+    constructor(args: DateChainConstructorParams) {
         super(args);
 
         const {
@@ -30,7 +31,7 @@ class DateChain extends Chain<DateChainConfig> {
             utcOffsetMinutes = 0,
         } = args;
 
-        const { config: _config } = this;
+        const { _config } = this;
         _config.dateOrder = dateOrder;
         _config.outputStringFormat = outputStringFormat;
         _config.outputPrecision = outputPrecision;
@@ -129,7 +130,7 @@ class DateChain extends Chain<DateChainConfig> {
      */
     public today() {
         const now = new Date();
-        now.setUTCMinutes(now.getUTCMinutes() + this._chainConfig.utcOffsetMinutes);
+        now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
         return this.addStep('today', [now]);
     }
 

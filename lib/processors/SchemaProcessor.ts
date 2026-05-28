@@ -156,9 +156,8 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         }
 
         const {
-            chainHandler: { renameKeys, stripKeys },
-            config: { renameKeysArgs, stripUnknownKeys, failOnFirstError }
-        } = _field;
+            chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
+        } = _field.config;
 
         // Do any required key renaming
         if (renameKeysArgs) {

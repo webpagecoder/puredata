@@ -76,7 +76,9 @@ class PureData {
     }
 
     date(props = {}) {
-        return new DateChain(this.composeProps(props, 'date', new DateHandler(this._locale)));
+        return new DateChain(
+            this.composeProps(props, 'date', new DateHandler(this._locale)
+        ));
     }
 
     enum(structure = []) {

@@ -12,11 +12,11 @@ type Step = {
 };
 
 export type ChainConfig<H extends ChainHandler = ChainHandler> =
-    Overwrite<FieldConfig, {
+    FieldConfig & {
         emptyValues: unknown[];
         chainHandler: H;
         pipeline: Step[];
-    }>;
+    };
 
 export type ChainConstructorParams<C extends ChainConfig = ChainConfig> =
     FieldConstructorParams & Partial<C> & Pick<C, 'chainHandler'>;
@@ -49,6 +49,15 @@ abstract class Chain<
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
+    public override clone(args: L = {} as L): this {
+        const clone = super.clone(args);
+
+        if (args.addStep) {
+            clone._config.pipeline = [...clone._config.pipeline, args.addStep];
+        }
+        return clone;
+    }
+
     public get(target: this, key: PropertyKey): unknown {
         if (key in target) {
             return (target as Record<PropertyKey, unknown>)[key];
@@ -67,7 +76,7 @@ abstract class Chain<
             addStep: {
                 fn: (fn as Step['fn']).bind(chainHandler),
                 args,
-            }
+            },
         } as L);
     }
 
@@ -98,13 +107,13 @@ abstract class Chain<
         });
     }
 
-    public get pipeline(): Step[] {
-        return this._config.pipeline;
-    }
+    // public get pipeline(): Step[] {
+    //     return this._config.pipeline;
+    // }
 
-    public get chainHandler(): C['chainHandler'] {
-        return this._config.chainHandler;
-    }
+    // public get chainHandler(): C['chainHandler'] {
+    //     return this._config.chainHandler;
+    // }
 
     public get config(): C {
         return this._config;
