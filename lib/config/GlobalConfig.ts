@@ -2,6 +2,7 @@
 
 const GLOBAL_CONFIG = Object.seal({
     general: {
+        autoConvert: true,
         emptyValues: [null, undefined, ''],
         // cloneValueBeforeFilter: false,
         // exceptions: false, //todo: throw exceptions in special functions like delete/insert in chain only if this is true
@@ -19,7 +20,7 @@ const GLOBAL_CONFIG = Object.seal({
         removeEmpties: true,
     },
     boolean: {
-        autoConvert: true,
+        // autoConvert: true,
         allowBoolish: false,
         boolishPairs: [
             [1, 0],

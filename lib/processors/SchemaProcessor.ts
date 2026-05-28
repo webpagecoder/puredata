@@ -62,7 +62,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         const compiledSchemaMap: CompiledSchemaMap = new Map();
 
-        for (let [key, childField] of field.config.schemaMap) {
+        for (let [key, childField] of field.extendedProps.schemaMap) {
             let compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
             });
@@ -157,7 +157,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         const {
             chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
-        } = _field.config;
+        } = _field.extendedProps;
 
         // Do any required key renaming
         if (renameKeysArgs) {

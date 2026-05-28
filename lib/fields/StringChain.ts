@@ -2,16 +2,16 @@
 
 import { StringHandler } from '../handlers/StringHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConfig } from './Chain.ts';
+import { Chain, ChainProps } from './Chain.ts';
 
-export type StringChainConfig = Overwrite<ChainConfig<StringHandler>, {
+export type StringChainProps = Overwrite<ChainProps<StringHandler>, {
     trim: boolean;
     maxLength: number | null;
     truncate: boolean;
 }>;
 
-class StringChain extends Chain<StringChainConfig> {
-    constructor(args: StringChainConfig) {
+class StringChain extends Chain<StringChainProps> {
+    constructor(args: StringChainProps) {
         super(args);
 
         const {
@@ -20,10 +20,10 @@ class StringChain extends Chain<StringChainConfig> {
             truncate = false,
         } = args;
 
-        const { _config } = this;
-        _config.trim = trim;
-        _config.maxLength = maxLength;
-        _config.truncate = truncate;
+        const { extendedProps: props } = this;
+        props.trim = trim;
+        props.maxLength = maxLength;
+        props.truncate = truncate;
     }
 }
 

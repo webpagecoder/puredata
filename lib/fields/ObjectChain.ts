@@ -2,19 +2,19 @@
 
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 //todo: need to add a "clone" option to all methods that modify the object...
-import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from './Chain.ts';
 
-export type ObjectChainConfig = ChainConfig<ObjectHandler> & {
+export type ObjectChainProps = ChainProps<ObjectHandler> & {
     cloneObject: boolean;
     ensurePlain: boolean;
     maxDepth: number | null;
     maxKeyCount: number | null;
 };
 
-export type ObjectChainConstructorParams<C extends ObjectChainConfig =
-    ObjectChainConfig> = ChainConstructorParams<C>;
+export type ObjectChainConstructorParams<C extends ObjectChainProps =
+    ObjectChainProps> = ChainConstructorParams<C>;
 
-class ObjectChain<C extends ObjectChainConfig = ObjectChainConfig> extends Chain<C> {
+class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C> {
 
     constructor(args: ObjectChainConstructorParams<C>) {
         super(args);
@@ -25,11 +25,11 @@ class ObjectChain<C extends ObjectChainConfig = ObjectChainConfig> extends Chain
             maxKeyCount = null
         } = args;
 
-        const { _config } = this;
-        _config.cloneObject = cloneObject;
-        _config.ensurePlain = ensurePlain;
-        _config.maxDepth = maxDepth;
-        _config.maxKeyCount = maxKeyCount;
+        const { extendedProps: props } = this;
+        props.cloneObject = cloneObject;
+        props.ensurePlain = ensurePlain;
+        props.maxDepth = maxDepth;
+        props.maxKeyCount = maxKeyCount;
     }
 
     // Transformers
@@ -42,7 +42,7 @@ class ObjectChain<C extends ObjectChainConfig = ObjectChainConfig> extends Chain
      */
     public removeEmpties(): this {
         return this.clone({ cloneObject: true } as L).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
-            return [this._config.emptyValues];
+            return [this.extendedProps.emptyValues];
         });
     }
 
@@ -54,7 +54,7 @@ class ObjectChain<C extends ObjectChainConfig = ObjectChainConfig> extends Chain
      */
     public removeEmptiesRecursive(): this {
         return this.clone({ cloneObject: true } as L).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
-            return [this._config.emptyValues];
+            return [this.extendedProps.emptyValues];
         });
     }
 

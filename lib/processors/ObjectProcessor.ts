@@ -22,7 +22,7 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends ChainProcesso
             return;
         }
 
-        const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this._field;
+        const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this._field.extendedProps;
 
         if (ensurePlain && !Utils.isPlainObject(tracker.getValue())) {
             tracker.addError('object/plain');

@@ -1,53 +1,50 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Field, FieldConstructorParams } from './Field.ts';
+import { Field, FieldCloneParams, FieldProps, FieldConstructorParams } from './Field.ts';
 
-export type PathReferenceFieldProps = FieldConstructorParams & {
-    pathStr: string;
-    defaultOrCallback?: unknown | ((...args: unknown[]) => unknown);
+export type PathReferenceFieldProps = FieldProps & {
+    path: Path;
+    defaultOrCallback: unknown | ((...args: unknown[]) => unknown);
 };
 
-class PathReferenceField extends Field {
-    protected _path: Path;
-    protected _defaultOrCallback: unknown
+export type PathReferenceFieldConstructorParams = 
+    FieldConstructorParams
+    & Partial<Omit<PathReferenceFieldProps, 'path'>>
+    & {
+        pathStr: string;
+    };
 
-    constructor(args: PathReferenceFieldProps) {
+export type PathReferenceFieldCloneParams =
+    FieldCloneParams<PathReferenceFieldProps> & {
+        pathStr?: string;
+    };
+
+class PathReferenceField extends Field<PathReferenceFieldProps> {
+
+    constructor(args: PathReferenceFieldConstructorParams) {
         super(args);
 
         const {
-            pathStr,
-            defaultOrCallback
+            pathStr = '.',
+            defaultOrCallback = undefined
         } = args;
 
-        this._path = Path.create(pathStr);
-        this._defaultOrCallback = defaultOrCallback;
+        const { extendedProps: props } = this;
+        props.path =  Path.create(pathStr);
+        props.defaultOrCallback = defaultOrCallback;
     }
 
-    public override clone(args: Partial<PathReferenceFieldProps> = {}): this {
+    public override clone(args:PathReferenceFieldCloneParams = {}): this {
         const clone = super.clone(args);
-        const {
-            pathStr,
-            defaultOrCallback = this._defaultOrCallback,
-        } = args;
 
-        clone._path = pathStr ? Path.create(pathStr) : this._path;
-        clone._defaultOrCallback = defaultOrCallback;
+        if (args.pathStr !== undefined) {
+            clone.extendedProps.path =  Path.create(args.pathStr);
+        }
         return clone;
     }
-
-    public get path() {
-        return this._path;
-    }
-    
-    public get defaultOrCallback() {
-        return this._defaultOrCallback;
-    }
-
-    // public set path(pathStr) {
-    //     return this.clone({ pathStr });
-    // }
 
 }
 
 export { PathReferenceField };
+

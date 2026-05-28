@@ -2,8 +2,7 @@
 
 import { ChainHandler } from '../handlers/ChainHandler.ts';
 import { HandlerResult } from '../handlers/HandlerResult.ts';
-import { Field, FieldConstructorParams, FieldCloneParams, FieldConfig } from './Field.ts';
-import { Overwrite } from '../types.ts';
+import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from './Field.ts';
 
 type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
@@ -11,23 +10,23 @@ type Step = {
     args?: StepArgsOrFn;
 };
 
-export type ChainConfig<H extends ChainHandler = ChainHandler> =
-    FieldConfig & {
+export type ChainProps<H extends ChainHandler = ChainHandler> =
+    FieldProps & {
         emptyValues: unknown[];
         chainHandler: H;
         pipeline: Step[];
     };
 
-export type ChainConstructorParams<C extends ChainConfig = ChainConfig> =
+export type ChainConstructorParams<C extends ChainProps = ChainProps> =
     FieldConstructorParams & Partial<C> & Pick<C, 'chainHandler'>;
 
-export type ChainCloneParams<C extends ChainConfig = ChainConfig> =
+export type ChainCloneParams<C extends ChainProps = ChainProps> =
     FieldCloneParams<C> & {
         addStep?: Step;
     };
 
 abstract class Chain<
-    C extends ChainConfig = ChainConfig,
+    C extends ChainProps = ChainProps,
     L extends ChainCloneParams<C> = ChainCloneParams<C>
 > extends Field<C> {
 
@@ -40,7 +39,7 @@ abstract class Chain<
             pipeline = [],
         } = args;
 
-        this._config = {
+        this._props = {
             chainHandler,
             emptyValues,
             pipeline
@@ -53,7 +52,7 @@ abstract class Chain<
         const clone = super.clone(args);
 
         if (args.addStep) {
-            clone._config.pipeline = [...clone._config.pipeline, args.addStep];
+            clone.extendedProps.pipeline = [...clone.extendedProps.pipeline, args.addStep];
         }
         return clone;
     }
@@ -66,7 +65,7 @@ abstract class Chain<
     }
 
     public addStep(fnKey: keyof C['chainHandler'], args: StepArgsOrFn = []): this {
-        const chainHandler = this._config.chainHandler as C['chainHandler'];
+        const chainHandler = this.extendedProps.chainHandler as C['chainHandler'];
         const fn = chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
@@ -90,7 +89,7 @@ abstract class Chain<
      */
     public empty(): this {
         return this.addStep('empty', function (this: Chain<any>): unknown[] {
-            return [this._config.emptyValues];
+            return [this.extendedProps.emptyValues];
         });
     }
 
@@ -103,21 +102,18 @@ abstract class Chain<
      */
     public notEmpty(): this {
         return this.addStep('notEmpty', function (this: Chain<any>): unknown[] {
-            return [this._config.emptyValues];
+            return [this.extendedProps.emptyValues];
         });
     }
 
     // public get pipeline(): Step[] {
-    //     return this._config.pipeline;
+    //     return this.props.pipeline;
     // }
 
     // public get chainHandler(): C['chainHandler'] {
-    //     return this._config.chainHandler;
+    //     return this.props.chainHandler;
     // }
 
-    public get config(): C {
-        return this._config;
-    }
 }
 
 export { Chain };

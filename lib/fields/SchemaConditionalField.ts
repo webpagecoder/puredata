@@ -7,7 +7,7 @@ class SchemaConditionalField extends ConditionalField {
 
     constructor(props = {}) {
         super(props);
-        this.props.referencePath = props.referencePath;
+        this.extendedProps.referencePath = props.referencePath;
     }
 
     // compile(context = {}) {

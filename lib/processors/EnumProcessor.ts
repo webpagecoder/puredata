@@ -1,19 +1,21 @@
 'use strict';
 
+import { EnumField } from '../fields/EnumField.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Processor } from './Processor.ts';
 
-class EnumProcessor extends Processor {
+class EnumProcessor extends Processor<EnumField> {
 
-    process(tracker, state = {}) {
-        const { structure, isArray } = this.field.props;
+    public override actualProcess(tracker: ValueTracker): ValueTracker {
+        const { structure, isArray } = this.field.extendedProps;
         if (isArray) {
-            if (structure.indexOf(tracker.getValue()) === -1) {
+            if ((structure as unknown[]).indexOf(tracker.getValue()) === -1) {
                 tracker.addError('enum/allowedValues', { allowedValues: structure });
             }
         }
         else {
-            if (Object.prototype.hasOwnProperty.call(structure, tracker.getValue())) {
-                tracker.setValue(structure[tracker.getValue()]);
+            if (Object.prototype.hasOwnProperty.call(structure, tracker.getValue() as PropertyKey)) {
+                tracker.setValue((structure as Record<PropertyKey, unknown>)[tracker.getValue() as PropertyKey]);
             }
             else {
                 tracker.addError('enum/allowedValues', { allowedValues: Object.keys(structure) });

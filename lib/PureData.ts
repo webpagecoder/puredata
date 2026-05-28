@@ -48,14 +48,14 @@ class PureData {
     }
 
     // clone(updatedConfig) {
-    //     this._config = Utils.mergeObjects(this._config, updatedConfig);
+    //     this._props = Utils.mergeObjects(this._props, updatedConfig);
     // }
 
     paths(delims) {
         Path.delims(delims);
     }
 
-    composeProps(props = {}, chainType: string, chainHandler: Handler) {
+    composeChainProps(props = {}, chainType: string, chainHandler: Handler) {
         return Object.assign(
             {
                 chainHandler
@@ -66,39 +66,47 @@ class PureData {
         );
     }
 
+    composeFieldProps(props = {}) {
+        return Object.assign(
+            {},
+            this._globalConfig['general'],
+            props
+        );
+    }
+
     // Chains
     array(props = {}) {
-        return new ArrayChain(this.composeProps(props, 'array', new ArrayHandler()));
+        return new ArrayChain(this.composeChainProps(props, 'array', new ArrayHandler()));
     }
 
     boolean(props = {}) {
-        return new BooleanChain(this.composeProps(props, 'boolean', new BooleanHandler()));
+        return new BooleanChain(this.composeChainProps(props, 'boolean', new BooleanHandler()));
     }
 
     date(props = {}) {
         return new DateChain(
-            this.composeProps(props, 'date', new DateHandler(this._locale)
-        ));
+            this.composeChainProps(props, 'date', new DateHandler(this._locale)
+            ));
     }
 
     enum(structure = []) {
-        return new EnumField(this.composeProps({ structure }));
+        return new EnumField(this.composeChainProps({ structure }));
     }
 
     any() {
-        return new Chain(this.composeProps());
+        return new Chain(this.composeChainProps());
     }
 
     number(props = {}) {
-        return new NumberChain(this.composeProps(props, 'number', new NumberHandler()));
+        return new NumberChain(this.composeChainProps(props, 'number', new NumberHandler()));
     }
 
     object(props = {}) {
-        return new DateChain(this.composeProps(props, 'object', new ObjectHandler()));
+        return new DateChain(this.composeChainProps(props, 'object', new ObjectHandler()));
     }
 
     pointer(pathStr, minDepth, maxDepth) {
-        return new ReferenceField(this.composeProps({
+        return new ReferenceField(this.composeChainProps({
             minDepth,
             maxDepth,
             path: Path.create(pathStr),
@@ -107,27 +115,27 @@ class PureData {
 
     schema(schema = {}, props = {}) {
         const finalProps = Object.assign({ schema }, props);
-        return new SchemaChain(this.composeProps(finalProps, 'object', new ObjectHandler()));
+        return new SchemaChain(this.composeChainProps(finalProps, 'object', new ObjectHandler()));
     }
 
     string(props = {}) {
-        return new StringChain(this.composeProps(props, 'string', new StringHandler()));
+        return new StringChain(this.composeChainProps(props, 'string', new StringHandler()));
     }
 
     // Other fields
 
     mutable(value) {
-        return new ValueField(this.composeProps({ value, mutable: true }));
+        return new ValueField(this.composeChainProps({ value, mutable: true }));
     }
 
     immutable(value) {
-        return new ValueField(this.composeProps({ value, mutable: false }));
+        return new ValueField(this.composeChainProps({ value, mutable: false }));
     }
 
     // conditionals
 
     satisfies(pathStr: string, comparisonField: Field) {
-        return new SchemaConditionalField(this.composeProps({
+        return new SchemaConditionalField(this.composeChainProps({
             areEqual: true,
             referencePath: this.value(pathStr),
             comparisonField,
@@ -135,7 +143,7 @@ class PureData {
     }
 
     violates(pathStr: string, comparisonField: Field) {
-        return new SchemaConditionalField(this.composeProps({
+        return new SchemaConditionalField(this.composeChainProps({
             areEqual: false,
             referencePath: this.value(pathStr),
             comparisonField,
@@ -151,8 +159,8 @@ class PureData {
         this.locale.override(finalOverrides);
     }
 
-    value(pathStr: string, defaultOrCallback: unknown) {
-        return new PathReferenceField(this.composeProps({ pathStr, defaultOrCallback }));
+    value(pathStr: string, defaultOrCallback: unknown = undefined) {
+        return new PathReferenceField(this.composeFieldProps({ pathStr, defaultOrCallback }));
     }
 
     get optional() {

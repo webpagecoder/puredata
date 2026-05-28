@@ -11,13 +11,13 @@ type Step = {
     args?: StepArgsOrFn;
 };
 
-export type ChainConfig = {
+export type ChainProps = {
     emptyValues: unknown[];
 };
 
 export type ChainConstructorParams<
     H extends ChainHandler = ChainHandler,
-    C extends ChainConfig = ChainConfig
+    C extends ChainProps = ChainProps
 > =
     Overwrite<FieldConstructorParams, Overwrite<C, {
         chainHandler: H;
@@ -30,13 +30,13 @@ export type ChainCloneParams<P extends ChainConstructorParams = ChainConstructor
     }>>;
 
 abstract class Chain<
-    C extends ChainConfig = ChainConfig,
+    C extends ChainProps = ChainProps,
     P extends ChainConstructorParams = ChainConstructorParams
 > extends Field {
 
     protected _chainHandler: P['chainHandler'];
     protected _pipeline: Step[];
-    protected _config: C;
+    protected _props: C;
 
     public constructor(args: P) {
         super(args);
@@ -49,7 +49,7 @@ abstract class Chain<
 
         this._chainHandler = chainHandler;
         this._pipeline = pipeline;
-        this._config = {
+        this._props = {
             emptyValues
         } as C;
 
@@ -78,11 +78,11 @@ abstract class Chain<
         clone._chainHandler = chainHandler;
         clone._pipeline = pipelineCopy;
 
-        const config = clone._config;
-        for (const key of Object.keys(this._config) as (keyof C)[]) {
+        const config = clone._props;
+        for (const key of Object.keys(this._props) as (keyof C)[]) {
             config[key] = key in args
                 ? (args as Partial<C>)[key] as C[keyof C]
-                : this._config[key];
+                : this._props[key];
         }
         return clone;
     }
@@ -112,7 +112,7 @@ abstract class Chain<
      */
     public empty(): this {
         return this.addStep('empty', function (this: Chain<any>): unknown[] {
-            return [this._config.emptyValues];
+            return [this._props.emptyValues];
         });
     }
 
@@ -125,7 +125,7 @@ abstract class Chain<
      */
     public notEmpty(): this {
         return this.addStep('notEmpty', function (this: Chain<any>): unknown[] {
-            return [this._config.emptyValues];
+            return [this._props.emptyValues];
         });
     }
 
@@ -138,7 +138,7 @@ abstract class Chain<
     }
 
     public get config(): C {
-        return this._config;
+        return this._props;
     }
 }
 

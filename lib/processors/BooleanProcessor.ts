@@ -1,17 +1,14 @@
 'use strict';
 
+import { BooleanChain } from '../fields/BooleanChain.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessor } from './ChainProcessor.ts';
 
-class BooleanProcessor extends ChainProcessor {
+class BooleanProcessor extends ChainProcessor<BooleanChain> {
 
-    preProcess(tracker) {
-        const { field } = this.props;
-        const {
-            boolishPairs,
-            allowBoolish,
-            transformer = x => x,
-            autoConvert
-        } = field.props;
+    public override preProcess(tracker: ValueTracker): void {
+        const { field } = this;
+        const { autoConvert, extendedProps: { boolishPairs, allowBoolish, transformer } } = field;
 
         let value = transformer(tracker.getValue());
 
@@ -28,6 +25,10 @@ class BooleanProcessor extends ChainProcessor {
                     return tracker.setValue(autoConvert ? false : value);
                 }
             }
+        }
+
+        if(autoConvert) {
+            return tracker.setValue(Boolean(value));
         }
 
         tracker.addError('boolean/base');

@@ -7,9 +7,10 @@ import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Overwrite } from '../types.ts';
 
-export type FieldConfig = {};
+export type FieldProps = {};
 
 export type FieldConstructorParams = {
+    autoConvert?: boolean;
     defaultValue?: unknown;
     label?: string;
     locale?: Locale;
@@ -17,17 +18,18 @@ export type FieldConstructorParams = {
     processorMapper?: FieldProcessorFactory;
 };
 
-export type FieldCloneParams<C extends FieldConfig = FieldConfig> = Partial<FieldConstructorParams & C>;
+export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldConstructorParams & C>;
 
-abstract class Field<C extends FieldConfig = FieldConfig> {
+abstract class Field<C extends FieldProps = FieldProps> {
 
     private static _id: number;
 
-    protected _config: C;
+    protected _props: C;
 
     protected _id: number;
     protected _processor: Processor | null;
 
+    protected _autoConvert: boolean;
     protected _defaultValue: unknown;
     protected _label: string
     protected _locale: Locale;
@@ -36,6 +38,7 @@ abstract class Field<C extends FieldConfig = FieldConfig> {
 
     public constructor(args: FieldConstructorParams) {
         const {
+            autoConvert = true,
             defaultValue = undefined,
             label = 'Field',
             locale = new Locale('en-US'),
@@ -43,7 +46,8 @@ abstract class Field<C extends FieldConfig = FieldConfig> {
             processorMapper = new FieldProcessorFactory(),
         } = args;
 
-        this._config = {} as C;
+        this._props = {} as C;
+        this._autoConvert = autoConvert;
         this._defaultValue = defaultValue;
         this._id = Field._id ? ++Field._id : Field._id = 1;
         this._label = label;
@@ -69,16 +73,22 @@ abstract class Field<C extends FieldConfig = FieldConfig> {
         return this._presence;
     }
 
+    public get autoConvert(): boolean {
+        return this._autoConvert;
+    }
+
     public clone(args: FieldCloneParams<C> = {}): this {
         const Constructor = this.constructor as new (props?: FieldConstructorParams) => this;
         const {
+            autoConvert = this._autoConvert,
             defaultValue = this._defaultValue,
             label = this._label,
             locale = this._locale,
             presence = this._presence,
-            processorMapper = this._processorMapper
+            processorMapper = this._processorMapper,
         } = args;
         const clone = new Constructor({
+            autoConvert,
             defaultValue,
             label,
             locale,
@@ -86,11 +96,11 @@ abstract class Field<C extends FieldConfig = FieldConfig> {
             processorMapper,
         } as FieldConstructorParams);
 
-        const { _config } = this;
-        for (const key of Object.keys(_config) as (keyof C)[]) {
-            clone._config[key] = key in args
+        const { _props } = this;
+        for (const key of Object.keys(_props) as (keyof C)[]) {
+            clone._props[key] = key in args
                 ? (args as Partial<C>)[key] as C[keyof C]
-                : _config[key];
+                : _props[key];
         }
 
         return clone;
@@ -116,6 +126,14 @@ abstract class Field<C extends FieldConfig = FieldConfig> {
 
     public isRequired(): boolean {
         return this._presence === 'required';
+    }
+
+    public get extendedProps(): C {
+        return this._props;
+    }
+
+    public config(config: C) {
+        return this.clone(config);
     }
 
     public default(defaultValue: unknown): this {

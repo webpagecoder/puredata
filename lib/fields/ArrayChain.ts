@@ -3,18 +3,18 @@
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
 import { Path } from '../Path.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from './Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainConfig = ChainConfig<ArrayHandler> & {
+export type ArrayChainProps = ChainProps<ArrayHandler> & {
     castSingle: boolean;
     maxLength: number;
     removeEmpties: boolean;
 };
-export type ArrayChainConstructorParams = ChainConstructorParams<ArrayChainConfig>;
+export type ArrayChainConstructorParams = ChainConstructorParams<ArrayChainProps>;
 
-class ArrayChain extends Chain<ArrayChainConfig> {
+class ArrayChain extends Chain<ArrayChainProps> {
 
     public constructor(args: ArrayChainConstructorParams) {
         super(args);
@@ -24,10 +24,10 @@ class ArrayChain extends Chain<ArrayChainConfig> {
             removeEmpties = false,
         } = args;
 
-        const { _config } = this;
-        _config.castSingle = castSingle;
-        _config.maxLength = maxLength;
-        _config.removeEmpties = removeEmpties;
+        const { extendedProps: props } = this;
+        props.castSingle = castSingle;
+        props.maxLength = maxLength;
+        props.removeEmpties = removeEmpties;
     }
 
     // Configurators
@@ -39,13 +39,13 @@ class ArrayChain extends Chain<ArrayChainConfig> {
      * @returns {ArrayChain} Returns this chain for method chaining
      * @example
      * // Configure to remove empty values including custom empties
-     * array([1, null, 2, '', 3, 'N/A']).configRemoveEmpties(true, ['N/A'])
+     * array([1, null, 2, '', 3, 'N/A']).propsRemoveEmpties(true, ['N/A'])
      * // Results in: [1, 2, 3] after preprocessing
      */
     public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
         return this.clone({
             removeEmpties,
-            emptyValues: [...this._config.emptyValues, ...addEmptyValues],
+            emptyValues: [...this.extendedProps.emptyValues, ...addEmptyValues],
         });
     }
 
@@ -55,11 +55,11 @@ class ArrayChain extends Chain<ArrayChainConfig> {
      * @returns {ArrayChain} Returns this chain for method chaining
      * @example
      * // Configure to cast single values to arrays
-     * array('hello').configCastSingle(true)
+     * array('hello').propsCastSingle(true)
      * // Input 'hello' becomes ['hello'] during preprocessing
      * 
      * // Disable automatic casting
-     * array('hello').configCastSingle(false)
+     * array('hello').propsCastSingle(false)
      * // Would fail validation since 'hello' is not an array
      */
     public configCastSingle(castSingle: boolean = true): this {
@@ -123,7 +123,7 @@ class ArrayChain extends Chain<ArrayChainConfig> {
      */
     public removeEmpties(): this {
         return this.addStep('removeEmpties', function (this: ArrayChain): unknown[] {
-            return [this._config.emptyValues];
+            return [this.extendedProps.emptyValues];
         });
     }
 

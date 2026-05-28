@@ -438,12 +438,10 @@ class Utils {
         }) === +(str.slice(-1));
     }
 
-    
+
     /****************************************************
      * Number utilities
      ***************************************************/
-
-
 
     static parseNumber(value: unknown, {
         autoConvert = true,
@@ -451,7 +449,7 @@ class Utils {
         ensureFinite = true,
         preservePrecision = true
     }: { autoConvert?: boolean; ensureSafe?: boolean; ensureFinite?: boolean; preservePrecision?: boolean } = {}): number | null {
-        const num = autoConvert && typeof value === 'string' ? Number(value) : value;
+        const num = autoConvert ? Number(value) : value;
         return (
             (typeof num !== 'number' || Number.isNaN(num))
             || (ensureFinite && !Number.isFinite(num))
@@ -459,8 +457,7 @@ class Utils {
             || (preservePrecision
                 && typeof value === 'string'
                 && String(num) !== value
-                && String(num) !== value.replace(/\.0+$/, '')
-            )
+                && String(num) !== value.replace(/\.0+$/, ''))
         ) ? null : num;
     }
 }

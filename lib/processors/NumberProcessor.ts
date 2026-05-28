@@ -9,12 +9,12 @@ import { State } from './Processor.ts';
 class NumberProcessor extends ChainProcessor<NumberChain> {
 
     public override preProcess(tracker: ValueTracker, state: State = {}): void {
-        const { _field } = this;
+        const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.extendedProps;
         const result = Utils.parseNumber(tracker.getValue(), {
-            autoConvert: _field.autoConvert,
-            ensureSafe: _field.ensureSafe,
-            ensureFinite: _field.ensureFinite,
-            preservePrecision: _field.preservePrecision
+            autoConvert,
+            ensureSafe,
+            ensureFinite,
+            preservePrecision
         });
         if (result == null) {
             tracker.addError('number/base');

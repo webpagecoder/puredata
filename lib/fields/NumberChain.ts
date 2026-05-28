@@ -3,18 +3,18 @@
 import { BooleanHandler } from '../handlers/BooleanHandler.ts';
 import { NumberHandler } from '../handlers/NumberHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainConfig, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from './Chain.ts';
 
-export type NumberChainConfig = Overwrite<ChainConfig<NumberHandler>, {
+export type NumberChainProps = Overwrite<ChainProps<NumberHandler>, {
         autoConvert: boolean;
         ensureSafe: boolean;
         ensureFinite: boolean;
         preservePrecision: boolean;
 }>;
 
-export type NumberChainConstructorParams = ChainConstructorParams<NumberChainConfig>;
+export type NumberChainConstructorParams = ChainConstructorParams<NumberChainProps>;
 
-class NumberChain extends Chain<NumberChainConfig> {
+class NumberChain extends Chain<NumberChainProps> {
 
     public constructor(args: NumberChainConstructorParams) {
         super(args);
@@ -25,11 +25,11 @@ class NumberChain extends Chain<NumberChainConfig> {
             preservePrecision = false,
         } = args;
 
-        const { _config } = this;
-        _config.autoConvert = autoConvert;
-        _config.ensureSafe = ensureSafe;
-        _config.ensureFinite = ensureFinite;
-        _config.preservePrecision = preservePrecision;
+        const { extendedProps: props } = this;
+        props.autoConvert = autoConvert;
+        props.ensureSafe = ensureSafe;
+        props.ensureFinite = ensureFinite;
+        props.preservePrecision = preservePrecision;
     }
 
     // Configurators

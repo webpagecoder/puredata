@@ -20,7 +20,7 @@ class ConditionalField extends Field {
             chain = [],
         } = props;
 
-        Object.assign(this.props, {
+        Object.assign(this.extendedProps, {
             comparisonField,
             areEqual,
             thenResult,
@@ -38,7 +38,7 @@ class ConditionalField extends Field {
 
 
     getChosenField(tracker, state) {
-        const { thenResult, otherwiseResult } = this.props;
+        const { thenResult, otherwiseResult } = this.extendedProps;
         const booleanResult = this.execute(tracker, state);
 
         let chosenField;
@@ -56,7 +56,7 @@ class ConditionalField extends Field {
     }
 
     execute(tracker, state) {
-        const { areEqual, chain, comparisonField } = this.props;
+        const { areEqual, chain, comparisonField } = this.extendedProps;
 
         comparisonField.process(tracker, state);
 
@@ -77,43 +77,43 @@ class ConditionalField extends Field {
     }
 
     or(conditional) {
-        if (this.props.stage !== 0) {
+        if (this.extendedProps.stage !== 0) {
             throw new Error('Illegal placement of "or" in conditional chain');
         }
         return this.clone({
-            chain: this.props.chain.concat([['or', conditional]])
+            chain: this.extendedProps.chain.concat([['or', conditional]])
         });
     }
 
     and(conditional) {
-        if (this.props.stage !== 0) {
+        if (this.extendedProps.stage !== 0) {
             throw new Error('Illegal placement of "and" in conditional chain');
         }
         return this.clone({
-            chain: this.props.chain.concat([['and', conditional]])
+            chain: this.extendedProps.chain.concat([['and', conditional]])
         });
     }
 
     then(thenResult) {
-        if (this.props.stage !== 0) {
+        if (this.extendedProps.stage !== 0) {
             throw new Error('Illegal placement of "then" in conditional chain');
         }
         return this.clone({
             thenResult: thenResult instanceof Field
                 ? thenResult
-                : new ValueField({ value: thenResult, processorMapper: this.props.processorMapper }),
+                : new ValueField({ value: thenResult, processorMapper: this.extendedProps.processorMapper }),
             stage: 1
         });
     }
 
     otherwise(otherwiseResult) {
-        if (this.props.stage !== 1) {
+        if (this.extendedProps.stage !== 1) {
             throw new Error('Illegal placement of "otherwise" in conditional chain');
         }
         return this.clone({
             otherwiseResult: otherwiseResult instanceof Field
                 ? otherwiseResult
-                : new ValueField({ value: otherwiseResult , processorMapper: this.props.processorMapper}),
+                : new ValueField({ value: otherwiseResult , processorMapper: this.extendedProps.processorMapper}),
             stage: 2
         });
     }

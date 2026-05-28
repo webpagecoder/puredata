@@ -6,7 +6,7 @@ import { Overwrite } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { ArrayChain } from './ArrayChain.ts';
 import { Field } from './Field.ts';
-import { ObjectChain, ObjectChainConfig, ObjectChainConstructorParams } from './ObjectChain.ts';
+import { ObjectChain, ObjectChainProps, ObjectChainConstructorParams } from './ObjectChain.ts';
 import { ValueField } from './ValueField.ts';
 
 export type SchemaObject = {
@@ -15,7 +15,7 @@ export type SchemaObject = {
 
 export type SchemaMap = Map<string, Field>;
 
-export type SchemaChainConfig = Overwrite<ObjectChainConfig, {
+export type SchemaChainProps = Overwrite<ObjectChainProps, {
     arrayChain: ArrayChain;
     failOnFirstError: boolean;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
@@ -23,13 +23,13 @@ export type SchemaChainConfig = Overwrite<ObjectChainConfig, {
     stripUnknownKeys: boolean;
 }>;
 
-export type SchemaChainConstructorParams = ObjectChainConstructorParams<SchemaChainConfig> & {
+export type SchemaChainConstructorParams = ObjectChainConstructorParams<SchemaChainProps> & {
     schema?: SchemaObject;
 };
 
 export type SchemaChainCloneParams = Partial<SchemaChainConstructorParams>;
     
-class SchemaChain extends ObjectChain<SchemaChainConfig> {
+class SchemaChain extends ObjectChain<SchemaChainProps> {
 
     constructor(args: SchemaChainConstructorParams) {
         super(args);
@@ -46,14 +46,14 @@ class SchemaChain extends ObjectChain<SchemaChainConfig> {
             stripUnknownKeys = true,
         } = args;
 
-        const { _config } = this;
-        _config.arrayChain = arrayChain;
-        _config.cloneObject = true;
-        _config.ensurePlain = true;
-        _config.failOnFirstError = failOnFirstError;
-        _config.stripUnknownKeys = stripUnknownKeys;
-        _config.renameKeysArgs = renameKeysArgs;
-        _config.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
+        const { extendedProps: props } = this;
+        props.arrayChain = arrayChain;
+        props.cloneObject = true;
+        props.ensurePlain = true;
+        props.failOnFirstError = failOnFirstError;
+        props.stripUnknownKeys = stripUnknownKeys;
+        props.renameKeysArgs = renameKeysArgs;
+        props.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
     }
 
     public override clone(args: SchemaChainCloneParams = {}): this {
@@ -62,7 +62,7 @@ class SchemaChain extends ObjectChain<SchemaChainConfig> {
             schema = null
         } = args;
         if (schema) {
-            clone._config.schemaMap = this._createSchemaMap(schema);
+            clone.extendedProps.schemaMap = this._createSchemaMap(schema);
         }
         return clone;
     }
@@ -82,7 +82,7 @@ class SchemaChain extends ObjectChain<SchemaChainConfig> {
                 });
             }
             else if (Array.isArray(value)) {
-                field = this._config.arrayChain.tuple(value);
+                field = this.extendedProps.arrayChain.tuple(value);
             }
             else {
                 field = new ValueField({

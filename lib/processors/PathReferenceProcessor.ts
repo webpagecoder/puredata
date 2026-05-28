@@ -2,12 +2,12 @@
 
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { Processor, State } from './Processor.ts';
+import { Processor } from './Processor.ts';
 
 class PathReferenceProcessor extends Processor<PathReferenceField> {
 
     public override actualProcess(tracker: ValueTracker): ValueTracker {
-        const { path, defaultOrCallback } = this._field;
+        const { path, defaultOrCallback } = this._field.extendedProps;
         const referencedValueTracker = tracker.parent.getNodeByPath(path);
         let resolvedValue = undefined;
         if (referencedValueTracker) {
@@ -25,8 +25,6 @@ class PathReferenceProcessor extends Processor<PathReferenceField> {
 
         return tracker;
     }
-
-
 }
 
 export { PathReferenceProcessor };

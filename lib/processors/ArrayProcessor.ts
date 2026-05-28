@@ -7,39 +7,35 @@ import { ChainProcessor } from './ChainProcessor.ts';
 class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const field = this.field;
+        const { autoConvert, label, extendedProps } = this.field;
+        const value = tracker.getValue();
 
-        const { label } = field;
-        const { castSingle } = field;
-
-        if (!Array.isArray(tracker.getValue())) {
-            if (castSingle && tracker.getValue() !== undefined) {
-                tracker.setValue([tracker.getValue()]);
+        if (!Array.isArray(value)) {
+            if (autoConvert || extendedProps.castSingle && value !== undefined) {
+                tracker.setValue([value]);
             }
             else {
                 tracker.addError('array/base');
+                return;
             }
         }
-        else {
-            const { maxLength, removeEmpties, emptyValues } = field;
 
-            if (removeEmpties) {
-                tracker.setValue(field.chainHandler.removeEmpties(tracker.getValue(), emptyValues).value);
-            }
+        const { chainHandler, maxLength, removeEmpties, emptyValues } = extendedProps;
 
-            if (maxLength != null) {
-                const result = field.chainHandler.maxLength(tracker.getValue(), maxLength);
-                if (result.fail) {
-                    tracker.addError('array/maxLength', {
-                        maxLength,
-                        label
-                    });
-                }
+        if (removeEmpties) {
+            tracker.setValue(chainHandler.removeEmpties(tracker.getValue() as unknown[], emptyValues).value);
+        }
+
+        if (maxLength != null) {
+            const result = chainHandler.maxLength(tracker.getValue() as unknown[], maxLength);
+            if (result.fail) {
+                tracker.addError('array/maxLength', {
+                    maxLength,
+                    label
+                });
             }
         }
     }
-
-
 }
 
 export { ArrayProcessor };
