@@ -7,12 +7,12 @@ import { Path } from '../Path.ts';
 import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
-import { ObjectProcessor, ObjectProcessorProps } from './ObjectProcessor.ts';
-import { Processor, ProcessorConstructorParams, State } from './Processor.ts';
+import { ObjectProcessor } from './ObjectProcessor.ts';
+import { Processor, State } from './Processor.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
 import { SchemaNodeProcessor } from './SchemaNodeProcessor.ts';
 
-export type CompiledSchemaMap = Map<string, SchemaNodeProcessor>;
+export type CompiledSchemaMap = Map<string, Processor>;
 
 export type CompilationContext = {
     parentPubSubs?: {
