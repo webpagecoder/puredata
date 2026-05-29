@@ -5,6 +5,7 @@ import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 import { ArgumentCollection } from '../types.ts';
+import { PubSub } from '../pub-sub/PubSub.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
@@ -13,6 +14,8 @@ export type ProcessorConstructorParams<F extends Field = Field> = {
 };
 
 export type State = Record<string, unknown>;
+
+export type CompilationContext = Record<string, unknown>;
 
 abstract class Processor<F extends Field = Field> {
 
@@ -39,7 +42,7 @@ abstract class Processor<F extends Field = Field> {
         // this._state = {};
     }
 
-    public compile(): this {
+    public compile(context: CompilationContext = {}): this {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {

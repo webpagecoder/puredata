@@ -8,16 +8,26 @@ class PathReferenceProcessor extends Processor<PathReferenceField> {
 
     public override actualProcess(tracker: ValueTracker): ValueTracker {
         const { path, defaultOrCallback } = this._field.extendedProps;
+        const isCallback = typeof defaultOrCallback === 'function';
+
+        if(path.isSelf) {
+            const resolvedValue = isCallback
+                ? defaultOrCallback(tracker.getValue())
+                : tracker.getValue();
+            tracker.setValue(resolvedValue);
+            return tracker;
+        }
+
         const referencedValueTracker = tracker.parent.getNodeByPath(path);
         let resolvedValue = undefined;
         if (referencedValueTracker) {
-            resolvedValue = typeof defaultOrCallback === 'function'
+            resolvedValue = isCallback
                 ? defaultOrCallback(referencedValueTracker.getValue())
                 : referencedValueTracker.getValue();
         }
 
         if (resolvedValue === undefined) {
-            tracker.setValue(typeof defaultOrCallback === 'function' ? defaultOrCallback() : defaultOrCallback);
+            tracker.setValue(isCallback ? defaultOrCallback() : defaultOrCallback);
         }
         else {
             tracker.setValue(resolvedValue);

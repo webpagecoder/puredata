@@ -7,45 +7,45 @@ import { SchemaNodePosition } from './SchemaNodePosition.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 
 export type SchemaNodeProcessorProps = {
-    processor: Processor;
+    innerProcessor: Processor;
     parent: SchemaProcessor;
     path: Path;
     root: SchemaProcessor;
 };
 
 class SchemaNodeProcessor extends Processor implements SchemaNodePosition {
-    public processor: Processor;
+    public innerProcessor: Processor;
     public parent: SchemaProcessor;
     public path: Path;
     public root: SchemaProcessor;
 
     public constructor(props: SchemaNodeProcessorProps) {
-        super({ field: props.processor.field });
-        this.processor = props.processor;
+        super({ field: props.innerProcessor.field });
+        this.innerProcessor = props.innerProcessor;
         this.path = props.path;
         this.parent = props.parent;
         this.root = props.root;
     }
 
     public override actualProcess(tracker: ValueTracker, state: State): ValueTracker {
-        return this.processor.actualProcess(tracker, state);
+        return this.innerProcessor.actualProcess(tracker, state);
     }
 
     public override hasReferences(): boolean {
-        return this.processor.hasReferences();
+        return this.innerProcessor.hasReferences();
     }
 
     public override compile(): this {
-        this.processor.compile();
+        this.innerProcessor.compile();
         return this;
     }
 
     public override preProcess(tracker: ValueTracker, state: State): void {
-        this.processor.preProcess(tracker, state);
+        this.innerProcessor.preProcess(tracker, state);
     }
 
     public override postProcess(tracker: ValueTracker, state: State): void {
-        this.processor.postProcess(tracker, state);
+        this.innerProcessor.postProcess(tracker, state);
     }
 
 }

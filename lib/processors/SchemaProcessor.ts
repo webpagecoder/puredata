@@ -8,72 +8,103 @@ import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
-import { Processor, State } from './Processor.ts';
+import { CompilationContext, Processor, State } from './Processor.ts';
+import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
 import { SchemaNodeProcessor } from './SchemaNodeProcessor.ts';
 
 export type CompiledSchemaMap = Map<string, Processor>;
 
-export type CompilationContext = {
-    parentPubSubs?: {
-        pubSub: PubSub;
-        depth: number;
-    }[];
+export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain> & {
+    depth?: number;
+    parent?: SchemaProcessor;
+    path?: Path;
+    root?: SchemaProcessor;
 };
 
-export type SchemaProcessorProps = ChainProcessorConstructorParams<SchemaChain> & {
-    depth?: number;
+export type SchemaCompilationContext = CompilationContext & {
+    pubSub?: PubSub;
+    conditionals?: SchemaConditionalProcessor[];
 };
 
 class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNodePosition {
 
     protected _compiledSchemaMap: CompiledSchemaMap;
+    protected _conditionals: SchemaConditionalProcessor[] | null;
     protected _depth: number;
     protected _parent: SchemaProcessor;
     protected _path: Path;
-    protected _pubSub: PubSub;
+    protected _pubSub: PubSub | null;
     protected _root: SchemaProcessor;
 
-    constructor(args: SchemaProcessorProps) {
+    constructor(args: SchemaProcessorConstructorParams) {
+        super(args);
+
         const {
             depth = 0,
             field,
+            parent = this,
+            path = new Path('/'),
             processorMapper = new FieldProcessorFactory(),
+            root = this
         } = args;
-
-        super(args);
 
         this._compiledSchemaMap = new Map();
         this._depth = depth;
-        this._parent = this;
-        this._path = new Path('/');
-        this._pubSub = new PubSub();
-        this._root = this;
-        
+        this._parent = parent;
+        this._path = path;
+        this._root = root;
+
+        // To be populated during compilation, local roots only
+        this._conditionals = null;
+        this._pubSub = null;
+
         const compiledSchemaMap: CompiledSchemaMap = new Map();
 
         for (let [key, childField] of field.extendedProps.schemaMap) {
+            const parent = this;
+            const path = this._path.move(key);
+            const root = this._root;
+
             let compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
+                parent,
+                path,
+                root
             });
 
             if (!(compiledChild instanceof SchemaProcessor)) {
                 compiledChild = new SchemaNodeProcessor({
-                    processor: compiledChild,
-                    parent: this,
-                    path: this._path.move(key),
-                    root: this._root
+                    innerProcessor: compiledChild,
+                    parent,
+                    path,
+                    root
                 });
             }
 
             compiledSchemaMap.set(key, compiledChild);
         }
 
+
+        //todo: go through compiled child processors and if any have substitution references,
+        // get those ready.
+
         this._compiledSchemaMap = compiledSchemaMap;
     }
 
-    public override compile(context: CompilationContext = {}): this {
-        super.compile();
+    public override compile(context: SchemaCompilationContext = {}): this {
+
+        super.compile(context);
+
+        let {
+            pubSub,
+            conditionals
+        } = context;
+
+        if(!pubSub) {
+            this._pubSub = pubSub = new PubSub();
+            this._conditionals = conditionals = [];
+        }
 
         const {
             _depth,
@@ -81,50 +112,44 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             _compiledSchemaMap
         } = this;
 
-        let {
-            parentPubSubs = [],
-        }: CompilationContext = context;
-
-        const allPubSubs = [
-            {
-                pubSub: this._pubSub,
-                depth: _depth
-            },
-            ...parentPubSubs
-        ];
-
-
         for (let [key, childProcessor] of _compiledSchemaMap) {
             const childPath = _path.move(key);
 
-            childProcessor = childProcessor.compile({
-                parentPubSubs: allPubSubs,
-            });
+            if (childProcessor.field instanceof SchemaConditionalProcessor) {
+                conditionals!.push(childProcessor);
+            }
+
+            childProcessor.compile({
+                pubSub,
+                conditionals
+            }); //conditionals should make a new pubsub
 
             _compiledSchemaMap.set(key, childProcessor);
 
             if (childProcessor.hasReferences()) {
-                for (const { pubSub, depth } of allPubSubs) {
+                // for (const { pubSub, depth } of allPubSubs) {
 
-                    const adjustedRelativeSubPath = childPath.shiftKeys(depth).toRelative();
+                const adjustedRelativeSubPath = childPath.shiftKeys(_depth).toRelative();
 
-                    const subNode = pubSub.getOrCreateNode(
-                        childPath.string,
-                        function ({ tracker, failOnFirstError, prependRootPath }) {
-                            const activeValueTracker = tracker.getNodeByPath(adjustedRelativeSubPath);
-                            if (activeValueTracker) {
-                                childProcessor.actualProcess(activeValueTracker);
-                            }
-                            return true;
+                const subNode = pubSub.getOrCreateNode(
+                    childPath.string,
+                    function ({ tracker, failOnFirstError }) {
+                        const activeValueTracker = tracker.getNodeByPath(adjustedRelativeSubPath);
+                        if (activeValueTracker) {
+                            childProcessor.actualProcess(activeValueTracker);
                         }
-                    );
-
-                    for (const reference of childProcessor.getReferences()) {
-                        const publisherPath = childPath.parent().move(reference.path);
-                        const pubNode = pubSub.getOrCreateNode(publisherPath.string);
-                        pubSub.linkNodes(pubNode, subNode);
+                        return true;
                     }
+                );
+
+                for (const reference of childProcessor.getReferences()) {
+                    const publisherPath = childPath.parent().move(reference.extendedProps.path);
+                    const pubNode = pubSub.getOrCreateNode(publisherPath.string);
+                    pubSub.linkNodes(pubNode, subNode);
                 }
+                // }
+
+
             }
         }
 
@@ -133,6 +158,13 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
     public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
 
+        let conditionalTrackersMap = state.conditionalTrackersMap as Map<SchemaConditionalProcessor, ValueTracker>;
+        if(!conditionalTrackersMap) {
+            conditionalTrackersMap = new Map<SchemaConditionalProcessor, ValueTracker>();
+            state.conditionalTrackersMap = conditionalTrackersMap;
+        }
+
+
         this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
             return tracker;
@@ -140,10 +172,6 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         const { _field, _pubSub, _compiledSchemaMap } = this;
 
-        if (!state.localRoot) {
-            state.localRoot = this;
-            state.conditionals = [];
-        }
 
         const {
             chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
@@ -163,8 +191,17 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
-        const value = tracker.getValue();
+
+
+
+
+        const value = tracker.getValue() as Record<string, any>;
         for (let [key, childProcessor] of _compiledSchemaMap) {
+
+            if(childProcessor instanceof SchemaConditionalProcessor) {
+                conditionalTrackersMap.set(childProcessor, tracker);
+                continue;
+            }
 
             let childValueTracker = new ValueTracker(undefined, childProcessor);
 
@@ -172,11 +209,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             childValueTracker.setValue(value[key]);
             // childValueTracker.path = tracker.path.move(key);
 
-            const childField = childProcessor.field;
-            if (childField instanceof SchemaConditionalField) {
-                state.conditionals.push([childProcessor, childValueTracker]);
-            }
-            else if (!childProcessor.hasReferences()) {
+            if (!childProcessor.hasReferences()) {
                 tracker.setChild(key, childProcessor.actualProcess(childValueTracker, state));
             }
             else {
@@ -184,15 +217,11 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             }
         }
 
-        if (state.localRoot === this) {
-            _pubSub.execute({ tracker });
-
-            for (const [conditionalField, tracker] of state.conditionals) {
-                conditionalField.actualProcess(tracker); // fresh state
+        if(this._pubSub) {
+            this._pubSub.execute({ tracker });
+            for(const conditional of this._conditionals!) {
+                conditional.actualProcess(conditionalTrackersMap.get(conditional)!, state);
             }
-            // console.log(this.state.conditionals);
-            state.conditionals = [];
-
         }
 
         return tracker;

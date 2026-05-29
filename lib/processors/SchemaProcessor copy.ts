@@ -6,23 +6,19 @@ import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
 import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { ObjectProcessor, ObjectProcessorProps } from './ObjectProcessor.ts';
-import { Processor, State } from './Processor.ts';
-import { SchemaNodeProcessor } from './SchemaNodeProcessor.ts';
+import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
+import { ObjectProcessor } from './ObjectProcessor.ts';
+import { CompilationContext, Processor, State } from './Processor.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
+import { SchemaNodeProcessor } from './SchemaNodeProcessor.ts';
 
-export type SchemaProcessorProps = ObjectProcessorProps<SchemaChain> & {
-    field: SchemaChain;
+export type CompiledSchemaMap = Map<string, Processor>;
+
+export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain> & {
     depth?: number;
-    parent?: SchemaProcessor;
-    path?: Path;
-    pubSub?: PubSub;
-    root?: SchemaProcessor;
 };
 
-export type CompiledSchemaMap = Map<string, SchemaNodeProcessor>;
-
-export type CompilationContext = {
+export type SchemaCompilationContext = CompilationContext & {
     parentPubSubs?: {
         pubSub: PubSub;
         depth: number;
@@ -31,35 +27,29 @@ export type CompilationContext = {
 
 class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNodePosition {
 
-    protected _parent: SchemaProcessor;
-    protected _path: Path
-    protected _root: SchemaProcessor;
-
     protected _compiledSchemaMap: CompiledSchemaMap;
     protected _depth: number;
+    protected _parent: SchemaProcessor;
+    protected _path: Path;
     protected _pubSub: PubSub;
+    protected _root: SchemaProcessor;
 
-    constructor(args: SchemaProcessorProps) {
+    constructor(args: SchemaProcessorConstructorParams) {
         const {
+            depth = 0,
             field,
             processorMapper = new FieldProcessorFactory(),
-            depth = 0,
-            path = Path.create('/'),
-            parent,
-            pubSub = new PubSub(),
-            root
         } = args;
 
         super(args);
 
-        this._parent = parent || this;
-        this._path = path;
-        this._root = root || this;
-
         this._compiledSchemaMap = new Map();
         this._depth = depth;
-        this._pubSub = pubSub;
-
+        this._parent = this;
+        this._path = new Path('/');
+        this._pubSub = new PubSub();
+        this._root = this;
+        
         const compiledSchemaMap: CompiledSchemaMap = new Map();
 
         for (let [key, childField] of field.extendedProps.schemaMap) {
@@ -69,9 +59,9 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
             if (!(compiledChild instanceof SchemaProcessor)) {
                 compiledChild = new SchemaNodeProcessor({
-                    processor: compiledChild,
+                    innerProcessor: compiledChild,
                     parent: this,
-                    path: path.move(key),
+                    path: this._path.move(key),
                     root: this._root
                 });
             }
@@ -82,8 +72,8 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         this._compiledSchemaMap = compiledSchemaMap;
     }
 
-    public override compile(context: CompilationContext = {}): this {
-        super.compile();
+    public override compile(context: SchemaCompilationContext = {}): this {
+        super.compile(context);
 
         const {
             _depth,
@@ -93,7 +83,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         let {
             parentPubSubs = [],
-        }: CompilationContext = context;
+        } = context;
 
         const allPubSubs = [
             {

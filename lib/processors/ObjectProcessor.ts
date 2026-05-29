@@ -3,7 +3,7 @@
 import { ObjectChain } from '../fields/ObjectChain.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Utils } from '../Utils.ts';
-import { ChainProcessor, ChainProcessorConstructorParams } from './ChainProcessor.ts';
+import { ChainProcessor } from './ChainProcessor.ts';
 import { State } from './Processor.ts';
 
 class ObjectProcessor<C extends ObjectChain = ObjectChain> extends ChainProcessor<C> {

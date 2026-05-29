@@ -11,7 +11,6 @@ class DateProcessor extends ChainProcessor<DateChain> {
 
     public constructor(args: DateProcessorConstructorParams) {
         super(args);
-        this._hasPipelineHooks = true;
     }
 
     public override preProcess(tracker: ValueTracker): void {
