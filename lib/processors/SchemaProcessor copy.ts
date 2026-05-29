@@ -1,7 +1,6 @@
 'use strict';
 
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
-import { ObjectChain } from '../fields/ObjectChain.ts';
 import { SchemaChain } from '../fields/SchemaChain.ts';
 import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
 import { Path } from '../Path.ts';
@@ -9,15 +8,19 @@ import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ObjectProcessor, ObjectProcessorProps } from './ObjectProcessor.ts';
 import { Processor, State } from './Processor.ts';
+import { SchemaNodeProcessor } from './SchemaNodeProcessor.ts';
+import { SchemaNodePosition } from './SchemaNodePosition.ts';
 
 export type SchemaProcessorProps = ObjectProcessorProps<SchemaChain> & {
     field: SchemaChain;
     depth?: number;
-    path?: Path;
     parent?: SchemaProcessor;
+    path?: Path;
     pubSub?: PubSub;
     root?: SchemaProcessor;
 };
+
+export type CompiledSchemaMap = Map<string, SchemaNodeProcessor>;
 
 export type CompilationContext = {
     parentPubSubs?: {
@@ -26,14 +29,15 @@ export type CompilationContext = {
     }[];
 };
 
-class SchemaProcessor extends ObjectProcessor<SchemaChain> {
+class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNodePosition {
 
-    protected _depth: number;
-    protected _path: Path
     protected _parent: SchemaProcessor;
+    protected _path: Path
+    protected _root: SchemaProcessor;
+
+    protected _compiledSchemaMap: CompiledSchemaMap;
+    protected _depth: number;
     protected _pubSub: PubSub;
-    protected _root: SchemaProcessor
-    protected _schema: Map<string, Processor>;
 
     constructor(args: SchemaProcessorProps) {
         const {
@@ -48,33 +52,34 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         super(args);
 
-        this._depth = depth;
-        this._path = path;
         this._parent = parent || this;
-        this._pubSub = pubSub;
+        this._path = path;
         this._root = root || this;
-        this._schema = new Map();
 
-        const { schema = new Map() } = field;
+        this._compiledSchemaMap = new Map();
+        this._depth = depth;
+        this._pubSub = pubSub;
 
-        const compiledSchema = new Map();
-        this._schema = compiledSchema;
+        const compiledSchemaMap: CompiledSchemaMap = new Map();
 
-        for (let [key, childField] of schema) {
-            const compiledChild = processorMapper.createProcessor(childField, {
+        for (let [key, childField] of field.extendedProps.schemaMap) {
+            let compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
-                path: path.move(key),
-                parent: this,
-                root: this._root,
             });
+
             if (!(compiledChild instanceof SchemaProcessor)) {
-                // Set proper path/parent/root for non-schema chains
-                (compiledChild as SchemaProcessor)._path = path.move(key);
-                (compiledChild as SchemaProcessor)._parent = this;
-                (compiledChild as SchemaProcessor)._root = this._root;
+                compiledChild = new SchemaNodeProcessor({
+                    processor: compiledChild,
+                    parent: this,
+                    path: path.move(key),
+                    root: this._root
+                });
             }
-            compiledSchema.set(key, compiledChild);
+
+            compiledSchemaMap.set(key, compiledChild);
         }
+
+        this._compiledSchemaMap = compiledSchemaMap;
     }
 
     public override compile(context: CompilationContext = {}): this {
@@ -83,7 +88,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         const {
             _depth,
             _path,
-            _schema
+            _compiledSchemaMap
         } = this;
 
         let {
@@ -99,14 +104,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         ];
 
 
-        for (let [key, childProcessor] of _schema) {
+        for (let [key, childProcessor] of _compiledSchemaMap) {
             const childPath = _path.move(key);
 
             childProcessor = childProcessor.compile({
                 parentPubSubs: allPubSubs,
             });
 
-            _schema.set(key, childProcessor);
+            _compiledSchemaMap.set(key, childProcessor);
 
             if (childProcessor.hasReferences()) {
                 for (const { pubSub, depth } of allPubSubs) {
@@ -143,7 +148,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             return tracker;
         }
 
-        const { _field, _pubSub } = this;
+        const { _field, _pubSub, _compiledSchemaMap } = this;
 
         if (!state.localRoot) {
             state.localRoot = this;
@@ -151,32 +156,28 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         const {
-            chainHandler: { renameKeys: renameKeysFn, stripKeys: stripUnknownKeysFn },
-            renameKeysArgs, stripUnknownKeys, schema, failOnFirstError
-        } = _field;
+            chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
+        } = _field.extendedProps;
 
         // Do any required key renaming
         if (renameKeysArgs) {
-            tracker.setValue(renameKeysFn(...renameKeysArgs).value);
+            tracker.setValue(renameKeys(...renameKeysArgs).value);
         }
 
         // Strip unknown keys if needed
-        const schemaKeys = Array.from(schema.keys());
-        if (stripUnknownKeysFn) {
-            tracker.setValue(stripUnknownKeysFn(tracker.getValue(), schemaKeys).value);
-        }
-        else {
-            tracker.untrackedEntries = tracker.getValue();
+        const schemaKeys = Array.from(_compiledSchemaMap.keys());
+        if (stripUnknownKeys) {
+            tracker.setValue(stripKeys(tracker.getValue(), schemaKeys).value);
         }
 
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
-        const value = tracker!.value;
-        for (let [key, childProcessor] of this._schema) {
+        const value = tracker.getValue();
+        for (let [key, childProcessor] of _compiledSchemaMap) {
 
             let childValueTracker = new ValueTracker(undefined, childProcessor);
-            tracker.setChild(key, childValueTracker);
+
 
             childValueTracker.setValue(value[key]);
             // childValueTracker.path = tracker.path.move(key);
@@ -186,7 +187,10 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 state.conditionals.push([childProcessor, childValueTracker]);
             }
             else if (!childProcessor.hasReferences()) {
-                childProcessor.actualProcess(childValueTracker, state);
+                tracker.setChild(key, childProcessor.actualProcess(childValueTracker, state));
+            }
+            else {
+                tracker.setChild(key, childValueTracker);
             }
         }
 
@@ -227,13 +231,23 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             if (!(target instanceof SchemaProcessor)) {
                 return null;
             }
-            const child = target._schema.get(key);
+            const child = target._compiledSchemaMap.get(key);
             if (!child) {
                 return null;
             }
             target = child;
         }
         return target;
+    }
+
+    public get parent(): SchemaProcessor {
+        return this._parent;
+    }
+    public get path(): Path {
+        return this._path;
+    }
+    public get root(): SchemaProcessor {
+        return this._root;
     }
 
 }

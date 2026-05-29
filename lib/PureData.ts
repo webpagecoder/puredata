@@ -25,6 +25,7 @@ import { StringHandler } from './handlers/StringHandler.ts';
 import { Utils } from './Utils.ts';
 import { Handler } from './handlers/Handler.ts';
 import { Field } from './fields/Field.ts';
+import { ObjectChain } from './fields/ObjectChain.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
@@ -102,7 +103,7 @@ class PureData {
     }
 
     object(props = {}) {
-        return new DateChain(this.composeChainProps(props, 'object', new ObjectHandler()));
+        return new ObjectChain(this.composeChainProps(props, 'object', new ObjectHandler()));
     }
 
     pointer(pathStr, minDepth, maxDepth) {

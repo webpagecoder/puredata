@@ -24,7 +24,7 @@ type PipelineStep = {
 };
 
 export type ChainProcessorConstructorParams<C extends Chain = Chain> = ProcessorConstructorParams<C> & {
-    hasPipelineHooks: boolean;
+    hasPipelineHooks?: boolean;
 };
 
 abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
@@ -33,7 +33,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
     constructor(args: ChainProcessorConstructorParams<C>) {
         super(args);
-        this._hasPipelineHooks = args.hasPipelineHooks;
+        this._hasPipelineHooks = args.hasPipelineHooks || false;
     }
 
     public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {

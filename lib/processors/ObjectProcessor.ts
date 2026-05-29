@@ -6,13 +6,6 @@ import { Utils } from '../Utils.ts';
 import { ChainProcessor, ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { State } from './Processor.ts';
 
-export type ObjectProcessorProps<C extends ObjectChain = ObjectChain> = ChainProcessorConstructorParams<C> & {
-    ensurePlain: boolean;
-    cloneObject: boolean;
-    maxDepth?: number;
-    maxKeyCount?: number;
-};
-
 class ObjectProcessor<C extends ObjectChain = ObjectChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker, _state?: State): void {

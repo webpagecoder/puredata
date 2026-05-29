@@ -9,12 +9,12 @@ export type DateProcessorConstructorParams = ChainProcessorConstructorParams<Dat
 
 class DateProcessor extends ChainProcessor<DateChain> {
 
-    constructor(args: DateProcessorConstructorParams) {
+    public constructor(args: DateProcessorConstructorParams) {
         super(args);
         this._hasPipelineHooks = true;
     }
 
-    override preProcess(tracker: ValueTracker): void {
+    public override preProcess(tracker: ValueTracker): void {
         const { chainHandler, skipGenericParse } = this._field.extendedProps;
         if (skipGenericParse) {
             return;
@@ -25,7 +25,7 @@ class DateProcessor extends ChainProcessor<DateChain> {
         );
     }
 
-    override postProcess(tracker: ValueTracker): void {
+    public override postProcess(tracker: ValueTracker): void {
         if (tracker.fail) {
             return;
         }
