@@ -30,9 +30,9 @@ class PathReferenceField extends Field<PathReferenceFieldProps> {
             defaultOrCallback = undefined
         } = args;
 
-        const { extendedProps: props } = this;
-        props.path =  Path.create(pathStr);
-        props.defaultOrCallback = defaultOrCallback;
+        const { extendedProps } = this;
+        extendedProps.path =  Path.create(pathStr);
+        extendedProps.defaultOrCallback = defaultOrCallback;
     }
 
     public override clone(args:PathReferenceFieldCloneParams = {}): this {

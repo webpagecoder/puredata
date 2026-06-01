@@ -5,7 +5,6 @@ import { Locale } from '../Locale.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { Overwrite } from '../types.ts';
 
 export type FieldProps = {};
 
@@ -13,9 +12,9 @@ export type FieldConstructorParams = {
     autoConvert?: boolean;
     defaultValue?: unknown;
     label?: string;
-    locale?: Locale;
+    locale: Locale;
     presence?: Presence;
-    processorMapper?: FieldProcessorFactory;
+    processorMapper: FieldProcessorFactory;
 };
 
 export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldConstructorParams & C>;
@@ -41,9 +40,9 @@ abstract class Field<C extends FieldProps = FieldProps> {
             autoConvert = true,
             defaultValue = undefined,
             label = 'Field',
-            locale = new Locale('en-US'),
+            locale,
             presence = 'required',
-            processorMapper = new FieldProcessorFactory(),
+            processorMapper
         } = args;
 
         this._props = {} as C;

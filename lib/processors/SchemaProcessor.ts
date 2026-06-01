@@ -129,12 +129,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             if (childProcessor.hasReferences()) {
                 // for (const { pubSub, depth } of allPubSubs) {
 
-                const adjustedRelativeSubPath = childPath.shiftKeys(_depth).toRelative();
+                const adjustedRelativeSubPath = childPath.shiftKeys(_depth - 1).toRelative();
 
                 const subNode = pubSub.getOrCreateNode(
                     childPath.string,
                     function ({ tracker, failOnFirstError }) {
-                        const activeValueTracker = tracker.getNodeByPath(adjustedRelativeSubPath);
+
+                        console.log(adjustedRelativeSubPath.string,childPath.string);
+                        const activeValueTracker = tracker.getNodeByPath(childPath);
                         if (activeValueTracker) {
                             childProcessor.actualProcess(activeValueTracker);
                         }
@@ -203,7 +205,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
                 continue;
             }
 
-            let childValueTracker = new ValueTracker(undefined, childProcessor);
+            let childValueTracker = new ValueTracker(childProcessor.field);
 
 
             childValueTracker.setValue(value[key]);

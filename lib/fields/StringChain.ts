@@ -2,7 +2,7 @@
 
 import { StringHandler } from '../handlers/StringHandler.ts';
 import { Overwrite } from '../types.ts';
-import { Chain, ChainProps } from './Chain.ts';
+import { Chain, ChainConstructorParams, ChainProps } from './Chain.ts';
 
 export type StringChainProps = Overwrite<ChainProps<StringHandler>, {
     trim: boolean;
@@ -10,8 +10,10 @@ export type StringChainProps = Overwrite<ChainProps<StringHandler>, {
     truncate: boolean;
 }>;
 
+export type StringChainConstructorParams = ChainConstructorParams<StringChainProps>;
+
 class StringChain extends Chain<StringChainProps> {
-    constructor(args: StringChainProps) {
+    constructor(args: StringChainConstructorParams) {
         super(args);
 
         const {

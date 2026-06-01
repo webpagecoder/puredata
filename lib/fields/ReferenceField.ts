@@ -14,7 +14,7 @@ export type ReferenceFieldConstructorParams = FieldConstructorParams
 
 class ReferenceField extends Field<ReferenceFieldProps> {
 
-    constructor(args: ReferenceFieldConstructorParams = {}) {
+    constructor(args: ReferenceFieldConstructorParams) {
         super(args);
         const {
             path = '',

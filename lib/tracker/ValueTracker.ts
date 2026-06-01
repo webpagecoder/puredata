@@ -1,12 +1,12 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import type { Processor } from '../processors/Processor.ts';
 import { ArgumentCollection } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Node } from './Node.ts';
+import { Field } from '../fields/Field.ts';
 
 type TrackerError = {
     args: ArgumentCollection;
@@ -25,15 +25,22 @@ type ErrorTree = {
 class ValueTracker extends Node {
 
     private _errorCollection: TrackerError[];
-    private _processor: Processor;
+    private _field: Field;
     private _rawValue: unknown;
 
-    constructor(value: unknown, processor: Processor) {
+    public constructor(field: Field, value: unknown = undefined) {
         super();
         this._errorCollection = [];
-        this._processor = processor;
-        this._rawValue = value;
+        this._field = field;
         this.setValue(value);
+    }
+
+    public override clone(): this {
+        const clone = super.clone();
+        clone._errorCollection = [];
+        clone._field = this._field;
+        clone.setValue(this._rawValue);
+        return clone;
     }
 
     public setValue(value: unknown = undefined): void {
@@ -79,12 +86,12 @@ class ValueTracker extends Node {
     }
 
     public addError(errorKey: string, args?: ArgumentCollection): this {
-        if (!this._processor) {
+        if (!this._field) {
             throw new Error('ValueTracker compiled field is not configured');
         }
 
         const {
-            _processor: { field: { label, locale } },
+            _field: { label, locale },
             _path: path,
         } = this;
         let text = locale.translate(Path.fromArray(['errors', errorKey])).replace('{label}', label);

@@ -12,7 +12,7 @@ export type ValueFieldConstructorParams = FieldConstructorParams
 
 class ValueField extends Field<ValueFieldProps> {
 
-    public constructor(args: ValueFieldConstructorParams = {}) {
+    public constructor(args: ValueFieldConstructorParams) {
         super(args);
         const {
             mutable = false,

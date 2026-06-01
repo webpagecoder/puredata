@@ -9,14 +9,21 @@ class Node {
     protected _root: this;
     protected _path: Path;
 
-    constructor() {
+    public constructor() {
         this._children = {};
         this._parent = this._root = this;
         this._path = Path.create('/');
     }
 
-    public removeChild(key: string): void {
-        delete this._children[key];
+    public clone(): this {
+        const clone = new (this.constructor as new () => this)();
+        clone._parent = this._parent;
+        clone._path = this._path;
+        clone._root = this._root;
+        for (const key of Object.keys(this._children)) {
+            clone._children[key] = this._children[key].clone();
+        }
+        return clone;
     }
 
     public setChild(key: string, child: this): void {
@@ -30,7 +37,7 @@ class Node {
         return Object.keys(this._children).length > 0;
     }
 
-    public getNodeByPath(path: string | Path, _context?: unknown): this | null {
+    public getNodeByPath(path: string | Path): this | null {
         const resolvedPath = typeof path === 'string' ? Path.create(path) : path as Path;
 
         if (resolvedPath.isSelf) {

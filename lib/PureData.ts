@@ -59,7 +59,9 @@ class PureData {
     composeChainProps(props = {}, chainType: string, chainHandler: Handler) {
         return Object.assign(
             {
-                chainHandler
+                chainHandler,
+                processorMapper: this._processorMapper,
+                locale: this._locale,
             },
             this._globalConfig['general'],
             this._globalConfig[chainType],
@@ -69,7 +71,10 @@ class PureData {
 
     composeFieldProps(props = {}) {
         return Object.assign(
-            {},
+            {
+                processorMapper: this._processorMapper,
+                locale: this._locale,
+            },
             this._globalConfig['general'],
             props
         );

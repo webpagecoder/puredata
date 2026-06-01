@@ -17,7 +17,7 @@ export type EnumFieldCloneParams =
 
 class EnumField extends Field<EnumFieldProps> {
 
-    constructor(args: EnumFieldConstructorParams = {}) {
+    constructor(args: EnumFieldConstructorParams) {
         super(args);
         const {
             structure = [],

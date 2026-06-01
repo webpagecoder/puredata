@@ -105,14 +105,18 @@ class Path {
         );
     }
 
+        toAbsolute(): Path {
+        const { separator } = Path;
+        return Path.create(separator + this.string);
+    }
+
     toRelative(): Path {
         const { separator, self } = Path;
         return Path.create(self + separator + this.string);
     }
 
-    toAbsolute(): Path {
-        const { separator } = Path;
-        return Path.create(separator + this.string);
+    public toString() {
+        return this.string;
     }
 
 }

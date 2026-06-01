@@ -37,7 +37,7 @@ abstract class Processor<F extends Field = Field> {
         this._id = ++Processor.id;
         this._cachedReferences = null;
         this._defaultValueProcessor = null;
-        this._field = field;
+        this._field = Object.seal(field);
         this._processorMapper = processorMapper;
         // this._state = {};
     }
@@ -52,7 +52,7 @@ abstract class Processor<F extends Field = Field> {
     }
 
     public process(value: unknown = undefined): ValueTracker {
-        const tracker = new ValueTracker(value, this);
+        const tracker = new ValueTracker(this._field, value);
         return this.actualProcess(tracker, {});
     }
 
