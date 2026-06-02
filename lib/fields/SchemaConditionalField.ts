@@ -55,7 +55,6 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
 
     public override clone(args: SchemaConditionalFieldCloneParams = {}): this {
         const clone = super.clone(args);
-
         if (args.targetPathStr !== undefined) {
             clone.extendedProps.targetPath = Path.create(args.targetPathStr);
         }
@@ -63,20 +62,22 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
     }
 
     or(conditionalField: SchemaConditionalField) {
-        if (this.extendedProps.buildStage !== 0) {
+        const { buildStage, conditionalChain } = this.extendedProps;
+        if (buildStage !== 0) {
             throw new Error('Illegal placement of "or" in condition chain');
         }
         return this.clone({
-            conditionalChain: this.extendedProps.conditionalChain.concat([['or', conditionalField]])
+            conditionalChain: conditionalChain.concat([['or', conditionalField]])
         });
     }
 
     and(conditionalField: SchemaConditionalField) {
-        if (this.extendedProps.buildStage !== 0) {
+        const { buildStage, conditionalChain } = this.extendedProps;
+        if (buildStage !== 0) {
             throw new Error('Illegal placement of "and" in condition chain');
         }
         return this.clone({
-            conditionalChain: this.extendedProps.conditionalChain.concat([['and', conditionalField]])
+            conditionalChain: conditionalChain.concat([['and', conditionalField]])
         });
     }
 

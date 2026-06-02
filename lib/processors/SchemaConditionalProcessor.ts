@@ -22,7 +22,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
             }
         }
 
-        const referencedValueTracker = targetPath.isSelf
+        let referencedValueTracker = targetPath.isSelf
             ? tracker
             : tracker.parent.getNodeByPath(targetPath);
 
@@ -31,7 +31,33 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);
         }
 
-        const booleanResult = this.process(referencedValueTracker);
+        referencedValueTracker = this.process2(referencedValueTracker.clone());
+
+
+        const { areEqual, conditionalChain, comparisonField } = this._field.extendedProps;
+
+        const finalTracker = comparisonField.process(tracker);
+
+        let booleanValue = finalTracker.pass
+        if (!areEqual) {
+            booleanValue = !booleanValue;
+        }
+
+        for (let [type, conditional] of conditionalChain) {
+            if (type === 'and') {
+                booleanValue = booleanValue && this.internalMeta.get(conditional).execute(tracker);
+            }
+            else {
+                booleanValue = booleanValue || this.internalMeta.get(conditional).execute(tracker);
+            }
+        }
+
+
+
+
+
+
+
 
         let chosenField: Field;
         if (booleanResult) {
@@ -46,7 +72,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         }
 
 
-        const chosenField = this.getChosenField(tracker);
+        // const chosenField = this.getChosenField(tracker);
 
         chosenField.process(tracker);
 
@@ -54,7 +80,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
     }
 
 
-    public override process(tracker: ValueTracker) {
+    public override process2(tracker: ValueTracker) {
         const { areEqual, conditionalChain, comparisonField } = this._field.extendedProps;
 
         const finalTracker = comparisonField.process(tracker);

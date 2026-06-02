@@ -11,7 +11,8 @@ class Node {
 
     public constructor() {
         this._children = {};
-        this._parent = this._root = this;
+        this._parent = this;
+        this._root = this;
         this._path = Path.create('/');
     }
 

@@ -37,7 +37,6 @@ class ValueTracker extends Node {
 
     public override clone(): this {
         const clone = super.clone();
-        clone._errorCollection = [];
         clone._field = this._field;
         clone.setValue(this._rawValue);
         return clone;
