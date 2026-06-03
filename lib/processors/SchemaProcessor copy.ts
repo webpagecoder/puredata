@@ -10,10 +10,10 @@ import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
 import { CompilationContext, Processor, State } from './Processor.ts';
 import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
-import { SchemaNode } from './SchemaNode.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
+import { SchemaNode } from './SchemaNode.ts';
 
-export type CompiledSchema = Map<string, SchemaNode>;
+export type CompiledSchemaMap = Map<string, Processor>;
 
 export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain> & {
     depth?: number;
@@ -24,13 +24,13 @@ export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<S
 
 export type SchemaCompilationContext = CompilationContext & {
     pubSub?: PubSub;
-    conditionals?: SchemaNode[];
+    conditionals?: SchemaConditionalProcessor[];
 };
 
 class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNodePosition {
 
-    protected _compiledSchema: CompiledSchema;
-    protected _conditionals: SchemaNode[] | null;
+    protected _compiledSchemaMap: CompiledSchemaMap;
+    protected _conditionals: SchemaConditionalProcessor[] | null;
     protected _depth: number;
     protected _parent: SchemaProcessor;
     protected _path: Path;
@@ -49,7 +49,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             root = this
         } = args;
 
-        this._compiledSchema = new Map();
+        this._compiledSchemaMap = new Map();
         this._depth = depth;
         this._parent = parent;
         this._path = path;
@@ -59,33 +59,37 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         this._conditionals = null;
         this._pubSub = null;
 
-        const compiledSchema: CompiledSchema = new Map();
+        const compiledSchemaMap: CompiledSchemaMap = new Map();
 
         for (let [key, childField] of field.extendedProps.schemaMap) {
-            const childPath = path.move(key);
-            const compiledChild = processorMapper.createProcessor(childField, {
+            const parent = this;
+            const path = this._path.move(key);
+            const root = this._root;
+
+            let compiledChild = processorMapper.createProcessor(childField, {
                 depth: depth + 1,
                 parent,
-                path: childPath,
+                path,
                 root
             });
 
-            compiledSchema.set(key,
-                compiledChild instanceof SchemaProcessor
-                    ? compiledChild
-                    : new SchemaNode({
-                        innerProcessor: compiledChild,
-                        parent: this,
-                        path: childPath,
-                        root
-                    })
-            );
+            if (!(compiledChild instanceof SchemaProcessor)) {
+                compiledChild = new SchemaNode({
+                    innerProcessor: compiledChild,
+                    parent,
+                    path,
+                    root
+                });
+            }
+
+            compiledSchemaMap.set(key, compiledChild);
         }
+
 
         //todo: go through compiled child processors and if any have substitution references,
         // get those ready.
 
-        this._compiledSchema = compiledSchema;
+        this._compiledSchemaMap = compiledSchemaMap;
     }
 
     public get parent(): SchemaProcessor {
@@ -104,7 +108,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         let {
             pubSub,
-            conditionals, path
+            conditionals
         } = context;
 
         if (!pubSub) {
@@ -114,32 +118,34 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         const {
             _depth,
-            _compiledSchema
+            _path,
+            _compiledSchemaMap
         } = this;
 
-        for (let [key, childProcessor] of _compiledSchema) {
-            const { field, path } = childProcessor;
+        for (let [key, childProcessor] of _compiledSchemaMap) {
+            const childPath = _path.move(key);
 
-            childProcessor = childProcessor.compile({
+            childProcessor.compile({
                 pubSub,
                 conditionals
-            });
-            _compiledSchema.set(key, childProcessor);
+            }); //conditionals should make a new pubsub
 
-            if (field instanceof SchemaConditionalField) {
+            _compiledSchemaMap.set(key, childProcessor);
+
+            if (childProcessor.field instanceof SchemaConditionalField) {
                 conditionals!.push(childProcessor);
             }
             else if (childProcessor.hasReferences()) {
                 // for (const { pubSub, depth } of allPubSubs) {
 
-                const adjustedRelativeSubPath = path.shiftKeys(_depth - 1).toRelative();
+                const adjustedRelativeSubPath = childPath.shiftKeys(_depth - 1).toRelative();
 
                 const subNode = pubSub.getOrCreateNode(
-                    path.string,
+                    childPath.string,
                     function ({ tracker, failOnFirstError }) {
 
-                        console.log(adjustedRelativeSubPath.string, path.string);
-                        const activeValueTracker = tracker.getNodeByPath(path);
+                        console.log(adjustedRelativeSubPath.string, childPath.string);
+                        const activeValueTracker = tracker.getNodeByPath(childPath);
                         if (activeValueTracker) {
                             childProcessor.process(activeValueTracker);
                         }
@@ -148,7 +154,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
                 );
 
                 for (const reference of childProcessor.getReferences()) {
-                    const publisherPath = path.parent().move(reference.extendedProps.path);
+                    const publisherPath = childPath.parent().move(reference.extendedProps.path);
                     const pubNode = pubSub.getOrCreateNode(publisherPath.string);
                     pubSub.linkNodes(pubNode, subNode);
                 }
@@ -163,10 +169,10 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
     public override process(tracker: ValueTracker, state: State = {}): ValueTracker {
 
-        let conditionalTrackers = state.conditionalTrackers as Map<SchemaConditionalProcessor, ValueTracker>;
-        if (!conditionalTrackers) {
-            conditionalTrackers = new Map<SchemaConditionalProcessor, ValueTracker>();
-            state.conditionalTrackers = conditionalTrackers;
+        let conditionalTrackersMap = state.conditionalTrackersMap as Map<SchemaConditionalProcessor, ValueTracker>;
+        if (!conditionalTrackersMap) {
+            conditionalTrackersMap = new Map<SchemaConditionalProcessor, ValueTracker>();
+            state.conditionalTrackersMap = conditionalTrackersMap;
         }
 
 
@@ -175,7 +181,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             return tracker;
         }
 
-        const { _field, _pubSub, _compiledSchema } = this;
+        const { _field, _pubSub, _compiledSchemaMap } = this;
 
 
         const {
@@ -188,7 +194,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         }
 
         // Strip unknown keys if needed
-        const schemaKeys = Array.from(_compiledSchema.keys());
+        const schemaKeys = Array.from(_compiledSchemaMap.keys());
         if (stripUnknownKeys) {
             tracker.setValue(stripKeys(tracker.getValue(), schemaKeys).value);
         }
@@ -196,16 +202,27 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
+
+
+
+
         const value = tracker.getValue() as Record<string, any>;
-        for (let [key, childProcessor] of _compiledSchema) {
-            const { field } = childProcessor;
-            let childValueTracker = new ValueTracker(field, value[key]);
+        for (let [key, childProcessor] of _compiledSchemaMap) {
+            const {field} = childProcessor;
+            let childValueTracker = new ValueTracker(field);
 
             if (field instanceof SchemaConditionalField) {
-                tracker.setChild(key, childValueTracker);
-                conditionalTrackers.set(childProcessor, childValueTracker);
+                conditionalTrackersMap.set(childProcessor, tracker);
+                continue;
             }
-            else if (!childProcessor.hasReferences()) {
+
+            
+
+
+            childValueTracker.setValue(value[key]);
+            // childValueTracker.path = tracker.path.move(key);
+
+            if (!childProcessor.hasReferences()) {
                 tracker.setChild(key, childProcessor.process(childValueTracker, state));
             }
             else {
@@ -215,15 +232,15 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
 
         if (this._pubSub) {
             this._pubSub.execute({ tracker });
-            for (const schemaNode of this._conditionals!) {
-                schemaNode.process(conditionalTrackers.get(schemaNode)!, state);
+            for (const conditional of this._conditionals!) {
+                conditional.process(conditionalTrackersMap.get(conditional)!, state);
             }
         }
 
         return tracker;
     }
 
-    public resolvePath(path: Path) {
+    public resolvePath(path: Path): Processor | null {
         if (typeof path === 'string') {
             path = Path.create(path);
         }
@@ -246,7 +263,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
             if (!(target instanceof SchemaProcessor)) {
                 return null;
             }
-            const child = target._compiledSchema.get(key);
+            const child = target._compiledSchemaMap.get(key);
             if (!child) {
                 return null;
             }
@@ -254,6 +271,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         }
         return target;
     }
+
 
 }
 

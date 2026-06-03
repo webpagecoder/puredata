@@ -64,12 +64,26 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this._defaultValue;
     }
 
+    public get extendedProps(): C {
+        return this._props;
+    }
+
     public get locale(): Locale {
         return this._locale;
     }
 
     public get presence(): Presence {
         return this._presence;
+    }
+
+    public get processor(): Processor {
+        if (!this._processor) {
+            if (!this._processorMapper) {
+                throw new Error('Field/Processor compilation mapper is not configured');
+            }
+            this._processor = this._processorMapper.createProcessor(this).compile();
+        }
+        return this._processor;
     }
 
     public get autoConvert(): boolean {
@@ -105,15 +119,19 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return clone;
     }
 
-    public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
-        if (!this._processor) {
-            if (!this._processorMapper) {
-                throw new Error('Field/Processor compilation mapper is not configured');
-            }
-            this._processor = this._processorMapper.createProcessor(this).compile();
-        }
-        return this._processor.process(valueOrValueTracker);
+    public process(value: unknown): ValueTracker {
+        return this.processor.process(new ValueTracker(this, value));
     }
+
+    //     public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
+    //     if (!this._processor) {
+    //         if (!this._processorMapper) {
+    //             throw new Error('Field/Processor compilation mapper is not configured');
+    //         }
+    //         this._processor = this._processorMapper.createProcessor(this).compile();
+    //     }
+    //     return this._processor.process(valueOrValueTracker);
+    // }
 
     public isForbidden(): boolean {
         return this._presence === 'forbidden';
@@ -125,10 +143,6 @@ abstract class Field<C extends FieldProps = FieldProps> {
 
     public isRequired(): boolean {
         return this._presence === 'required';
-    }
-
-    public get extendedProps(): C {
-        return this._props;
     }
 
     public config(config: C) {

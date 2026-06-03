@@ -6,7 +6,7 @@ import { Processor } from './Processor.ts';
 
 class PathReferenceProcessor extends Processor<PathReferenceField> {
 
-    public override actualProcess(tracker: ValueTracker): ValueTracker {
+    public override process(tracker: ValueTracker): ValueTracker {
         const { path, defaultOrCallback } = this._field.extendedProps;
         const isCallback = typeof defaultOrCallback === 'function';
 

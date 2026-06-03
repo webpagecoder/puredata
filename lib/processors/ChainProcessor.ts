@@ -36,7 +36,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         // this._hasPipelineHooks = args.hasPipelineHooks || false;
     }
 
-    public override actualProcess(tracker: ValueTracker, state: State = {}): ValueTracker {
+    public override process(tracker: ValueTracker, state: State = {}): ValueTracker {
         this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
             return tracker;

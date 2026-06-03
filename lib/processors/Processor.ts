@@ -51,12 +51,7 @@ abstract class Processor<F extends Field = Field> {
         return this;
     }
 
-    public process(value: unknown = undefined): ValueTracker {
-        const tracker = new ValueTracker(this._field, value);
-        return this.actualProcess(tracker, {});
-    }
-
-    public abstract actualProcess(tracker: ValueTracker, state: State): ValueTracker;
+    public abstract process(tracker: ValueTracker, state: State): ValueTracker;
 
     public preProcess(tracker: ValueTracker, state: State = {}): void {
         const { _field } = this;
@@ -72,7 +67,7 @@ abstract class Processor<F extends Field = Field> {
         else if (!isDefined) {
             const { _defaultValueProcessor } = this;
             if (_defaultValueProcessor) {
-                _defaultValueProcessor.actualProcess(tracker, state);
+                _defaultValueProcessor.process(tracker, state);
             }
             else {
                 tracker.setValue(_field.defaultValue);

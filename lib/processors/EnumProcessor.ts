@@ -6,7 +6,7 @@ import { Processor } from './Processor.ts';
 
 class EnumProcessor extends Processor<EnumField> {
 
-    public override actualProcess(tracker: ValueTracker): ValueTracker {
+    public override process(tracker: ValueTracker): ValueTracker {
         const { structure, isArray } = this.field.extendedProps;
         if (isArray) {
             if ((structure as unknown[]).indexOf(tracker.getValue()) === -1) {

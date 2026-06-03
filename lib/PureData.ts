@@ -140,18 +140,18 @@ class PureData {
 
     // conditionals
 
-    satisfies(pathStr: string, comparisonField: Field) {
+    satisfies(targetPathStr: string, comparisonField: Field) {
         return new SchemaConditionalField(this.composeChainProps({
             areEqual: true,
-            referencePath: this.value(pathStr),
+            targetPathStr,
             comparisonField,
         }));
     }
 
-    violates(pathStr: string, comparisonField: Field) {
+    violates(targetPathStr: string, comparisonField: Field) {
         return new SchemaConditionalField(this.composeChainProps({
             areEqual: false,
-            referencePath: this.value(pathStr),
+            targetPathStr,
             comparisonField,
         }));
     }
