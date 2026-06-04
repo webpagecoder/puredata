@@ -1,104 +1,107 @@
 'use strict';
 
-import { Field } from '../fields/Field.ts';
 import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
-import { ValueField } from '../fields/ValueField.ts';
-import { Locale } from '../Locale.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { CompilationContext, Processor } from './Processor.ts';
+import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from './Processor.ts';
+
+export type SchemaConditionalProcessorConstructorParams = ProcessorConstructorParams<SchemaConditionalField>;
+
+export type SchemaConditionalProcessorCompilationContext = ProcessorCompilationContext & {
+    isNested?: boolean
+}
 
 class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
 
-    public override process(tracker: ValueTracker) {
+    protected _comparisonProcessor: Processor;
+    protected _conditionalProcessorChain: [type: 'and' | 'or', SchemaConditionalProcessor][];
+    protected _otherwiseProcessor: Processor | null;
+    protected _thenProcessor: Processor | null;
+    protected _isNested: boolean;
 
-        const { areEqual, buildStage, comparisonField, thenField, otherwiseField, conditionalChain, targetPath } = this._field.extendedProps;
+    constructor(args: SchemaConditionalProcessorConstructorParams) {
+        super(args);
 
-        if (buildStage !== 2) {
-            throw new Error('Conditionals must contain a complete then/otherwise pair');
+        const { processorMapper } = args;
+        const { _field } = this;
+        const { comparisonField, conditionalChain, otherwiseField, thenField } = _field.extendedProps;
+
+        this._comparisonProcessor = processorMapper.createProcessor(comparisonField).compile() as Processor;
+        this._isNested = false;
+        this._otherwiseProcessor = otherwiseField
+            ? processorMapper.createProcessor(otherwiseField).compile() as Processor
+            : null;
+        this._thenProcessor = thenField
+            ? processorMapper.createProcessor(thenField).compile() as Processor
+            : null;
+
+
+        this._conditionalProcessorChain = [];
+        for (let [type, conditionalField] of conditionalChain) {
+            this._conditionalProcessorChain.push([
+                type,
+                processorMapper.createProcessor(conditionalField).compile({ isNested: true }) as SchemaConditionalProcessor
+            ]);
         }
-        for (const [, conditionalField] of conditionalChain) {
-            if (conditionalField.extendedProps.buildStage !== 0) {
-                throw new Error('Compound conditionals cannot contain then/otherwise');
+    }
+
+    public override compile({ isNested = false }: SchemaConditionalProcessorCompilationContext): this {
+        const { _field: { extendedProps: { buildStage } } } = this;
+
+        this._isNested = isNested;
+
+        if (isNested) {
+            if (buildStage !== 0) {
+                throw new Error('Nested conditionals may NOT contain then/otherwise');
             }
         }
+        else if (buildStage !== 2) {
+            throw new Error('Conditionals must contain a complete then/otherwise pair');
+        }
+
+        return this;
+    }
+
+    public override process(tracker: ValueTracker) {
+
+        const { _field, _comparisonProcessor, _thenProcessor, _otherwiseProcessor, _conditionalProcessorChain,  } = this;
+        const { comparisonMode, targetPath } = _field.extendedProps;
 
         let referencedValueTracker = targetPath.isSelf
             ? tracker
             : tracker.parent.getNodeByPath(targetPath);
 
-        if(!referencedValueTracker) {
+        if (!referencedValueTracker) {
             //todo: should fail like this in regular reference processors too.
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);
         }
 
-        const comparisonResultTracker = comparisonField.processor.process(referencedValueTracker.clone());
+        const comparisonResultTracker = _comparisonProcessor.process(referencedValueTracker.clone());
 
+        let predicateValue = comparisonResultTracker.pass
+        if (comparisonMode === 'notEquals') {
+            predicateValue = !predicateValue;
+        }
 
+        for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
+            let result = conditionalProcessor.process(referencedValueTracker).pass;
+            if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
+                result = !result;
+            }
+            if (type === 'and') {
+                predicateValue = predicateValue && result;
+            }
+            else {
+                predicateValue = predicateValue || result;
+            }
+        }
 
-        // const finalTracker = comparisonField.process(tracker);
-
-        // let booleanValue = finalTracker.pass
-        // if (!areEqual) {
-        //     booleanValue = !booleanValue;
-        // }
-
-        // for (let [type, conditional] of conditionalChain) {
-        //     if (type === 'and') {
-        //         booleanValue = booleanValue && this.internalMeta.get(conditional).execute(tracker);
-        //     }
-        //     else {
-        //         booleanValue = booleanValue || this.internalMeta.get(conditional).execute(tracker);
-        //     }
-        // }
-
-
-
-
-
-
-
-
-        // let chosenField: Field;
-        // if (booleanResult) {
-        //     chosenField = thenField.isSchemaConditionalField
-        //         ? thenField.execute(tracker)
-        //         : thenField;
-        // }
-        // else {
-        //     chosenField = otherwiseField.isSchemaConditionalField
-        //         ? otherwiseField.execute(tracker)
-        //         : otherwiseField;
-        // }
-
-
-        // // const chosenField = this.getChosenField(tracker);
-
-        // chosenField.process(tracker);
-
-        return tracker;
+        if (this._isNested) {
+            return predicateValue ? ValueTracker.pass(_field) : ValueTracker.fail(_field);
+        }
+        else {
+            return (predicateValue ? _thenProcessor : _otherwiseProcessor)!.process(tracker);
+        }
     }
-
-
-
-    // protected getChosenField(tracker: ValueTracker): Field {
-    //     const { thenField, otherwiseField } = this._field.extendedProps;
-    //     const booleanResult = this.execute(tracker);
-
-    //     let chosenField;
-    //     if (booleanResult) {
-    //         chosenField = thenField.isSchemaConditionalField
-    //             ? thenField.execute(tracker)
-    //             : thenField;
-    //     }
-    //     else {
-    //         chosenField = otherwiseField.isSchemaConditionalField
-    //             ? otherwiseField.execute(tracker)
-    //             : otherwiseField;
-    //     }
-    //     return chosenField;
-    // }
-
-
 }
 
 export { SchemaConditionalProcessor };

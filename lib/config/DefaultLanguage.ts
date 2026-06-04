@@ -118,6 +118,7 @@ const DEFAULT_LANGUAGE: NestedStringRecord = {
             weekend: 'Must be a weekend',
         },
         generic: {
+            base: 'An error occurred',
             defined: 'Must be defined',
             empty: 'Must be empty',
             equals: 'Must equal {comparison}',

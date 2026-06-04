@@ -9,13 +9,13 @@ import { PubSub } from '../pub-sub/PubSub.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
-    processorMapper?: FieldProcessorFactory;
+    processorMapper: FieldProcessorFactory;
     defaultValueReference?: Processor;
 };
 
-export type State = Record<string, unknown>;
+export type State = Record<string, unknown> | undefined;
 
-export type CompilationContext = Record<string, unknown>;
+export type ProcessorCompilationContext = Record<string, unknown>;
 
 abstract class Processor<F extends Field = Field> {
 
@@ -42,7 +42,7 @@ abstract class Processor<F extends Field = Field> {
         // this._state = {};
     }
 
-    public compile(context: CompilationContext = {}): this {
+    public compile(context: ProcessorCompilationContext = {}): this {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {
@@ -51,7 +51,7 @@ abstract class Processor<F extends Field = Field> {
         return this;
     }
 
-    public abstract process(tracker: ValueTracker, state: State): ValueTracker;
+    public abstract process(tracker: ValueTracker, state?: State): ValueTracker;
 
     public preProcess(tracker: ValueTracker, state: State = {}): void {
         const { _field } = this;

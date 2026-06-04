@@ -28,6 +28,16 @@ class ValueTracker extends Node {
     private _field: Field;
     private _rawValue: unknown;
 
+    public static fail(field: Field) {
+        const tracker = new ValueTracker(field);
+        tracker.addError('generic/base');
+        return tracker;
+    }
+
+    public static pass(field: Field) {
+        return new ValueTracker(field);
+    }
+
     public constructor(field: Field, value: unknown = undefined) {
         super();
         this._errorCollection = [];

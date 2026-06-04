@@ -8,7 +8,7 @@ import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
-import { CompilationContext, Processor, State } from './Processor.ts';
+import { ProcessorCompilationContext, Processor, State } from './Processor.ts';
 import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
 import { SchemaNode } from './SchemaNode.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
@@ -22,7 +22,7 @@ export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<S
     root?: SchemaProcessor;
 };
 
-export type SchemaCompilationContext = CompilationContext & {
+export type SchemaCompilationContext = ProcessorCompilationContext & {
     pubSub?: PubSub;
     conditionals?: SchemaNode[];
 };
@@ -216,7 +216,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> implements SchemaNode
         if (this._pubSub) {
             this._pubSub.execute({ tracker });
             for (const schemaNode of this._conditionals!) {
-                schemaNode.process(conditionalTrackers.get(schemaNode)!, state);
+                schemaNode.process(conditionalTrackers.get(schemaNode)!);
             }
         }
 

@@ -5,14 +5,16 @@ import { Path } from '../Path.ts';
 import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from './Field.ts';
 import { ValueField } from './ValueField.ts';
 
+export type ConditionalChainEntry = ['and' | 'or', SchemaConditionalField];
+
 export type SchemaConditionalFieldProps = FieldProps & {
-    areEqual?: boolean;
-    comparisonField: Field;
-    conditionalChain: [string, SchemaConditionalField][];
-    otherwiseField: null | Field;
     buildStage: number;
+    comparisonMode?: 'equals' | 'notEquals';
+    comparisonField: Field;
+    conditionalChain: ConditionalChainEntry[];
+    otherwiseField: null | Field;
     targetPath: Path;
-    thenField: Field;
+    thenField: null | Field;
 };
 
 export type SchemaConditionalFieldConstructorParams = FieldConstructorParams
@@ -34,17 +36,17 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         super(props);
 
         const {
-            areEqual = true,
+            buildStage = 0,
+            comparisonMode = 'equals',
             comparisonField,
             conditionalChain = [],
             otherwiseField = null,
-            buildStage = 0,
             targetPathStr,
-            thenField,
+            thenField = null,
         } = props;
 
         const { extendedProps } = this;
-        extendedProps.areEqual = areEqual;
+        extendedProps.comparisonMode = comparisonMode;
         extendedProps.comparisonField = comparisonField;
         extendedProps.conditionalChain = conditionalChain;
         extendedProps.otherwiseField = otherwiseField;

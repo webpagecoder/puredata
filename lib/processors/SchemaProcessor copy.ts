@@ -8,7 +8,7 @@ import { PubSub } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
-import { CompilationContext, Processor, State } from './Processor.ts';
+import { ProcessorCompilationContext, Processor, State } from './Processor.ts';
 import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
 import { SchemaNode } from './SchemaNode.ts';
@@ -22,7 +22,7 @@ export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<S
     root?: SchemaProcessor;
 };
 
-export type SchemaCompilationContext = CompilationContext & {
+export type SchemaCompilationContext = ProcessorCompilationContext & {
     pubSub?: PubSub;
     conditionals?: SchemaConditionalProcessor[];
 };

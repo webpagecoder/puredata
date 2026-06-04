@@ -3,15 +3,15 @@
 import { Field } from '../fields/Field.ts';
 import { Path } from '../Path.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { CompilationContext, Processor, State } from './Processor.ts';
+import { ProcessorCompilationContext, Processor, State } from './Processor.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 
 export type SchemaNodeProps = {
     innerProcessor: Processor;
-    parent: SchemaNode;
+    parent: SchemaProcessor;
     path: Path;
-    root: SchemaNode;
+    root: SchemaProcessor;
 };
 
 class SchemaNode extends Processor implements SchemaNodePosition {
@@ -30,7 +30,7 @@ class SchemaNode extends Processor implements SchemaNodePosition {
         this.root = props.root || this;
     }
 
-    public override process(tracker: ValueTracker, state: State): ValueTracker {
+    public override process(tracker: ValueTracker, state?: State): ValueTracker {
         return this.innerProcessor.process(tracker, state);
     }
 
@@ -38,7 +38,7 @@ class SchemaNode extends Processor implements SchemaNodePosition {
         return this.innerProcessor.hasReferences();
     }
 
-    public override compile(context: CompilationContext = {}): this {
+    public override compile(context: ProcessorCompilationContext = {}): this {
         this.innerProcessor = this.innerProcessor.compile(context);
         return this;
     }
