@@ -3,18 +3,18 @@
 import { Path } from '../Path.ts';
 import { Field, FieldProps, FieldConstructorParams } from './Field.ts';
 
-export type ReferenceFieldProps = FieldProps & {
+export type SchemaReferenceFieldProps = FieldProps & {
     path: Path | string;
     minDepth: number;
     maxDepth: number;
 };
 
-export type ReferenceFieldConstructorParams = FieldConstructorParams
-    & Partial<ReferenceFieldProps>
+export type SchemaReferenceFieldConstructorParams = FieldConstructorParams
+    & Partial<SchemaReferenceFieldProps>
 
-class ReferenceField extends Field<ReferenceFieldProps> {
+class SchemaReferenceField extends Field<SchemaReferenceFieldProps> {
 
-    constructor(args: ReferenceFieldConstructorParams) {
+    constructor(args: SchemaReferenceFieldConstructorParams) {
         super(args);
         const {
             path = '',
@@ -22,7 +22,7 @@ class ReferenceField extends Field<ReferenceFieldProps> {
             maxDepth = -1,
         } = args;
 
-       const { extendedProps: props } = this;
+        const { extendedProps: props } = this;
         props.path = path;
         props.minDepth = minDepth;
         props.maxDepth = maxDepth;
@@ -30,4 +30,4 @@ class ReferenceField extends Field<ReferenceFieldProps> {
 
 }
 
-export { ReferenceField };
+export { SchemaReferenceField };

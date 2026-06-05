@@ -13,7 +13,7 @@ import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
 import { SchemaNode } from './SchemaNode.ts';
 import { SchemaNodePosition } from './SchemaNodePosition.ts';
 
-export type CompiledSchema = Map<string, SchemaNode>;
+export type CompiledSchema = Map<string, SchemaNode | SchemaProcessor>;
 
 export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain> & {
     depth?: number;

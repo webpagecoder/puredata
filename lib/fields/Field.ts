@@ -86,6 +86,10 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this._processor;
     }
 
+    public get processorMapper(): FieldProcessorFactory {
+        return this._processorMapper;
+    }
+
     public get autoConvert(): boolean {
         return this._autoConvert;
     }

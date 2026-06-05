@@ -4,22 +4,22 @@ import { RecursiveValueTracker } from '../tracker/RecursiveValueTracker.ts';
 import { Processor } from './Processor.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 
-class ReferenceProcessor extends Processor {
+class SchemaReferenceProcessor extends Processor<PathReferenceField> {
 
     get valueNodeConstructor() {
         return RecursiveValueTracker;
     }
 
-    compile(context = {}) {
-        const { processorMapper, field, parent, path, root } = this.props;
-        const { path: referencePath } = field.props;
+    public override compile() {
+        const { _processorMapper, _field, parent, path, root } = this;
+        const { path: referencePath } = _field.extendedProps;
 
         const compiledReference = parent.resolvePath(referencePath);
 
         if (!compiledReference) {
             throw new Error('At key ' + path + ' - unable to resolve referenced path: ' + referencePath);
         }
-        if (compiledReference instanceof ReferenceProcessor) {
+        if (compiledReference instanceof SchemaReferenceProcessor) {
             throw new Error('At key ' + path + ' - cannot point to another reference: ' + referencePath);
         }
 
@@ -80,4 +80,4 @@ class ReferenceProcessor extends Processor {
 
 }
 
-export { ReferenceProcessor };
+export { SchemaReferenceProcessor as ReferenceProcessor };

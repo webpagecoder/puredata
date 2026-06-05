@@ -21,13 +21,15 @@ class SchemaNode extends Processor implements SchemaNodePosition {
     public root: SchemaProcessor;
 
     public constructor(props: SchemaNodeProps) {
+        const { innerProcessor, parent, path, root } = props;
         super({
-            field: props.innerProcessor.field
+            field: innerProcessor.field,
+            processorMapper: innerProcessor.field.processorMapper
         });
-        this.innerProcessor = props.innerProcessor;
-        this.path = props.path || new Path('/');
-        this.parent = props.parent || this;
-        this.root = props.root || this;
+        this.innerProcessor = innerProcessor;
+        this.path = path || new Path('/');
+        this.parent = parent || this;
+        this.root = root || this;
     }
 
     public override process(tracker: ValueTracker, state?: State): ValueTracker {

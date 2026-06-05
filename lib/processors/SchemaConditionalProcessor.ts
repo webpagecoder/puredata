@@ -44,7 +44,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         }
     }
 
-    public override compile({ isNested = false }: SchemaConditionalProcessorCompilationContext): this {
+    public override compile({ isNested = false }: SchemaConditionalProcessorCompilationContext = {}): this {
         const { _field: { extendedProps: { buildStage } } } = this;
 
         this._isNested = isNested;
@@ -83,7 +83,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         }
 
         for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
-            let result = conditionalProcessor.process(referencedValueTracker).pass;
+            let result = conditionalProcessor.process(tracker).pass;
             if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
                 result = !result;
             }

@@ -11,7 +11,7 @@ import { DateChain } from './fields/DateChain.ts';
 import { EnumField } from './fields/EnumField.ts';
 import { NumberChain } from './fields/NumberChain.ts';
 import { PathReferenceField } from './fields/PathReferenceField.ts';
-import { ReferenceField } from './fields/ReferenceField.ts';
+import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
 import { SchemaChain } from './fields/SchemaChain.ts';
 import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
 import { StringChain } from './fields/StringChain.ts';
@@ -111,8 +111,8 @@ class PureData {
         return new ObjectChain(this.composeChainProps(props, 'object', new ObjectHandler()));
     }
 
-    pointer(pathStr, minDepth, maxDepth) {
-        return new ReferenceField(this.composeChainProps({
+    pointer(pathStr: string, minDepth: number, maxDepth: number) {
+        return new SchemaReferenceField(this.composeFieldProps({
             minDepth,
             maxDepth,
             path: Path.create(pathStr),
@@ -130,11 +130,11 @@ class PureData {
 
     // Other fields
 
-    mutable(value) {
+    mutable(value: unknown) {
         return new ValueField(this.composeChainProps({ value, mutable: true }));
     }
 
-    immutable(value) {
+    immutable(value: unknown) {
         return new ValueField(this.composeChainProps({ value, mutable: false }));
     }
 
