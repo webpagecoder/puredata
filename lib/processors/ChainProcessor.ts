@@ -36,14 +36,13 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         // this._hasPipelineHooks = args.hasPipelineHooks || false;
     }
 
-    public override process(tracker: ValueTracker, state: State = {}): ValueTracker {
+    public override process(tracker: ValueTracker, state?: State): void {
         this.preProcess(tracker, state);
         if (tracker.hasErrors()) {
-            return tracker;
+            return;
         }
-        this.executePipeline(tracker, state);
+        this.executePipeline(tracker);
         this.postProcess(tracker, state);
-        return tracker;
     }
 
     private resolveStepArgs(args: PipelineStep['args']): unknown[] {
@@ -53,7 +52,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         return args || [];
     }
 
-    public executePipeline(tracker: ValueTracker, state: State = {}): void {
+    public executePipeline(tracker: ValueTracker): void {
         const pipeline = this._field.extendedProps.pipeline || [];
         // const { _hasPipelineHooks } = this;
         for (const step of pipeline) {
@@ -65,9 +64,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
             // a regular chain cant really refer to itself
             for (const arg of args) {
                 if (arg instanceof PathReferenceField) {
-                    const refValueTracker = (tracker._parent as unknown as {
-                        getByPath(path: unknown): ValueTracker | undefined;
-                    }).getByPath(arg.path);
+                    const refValueTracker = tracker.parent.resolvePath(arg.extendedProps.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {

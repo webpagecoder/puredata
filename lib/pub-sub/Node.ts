@@ -2,7 +2,7 @@
 
 import { PubSubContext } from './PubSub.ts';
 
-export type NodeCallback = (context?: PubSubContext) => unknown;
+export type NodeCallback = (context: PubSubContext) => boolean;
 
 class Node {
 
@@ -10,7 +10,7 @@ class Node {
     callback: NodeCallback;
     children: Set<Node>;
 
-    constructor(key: unknown, callback: NodeCallback = (_context: PubSubContext = {}): unknown => true) {
+    constructor(key: unknown, callback: NodeCallback = (_context: PubSubContext) => true) {
         this.key = key;
         this.callback = callback;
         this.children = new Set<Node>();

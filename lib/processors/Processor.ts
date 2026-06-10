@@ -42,7 +42,7 @@ abstract class Processor<F extends Field = Field> {
         // this._state = {};
     }
 
-    public compile(context: ProcessorCompilationContext = {}): this {
+    public compile(): Processor {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {
@@ -51,9 +51,9 @@ abstract class Processor<F extends Field = Field> {
         return this;
     }
 
-    public abstract process(tracker: ValueTracker, state?: State): ValueTracker;
+    public abstract process(tracker: ValueTracker, state?: State): void;//todo: revisit this setup
 
-    public preProcess(tracker: ValueTracker, state: State = {}): void {
+    public preProcess(tracker: ValueTracker, state?: State): void {
         const { _field } = this;
 
         const isDefined = tracker.getValue() !== undefined;
@@ -75,7 +75,7 @@ abstract class Processor<F extends Field = Field> {
         }
     }
 
-    public postProcess(tracker: ValueTracker, state: State = {}): void { };
+    public postProcess(tracker: ValueTracker, state?: State): void { };//todo: revisit this setup
 
     public hasReferences(): boolean {
         return this.getReferences().size > 0;
@@ -103,6 +103,10 @@ abstract class Processor<F extends Field = Field> {
 
     public get field(): F {
         return this._field;
+    }
+
+    public get ValueTrackerConstructor() {
+        return ValueTracker;
     }
 
 }

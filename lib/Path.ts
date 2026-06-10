@@ -3,32 +3,31 @@
 type PathOrString = Path | string;
 
 class Path {
-    static separator: string = '/';
+    public static separator: string = '/';
     static up: string = '..';
     static self: string = '.';
 
-    string: string;
-    private _keys: string[];
-    isAbsolute: boolean;
-    isSelf: boolean;
-    upCount: number;
+    protected _isAbsolute: boolean;
+    protected _keys: string[];
+    protected _string: string;
+    protected _upCount: number;
 
-    static delims({ separator, up, self }: { separator: string; up: string; self: string }): void {
+    public static delims({ separator, up, self }: { separator: string; up: string; self: string }): void {
         Path.separator = separator;
         Path.up = up;
         Path.self = self;
     }
 
-    static create(path: PathOrString): Path {
-        return path instanceof Path ? new Path(path.string) : new Path(path);
+    public static create(path: PathOrString): Path {
+        return path instanceof Path ? new Path(path._string) : new Path(path);
     }
 
-    static fromArray(keys: string[]): Path {
+    public static fromArray(keys: string[]): Path {
         const { separator } = Path;
         return Path.create(keys.join(separator));
     }
 
-    constructor(pathString: string = '') {
+    public constructor(pathString: string = '') {
         const { separator, up, self } = Path;
         const isAbsolute = pathString.startsWith(separator);
         let upCount = 0;
@@ -50,38 +49,69 @@ class Path {
             }
         }
 
-        this.string = (isAbsolute ? separator : (up + separator).repeat(upCount)) + keys.join(separator) || self;
+        this._string = (isAbsolute ? separator : (up + separator).repeat(upCount)) + keys.join(separator) || self;
         this._keys = keys;
-        this.isAbsolute = isAbsolute;
-        this.isSelf = this.string === self;
-        this.upCount = upCount;
+        this._isAbsolute = isAbsolute;
+        this._upCount = upCount;
     }
 
-    get keys(): string[] {
+    public get keys(): string[] {
         return [...this._keys];
     }
 
-    parent(): Path {
-        const { separator, up } = Path;
-        return Path.create(this.string + separator + up);
+    public get isAbsolute(): boolean {
+        return this._isAbsolute;
     }
 
-    move(movementPath: Path | string = ''): Path {
+    public get isRoot(): boolean {
+        return this._string === Path.separator;
+    }
+
+    public get isSelf(): boolean {
+        return this._string === Path.self;
+    }
+
+    public get string(): string {
+        return this._string;
+    }
+
+    public get upChar(): string {
+        return Path.up;
+    }
+
+    public get upCount(): number {
+        return this._upCount;
+    }
+    
+    public get separatorChar(): string {
+        return Path.separator;
+    }
+
+    public get selfChar(): string {
+        return Path.self;
+    }
+
+    public parent(): Path {
+        const { separator, up } = Path;
+        return Path.create(this._string + separator + up);
+    }
+
+    public move(movementPath: Path | string = ''): Path {
         const movementString = movementPath instanceof Path
-            ? movementPath.string
+            ? movementPath._string
             : movementPath;
 
         const { separator } = Path;
         return movementString.startsWith(separator)
             ? Path.create(movementString)
-            : Path.create(this.string + separator + movementString);
+            : Path.create(this._string + separator + movementString);
     }
 
-    equals(otherPath: Path): boolean {
+    public equals(otherPath: Path): boolean {
         if (
-            otherPath.isSelf !== this.isSelf
-            || otherPath.isAbsolute !== this.isAbsolute
-            || otherPath.upCount !== this.upCount
+            otherPath._isSelf !== this._isSelf
+            || otherPath._isAbsolute !== this._isAbsolute
+            || otherPath._upCount !== this._upCount
             || otherPath.keys.length !== this._keys.length
         ) {
             return false;
@@ -94,29 +124,29 @@ class Path {
         return true;
     }
 
-    shiftKeys(count: number = 1): Path {
-        if (!this.isAbsolute) {
+    public shiftKeys(count: number = 1): Path {
+        if (!this._isAbsolute) {
             throw new Error('Can only shift absolute paths.');
         }
         const { separator, up } = Path;
-        const { isAbsolute, upCount, _keys } = this;
+        const { _isAbsolute: isAbsolute, _upCount: upCount, _keys } = this;
         return Path.create(
             (isAbsolute ? separator : (up + separator).repeat(upCount)) + _keys.slice(count).join(separator)
         );
     }
 
-        toAbsolute(): Path {
+    public toAbsolute(): Path {
         const { separator } = Path;
-        return Path.create(separator + this.string);
+        return Path.create(separator + this._string);
     }
 
-    toRelative(): Path {
+    public toRelative(): Path {
         const { separator, self } = Path;
-        return Path.create(self + separator + this.string);
+        return Path.create(self + separator + this._string);
     }
 
     public toString() {
-        return this.string;
+        return this._string;
     }
 
 }

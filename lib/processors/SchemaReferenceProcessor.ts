@@ -1,83 +1,101 @@
 'use strict';
 
-import { RecursiveValueTracker } from '../tracker/RecursiveValueTracker.ts';
-import { Processor } from './Processor.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
+import { SchemaReferenceField } from '../fields/SchemaReferenceField.ts';
+import { Path } from '../Path.ts';
+import { NestedValueTracker } from '../tracker/NestedValueTracker.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { Processor, ProcessorCompilationContext, ProcessorConstructorParams, State } from './Processor.ts';
+import { SchemaProcessor } from './SchemaProcessor.ts';
 
-class SchemaReferenceProcessor extends Processor<PathReferenceField> {
+export type SchemaReferenceProcessorContext = ProcessorCompilationContext & {
+    ancestors: SchemaProcessor[];
+    parent: SchemaProcessor;
+    absolutePath: Path;
+}
 
-    get valueNodeConstructor() {
-        return RecursiveValueTracker;
+class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
+
+    protected _innerProcessor: Processor | null;
+
+    public constructor(args: ProcessorConstructorParams<SchemaReferenceField>) {
+        super(args);
+        this._innerProcessor = null;
     }
 
-    public override compile() {
-        const { _processorMapper, _field, parent, path, root } = this;
-        const { path: referencePath } = _field.extendedProps;
+    public override compile(context: SchemaReferenceProcessorContext): Processor {
+        const { ancestors, parent, absolutePath } = context;
+        const { _processorMapper, _field } = this;
+        const { absolutePath: refPath } = _field.extendedProps;
+        const referencedProcessor = parent.resolveNodePath(refPath, ancestors);
 
-        const compiledReference = parent.resolvePath(referencePath);
-
-        if (!compiledReference) {
-            throw new Error('At key ' + path + ' - unable to resolve referenced path: ' + referencePath);
+        if (!referencedProcessor) {
+            throw new Error('At key ' + absolutePath
+                + ' - unable to resolve referenced path: ' + refPath);
         }
-        if (compiledReference instanceof SchemaReferenceProcessor) {
-            throw new Error('At key ' + path + ' - cannot point to another reference: ' + referencePath);
+        if (referencedProcessor instanceof SchemaReferenceProcessor) {
+            throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + refPath);
         }
 
-        //todo: fix this..no more delims
-        const separator = path.chars.separator;
-        const refPathStr = compiledReference.props.path.string;
-        const thisPathStr = this.props.path.string;
+        const resolvedRefPath = absolutePath.move(refPath);
+        const { separatorChar } = absolutePath;
+        const isNest = resolvedRefPath.isRoot
+            || (absolutePath.string + separatorChar).startsWith(resolvedRefPath.string + separatorChar);
 
-        const isNest = refPathStr === separator || (thisPathStr + separator).startsWith(refPathStr + separator);
-
-        let processor;
-
-        if (!isNest) {
-            processor = processorMapper.createProcessor({
-                parent,
-                path,
-                root,
-                field: compiledReference.props.field,
-                isLocalRoot: true,
-            });
-            processor.compile(Object.assign({}, context));
+        if (isNest) {
+            this._innerProcessor = referencedProcessor;
+            return this;
         }
         else {
-            processor = this;
+            return _processorMapper.createProcessor(referencedProcessor.field).compile();
         }
-
-        return processor;
     }
 
-    process(tracker, state) {
-        let { 
-            field: { props: { minDepth = 0, maxDepth = 1, path } }, 
-            parent
-         } = this.props;
+    public override process(tracker: ValueTracker, state: State = {}): void {
+        let {
+            minDepth = 0, maxDepth = 1
+        } = this._field.extendedProps;
 
-        minDepth = minDepth instanceof PathReferenceField ? tracker.getByPath(minDepth) : minDepth;
-        maxDepth = maxDepth instanceof PathReferenceField ? tracker.getByPath(maxDepth) : maxDepth;
+        minDepth = Number(minDepth instanceof PathReferenceField ? minDepth.process().value : minDepth);
+        maxDepth = Number(maxDepth instanceof PathReferenceField ? maxDepth.process().value : maxDepth);
 
-        let { value } = tracker;
+        let {
+            nestDepth = 1,
+            nestParent = null,
+            nestRoot = tracker,
+        } = state;
 
-        if (value === undefined && tracker.depth < minDepth) {
-            tracker.nestRoot.addError('object/recursion/tooShallow', {});
-            return tracker;
+        tracker.setNestRoot(nestRoot);
+        tracker.setNestParent(nestParent);
+        tracker.setNestDepth(nestDepth);
+
+        const value = tracker.getValue();
+
+        if (value === undefined && nestDepth < minDepth) {
+            tracker.nestRoot!.addError('object/recursion/tooShallow', { minDepth, maxDepth });
+            return;
         }
-        else if (value !== undefined && tracker.depth > maxDepth) {
-            tracker.nestRoot.addError('object/recursion/tooDeep', {});
-            return tracker;
+        else if (value !== undefined) {
+            if (nestDepth > maxDepth) {
+                tracker.nestRoot!.addError('object/recursion/tooDeep', { minDepth, maxDepth });
+                return;
+            }
+            this._innerProcessor!.process(tracker, {
+                nestDepth: nestDepth + 1,
+                nestParent: tracker,
+                nestRoot
+            });
         }
 
-        if (!this.cachedReference) {
-            this.cachedReference = parent.resolvePath(path);
-        }
 
-        this.cachedReference.process(tracker, state);
 
-        return tracker;
     }
+
+    // public override get ValueTrackerConstructor() {
+    //     return NestedValueTracker;
+    // }
 
 }
 
-export { SchemaReferenceProcessor as ReferenceProcessor };
+export { SchemaReferenceProcessor };
+

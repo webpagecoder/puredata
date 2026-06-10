@@ -123,8 +123,11 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return clone;
     }
 
-    public process(value: unknown): ValueTracker {
-        return this.processor.process(new ValueTracker(this, value));
+    public process(value?: unknown): ValueTracker {
+        const { processor } = this;
+        const tracker = new processor.ValueTrackerConstructor(this, value);
+        processor.process(tracker);
+        return tracker;
     }
 
     //     public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {

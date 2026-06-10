@@ -6,7 +6,7 @@ import { Processor } from './Processor.ts';
 
 class PathReferenceProcessor extends Processor<PathReferenceField> {
 
-    public override process(tracker: ValueTracker): ValueTracker {
+    public override process(tracker: ValueTracker): void {
         const { path, defaultOrCallback } = this._field.extendedProps;
         const isCallback = typeof defaultOrCallback === 'function';
 
@@ -15,10 +15,10 @@ class PathReferenceProcessor extends Processor<PathReferenceField> {
                 ? defaultOrCallback(tracker.getValue())
                 : tracker.getValue();
             tracker.setValue(resolvedValue);
-            return tracker;
+            return;
         }
 
-        const referencedValueTracker = tracker.parent.getNodeByPath(path);
+        const referencedValueTracker = tracker.parent.resolvePath(path);
         let resolvedValue = undefined;
         if (referencedValueTracker) {
             resolvedValue = isCallback
@@ -32,8 +32,6 @@ class PathReferenceProcessor extends Processor<PathReferenceField> {
         else {
             tracker.setValue(resolvedValue);
         }
-
-        return tracker;
     }
 }
 

@@ -19,16 +19,19 @@ class BooleanProcessor extends ChainProcessor<BooleanChain> {
         if (allowBoolish) {
             for (const [truthy, falsy] of boolishPairs) {
                 if (truthy === value) {
-                    return tracker.setValue(autoConvert ? true : value);
+                    tracker.setValue(autoConvert ? true : value);
+                    return;
                 }
                 else if (falsy === value) {
-                    return tracker.setValue(autoConvert ? false : value);
+                    tracker.setValue(autoConvert ? false : value);
+                    return;
                 }
             }
         }
 
         if(autoConvert) {
-            return tracker.setValue(Boolean(value));
+            tracker.setValue(Boolean(value));
+            return;
         }
 
         tracker.addError('boolean/base');

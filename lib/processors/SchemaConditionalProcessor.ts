@@ -68,22 +68,25 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
 
         let referencedValueTracker = targetPath.isSelf
             ? tracker
-            : tracker.parent.getNodeByPath(targetPath);
+            : tracker.parent.resolvePath(targetPath);
 
         if (!referencedValueTracker) {
             //todo: should fail like this in regular reference processors too.
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);
         }
 
-        const comparisonResultTracker = _comparisonProcessor.process(referencedValueTracker.clone());
+        const trackerClone = referencedValueTracker.cloneWithoutErrors();
+        _comparisonProcessor.process(trackerClone);
 
-        let predicateValue = comparisonResultTracker.pass
+        let predicateValue = trackerClone.pass;
         if (comparisonMode === 'notEquals') {
             predicateValue = !predicateValue;
         }
 
         for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
-            let result = conditionalProcessor.process(tracker).pass;
+            const trackerClone = referencedValueTracker.cloneWithoutErrors();
+            conditionalProcessor.process(trackerClone);
+            let result = trackerClone.pass; //TODO THIS SHOULD BE THE CLONED TRACKER!!
             if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
                 result = !result;
             }
@@ -96,10 +99,11 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         }
 
         if (this._isNested) {
-            return predicateValue ? ValueTracker.pass(_field) : ValueTracker.fail(_field);
+            //todo: this is no good.... with returns...rethink
+            return predicateValue ? tracker.setPass() : tracker.setFail();
         }
         else {
-            return (predicateValue ? _thenProcessor : _otherwiseProcessor)!.process(tracker);
+            (predicateValue ? _thenProcessor : _otherwiseProcessor)!.process(tracker);//TODO:!!! NO RETURNING
         }
     }
 }

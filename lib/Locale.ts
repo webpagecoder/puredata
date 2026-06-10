@@ -54,7 +54,7 @@ class Locale {
         }
 
         if (pathPointer == null) {
-            throw new Error('Nonexistent path in language file: ' + path.string);
+            throw new Error('Nonexistent path in language file: ' + path._string);
         }
 
         const [pointer, key] = pathPointer;
@@ -62,13 +62,13 @@ class Locale {
         if (typeof value === 'string' || Array.isArray(value) || (allowMultiple && Utils.isPlainObject(value))) {
             return value;
         }
-        throw new Error('Invalid path for translation: ' + path.string);
+        throw new Error('Invalid path for translation: ' + path._string);
     }
 
     override(overrides: TranslationRecord): void {
         for (const key of Object.keys(overrides)) {
             const path = Path.create(key).toRelative();
-            this.overrides[path.string] = overrides[key] as string;
+            this.overrides[path._string] = overrides[key] as string;
         }
     }
 }

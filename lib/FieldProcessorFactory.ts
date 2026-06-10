@@ -31,7 +31,7 @@ import { StringProcessor } from './processors/StringProcessor.ts';
 // Others & processors
 
 import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
-import { ReferenceProcessor } from './processors/SchemaReferenceProcessor.ts';
+import { SchemaReferenceProcessor } from './processors/SchemaReferenceProcessor.ts';
 
 import { EnumField } from './fields/EnumField.ts';
 import { EnumProcessor } from './processors/EnumProcessor.ts';
@@ -61,7 +61,7 @@ MAPPINGS.set(SchemaChain, SchemaProcessor);
 MAPPINGS.set(StringChain, StringProcessor);
 
 // Other types
-MAPPINGS.set(SchemaReferenceField, ReferenceProcessor);
+MAPPINGS.set(SchemaReferenceField, SchemaReferenceProcessor);
 MAPPINGS.set(EnumField, EnumProcessor);
 MAPPINGS.set(PathReferenceField, PathReferenceProcessor);
 MAPPINGS.set(SchemaConditionalField, SchemaConditionalProcessor);

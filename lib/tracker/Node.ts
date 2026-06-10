@@ -16,13 +16,13 @@ class Node {
         this._path = Path.create('/');
     }
 
-    public clone(): this {
+    public cloneWithoutErrors(): this {
         const clone = new (this.constructor as new () => this)();
         clone._parent = this._parent;
         clone._path = this._path;
         clone._root = this._root;
         for (const key of Object.keys(this._children)) {
-            clone._children[key] = this._children[key].clone();
+            clone._children[key] = this._children[key].cloneWithoutErrors();
         }
         return clone;
     }
@@ -38,8 +38,8 @@ class Node {
         return Object.keys(this._children).length > 0;
     }
 
-    public getNodeByPath(path: string | Path): this | null {
-        const resolvedPath = typeof path === 'string' ? Path.create(path) : path as Path;
+    public resolvePath(path: string | Path): this | null {
+        const resolvedPath = Path.create(path);
 
         if (resolvedPath.isSelf) {
             return this;
