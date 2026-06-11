@@ -39,7 +39,7 @@ describe('Processor generic presence errors', () => {
 
         expect(result.pass).toBe(false);
         expect(errors).toHaveLength(1);
-        expect(errors[0].errorKey).toBe('generic/required');
+        expect(errors[0].errorSlug).toBe('generic/required');
         expect(errors[0].text).toBe(DefaultLanguage.errors.generic.required);
     });
 
@@ -51,7 +51,7 @@ describe('Processor generic presence errors', () => {
 
         expect(result.pass).toBe(false);
         expect(errors).toHaveLength(1);
-        expect(errors[0].errorKey).toBe('generic/forbidden');
+        expect(errors[0].errorSlug).toBe('generic/forbidden');
         expect(errors[0].text).toBe(DefaultLanguage.errors.generic.forbidden);
     });
 

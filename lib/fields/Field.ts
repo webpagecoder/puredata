@@ -114,9 +114,8 @@ abstract class Field<C extends FieldProps = FieldProps> {
     }
 
     public process(value?: unknown): ValueTracker {
-        const { processor } = this;
         const tracker = new ValueTracker(this, value);
-        processor.process(tracker);
+        this.processor.process(tracker);
         return tracker;
     }
 

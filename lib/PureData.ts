@@ -111,7 +111,7 @@ class PureData {
         return new ObjectChain(this.composeChainProps(props, 'object', new ObjectHandler()));
     }
 
-    pointer(pathStr: string, minDepth: number, maxDepth: number) {
+    field(pathStr: string, minDepth: number | PathReferenceField, maxDepth: number | PathReferenceField) {
         return new SchemaReferenceField(this.composeFieldProps({
             minDepth,
             maxDepth,
@@ -168,6 +168,8 @@ class PureData {
     value(pathStr: string, defaultOrCallback: unknown = undefined) {
         return new PathReferenceField(this.composeFieldProps({ pathStr, defaultOrCallback }));
     }
+
+
 
     get optional() {
         return 'optional';

@@ -38,7 +38,7 @@ abstract class Processor<F extends Field = Field> {
         this._processorMapper = processorMapper;
     }
 
-    public compile(context?: ProcessorCompilationContext): this {
+    public compile(context?: ProcessorCompilationContext): Processor {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {

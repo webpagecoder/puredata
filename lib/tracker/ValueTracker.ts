@@ -10,7 +10,7 @@ import { Field } from '../fields/Field.ts';
 
 export type TrackerError = {
     args: ArgumentCollection;
-    errorKey: string;
+    errorSlug: string;
     key: string;
     path: string;
     text: string;
@@ -26,17 +26,17 @@ class ValueTracker extends Node {
 
     protected _errorCollection: TrackerError[];
     protected _field: Field;
-    protected _rawValue: unknown;
     protected _nestDepth: number;
     protected _nestRoot: ValueTracker | null;
+    protected _rawValue: unknown;
 
     public constructor(field: Field, value?: unknown) {
         super();
         this._errorCollection = [];
         this._field = field;
-        this.setValue(value);
         this._nestDepth = 0;
         this._nestRoot = null;
+        this.setValue(value);
     }
 
     public override cloneWithoutErrors(): this {
@@ -71,7 +71,13 @@ class ValueTracker extends Node {
         const children = this._children;
         const final = Object.assign({}, this._rawValue as Record<string, unknown>);
         for (const key of Object.keys(children)) {
-            final[key] = children[key].getValue();
+            const value = children[key].getValue();
+            if (value !== undefined) {
+                final[key] = value;
+            }
+            else {
+                delete final[key];
+            }
         }
         return final;
     }
@@ -90,7 +96,7 @@ class ValueTracker extends Node {
         return false;
     }
 
-    public addError(errorKey: string, args?: ArgumentCollection): this {
+    public addError(errorSlug: string, args?: ArgumentCollection): this {
         if (!this._field) {
             throw new Error('ValueTracker compiled field is not configured');
         }
@@ -99,7 +105,7 @@ class ValueTracker extends Node {
             _field: { label, locale },
             _path: path,
         } = this;
-        let text = locale.translate(Path.fromArray(['errors', errorKey])).replace('{label}', label);
+        let text = locale.translate(Path.fromArray(['errors', errorSlug])).replace('{label}', label);
         if (args) {
             for (const argKey of Object.keys(args)) {
                 const arg = args[argKey];
@@ -108,7 +114,7 @@ class ValueTracker extends Node {
         }
         this._errorCollection.push({
             args: args || {},
-            errorKey,
+            errorSlug,
             key: String(path.keys[path.keys.length - 1] || ''),
             path: path._string,
             text,
@@ -144,9 +150,9 @@ class ValueTracker extends Node {
         this._errorCollection = [];
     }
 
-    public setFail(errorKey: string = 'generic/base', args?: ArgumentCollection) {
+    public setFail(errorSlug: string = 'generic/base', args?: ArgumentCollection) {
         this._errorCollection = [];
-        this.addError(errorKey, args);
+        this.addError(errorSlug, args);
     }
 
     public getErrors(): ErrorTree {

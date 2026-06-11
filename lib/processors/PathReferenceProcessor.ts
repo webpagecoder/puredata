@@ -17,6 +17,7 @@ class PathReferenceProcessor extends Processor<PathReferenceField> {
             tracker.setValue(resolvedValue);
             return;
         }
+        
 
         const referencedValueTracker = tracker.parent.resolvePath(path);
         let resolvedValue = undefined;
