@@ -21,18 +21,13 @@ export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldC
 
 abstract class Field<C extends FieldProps = FieldProps> {
 
-    private static _id: number;
-
-    protected _props: C;
-
-    protected _id: number;
-    protected _processor: Processor | null;
-
     protected _autoConvert: boolean;
     protected _defaultValue: unknown;
     protected _label: string
     protected _locale: Locale;
     protected _presence: Presence;
+    protected _processor: Processor | null;
+    protected _props: C;
     protected _processorMapper: FieldProcessorFactory;
 
     public constructor(args: FieldConstructorParams) {
@@ -48,16 +43,11 @@ abstract class Field<C extends FieldProps = FieldProps> {
         this._props = {} as C;
         this._autoConvert = autoConvert;
         this._defaultValue = defaultValue;
-        this._id = Field._id ? ++Field._id : Field._id = 1;
         this._label = label;
         this._locale = locale;
         this._presence = presence;
         this._processor = null;
         this._processorMapper = processorMapper;
-    }
-
-    public get id(): number {
-        return this._id;
     }
 
     public get defaultValue(): unknown {
@@ -129,16 +119,6 @@ abstract class Field<C extends FieldProps = FieldProps> {
         processor.process(tracker);
         return tracker;
     }
-
-    //     public process(valueOrValueTracker: ValueTracker | unknown): ValueTracker {
-    //     if (!this._processor) {
-    //         if (!this._processorMapper) {
-    //             throw new Error('Field/Processor compilation mapper is not configured');
-    //         }
-    //         this._processor = this._processorMapper.createProcessor(this).compile();
-    //     }
-    //     return this._processor.process(valueOrValueTracker);
-    // }
 
     public isForbidden(): boolean {
         return this._presence === 'forbidden';

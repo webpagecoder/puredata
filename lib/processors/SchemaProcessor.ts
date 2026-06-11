@@ -13,9 +13,7 @@ import { SchemaReferenceProcessor } from './SchemaReferenceProcessor.ts';
 
 export type CompiledSchema = Map<string, Processor>;
 
-export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain> & {
-    schemaDepth?: number;
-};
+export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
     ancestors?: SchemaProcessor[] | null;
@@ -31,14 +29,12 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
     protected _conditionals: SchemaConditionalProcessor[] | null;
     protected _nests: SchemaReferenceProcessor[] | null;
     protected _schema: CompiledSchema;
-    protected _schemaDepth: number;
     protected _pubSub: PubSub | null;
 
     constructor(args: SchemaProcessorConstructorParams) {
         super(args);
 
         const {
-            schemaDepth = 0,
             field,
             processorMapper = new FieldProcessorFactory(),
         } = args;
@@ -47,14 +43,12 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         this._nests = null;
         this._pubSub = null;
         this._schema = new Map();
-        this._schemaDepth = schemaDepth; // this might have to be set in compilation todo
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.extendedProps.schemaMap) {
             this._schema.set(key, processorMapper.createProcessor(childField));
         }
     }
-
 
     public override compile(context: SchemaCompilationContext = {}): this {
 
@@ -75,7 +69,6 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         const {
-            _schemaDepth,
             _schema
         } = this;
 
@@ -107,8 +100,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                         const rel = absoluteChildPath.toRelative();
                         const activeValueTracker = (tracker as ValueTracker).resolvePath(rel);
                         if (activeValueTracker) {
-                            const t = resolvedChildProcessor.process(activeValueTracker);
-                            console.log();
+                            resolvedChildProcessor.process(activeValueTracker);
                         }
                         return true;
                     }
@@ -127,19 +119,19 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
     public override process(tracker: ValueTracker, state: State = {}): void {
 
-        let conditionalTrackers = state.conditionalTrackers as Map<Processor, ValueTracker>;
+        let conditionalTrackers = state.conditionalTrackers as Map<SchemaConditionalProcessor, ValueTracker>;
         if (!conditionalTrackers) {
             conditionalTrackers = new Map();
             state.conditionalTrackers = conditionalTrackers;
         }
 
-        let nestTrackers = state.nestTrackers as Map<Processor, ValueTracker>;
+        let nestTrackers = state.nestTrackers as Map<SchemaReferenceProcessor, ValueTracker>;
         if (!nestTrackers) {
             nestTrackers = new Map();
             state.nestTrackers = nestTrackers;
         }
 
-        this.preProcess(tracker, state);
+        this.preProcess(tracker);
         if (tracker.hasErrors()) {
             return;
         }
@@ -180,7 +172,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 nestTrackers.set(childProcessor, childValueTracker);
             }
             else if (!childProcessor.hasReferences()) {
-                childProcessor.process(childValueTracker, state)
+                childProcessor.process(childValueTracker, state);
             }
 
         }
@@ -188,7 +180,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         if (this._pubSub) {
             this._pubSub.execute({ tracker });
             for (const processor of this._nests!) {
-                processor.process(nestTrackers.get(processor)!, state);
+                processor.process(nestTrackers.get(processor)!);
             }
             for (const processor of this._conditionals!) {
                 processor.process(conditionalTrackers.get(processor)!);

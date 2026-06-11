@@ -24,7 +24,8 @@ class DateProcessor extends ChainProcessor<DateChain> {
         );
     }
 
-    public override postProcess(tracker: ValueTracker): void {
+    public override process(tracker: ValueTracker): void {
+        super.process(tracker);
         if (tracker.fail) {
             return;
         }

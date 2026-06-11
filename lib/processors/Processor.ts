@@ -4,11 +4,11 @@ import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
+import { PathReferenceProcessor } from './PathReferenceProcessor.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
     processorMapper: FieldProcessorFactory;
-    defaultValueReference?: Processor;
 };
 
 export type State = Record<string, unknown> | undefined;
@@ -21,7 +21,7 @@ abstract class Processor<F extends Field = Field> {
 
     protected _id: number;
     protected _cachedReferences: Set<any> | null;
-    protected _defaultValueProcessor: Processor | null;
+    protected _defaultValuePathReferenceProcessor: PathReferenceProcessor | null;
     protected _field: F;
     protected _processorMapper: FieldProcessorFactory;
 
@@ -33,23 +33,24 @@ abstract class Processor<F extends Field = Field> {
 
         this._id = ++Processor.id;
         this._cachedReferences = null;
-        this._defaultValueProcessor = null;
+        this._defaultValuePathReferenceProcessor = null;
         this._field = Object.seal(field);
         this._processorMapper = processorMapper;
     }
 
-    public compile(): Processor {
+    public compile(context?: ProcessorCompilationContext): this {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathReferenceField) {
-            this._defaultValueProcessor = _processorMapper.createProcessor(defaultValue);
+            this._defaultValuePathReferenceProcessor = 
+                _processorMapper.createProcessor(defaultValue).compile(context) as PathReferenceProcessor;
         }
         return this;
     }
 
-    public abstract process(tracker: ValueTracker, state?: State): void;//todo: revisit this setup
+    public abstract process(tracker: ValueTracker, state?: State): void;
 
-    public preProcess(tracker: ValueTracker, state?: State): void {
+    public preProcess(tracker: ValueTracker): void {
         const { _field } = this;
 
         const isDefined = tracker.getValue() !== undefined;
@@ -61,17 +62,15 @@ abstract class Processor<F extends Field = Field> {
             tracker.addError('generic/forbidden');
         }
         else if (!isDefined) {
-            const { _defaultValueProcessor } = this;
-            if (_defaultValueProcessor) {
-                _defaultValueProcessor.process(tracker, state);
+            const { _defaultValuePathReferenceProcessor } = this;
+            if (_defaultValuePathReferenceProcessor) {
+                _defaultValuePathReferenceProcessor.process(tracker);
             }
             else {
                 tracker.setValue(_field.defaultValue);
             }
         }
     }
-
-    public postProcess(tracker: ValueTracker, state?: State): void { };//todo: revisit this setup
 
     public hasReferences(): boolean {
         return this.getReferences().size > 0;
@@ -93,8 +92,7 @@ abstract class Processor<F extends Field = Field> {
                 references.add(defaultValue);
             }
         }
-        this._cachedReferences = references;
-        return references;
+        return this._cachedReferences = references;
     }
 
     public get field(): F {

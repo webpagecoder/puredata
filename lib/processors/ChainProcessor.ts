@@ -15,7 +15,7 @@ type PipelineError = {
 type PipelineResult = {
     value: unknown;
     fail: boolean;
-    errors: Iterable<PipelineError>;
+    errors: PipelineError[];
 };
 
 type PipelineStep = {
@@ -36,13 +36,12 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         // this._hasPipelineHooks = args.hasPipelineHooks || false;
     }
 
-    public override process(tracker: ValueTracker, state?: State): void {
-        this.preProcess(tracker, state);
+    public override process(tracker: ValueTracker): void {
+        this.preProcess(tracker);
         if (tracker.hasErrors()) {
             return;
         }
         this.executePipeline(tracker);
-        this.postProcess(tracker, state);
     }
 
     private resolveStepArgs(args: PipelineStep['args']): unknown[] {
@@ -72,16 +71,10 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
                 }
             }
 
-            // if (this._hasPipelineHooks) {
-            //     this.preStepHook(tracker, state);
-            // }
             const result = fn(...[
                 tracker.getValue(),
                 ...finalArgs
             ]);
-            // if (this._hasPipelineHooks) {
-            //     this.postStepHook(tracker, state);
-            // }
 
             this._copyResultToTracker(tracker, result);
 

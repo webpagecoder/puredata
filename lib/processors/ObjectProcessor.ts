@@ -8,8 +8,8 @@ import { State } from './Processor.ts';
 
 class ObjectProcessor<C extends ObjectChain = ObjectChain> extends ChainProcessor<C> {
 
-    public override preProcess(tracker: ValueTracker, state?: State): void {
-        super.preProcess(tracker, state); //todo: this is 
+    public override preProcess(tracker: ValueTracker): void {
+        super.preProcess(tracker);
 
         if (!Utils.isObject(tracker.getValue())) {
             tracker.addError('object/base');
