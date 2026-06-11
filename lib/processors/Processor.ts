@@ -1,11 +1,9 @@
 'use strict';
 
-import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
-import { ArgumentCollection } from '../types.ts';
-import { PubSub } from '../pub-sub/PubSub.ts';
+import { PathReferenceField } from '../fields/PathReferenceField.ts';
+import { ValueTracker } from '../tracker/ValueTracker.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
@@ -26,7 +24,6 @@ abstract class Processor<F extends Field = Field> {
     protected _defaultValueProcessor: Processor | null;
     protected _field: F;
     protected _processorMapper: FieldProcessorFactory;
-    // protected _state: Record<string, unknown>;
 
     constructor(args: ProcessorConstructorParams<F>) {
         const {
@@ -39,7 +36,6 @@ abstract class Processor<F extends Field = Field> {
         this._defaultValueProcessor = null;
         this._field = Object.seal(field);
         this._processorMapper = processorMapper;
-        // this._state = {};
     }
 
     public compile(): Processor {
@@ -105,10 +101,7 @@ abstract class Processor<F extends Field = Field> {
         return this._field;
     }
 
-    public get ValueTrackerConstructor() {
-        return ValueTracker;
-    }
-
 }
 
 export { Processor };
+

@@ -39,7 +39,8 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
                 type,
-                processorMapper.createProcessor(conditionalField).compile({ isNested: true }) as SchemaConditionalProcessor
+                (processorMapper.createProcessor(conditionalField) as SchemaConditionalProcessor)
+                    .compile({ isNested: true }) as SchemaConditionalProcessor
             ]);
         }
     }
@@ -86,7 +87,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
             const trackerClone = referencedValueTracker.cloneWithoutErrors();
             conditionalProcessor.process(trackerClone);
-            let result = trackerClone.pass; //TODO THIS SHOULD BE THE CLONED TRACKER!!
+            let result = trackerClone.pass; //todo: can we do a shortcircuit to fail on first error to save compute?
             if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
                 result = !result;
             }
@@ -99,8 +100,8 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         }
 
         if (this._isNested) {
-            //todo: this is no good.... with returns...rethink
-            return predicateValue ? tracker.setPass() : tracker.setFail();
+            // If this is nested, then the tracker is a clone of the parent conditional's tracker,
+            predicateValue ? tracker.setPass() : tracker.setFail();
         }
         else {
             (predicateValue ? _thenProcessor : _otherwiseProcessor)!.process(tracker);//TODO:!!! NO RETURNING

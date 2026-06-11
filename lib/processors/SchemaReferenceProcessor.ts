@@ -3,7 +3,6 @@
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { SchemaReferenceField } from '../fields/SchemaReferenceField.ts';
 import { Path } from '../Path.ts';
-import { NestedValueTracker } from '../tracker/NestedValueTracker.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorConstructorParams, State } from './Processor.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
@@ -51,49 +50,42 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
         }
     }
 
-    public override process(tracker: ValueTracker, state: State = {}): void {
+    public override process(tracker: ValueTracker): void {
         let {
             minDepth = 0, maxDepth = 1
         } = this._field.extendedProps;
 
+        //todo: cant use field here
         minDepth = Number(minDepth instanceof PathReferenceField ? minDepth.process().value : minDepth);
         maxDepth = Number(maxDepth instanceof PathReferenceField ? maxDepth.process().value : maxDepth);
 
-        let {
-            nestDepth = 1,
-            nestParent = null,
-            nestRoot = tracker,
-        } = state;
+        tracker.setNestDepth(tracker.parent.nestDepth + 1);
 
-        tracker.setNestRoot(nestRoot);
-        tracker.setNestParent(nestParent);
-        tracker.setNestDepth(nestDepth);
+        if(tracker.nestDepth === 1) {
+            tracker.setNestRoot(tracker);
+        }
+        else {
+            tracker.setNestRoot(tracker.parent.nestRoot);
+        }
 
         const value = tracker.getValue();
 
-        if (value === undefined && nestDepth < minDepth) {
+        if (value === undefined && tracker.nestDepth < minDepth) {
             tracker.nestRoot!.addError('object/recursion/tooShallow', { minDepth, maxDepth });
             return;
         }
         else if (value !== undefined) {
-            if (nestDepth > maxDepth) {
+            if (tracker.nestDepth > maxDepth) {
                 tracker.nestRoot!.addError('object/recursion/tooDeep', { minDepth, maxDepth });
                 return;
             }
-            this._innerProcessor!.process(tracker, {
-                nestDepth: nestDepth + 1,
-                nestParent: tracker,
-                nestRoot
-            });
+            this._innerProcessor!.process(tracker);
         }
 
 
 
     }
 
-    // public override get ValueTrackerConstructor() {
-    //     return NestedValueTracker;
-    // }
 
 }
 

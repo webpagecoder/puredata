@@ -28,18 +28,7 @@ class ValueTracker extends Node {
     protected _field: Field;
     protected _rawValue: unknown;
     protected _nestDepth: number;
-    protected _nestParent: ValueTracker | null;
     protected _nestRoot: ValueTracker | null;
-
-    // public static fail(field: Field) {
-    //     const tracker = new this(field);
-    //     tracker.addError('generic/base');
-    //     return tracker;
-    // }
-
-    // public static pass(field: Field) {
-    //     return new this(field);
-    // }
 
     public constructor(field: Field, value?: unknown) {
         super();
@@ -47,17 +36,13 @@ class ValueTracker extends Node {
         this._field = field;
         this.setValue(value);
         this._nestDepth = 0;
-        this._nestParent = null;
         this._nestRoot = null;
     }
 
     public override cloneWithoutErrors(): this {
         const clone = super.cloneWithoutErrors();
         clone._field = this._field;
-        //todo: other fields here...
-        clone._errorCollection = [...this._errorCollection];
         clone._nestDepth = this._nestDepth;
-        clone._nestParent = this._nestParent;
         clone._nestRoot = this._nestRoot;
         clone.setValue(this._rawValue);
         return clone;
@@ -213,20 +198,12 @@ class ValueTracker extends Node {
         return this._nestDepth;
     }
 
-    public get nestParent(): ValueTracker | null {
-        return this._nestParent;
-    }
-
     public get nestRoot(): ValueTracker | null {
         return this._nestRoot;
     }
 
     public setNestRoot(root: ValueTracker | null): void {
         this._nestRoot = root;
-    }
-
-    public setNestParent(parent: ValueTracker | null): void {
-        this._nestParent = parent;
     }
 
     public setNestDepth(depth: number): void {

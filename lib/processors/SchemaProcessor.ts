@@ -2,11 +2,8 @@
 
 import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
 import { SchemaChain } from '../fields/SchemaChain.ts';
-import { SchemaConditionalField } from '../fields/SchemaConditionalField.ts';
-import { SchemaReferenceField } from '../fields/SchemaReferenceField.ts';
 import { Path } from '../Path.ts';
 import { PubSub, PubSubContext } from '../pub-sub/PubSub.ts';
-import { NestedValueTracker } from '../tracker/NestedValueTracker.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from './ChainProcessor.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
@@ -136,7 +133,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             state.conditionalTrackers = conditionalTrackers;
         }
 
-        let nestTrackers = state.nestTrackers as Map<Processor, NestedValueTracker>;
+        let nestTrackers = state.nestTrackers as Map<Processor, ValueTracker>;
         if (!nestTrackers) {
             nestTrackers = new Map();
             state.nestTrackers = nestTrackers;
@@ -169,7 +166,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const value = tracker.getValue() as Record<string, any>;
         for (let [key, childProcessor] of _schema) {
-            let childValueTracker = new childProcessor.ValueTrackerConstructor(
+            let childValueTracker = new ValueTracker(
                 childProcessor.field,
                 value[key]
             );
