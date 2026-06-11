@@ -11,31 +11,24 @@ import { Processor, ProcessorCompilationContext, State } from './Processor.ts';
 import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
 import { SchemaReferenceProcessor } from './SchemaReferenceProcessor.ts';
 
-export type CompiledSchema<P = Processor> = Map<P, string>;
+export type CompiledSchema = Map<string, Processor>;
 
 export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
     ancestors?: SchemaProcessor[] | null;
-    conditionalSchema?: CompiledSchema<SchemaConditionalProcessor>;
-    nestSchema?: CompiledSchema<SchemaReferenceProcessor>;
+    conditionals?: SchemaConditionalProcessor[];
+    nests?: SchemaReferenceProcessor[];
     parent?: SchemaProcessor;
     absolutePath?: Path;
     referenceResolver?: PubSub;
 };
 
-export type DeferredProcessorContext = [
-    key: string,
-    parentTracker: ValueTracker,
-    processor: Processor,
-    value: unknown
-];
-
 class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
-    protected _conditionalSchema: CompiledSchema<SchemaConditionalProcessor> | null;
-    protected _localSchema: CompiledSchema;
-    protected _nestSchema: CompiledSchema<SchemaReferenceProcessor> | null;
+    protected _conditionals: SchemaConditionalProcessor[] | null;
+    protected _nests: SchemaReferenceProcessor[] | null;
+    protected _schema: CompiledSchema;
     protected _referenceResolver: PubSub | null;
 
     constructor(args: SchemaProcessorConstructorParams) {
@@ -46,14 +39,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             processorMapper = new FieldProcessorFactory(),
         } = args;
 
-        this._conditionalSchema = null;
-        this._localSchema = new Map();
-        this._nestSchema = null;
+        this._conditionals = null;
+        this._nests = null;
         this._referenceResolver = null;
+        this._schema = new Map();
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.extendedProps.schemaMap) {
-            this._localSchema.set(processorMapper.createProcessor(childField), key);
+            this._schema.set(key, processorMapper.createProcessor(childField));
         }
     }
 
@@ -62,40 +55,41 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         super.compile(context);
 
         let {
-            absolutePath = new Path('/'),
             ancestors = [],
-            conditionalSchema,
-            nestSchema,
+            conditionals,
+            nests,
+            absolutePath = new Path('/'),
             referenceResolver,
         } = context;
 
         if (!referenceResolver) {
             this._referenceResolver = referenceResolver = new PubSub();
-            this._conditionalSchema = conditionalSchema = new Map();
-            this._nestSchema = nestSchema = new Map();
+            this._conditionals = conditionals = [];
+            this._nests = nests = [];
         }
 
         const {
-            _localSchema
+            _schema
         } = this;
 
-        const finalLocalSchema: CompiledSchema = new Map();
-        for (let [childProcessor, key] of _localSchema) {
+        for (let [key, childProcessor] of _schema) {
             const absoluteChildPath = absolutePath.move(key);
 
-            const resolvedChildProcessor = childProcessor.compile({
-                absolutePath: absoluteChildPath,
+            let resolvedChildProcessor = childProcessor.compile({
+                conditionals,
                 ancestors: [...ancestors!, this],
-                conditionalSchema,
                 parent: this,
+                absolutePath: absoluteChildPath,
                 referenceResolver,
             });
 
+            _schema.set(key, resolvedChildProcessor);
+
             if (resolvedChildProcessor instanceof SchemaConditionalProcessor) {
-                conditionalSchema!.set(resolvedChildProcessor, key);
+                conditionals!.push(resolvedChildProcessor);
             }
             else if (resolvedChildProcessor instanceof SchemaReferenceProcessor) {
-                nestSchema!.set(resolvedChildProcessor, key); // guaranteed nest
+                nests!.push(resolvedChildProcessor); // guaranteed nest
             }
             else if (resolvedChildProcessor.hasReferences()) {
 
@@ -118,27 +112,23 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                     referenceResolver.linkNodes(pubNode, subNode);
                 }
             }
-            else {
-                finalLocalSchema.set(resolvedChildProcessor, key);
-            }
         }
 
-        this._localSchema = finalLocalSchema;
         return this;
     }
 
     public override process(tracker: ValueTracker, state: State = {}): void {
 
-        let deferredConditionals = state.deferredConditionals as DeferredProcessorContext[] | null;
-        if (!deferredConditionals) {
-            deferredConditionals = [];
-            state.deferredConditionals = deferredConditionals;
+        let conditionalTrackers = state.conditionalTrackers as Map<SchemaConditionalProcessor, ValueTracker>;
+        if (!conditionalTrackers) {
+            conditionalTrackers = new Map();
+            state.conditionalTrackers = conditionalTrackers;
         }
 
-        let deferredNests = state.deferredNests as DeferredProcessorContext[] | null;
-        if (!deferredNests) {
-            deferredNests = [];
-            state.deferredNests = deferredNests;
+        let nestTrackers = state.nestTrackers as Map<SchemaReferenceProcessor, ValueTracker>;
+        if (!nestTrackers) {
+            nestTrackers = new Map();
+            state.nestTrackers = nestTrackers;
         }
 
         this.preProcess(tracker);
@@ -146,7 +136,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             return;
         }
 
-        const { _field, _referenceResolver, _localSchema: _schema } = this;
+        const { _field, _referenceResolver, _schema } = this;
 
         const {
             chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
@@ -168,46 +158,43 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const value = tracker.getValue() as Record<string, any>;
         for (let [key, childProcessor] of _schema) {
+            let childValueTracker = new ValueTracker(
+                childProcessor.field,
+                value[key]
+            );
+
+            tracker.setChild(key, childValueTracker);
 
 
             if (childProcessor instanceof SchemaConditionalProcessor) {
-                deferredConditionals.push([key, tracker, childProcessor, value[key]]);
+                conditionalTrackers.set(childProcessor, childValueTracker);
             }
             else if (childProcessor instanceof SchemaReferenceProcessor) {
-                deferredNests.push([key, tracker, childProcessor, value[key]]);
+                nestTrackers.set(childProcessor, childValueTracker);
             }
             else if (childProcessor.hasReferences()) {
 
             }
             else {
-                const childValueTracker = new ValueTracker(childProcessor.field, value[key]);
                 childProcessor.process(childValueTracker, state);
-                tracker.setChild(key, childValueTracker);
             }
+
         }
 
         if (this._referenceResolver) {
             this._referenceResolver.execute({ tracker });
-            for (const processor of this._nestSchema!) {
-                const nestContext = deferredNests.find(([key, t, p, v]) => p === processor);
-                if (nestContext) {
-                    const [, , p, v] = nestContext;
-                    p.process(nestContext[1], { value: v });
-                }
+            for (const processor of this._nests!) {
+                processor.process(nestTrackers.get(processor)!);
             }
-            for (const processor of this._conditionalSchema!) {
-                const conditionalContext = deferredConditionals.find(([key, t, p, v]) => p === processor);
-                if (conditionalContext) {
-                    const [, , p, v] = conditionalContext;
-                    p.process(conditionalContext[1], { value: v });
-                }
+            for (const processor of this._conditionals!) {
+                processor.process(conditionalTrackers.get(processor)!);
             }
         }
 
     }
 
     public get schema(): CompiledSchema {
-        return this._localSchema;
+        return this._schema;
     }
 
     public resolveNodePath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {
