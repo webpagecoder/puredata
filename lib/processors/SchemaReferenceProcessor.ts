@@ -79,7 +79,7 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
     }
 
     // For recursive nesting...
-    public override process(tracker: ValueTracker): void {
+    public override process(tracker: ValueTracker): ValueTracker {
 
         // Nests are guaranteed to run after all other reference values have settled within a schema.
         // They don't use the PubSub system for dynamic value resolution like other references. 
@@ -127,6 +127,7 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
                 this._innerNestedProcessor!.process(tracker);
             }
         }
+        return tracker;
     }
 
 }

@@ -33,15 +33,15 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
     constructor(args: ChainProcessorConstructorParams<C>) {
         super(args);
-        // this._hasPipelineHooks = args.hasPipelineHooks || false;
     }
 
-    public override process(tracker: ValueTracker): void {
+    public override process(tracker: ValueTracker): ValueTracker {
         this.preProcess(tracker);
         if (tracker.hasErrors()) {
-            return;
+            return tracker;
         }
         this.executePipeline(tracker);
+        return tracker;
     }
 
     private resolveStepArgs(args: PipelineStep['args']): unknown[] {

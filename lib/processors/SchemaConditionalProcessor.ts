@@ -62,7 +62,7 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         return this;
     }
 
-    public override process(tracker: ValueTracker) {
+    public override process(tracker: ValueTracker): ValueTracker {
 
         const { _field, _comparisonProcessor, _thenProcessor, _otherwiseProcessor, _conditionalProcessorChain,  } = this;
         const { comparisonMode, targetPath } = _field.extendedProps;
@@ -106,6 +106,8 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         else {
             (predicateValue ? _thenProcessor : _otherwiseProcessor)!.process(tracker);//TODO:!!! NO RETURNING
         }
+
+        return tracker;
     }
 }
 
