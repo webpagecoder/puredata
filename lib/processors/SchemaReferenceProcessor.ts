@@ -127,7 +127,6 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
                 this._innerNestedProcessor!.process(tracker);
             }
         }
-        return tracker;
     }
 
 }

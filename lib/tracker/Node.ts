@@ -5,14 +5,12 @@ import { Path } from '../Path.ts';
 class Node {
 
     protected _children: Record<string, this>;
-    protected _key: string;
     protected _parent: this;
     protected _root: this;
     protected _path: Path;
 
     public constructor() {
         this._children = {};
-        this._key = '';
         this._parent = this;
         this._root = this;
         this._path = Path.create('/');
@@ -33,7 +31,6 @@ class Node {
     public createChild(key: string): this {
         const child = new (this.constructor as new () => this)();
         this._children[key] = child;
-        child._key = key;
         child._parent = this;
         child._root = this._root;
         child._path = this._path.move(key);

@@ -48,7 +48,7 @@ abstract class Processor<F extends Field = Field> {
         return this;
     }
 
-    public abstract process(tracker: ValueTracker, state?: State): ValueTracker;
+    public abstract process(tracker: ValueTracker, state?: State): void;
 
     public preProcess(tracker: ValueTracker): void {
         const { _field } = this;

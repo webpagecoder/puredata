@@ -24,17 +24,16 @@ class DateProcessor extends ChainProcessor<DateChain> {
         );
     }
 
-    public override process(tracker: ValueTracker): ValueTracker {
+    public override process(tracker: ValueTracker): void {
         super.process(tracker);
         if (tracker.fail) {
-            return tracker;
+            return;
         }
         const { chainHandler, outputStringFormat, outputTimeMode } = this._field.extendedProps;
         this._copyResultToTracker(
             tracker,
             chainHandler.toFormat(tracker.getValue() as UtcDate, outputStringFormat, outputTimeMode)
         );
-        return tracker;
     }
 
 }

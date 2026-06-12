@@ -26,8 +26,14 @@ export type DeferredProcessorContext = [
     childKey: string,
     processor: Processor,
     parentTracker: ValueTracker,
-    value: Record<string, any>
+    parentValue: Record<string, any>
 ];
+
+export type ReferenceResolverContext = PubSubContext & {
+    deferredReferences: DeferredProcessorContext[];
+    rootTracker: ValueTracker;
+    failOnFirstError?: boolean;
+};
 
 class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
@@ -100,19 +106,21 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
                 const subNode = referenceResolver.getOrCreateNode(
                     absoluteSubPath.string,
-                    (context: PubSubContext): boolean => {
+                    (context): boolean => {
 
-                        const { deferredReferences } = context;
+                        const {
+                            failOnFirstError,
+                            rootTracker
+                        } = context as ReferenceResolverContext;
+
+                        const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative());
 
                         // const { tracker, failOnFirstError } = context;
                         // const subTracker = (tracker as ValueTracker).resolvePath(absoluteSubPath.toRelative());
-                        // if (subTracker) {
-                        //     subTracker.parent.setChild(
-                        //         subTracker.key,
-                        //         resolvedChildProcessor.process(subTracker)
-                        //     );
-                        // }
-                        // return true;
+                        if (subTracker) {
+                            resolvedChildProcessor.process(subTracker);
+                        }
+                        return true;
 
 
 
@@ -135,7 +143,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         return this;
     }
 
-    public override process(tracker: ValueTracker, state: State = {}): ValueTracker {
+    public override process(tracker: ValueTracker, state: State = {}): void {
 
         let deferredConditionals = state.deferredConditionals as DeferredProcessorContext[] | null;
         if (!deferredConditionals) {
@@ -157,7 +165,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         this.preProcess(tracker);
         if (tracker.hasErrors()) {
-            return tracker;
+            return;
         }
 
         const {
@@ -179,9 +187,11 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         // Strip unknown keys if needed
-        const schemaKeys = Array.from(_localBasicProcessors.keys());
         if (stripUnknownKeys) {
-            tracker.setValue(stripKeys(tracker.getValue(), schemaKeys).value);
+            tracker.setValue(stripKeys(
+                tracker.getValue(),
+                Array.from(_field.extendedProps.schemaMap.keys())
+            ).value);
         }
 
         this.executePipeline(tracker);
@@ -189,17 +199,8 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const value = tracker.getValue() as Record<string, any>;
 
-        for (let [childProcessor, key] of _localBasicProcessors) {
-            tracker.setChild(key, childProcessor.process(
-                new ValueTracker(childProcessor.field, value[key]),
-                state
-            ));
-        }
-
-        if (_localNestProcessors.size > 0) {
-            for (const [processor, key] of _localNestProcessors) {
-                deferredNests.push([key, processor, tracker, value]);
-            }
+        for (let [processor, key] of _localBasicProcessors) {
+            processor.process(tracker.insertChild(processor.field, key, value[key]), state);
         }
 
         if (_localConditionalProcessors.size > 0) {
@@ -208,40 +209,35 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             }
         }
 
+        if (_localNestProcessors.size > 0) {
+            for (const [processor, key] of _localNestProcessors) {
+                deferredNests.push([key, processor, tracker, value]);
+            }
+        }
+
         if (_localReferenceProcessors.size > 0) {
             for (const [processor, key] of _localReferenceProcessors) {
-                deferredReferences.push([key, processor, tracker, value]);
+                tracker.insertChild(processor.field, key);
             }
         }
 
         if (_referenceResolver) {
             // We are in the root of the schema
 
-            if (deferredReferences.length > 0) {
-                _referenceResolver.execute({ deferredReferences });
-            }
+            _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failOnFirstError });
 
             if (deferredNests.length > 0) {
                 for (const [key, processor, tracker, value] of deferredNests) {
-                    tracker.setChild(key, processor.process(
-                        new ValueTracker(processor.field, value[key])
-                    ));
+                    processor.process(tracker.insertChild(processor.field, key));
                 }
             }
 
             if (deferredConditionals.length > 0) {
                 for (const [key, processor, tracker, value] of deferredConditionals) {
-                    tracker.setChild(key, processor.process(
-                        new ValueTracker(processor.field, value[key])
-                    ));
+                    processor.process(tracker.insertChild(processor.field, key));
                 }
             }
         }
-        return tracker;
-    }
-
-    public get schema(): CompiledSchema {
-        return this._localBasicProcessors;
     }
 
     public resolveNodePath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {

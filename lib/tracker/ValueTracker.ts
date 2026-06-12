@@ -48,15 +48,11 @@ class ValueTracker extends Node {
         return clone;
     }
 
-    public override createChild(key: string, value?: unknown): this {
+    public insertChild(field: Field, key: string, value?: unknown): this {
         const child = super.createChild(key);
-        child._field = this._field;
+        child._field = field;
         child.setValue(value);
         return child;
-    }
-
-    public setChild(key: string, childTracker: this): void {
-        this._children[key] = childTracker;
     }
 
     public setValue(value: unknown = undefined): void {
