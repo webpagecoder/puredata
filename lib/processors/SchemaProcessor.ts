@@ -26,7 +26,6 @@ export type DeferredProcessorContext = [
     childKey: string,
     processor: Processor,
     parentTracker: ValueTracker,
-    parentValue: Record<string, any>
 ];
 
 export type ReferenceResolverContext = PubSubContext & {
@@ -227,13 +226,13 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failOnFirstError });
 
             if (deferredNests.length > 0) {
-                for (const [key, processor, tracker, value] of deferredNests) {
+                for (const [key, processor, tracker] of deferredNests) {
                     processor.process(tracker.insertChild(processor.field, key));
                 }
             }
 
             if (deferredConditionals.length > 0) {
-                for (const [key, processor, tracker, value] of deferredConditionals) {
+                for (const [key, processor, tracker] of deferredConditionals) {
                     processor.process(tracker.insertChild(processor.field, key));
                 }
             }
