@@ -17,54 +17,27 @@ export type SchemaReferenceProcessorCompilationContext = ProcessorCompilationCon
 class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
 
     protected _innerNestedProcessor: Processor | null;
-    protected _minDepthNum: number | null;
-    protected _maxDepthNum: number | null;
-    protected _minDepthProcessor: PathReferenceProcessor | null;
-    protected _maxDepthProcessor: PathReferenceProcessor | null;
 
     public constructor(args: ProcessorConstructorParams<SchemaReferenceField>) {
         super(args);
-        const { extendedProps: { minDepth, maxDepth } } = this._field;
-
         this._innerNestedProcessor = null;
-        if (minDepth instanceof PathReferenceField) {
-            this._minDepthProcessor = new PathReferenceProcessor({
-                field: minDepth,
-                processorMapper: this._processorMapper
-            });
-            this._minDepthNum = null;
-        } else {
-            this._minDepthNum = minDepth;
-            this._minDepthProcessor = null;
-        }
-
-        if (maxDepth instanceof PathReferenceField) {
-            this._maxDepthProcessor = new PathReferenceProcessor({
-                field: maxDepth,
-                processorMapper: this._processorMapper
-            });
-            this._maxDepthNum = null;
-        } else {
-            this._maxDepthNum = maxDepth;
-            this._maxDepthProcessor = null;
-        }
     }
 
     public override compile(context: SchemaReferenceProcessorCompilationContext): Processor {
         const { ancestors, parent, absolutePath } = context;
         const { _processorMapper, _field } = this;
-        const { absolutePath: refPath } = _field.extendedProps;
-        const referencedProcessor = parent.resolveNodePath(refPath, ancestors);
+        const { fieldPath } = _field.extendedProps;
+        const referencedProcessor = parent.resolveNodePath(fieldPath, ancestors);
 
         if (!referencedProcessor) {
             throw new Error('At key ' + absolutePath
-                + ' - unable to resolve referenced path: ' + refPath);
+                + ' - unable to resolve referenced path: ' + fieldPath);
         }
         if (referencedProcessor instanceof SchemaReferenceProcessor) {
-            throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + refPath);
+            throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
         }
 
-        const resolvedRefPath = absolutePath.move(refPath);
+        const resolvedRefPath = absolutePath.move(fieldPath);
         const { separatorChar } = absolutePath;
         const isNest = resolvedRefPath.isRoot
             || (absolutePath.string + separatorChar).startsWith(resolvedRefPath.string + separatorChar);
@@ -74,36 +47,14 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
             return this;
         }
         else {
-            return _processorMapper.createProcessor(referencedProcessor.field).compile();
+            return _processorMapper.createProcessor(referencedProcessor.field).compile(context);
         }
     }
 
-    // For recursive nesting...
-    public override process(tracker: ValueTracker): ValueTracker {
+    // Note: this will only be called if the reference is a nest (i.e. it points to an ancestor)
+    public override process(tracker: ValueTracker): void {
 
-        // Nests are guaranteed to run after all other reference values have settled within a schema.
-        // They don't use the PubSub system for dynamic value resolution like other references. 
-        // Instead, they resolve their min/max depth values directly at runtime.
-        const { _minDepthNum, _maxDepthNum, _minDepthProcessor, _maxDepthProcessor } = this;
-        let minDepth: number, maxDepth: number;
-
-        if (_minDepthProcessor instanceof PathReferenceProcessor) {
-            const minDepthTracker = new ValueTracker(_minDepthProcessor.field);
-            _minDepthProcessor.process(tracker);
-            minDepth = Number(minDepthTracker.getValue());
-        }
-        else {
-            minDepth = _minDepthNum!;
-        }
-
-        if (_maxDepthProcessor instanceof PathReferenceProcessor) {
-            const maxDepthTracker = new ValueTracker(_maxDepthProcessor.field);
-            _maxDepthProcessor.process(maxDepthTracker);
-            maxDepth = Number(maxDepthTracker.getValue());
-        }
-        else {
-            maxDepth = _maxDepthNum!;
-        }
+        const { minDepth, maxDepth } = this._field.extendedProps;
 
         tracker.setNestDepth(tracker.parent.nestDepth + 1);
 

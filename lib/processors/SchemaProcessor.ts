@@ -11,7 +11,7 @@ import { Processor, ProcessorCompilationContext, State } from './Processor.ts';
 import { SchemaConditionalProcessor } from './SchemaConditionalProcessor.ts';
 import { SchemaReferenceProcessor } from './SchemaReferenceProcessor.ts';
 
-export type CompiledSchema<P = Processor> = Map<P, string>;
+export type CompiledSchema<P = Processor> = Map<string, P>;
 
 export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain>;
 
@@ -59,7 +59,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.extendedProps.schemaMap) {
-            this._localBasicProcessors.set(processorMapper.createProcessor(childField), key);
+            this._localBasicProcessors.set(key, processorMapper.createProcessor(childField));
         }
     }
 
@@ -85,7 +85,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         } = this;
 
         const localBasicProcessors: CompiledSchema = new Map();
-        for (let [childProcessor, key] of _localBasicProcessors) {
+        for (let [key, childProcessor] of _localBasicProcessors) {
             const absoluteSubPath = absolutePath.move(key);
 
             const resolvedChildProcessor = childProcessor.compile({
@@ -96,13 +96,13 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             });
 
             if (resolvedChildProcessor instanceof SchemaConditionalProcessor) {
-                _localConditionalProcessors.set(resolvedChildProcessor, key);
+                _localConditionalProcessors.set(key, resolvedChildProcessor);
             }
             else if (resolvedChildProcessor instanceof SchemaReferenceProcessor) {
-                _localNestProcessors.set(resolvedChildProcessor, key); // guaranteed nest
+                _localNestProcessors.set(key, resolvedChildProcessor); // guaranteed nest
             }
             else if (resolvedChildProcessor.hasReferences()) {
-                _localReferenceProcessors.set(resolvedChildProcessor, key);
+                _localReferenceProcessors.set(key, resolvedChildProcessor);
 
                 const subNode = referenceResolver.getOrCreateNode(
                     absoluteSubPath.string,
@@ -135,7 +135,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 }
             }
             else {
-                localBasicProcessors.set(resolvedChildProcessor, key);
+                localBasicProcessors.set(key, resolvedChildProcessor);
             }
         }
 
@@ -199,24 +199,24 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const value = tracker.getValue() as Record<string, any>;
 
-        for (let [processor, key] of _localBasicProcessors) {
+        for (let [key, processor] of _localBasicProcessors) {
             processor.process(tracker.insertChild(processor.field, key, value[key]), state);
         }
 
         if (_localConditionalProcessors.size > 0) {
-            for (const [processor, key] of _localConditionalProcessors) {
+            for (const [key, processor] of _localConditionalProcessors) {
                 deferredConditionals.push([key, processor, tracker, value]);
             }
         }
 
         if (_localNestProcessors.size > 0) {
-            for (const [processor, key] of _localNestProcessors) {
+            for (const [key, processor] of _localNestProcessors) {
                 deferredNests.push([key, processor, tracker, value]);
             }
         }
 
         if (_localReferenceProcessors.size > 0) {
-            for (const [processor, key] of _localReferenceProcessors) {
+            for (const [key, processor] of _localReferenceProcessors) {
                 tracker.insertChild(processor.field, key);
             }
         }
@@ -266,12 +266,10 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             if (!processor || !(processor instanceof SchemaProcessor)) {
                 return null;
             }
-            processor = processor.schema.get(key) || null;
+            processor = processor._localBasicProcessors.get(key) || null;
         }
         return processor;
     }
-
-
 }
 
 export { SchemaProcessor };

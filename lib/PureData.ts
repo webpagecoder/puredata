@@ -111,11 +111,11 @@ class PureData {
         return new ObjectChain(this.composeChainProps(props, 'object', new ObjectHandler()));
     }
 
-    field(pathStr: string, minDepth: number | PathReferenceField, maxDepth: number | PathReferenceField) {
+    field(pathStr: string, minDepth?: number, maxDepth?: number) {
         return new SchemaReferenceField(this.composeFieldProps({
             minDepth,
             maxDepth,
-            path: Path.create(pathStr),
+            fieldPath: Path.create(pathStr),
         }));
     }
 

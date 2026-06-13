@@ -78,6 +78,9 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
 
         const trackerClone = referencedValueTracker.cloneWithoutErrors();
         _comparisonProcessor.process(trackerClone);
+        // why we have to clone tracker before passing back or something...
+        // trackerClone yes should be passed here, but it is referring to testing
+        // the value at referenceValueTracker
 
         let predicateValue = trackerClone.pass;
         if (comparisonMode === 'notEquals') {
@@ -85,9 +88,8 @@ class SchemaConditionalProcessor extends Processor<SchemaConditionalField> {
         }
 
         for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
-            const trackerClone = referencedValueTracker.cloneWithoutErrors();
-            conditionalProcessor.process(trackerClone);
-            let result = trackerClone.pass; //todo: can we do a shortcircuit to fail on first error to save compute?
+            conditionalProcessor.process(tracker);
+            let result = tracker.pass; //todo: can we do a shortcircuit to fail on first error to save compute?
             if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
                 result = !result;
             }

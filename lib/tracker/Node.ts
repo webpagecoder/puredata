@@ -18,7 +18,6 @@ class Node {
 
     public cloneWithoutErrors(): this {
         const clone = new (this.constructor as new () => this)();
-        clone._key = this._key;
         clone._parent = this._parent;
         clone._path = this._path;
         clone._root = this._root;
