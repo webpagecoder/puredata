@@ -1,8 +1,7 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { Field, FieldProps, FieldConstructorParams } from './Field.ts';
-import { PathReferenceField } from './PathReferenceField.ts';
+import { Field, FieldConstructorParams, FieldProps } from './Field.ts';
 
 export type SchemaReferenceFieldProps = FieldProps & {
     fieldPath: Path;

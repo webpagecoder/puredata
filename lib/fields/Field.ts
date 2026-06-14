@@ -1,7 +1,8 @@
 'use strict';
 
-import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
+import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { Locale } from '../Locale.ts';
+import { PathFactory } from '../PathFactory.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
@@ -13,8 +14,9 @@ export type FieldConstructorParams = {
     defaultValue?: unknown;
     label?: string;
     locale: Locale;
+    pathFactory: PathFactory;
     presence?: Presence;
-    processorMapper: FieldProcessorFactory;
+    processorMapper: ProcessorFactory;
 };
 
 export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldConstructorParams & C>;
@@ -25,10 +27,11 @@ abstract class Field<C extends FieldProps = FieldProps> {
     protected _defaultValue: unknown;
     protected _label: string
     protected _locale: Locale;
+    protected _pathFactory: PathFactory;
     protected _presence: Presence;
     protected _processor: Processor | null;
+    protected _processorMapper: ProcessorFactory;
     protected _props: C;
-    protected _processorMapper: FieldProcessorFactory;
 
     public constructor(args: FieldConstructorParams) {
         const {
@@ -36,6 +39,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             defaultValue = undefined,
             label = 'Field',
             locale,
+            pathFactory,
             presence = 'required',
             processorMapper
         } = args;
@@ -45,6 +49,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
         this._defaultValue = defaultValue;
         this._label = label;
         this._locale = locale;
+        this._pathFactory = pathFactory;
         this._presence = presence;
         this._processor = null;
         this._processorMapper = processorMapper;
@@ -76,7 +81,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this._processor;
     }
 
-    public get processorMapper(): FieldProcessorFactory {
+    public get processorMapper(): ProcessorFactory {
         return this._processorMapper;
     }
 

@@ -49,7 +49,7 @@ import { ProcessorConstructorParams } from './processors/Processor.ts';
 type FieldConstructor = abstract new (...args: any[]) => Field;
 type ProcessorConstructor = new (args: ProcessorConstructorParams) => Processor;
 
-const MAPPINGS = new Map<FieldConstructor, ProcessorConstructor>();
+const MAPPINGS = new Map<FieldConstructor, Processor>();
 
 // Chains
 MAPPINGS.set(ArrayChain, ArrayProcessor);
@@ -68,7 +68,7 @@ MAPPINGS.set(SchemaConditionalField, SchemaConditionalProcessor);
 MAPPINGS.set(ValueField, ValueProcessor);
 
 
-class FieldProcessorFactory {
+class ProcessorFactory {
 
     createProcessor(field: Field, context: Record<string, any> = {}): Processor {
         const ProcessorConstructor = MAPPINGS.get(field.constructor as FieldConstructor);
@@ -86,4 +86,4 @@ class FieldProcessorFactory {
 
 }
 
-export { FieldProcessorFactory };
+export { ProcessorFactory };

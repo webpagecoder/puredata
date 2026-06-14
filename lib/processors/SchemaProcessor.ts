@@ -1,6 +1,6 @@
 'use strict';
 
-import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
+import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { SchemaChain } from '../fields/SchemaChain.ts';
 import { Path } from '../Path.ts';
 import { PubSub, PubSubContext } from '../pub-sub/PubSub.ts';
@@ -47,7 +47,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const {
             field,
-            processorMapper = new FieldProcessorFactory(),
+            processorMapper = new ProcessorFactory(),
         } = args;
 
         this._localBasicProcessors = new Map();
@@ -204,13 +204,13 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         if (_localConditionalProcessors.size > 0) {
             for (const [key, processor] of _localConditionalProcessors) {
-                deferredConditionals.push([key, processor, tracker, value]);
+                deferredConditionals.push([key, processor, tracker]);
             }
         }
 
         if (_localNestProcessors.size > 0) {
             for (const [key, processor] of _localNestProcessors) {
-                deferredNests.push([key, processor, tracker, value]);
+                deferredNests.push([key, processor, tracker]);
             }
         }
 

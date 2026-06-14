@@ -1,11 +1,9 @@
 'use strict';
 
-import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { SchemaReferenceField } from '../fields/SchemaReferenceField.ts';
 import { Path } from '../Path.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { PathReferenceProcessor } from './PathReferenceProcessor.ts';
-import { Processor, ProcessorCompilationContext, ProcessorConstructorParams, State } from './Processor.ts';
+import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from './Processor.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 
 export type SchemaReferenceProcessorCompilationContext = ProcessorCompilationContext & {
@@ -79,7 +77,6 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
             }
         }
     }
-
 }
 
 export { SchemaReferenceProcessor };

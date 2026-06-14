@@ -1,6 +1,6 @@
 'use strict';
 
-import { FieldProcessorFactory } from '../FieldProcessorFactory.ts';
+import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { Field } from '../fields/Field.ts';
 import { PathReferenceField } from '../fields/PathReferenceField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
@@ -8,7 +8,7 @@ import { PathReferenceProcessor } from './PathReferenceProcessor.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
-    processorMapper: FieldProcessorFactory;
+    processorMapper: ProcessorFactory;
 };
 
 export type State = Record<string, unknown> | undefined;
@@ -23,11 +23,11 @@ abstract class Processor<F extends Field = Field> {
     protected _cachedReferences: Set<any> | null;
     protected _defaultValuePathReferenceProcessor: PathReferenceProcessor | null;
     protected _field: F;
-    protected _processorMapper: FieldProcessorFactory;
+    protected _processorMapper: ProcessorFactory;
 
     constructor(args: ProcessorConstructorParams<F>) {
         const {
-            processorMapper = new FieldProcessorFactory(),
+            processorMapper = new ProcessorFactory(),
             field,
         } = args;
 

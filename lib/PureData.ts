@@ -1,19 +1,22 @@
 'use strict';
 
-import { FieldProcessorFactory } from './FieldProcessorFactory.ts';
+import { ProcessorFactory } from './ProcessorFactory.ts';
 import { Locale } from './Locale.ts';
 import { Path } from './Path.ts';
 import { DEFAULT_LANGUAGE } from './config/DefaultLanguage.ts';
+import { GlobalConfig } from './config/GlobalConfig.ts';
 import { ArrayChain } from './fields/ArrayChain.ts';
 import { BooleanChain } from './fields/BooleanChain.ts';
 import { Chain } from './fields/Chain.ts';
 import { DateChain } from './fields/DateChain.ts';
 import { EnumField } from './fields/EnumField.ts';
+import { Field } from './fields/Field.ts';
 import { NumberChain } from './fields/NumberChain.ts';
+import { ObjectChain } from './fields/ObjectChain.ts';
 import { PathReferenceField } from './fields/PathReferenceField.ts';
-import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
 import { SchemaChain } from './fields/SchemaChain.ts';
 import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
+import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
 import { StringChain } from './fields/StringChain.ts';
 import { ValueField } from './fields/ValueField.ts';
 import { ArrayHandler } from './handlers/ArrayHandler.ts';
@@ -22,21 +25,17 @@ import { DateHandler } from './handlers/DateHandler.ts';
 import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
-import { Utils } from './Utils.ts';
-import { Handler } from './handlers/Handler.ts';
-import { Field } from './fields/Field.ts';
-import { ObjectChain } from './fields/ObjectChain.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
 
     private _locale: Locale;
-    private _processorMapper: FieldProcessorFactory;
-    private _globalConfig: PureDataConfig;
+    private _processorMapper: ProcessorFactory;
+    private _globalConfig: GlobalConfig;
 
 
-    constructor(globalConfig, processorMapper = new FieldProcessorFactory()) {
+    constructor(globalConfig: GlobalConfig, processorMapper = new ProcessorFactory()) {
         this._globalConfig = globalConfig;
 
         Path.delims(this._globalConfig.general.pathDelims);
@@ -167,25 +166,6 @@ class PureData {
 
     value(pathStr: string, defaultOrCallback: unknown = undefined) {
         return new PathReferenceField(this.composeFieldProps({ pathStr, defaultOrCallback }));
-    }
-
-
-
-    get optional() {
-        return 'optional';
-    }
-
-    get forbidden() {
-        return 'forbidden';
-    }
-
-    get required() {
-        return 'required';
-    }
-
-    get now() {
-        //todo: date shift via utc setting here!
-        return new Date();
     }
 }
 

@@ -1,6 +1,8 @@
 'use strict';
 
-const GLOBAL_CONFIG = Object.seal({
+export type GlobalConfig = typeof GlobalConfig;
+
+const GlobalConfig = Object.seal({
     general: {
         autoConvert: true,
         emptyValues: [null, undefined, ''],
@@ -15,7 +17,6 @@ const GLOBAL_CONFIG = Object.seal({
     },
     array: {
         castSingle: true,
-        // emptyValues: [null, undefined, ''], inherit GlobalConfig.emptyValues
         maxLength: null,
         removeEmpties: true,
     },
@@ -43,7 +44,6 @@ const GLOBAL_CONFIG = Object.seal({
         preservePrecision: true,
     },
     object: {
-        // emptyValues: [null, undefined, ''], inherit GlobalConfig.emptyValues
         ensurePlain: true,
         maxDepth: 10, // set to -null to not check
         maxKeyCount: 100, // set to -null to not check - recursive        
@@ -67,4 +67,4 @@ const GLOBAL_CONFIG = Object.seal({
     }
 });
 
-export { GLOBAL_CONFIG };
+export { GlobalConfig };

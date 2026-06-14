@@ -1,8 +1,8 @@
 'use strict';
 
-import { GLOBAL_CONFIG } from './config/GlobalConfig.ts';
+import { GlobalConfig } from './config/GlobalConfig.ts';
 import { PureData } from './PureData.ts';
 
-const pd = new PureData(GLOBAL_CONFIG);
+const pd = new PureData(GlobalConfig);
 
 export { pd };
