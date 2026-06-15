@@ -88,7 +88,7 @@ abstract class Chain<
      * generic.empty()
      */
     public empty(): this {
-        return this.addStep('empty', function (this: Chain<any>): unknown[] {
+        return this.addStep('empty', function (this: Chain): unknown[] {
             return [this.extendedProps.emptyValues];
         });
     }
@@ -101,7 +101,7 @@ abstract class Chain<
      * generic.notEmpty()
      */
     public notEmpty(): this {
-        return this.addStep('notEmpty', function (this: Chain<any>): unknown[] {
+        return this.addStep('notEmpty', function (this: Chain): unknown[] {
             return [this.extendedProps.emptyValues];
         });
     }

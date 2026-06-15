@@ -1,6 +1,6 @@
 'use strict';
 
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { ArgumentCollection } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
@@ -112,7 +112,7 @@ class ValueTracker extends Node {
             _field: { label, locale },
             _path: path,
         } = this;
-        let text = locale.translate(Path.fromArray(['errors', errorSlug])).replace('{label}', label);
+        let text = locale.translate(new Path(['errors', errorSlug])).replace('{label}', label);
         if (args) {
             for (const argKey of Object.keys(args)) {
                 const arg = args[argKey];
@@ -176,7 +176,7 @@ class ValueTracker extends Node {
         return obj;
     }
 
-    public getLocalErrors(path?: string | Path): TrackerError[] {
+    public getLocalErrors(path?: Path): TrackerError[] {
         const tracker = path ? this.resolvePath(path) : this;
         return tracker ? (tracker as ValueTracker)._errorCollection : [];
     }

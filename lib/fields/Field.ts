@@ -2,7 +2,7 @@
 
 import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { Locale } from '../Locale.ts';
-import { PathFactory } from '../PathFactory.ts';
+import { PathFactory } from '../path/PathFactory.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';

@@ -1,146 +1,154 @@
 'use strict';
 
-import { ProcessorFactory } from './ProcessorFactory.ts';
-import { Locale } from './Locale.ts';
-import { Path } from './Path.ts';
 import { DEFAULT_LANGUAGE } from './config/DefaultLanguage.ts';
 import { GlobalConfig } from './config/GlobalConfig.ts';
+import { AnyChain } from './fields/AnyChain.ts';
 import { ArrayChain } from './fields/ArrayChain.ts';
 import { BooleanChain } from './fields/BooleanChain.ts';
-import { Chain } from './fields/Chain.ts';
+import { Chain, ChainConstructorParams } from './fields/Chain.ts';
 import { DateChain } from './fields/DateChain.ts';
-import { EnumField } from './fields/EnumField.ts';
-import { Field } from './fields/Field.ts';
+import { EnumField, EnumStructure } from './fields/EnumField.ts';
+import { Field, FieldConstructorParams } from './fields/Field.ts';
 import { NumberChain } from './fields/NumberChain.ts';
-import { ObjectChain } from './fields/ObjectChain.ts';
+import { ObjectChain, ObjectChainConstructorParams } from './fields/ObjectChain.ts';
 import { PathReferenceField } from './fields/PathReferenceField.ts';
 import { SchemaChain } from './fields/SchemaChain.ts';
 import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
-import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
+import { SchemaReferenceField, SchemaReferenceFieldConstructorParams } from './fields/SchemaReferenceField.ts';
 import { StringChain } from './fields/StringChain.ts';
 import { ValueField } from './fields/ValueField.ts';
+import { AnyChainHandler } from './handlers/AnyChainHandler.ts';
 import { ArrayHandler } from './handlers/ArrayHandler.ts';
 import { BooleanHandler } from './handlers/BooleanHandler.ts';
+import { ChainHandler } from './handlers/ChainHandler.ts';
 import { DateHandler } from './handlers/DateHandler.ts';
 import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
+import { Locale } from './Locale.ts';
+import { Path, PathDelimTypes } from './path/Path.ts';
+import { PathFactory } from './path/PathFactory.ts';
+import { ProcessorFactory } from './ProcessorFactory.ts';
 
 Locale.register('en-US', DEFAULT_LANGUAGE);
 
 class PureData {
 
     private _locale: Locale;
+    private _pathFactory: PathFactory;
     private _processorMapper: ProcessorFactory;
     private _globalConfig: GlobalConfig;
 
-
     constructor(globalConfig: GlobalConfig, processorMapper = new ProcessorFactory()) {
         this._globalConfig = globalConfig;
-
-        Path.delims(this._globalConfig.general.pathDelims);
-
-        const { localeCode } = this._globalConfig.general;
-
-        this._locale = new Locale(localeCode);
+        this._locale = new Locale(globalConfig.general.localeCode);
+        this._pathFactory = new PathFactory(globalConfig.general.pathDelims);
         this._processorMapper = processorMapper;
-
     }
 
-    // clone(updatedConfig) {
-    //     this._props = Utils.mergeObjects(this._props, updatedConfig);
-    // }
-
-    paths(delims) {
-        Path.delims(delims);
-    }
-
-    composeChainProps(props = {}, chainType: string, chainHandler: Handler) {
+    composeChainProps<T extends ChainConstructorParams>(
+        props: Record<string, unknown> = {},
+        chainType: string,
+        chainHandler: ChainHandler
+    ) {
         return Object.assign(
             {
                 chainHandler,
-                processorMapper: this._processorMapper,
                 locale: this._locale,
+                pathFactory: this._pathFactory,
+                processorMapper: this._processorMapper,
             },
             this._globalConfig['general'],
-            this._globalConfig[chainType],
+            this._globalConfig[chainType as keyof GlobalConfig],
             props
-        );
+        ) as T;
     }
 
-    composeFieldProps(props = {}) {
+    composeFieldProps<T extends FieldConstructorParams>(props: Record<string, unknown> = {}) {
         return Object.assign(
             {
-                processorMapper: this._processorMapper,
                 locale: this._locale,
+                pathFactory: this._pathFactory,
+                processorMapper: this._processorMapper,
             },
             this._globalConfig['general'],
             props
-        );
+        ) as T;
     }
 
     // Chains
-    array(props = {}) {
-        return new ArrayChain(this.composeChainProps(props, 'array', new ArrayHandler()));
-    }
-
-    boolean(props = {}) {
-        return new BooleanChain(this.composeChainProps(props, 'boolean', new BooleanHandler()));
-    }
-
-    date(props = {}) {
-        return new DateChain(
-            this.composeChainProps(props, 'date', new DateHandler(this._locale)
-            ));
-    }
-
-    enum(structure = []) {
-        return new EnumField(this.composeChainProps({ structure }));
-    }
 
     any() {
-        return new Chain(this.composeChainProps());
+        return new AnyChain(this.composeChainProps({}, 'any', new AnyChainHandler()));
     }
 
-    number(props = {}) {
+    array(props: Record<string, unknown> = {}) {
+        return new ArrayChain(
+            this.composeChainProps(props, 'array', new ArrayHandler())
+        );
+    }
+
+    boolean(props: Record<string, unknown> = {}) {
+        return new BooleanChain(
+            this.composeChainProps(props, 'boolean', new BooleanHandler())
+        );
+    }
+
+    date(props: Record<string, unknown> = {}) {
+        return new DateChain(
+            this.composeChainProps(props, 'date', new DateHandler(this._locale))
+        );
+    }
+
+    number(props: Record<string, unknown> = {}) {
         return new NumberChain(this.composeChainProps(props, 'number', new NumberHandler()));
     }
 
-    object(props = {}) {
-        return new ObjectChain(this.composeChainProps(props, 'object', new ObjectHandler()));
+    object(props: Record<string, unknown> = {}) {
+        return new ObjectChain(this.composeChainProps<ObjectChainConstructorParams>(props, 'object', new ObjectHandler()));
     }
+
+    schema(schema: Record<string, Field> = {}, props: Record<string, unknown> = {}) {
+        const finalProps = Object.assign({ schema }, props);
+        return new SchemaChain(this.composeChainProps(finalProps, 'object', new ObjectHandler()));
+    }
+
+    string(props: Record<string, unknown> = {}) {
+        return new StringChain(this.composeChainProps(props, 'string', new StringHandler()));
+    }
+
+    // Fields
+
+    enum(structure: EnumStructure) {
+        return new EnumField(this.composeFieldProps({ structure }));
+    }
+
+    immutable(value: unknown) {
+        return new ValueField(this.composeFieldProps({ value, mutable: false }));
+    }
+
+    mutable(value: unknown) {
+        return new ValueField(this.composeFieldProps({ value, mutable: true }));
+    }
+
+    value(pathStr: string, defaultOrCallback: unknown = undefined) {
+        return new PathReferenceField(this.composeFieldProps({ pathStr, defaultOrCallback }));
+    }
+
+    // Field pointer
 
     field(pathStr: string, minDepth?: number, maxDepth?: number) {
         return new SchemaReferenceField(this.composeFieldProps({
             minDepth,
             maxDepth,
-            fieldPath: Path.create(pathStr),
-        }));
+            fieldPath: this._pathFactory.create(pathStr),
+        }) as unknown as SchemaReferenceFieldConstructorParams);
     }
 
-    schema(schema = {}, props = {}) {
-        const finalProps = Object.assign({ schema }, props);
-        return new SchemaChain(this.composeChainProps(finalProps, 'object', new ObjectHandler()));
-    }
-
-    string(props = {}) {
-        return new StringChain(this.composeChainProps(props, 'string', new StringHandler()));
-    }
-
-    // Other fields
-
-    mutable(value: unknown) {
-        return new ValueField(this.composeChainProps({ value, mutable: true }));
-    }
-
-    immutable(value: unknown) {
-        return new ValueField(this.composeChainProps({ value, mutable: false }));
-    }
-
-    // conditionals
+    // Conditionals
 
     satisfies(targetPathStr: string, comparisonField: Field) {
-        return new SchemaConditionalField(this.composeChainProps({
+        return new SchemaConditionalField(this.composeFieldProps({
             areEqual: true,
             targetPathStr,
             comparisonField,
@@ -148,25 +156,29 @@ class PureData {
     }
 
     violates(targetPathStr: string, comparisonField: Field) {
-        return new SchemaConditionalField(this.composeChainProps({
+        return new SchemaConditionalField(this.composeFieldProps({
             areEqual: false,
             targetPathStr,
             comparisonField,
         }));
     }
 
+    // Settings 
+
+    pathDelims(delims: PathDelimTypes) {
+        this._pathFactory = new PathFactory(delims);
+    }
+
     errors(overrides: Record<string, string>) {
         const finalOverrides: Record<string, string> = {};
         for (const key of Object.keys(overrides)) {
-            finalOverrides[Path.fromArray(['errors', key])] = overrides[key];
+            finalOverrides[this._pathFactory.fromArray(['errors', key])] = overrides[key];
         }
 
-        this.locale.override(finalOverrides);
+        this._locale.override(finalOverrides);
     }
 
-    value(pathStr: string, defaultOrCallback: unknown = undefined) {
-        return new PathReferenceField(this.composeFieldProps({ pathStr, defaultOrCallback }));
-    }
+
 }
 
 export { PureData };

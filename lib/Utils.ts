@@ -2,7 +2,7 @@
 
 import { RegexCache } from './RegexCache.ts';
 import { Field } from './fields/Field.ts';
-import { Path } from './Path.ts';
+import { Path } from './path/Path.ts';
 
 export type NestedStringRecord = {
     [key: string]: NestedStringRecord | string | undefined;

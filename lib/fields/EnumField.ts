@@ -2,7 +2,7 @@
 
 import { Field, FieldCloneParams, FieldProps, FieldConstructorParams } from './Field.ts';
 
-type EnumStructure = unknown[] | Record<string, unknown>;
+export type EnumStructure = unknown[] | Record<string, unknown>;
 
 export type EnumFieldProps = FieldProps & {
     structure: EnumStructure;

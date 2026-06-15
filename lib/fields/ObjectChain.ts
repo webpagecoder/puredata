@@ -2,7 +2,7 @@
 
 import { ObjectHandler } from '../handlers/ObjectHandler.ts';
 //todo: need to add a "clone" option to all methods that modify the object...
-import { Chain, ChainProps, ChainConstructorParams } from './Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams, ChainCloneParams } from './Chain.ts';
 
 export type ObjectChainProps = ChainProps<ObjectHandler> & {
     cloneObject: boolean;
@@ -41,7 +41,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
      * object.removeEmpties() // Removes keys with falsy or empty values
      */
     public removeEmpties(): this {
-        return this.clone({ cloneObject: true } as L).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
+        return this.clone({ cloneObject: true } as ChainCloneParams<C>).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
             return [this.extendedProps.emptyValues];
         });
     }
@@ -53,7 +53,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
      * object.removeEmptiesRecursive() // Deep clean of empty values in nested objects
      */
     public removeEmptiesRecursive(): this {
-        return this.clone({ cloneObject: true } as L).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
+        return this.clone({ cloneObject: true } as ChainCloneParams<C>).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
             return [this.extendedProps.emptyValues];
         });
     }

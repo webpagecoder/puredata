@@ -1,7 +1,7 @@
 
 'use strict';
 
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from './Field.ts';
 import { ValueField } from './ValueField.ts';
 

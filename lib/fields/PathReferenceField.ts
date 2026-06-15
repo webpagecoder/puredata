@@ -1,6 +1,6 @@
 'use strict';
 
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { Field, FieldCloneParams, FieldProps, FieldConstructorParams } from './Field.ts';
 
 export type PathReferenceFieldProps = FieldProps & {

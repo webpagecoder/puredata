@@ -2,7 +2,7 @@
 
 import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { SchemaChain } from '../fields/SchemaChain.ts';
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { PubSub, PubSubContext } from '../pub-sub/PubSub.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from './ChainProcessor.ts';

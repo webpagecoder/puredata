@@ -1,7 +1,7 @@
 'use strict';
 
 import { ArrayHandler } from '../handlers/ArrayHandler.ts';
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { Overwrite } from '../types.ts';
 import { Chain, ChainProps, ChainConstructorParams } from './Chain.ts';
 

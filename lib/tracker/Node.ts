@@ -1,6 +1,6 @@
 'use strict';
 
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 
 class Node {
 
@@ -9,11 +9,11 @@ class Node {
     protected _root: this;
     protected _path: Path;
 
-    public constructor() {
+    public constructor(path: Path = new Path('/')) {
         this._children = {};
         this._parent = this;
         this._root = this;
-        this._path = Path.create('/');
+        this._path = path;
     }
 
     public cloneWithoutErrors(): this {
@@ -40,19 +40,17 @@ class Node {
         return Object.keys(this._children).length > 0;
     }
 
-    public resolvePath(path: string | Path): this | null {
-        const resolvedPath = Path.create(path);
-
-        if (resolvedPath.isSelf) {
+    public resolvePath(path: Path): this | null {
+        if (path.isSelf) {
             return this;
         }
         let tracker: this = this;
-        if (resolvedPath.isAbsolute) {
+        if (path.isAbsolute) {
             tracker = this._root;
         }
         else {
             tracker = this;
-            for (let i = 0; i < resolvedPath.upCount; ++i) {
+            for (let i = 0; i < path.upCount; ++i) {
                 if (tracker._parent === tracker) {
                     break;
                 }
@@ -60,7 +58,7 @@ class Node {
             }
         }
 
-        for (const key of resolvedPath.keys) {
+        for (const key of path.keys) {
             const child = tracker._children[key];
             if (!child) {
                 return null;
@@ -68,10 +66,6 @@ class Node {
             tracker = child;
         }
         return tracker;
-    }
-
-    public get key(): string {
-        return this._key;
     }
 
     public get parent(): this {

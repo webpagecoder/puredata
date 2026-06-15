@@ -1,6 +1,6 @@
 'use strict';
 
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { Field, FieldConstructorParams, FieldProps } from './Field.ts';
 
 export type SchemaReferenceFieldProps = FieldProps & {
@@ -17,7 +17,7 @@ class SchemaReferenceField extends Field<SchemaReferenceFieldProps> {
     constructor(args: SchemaReferenceFieldConstructorParams) {
         super(args);
         const {
-            fieldPath = Path.create('/'),
+            fieldPath = this._pathFactory.create('/'),
             minDepth = -1,
             maxDepth = -1,
         } = args;

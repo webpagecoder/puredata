@@ -1,7 +1,7 @@
 'use strict';
 
 import { SchemaReferenceField } from '../fields/SchemaReferenceField.ts';
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from './Processor.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
@@ -36,7 +36,7 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
         }
 
         const resolvedRefPath = absolutePath.move(fieldPath);
-        const { separatorChar } = absolutePath;
+        const { separator: separatorChar } = absolutePath;
         const isNest = resolvedRefPath.isRoot
             || (absolutePath.string + separatorChar).startsWith(resolvedRefPath.string + separatorChar);
 

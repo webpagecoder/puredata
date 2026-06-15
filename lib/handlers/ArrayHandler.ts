@@ -1,6 +1,6 @@
 'use strict';
 
-import { Path } from '../Path.ts';
+import { Path } from '../path/Path.ts';
 import { HandlerResult } from './HandlerResult.ts';
 import { Utils } from '../Utils.ts';
 import { ChainHandler } from './ChainHandler.ts';

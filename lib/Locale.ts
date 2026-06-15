@@ -1,7 +1,7 @@
 'use strict';
 
-import { Path } from './Path.ts';
-import { Utils, TranslationRecord } from './Utils.ts';
+import { Path } from './path/Path.ts';
+import { Utils } from './Utils.ts';
 
 export type TranslationRecord = {
     [key: string]: TranslationRecord | string | string[];
@@ -9,11 +9,11 @@ export type TranslationRecord = {
 
 class Locale {
 
-    static registry: Record<string, TranslationRecord> = {};
+    public static registry: Record<string, TranslationRecord> = {};
 
-    languageKey?: string;
-    overrides: TranslationRecord = {};
-    text: Locale | TranslationRecord = {};
+    protected _languageKey?: string;
+    protected _overrides: TranslationRecord = {};
+    protected _text: Locale | TranslationRecord = {};
 
     static register(languageKey: string, text: TranslationRecord = {}): void {
         Locale.registry[languageKey] = text;
@@ -22,7 +22,7 @@ class Locale {
     constructor(keyOrParentLocale: string | Locale) {
 
         if (keyOrParentLocale instanceof Locale) {
-            this.text = keyOrParentLocale;
+            this._text = keyOrParentLocale;
             return;
         }
 
@@ -31,30 +31,27 @@ class Locale {
             throw new Error(`Language '${keyOrParentLocale}' is not registered`);
         }
 
-        this.languageKey = keyOrParentLocale;
-        this.text = text;
+        this._languageKey = keyOrParentLocale;
+        this._text = text;
     }
 
     static get(language: string): Locale {
         return new Locale(language);
     }
 
-    translate(path: string | Path, allowMultiple: boolean = false): string | string[] | TranslationRecord {
-        if (!(path instanceof Path)) {
-            path = Path.create(path).toRelative();
-        }
+    translate(path: Path, allowMultiple: boolean = false): string | string[] | TranslationRecord {
 
         // Check in order: overrides, locale text, parent locale text
-        let pathPointer = Utils.getRefByPath(this.overrides, path);
+        let pathPointer = Utils.getRefByPath(this._overrides, path);
         if (pathPointer == null) {
-            pathPointer = Utils.getRefByPath(this.text, path);
+            pathPointer = Utils.getRefByPath(this._text, path);
         }
-        if (pathPointer == null && this.text instanceof Locale) {
-            return this.text.translate(path);
+        if (pathPointer == null && this._text instanceof Locale) {
+            return this._text.translate(path);
         }
 
         if (pathPointer == null) {
-            throw new Error('Nonexistent path in language file: ' + path._string);
+            throw new Error('Nonexistent path in language file: ' + path.string);
         }
 
         const [pointer, key] = pathPointer;
@@ -62,13 +59,13 @@ class Locale {
         if (typeof value === 'string' || Array.isArray(value) || (allowMultiple && Utils.isPlainObject(value))) {
             return value;
         }
-        throw new Error('Invalid path for translation: ' + path._string);
+        throw new Error('Invalid path for translation: ' + path.string);
     }
 
     override(overrides: TranslationRecord): void {
         for (const key of Object.keys(overrides)) {
             const path = Path.create(key).toRelative();
-            this.overrides[path._string] = overrides[key] as string;
+            this._overrides[path._string] = overrides[key] as string;
         }
     }
 }
