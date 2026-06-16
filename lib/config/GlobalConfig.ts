@@ -8,7 +8,6 @@ const GlobalConfig = Object.seal({
         emptyValues: [null, undefined, ''],
         // cloneValueBeforeFilter: false,
         // exceptions: false, //todo: throw exceptions in special functions like delete/insert in chain only if this is true
-        localeCode: 'en-US',
         pathDelims: {
             separator: '/',
             self: '.',

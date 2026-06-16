@@ -12,7 +12,7 @@ class HandlerResult {
     constructor(args: {
         value?: unknown;
         pass?: boolean;
-        errorSlug?: string;
+        errorKey?: string;
         args?: ArgumentCollection;
     } = {}) {
         this.value = args.value;
@@ -20,25 +20,25 @@ class HandlerResult {
         this.fail = !this.pass;
         this.errors = {}
         if (!this.pass) {
-            if (args.errorSlug) {
-                this.addError(args.errorSlug, args.args || {});
+            if (args.errorKey) {
+                this.addError(args.errorKey, args.args || {});
             }
         }
     }
 
-    public addError(errorSlug: string, args: ArgumentCollection): void {
+    public addError(errorKey: string, args: ArgumentCollection): void {
         if (this.pass) {
             throw new Error('Errors cannot be added to a Result that passed');
         }
-        this.errors[errorSlug] = args;
+        this.errors[errorKey] = args;
     }
 
     public static pass(value: unknown): HandlerResult {
         return new HandlerResult({ value, pass: true });
     }
 
-    public static fail(value: unknown, errorSlug: string, args: ArgumentCollection = {}): HandlerResult {
-        return new HandlerResult({ value, pass: false, errorSlug, args });
+    public static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): HandlerResult {
+        return new HandlerResult({ value, pass: false, errorKey, args });
     }
 
 }

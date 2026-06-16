@@ -1,6 +1,7 @@
 'use strict';
 
-import { DefaultText } from './config/DefaultErrorText.ts';
+import { DefaultErrorText } from './config/DefaultErrorText.ts';
+import { DefaultCalendarText } from './config/DefaultCalendarText.ts';
 import { GlobalConfig } from './config/GlobalConfig.ts';
 import { AnyChain } from './fields/AnyChain.ts';
 import { ArrayChain } from './fields/ArrayChain.ts';
@@ -14,7 +15,7 @@ import { ObjectChain, ObjectChainConstructorParams } from './fields/ObjectChain.
 import { PathReferenceField } from './fields/PathReferenceField.ts';
 import { SchemaChain } from './fields/SchemaChain.ts';
 import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
-import { SchemaReferenceField, SchemaReferenceFieldConstructorParams } from './fields/SchemaReferenceField.ts';
+import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
 import { StringChain } from './fields/StringChain.ts';
 import { ValueField } from './fields/ValueField.ts';
 import { AnyChainHandler } from './handlers/AnyChainHandler.ts';
@@ -25,23 +26,28 @@ import { DateHandler } from './handlers/DateHandler.ts';
 import { NumberHandler } from './handlers/NumberHandler.ts';
 import { ObjectHandler } from './handlers/ObjectHandler.ts';
 import { StringHandler } from './handlers/StringHandler.ts';
-import { Locale } from './Locale.ts';
 import { Path, PathDelimTypes } from './path/Path.ts';
-import { PathFactory } from './path/PathFactory.ts';
 import { ProcessorFactory } from './ProcessorFactory.ts';
+import { Translation } from './Translation.ts';
 
-Locale.register('en-US', DefaultText);
 
 class PureData {
 
-    private _locale: Locale;
-    private _pathDelims: PathDelimTypes;
-    private _processorMapper: ProcessorFactory;
-    private _globalConfig: GlobalConfig;
+    protected _calendarText: Translation;
+    protected _errorMessages: Translation;
+    protected _pathDelims: PathDelimTypes;
+    protected _processorMapper: ProcessorFactory;
+    protected _globalConfig: GlobalConfig;
 
-    constructor(globalConfig: GlobalConfig, processorMapper = new ProcessorFactory()) {
+    constructor(
+        globalConfig: GlobalConfig,
+        processorMapper = new ProcessorFactory(),
+        errorMessages = new Translation(DefaultErrorText),
+        calendarText = new Translation(DefaultCalendarText)
+    ) {
+        this._errorMessages = errorMessages;
+        this._calendarText = calendarText;
         this._globalConfig = globalConfig;
-        this._locale = new Locale(globalConfig.general.localeCode);
         this._pathDelims = globalConfig.general.pathDelims;
         this._processorMapper = processorMapper;
     }
@@ -54,7 +60,7 @@ class PureData {
         return Object.assign(
             {
                 chainHandler,
-                locale: this._locale,
+                errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 processorMapper: this._processorMapper,
             },
@@ -67,7 +73,7 @@ class PureData {
     composeFieldProps<T extends FieldConstructorParams>(props: Record<string, unknown> = {}) {
         return Object.assign(
             {
-                locale: this._locale,
+                errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 processorMapper: this._processorMapper,
             },
@@ -95,17 +101,27 @@ class PureData {
     }
 
     date(props: Record<string, unknown> = {}) {
-        return new DateChain(
-            this.composeChainProps(props, 'date', new DateHandler(this._locale))
-        );
+        return new DateChain(this.composeChainProps(
+            Object.assign(props),
+            'date',
+            new DateHandler(this._calendarText)
+        ));
     }
 
     number(props: Record<string, unknown> = {}) {
-        return new NumberChain(this.composeChainProps(props, 'number', new NumberHandler()));
+        return new NumberChain(this.composeChainProps(
+            props, 
+            'number',
+             new NumberHandler()
+            ));
     }
 
     object(props: Record<string, unknown> = {}) {
-        return new ObjectChain(this.composeChainProps<ObjectChainConstructorParams>(props, 'object', new ObjectHandler()));
+        return new ObjectChain(this.composeChainProps<ObjectChainConstructorParams>(
+            props, 
+            'object', 
+            new ObjectHandler()
+        ));
     }
 
     schema(schema: Record<string, Field> = {}, props: Record<string, unknown> = {}) {
@@ -165,19 +181,16 @@ class PureData {
 
     // Settings 
 
-    calendar(){}
+    calendar() { }
 
     errors(overrides: Record<string, string>) {
         const errorOverrides: Record<string, string> = {};
         for (const pathStr of Object.keys(overrides)) {
-            const path = new Path(['errors', pathStr], this._pathDelims);
-            errorOverrides[path.toString()] = overrides[pathStr];
+            const path = new Path(pathStr, this._pathDelims);
+            errorOverrides[path.toRelative().toString()] = overrides[pathStr];
         }
-
-        this._locale.override(errorOverrides);
+        this._errorMessages.setText(errorOverrides);
     }
-
-    language(){}
 
     pathDelims(delims: PathDelimTypes) {
         this._pathDelims = delims;

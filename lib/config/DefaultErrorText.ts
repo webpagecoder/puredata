@@ -1,8 +1,6 @@
 'use strict';
 
-import { TextTree } from "../Locale.ts";
-
-const DefaultErrorText: Record<string, string | string[]> = {
+const DefaultErrorText: Record<string, string> = {
     'array/base': 'Must be an array',
     'array/allOf': 'Must contain all of these values: {requiredValues}, missing: {missingValue}',
     'array/dimensions': 'Must have dimensions {dimensions}',

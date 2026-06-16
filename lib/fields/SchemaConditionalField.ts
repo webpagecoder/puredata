@@ -51,14 +51,14 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         extendedProps.conditionalChain = conditionalChain;
         extendedProps.otherwiseField = otherwiseField;
         extendedProps.buildStage = buildStage;
-        extendedProps.targetPath = Path.create(targetPathStr);
+        extendedProps.targetPath = new Path(targetPathStr);
         extendedProps.thenField = thenField;
     }
 
     public override clone(args: SchemaConditionalFieldCloneParams = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
-            clone.extendedProps.targetPath = Path.create(args.targetPathStr);
+            clone.extendedProps.targetPath = new Path(args.targetPathStr);
         }
         return clone;
     }
@@ -90,7 +90,11 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         return this.clone({
             thenField: thenResult instanceof Field
                 ? thenResult
-                : new ValueField({ locale: this._locale, processorMapper: this._processorMapper, value: thenResult }),
+                : new ValueField({ 
+                    errorMessages: this._errorMessages, 
+                    processorMapper: this._processorMapper, 
+                    value: thenResult 
+                }),
             buildStage: 1
         });
     }
@@ -102,7 +106,11 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         return this.clone({
             otherwiseField: otherwiseResult instanceof Field
                 ? otherwiseResult
-                : new ValueField({ locale: this._locale, processorMapper: this._processorMapper, value: otherwiseResult }),
+                : new ValueField({ 
+                    errorMessages: this._errorMessages, 
+                    processorMapper: this._processorMapper, 
+                    value: otherwiseResult 
+                }),
             buildStage: 2
         });
     }

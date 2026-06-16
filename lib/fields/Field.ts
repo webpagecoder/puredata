@@ -1,7 +1,7 @@
 'use strict';
 
 import { ProcessorFactory } from '../ProcessorFactory.ts';
-import { Locale } from '../Locale.ts';
+import { Translation } from '../Translation.ts';
 import { PathFactory } from '../path/PathFactory.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from '../processors/Processor.ts';
@@ -13,8 +13,7 @@ export type FieldConstructorParams = {
     autoConvert?: boolean;
     defaultValue?: unknown;
     label?: string;
-    locale: Locale;
-    pathFactory: PathFactory;
+    errorMessages: Translation;
     presence?: Presence;
     processorMapper: ProcessorFactory;
 };
@@ -26,8 +25,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
     protected _autoConvert: boolean;
     protected _defaultValue: unknown;
     protected _label: string
-    protected _locale: Locale;
-    protected _pathFactory: PathFactory;
+    protected _errorMessages: Translation;
     protected _presence: Presence;
     protected _processor: Processor | null;
     protected _processorMapper: ProcessorFactory;
@@ -38,8 +36,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             autoConvert = true,
             defaultValue = undefined,
             label = 'Field',
-            locale,
-            pathFactory,
+            errorMessages,
             presence = 'required',
             processorMapper
         } = args;
@@ -48,8 +45,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
         this._autoConvert = autoConvert;
         this._defaultValue = defaultValue;
         this._label = label;
-        this._locale = locale;
-        this._pathFactory = pathFactory;
+        this._errorMessages = errorMessages.override();
         this._presence = presence;
         this._processor = null;
         this._processorMapper = processorMapper;
@@ -63,8 +59,8 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this._props;
     }
 
-    public get locale(): Locale {
-        return this._locale;
+    public get errorMessages(): Translation {
+        return this._errorMessages;
     }
 
     public get presence(): Presence {
@@ -95,7 +91,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             autoConvert = this._autoConvert,
             defaultValue = this._defaultValue,
             label = this._label,
-            locale = this._locale,
+            errorMessages = this._errorMessages.override(),
             presence = this._presence,
             processorMapper = this._processorMapper,
         } = args;
@@ -103,7 +99,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             autoConvert,
             defaultValue,
             label,
-            locale,
+            errorMessages,
             presence,
             processorMapper,
         } as FieldConstructorParams);
@@ -136,6 +132,11 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this._presence === 'required';
     }
 
+    public getLabel(): string {
+        return this._label;
+    }
+
+    // Declarative API
     public config(config: C) {
         return this.clone(config);
     }
@@ -146,7 +147,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
 
     public errors(messages: Record<string, string>): this {
         const clone = this.clone();
-        clone._locale.override(messages);
+        clone._errorMessages.setText(messages);
         return clone;
     }
 
@@ -165,6 +166,8 @@ abstract class Field<C extends FieldProps = FieldProps> {
     public required(): this {
         return this.clone({ presence: 'required' } as FieldCloneParams<C>);
     }
+
+
 }
 
 export { Field };

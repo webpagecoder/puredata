@@ -133,7 +133,7 @@ class Path {
         self = this._delims.self,
         separator = this._delims.separator,
         up = this._delims.up
-    } = {}) {
+    } = {}): string {
         return (
             this._isAbsolute
                 ? separator

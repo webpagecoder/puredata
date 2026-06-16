@@ -1,8 +1,8 @@
 'use strict';
 
-import { DateConverter, DateOrder, DayOfWeek, GenericDateInput, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimeMode, TimestampOptions } from '../date/DateConverter.ts';
+import { DateConverter, DayOfWeek, GenericDateInput, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimeMode, TimestampOptions } from '../date/DateConverter.ts';
 import { UtcDate } from '../date/UtcDate.ts';
-import { Locale } from '../Locale.ts';
+import { Translation } from '../Translation.ts';
 import { ChainHandler } from './ChainHandler.ts';
 import { HandlerResult } from './HandlerResult.ts';
 const { pass, fail } = HandlerResult;
@@ -14,13 +14,13 @@ class DateHandler extends ChainHandler {
     protected _dateConverter: DateConverter;
 
     /**
-     * Creates a date handler configured with locale and date-order preferences.
-     * @param locale Locale used by the date converter.
+     * Creates a date handler configured with calendarText and date-order preferences.
+     * @param calendarText Translation text used by the date converter.
      * @param dateOrder Preferred component order for ambiguous numeric dates.
      */
-    public constructor(locale: Locale) {
+    public constructor(calendarText: Translation) {
         super();
-        this._dateConverter = new DateConverter(locale);
+        this._dateConverter = new DateConverter(calendarText);
     }
 
     // =============================================

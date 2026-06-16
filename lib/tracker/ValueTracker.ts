@@ -10,7 +10,7 @@ import { Field } from '../fields/Field.ts';
 
 export type TrackerError = {
     args: ArgumentCollection;
-    errorSlug: string;
+    errorKey: string;
     key: string;
     path: string;
     text: string;
@@ -103,16 +103,16 @@ class ValueTracker extends Node {
         return false;
     }
 
-    public addError(errorSlug: string, args?: ArgumentCollection): this {
+    public addError(errorKey: string, args?: ArgumentCollection): this {
         if (!this._field) {
             throw new Error('ValueTracker compiled field is not configured');
         }
 
         const {
-            _field: { label, locale },
+            _field: { errorMessages },
             _path: path,
         } = this;
-        let text = locale.translate(new Path(['errors', errorSlug])).replace('{label}', label);
+        let text = errorMessages.getText(errorKey) as string;
         if (args) {
             for (const argKey of Object.keys(args)) {
                 const arg = args[argKey];
@@ -121,7 +121,7 @@ class ValueTracker extends Node {
         }
         this._errorCollection.push({
             args: args || {},
-            errorSlug,
+            errorKey,
             key: String(path.keys[path.keys.length - 1] || ''),
             path: path.toString(),
             text,
@@ -157,9 +157,9 @@ class ValueTracker extends Node {
         this._errorCollection = [];
     }
 
-    public setFail(errorSlug: string = 'generic/base', args?: ArgumentCollection) {
+    public setFail(errorKey: string = 'generic/base', args?: ArgumentCollection) {
         this._errorCollection = [];
-        this.addError(errorSlug, args);
+        this.addError(errorKey, args);
     }
 
     public getErrors(): ErrorTree {

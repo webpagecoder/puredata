@@ -37,8 +37,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
         const {
             arrayChain = new ArrayChain({
                 chainHandler: new ArrayHandler(),
-                locale: this._locale,
-                pathFactory: this._pathFactory,
+                errorMessages: this._errorMessages,
                 processorMapper: this._processorMapper,
             }),
             failOnFirstError = false,
@@ -87,8 +86,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             }
             else {
                 field = new ValueField({
-                    locale: this._locale,
-                    pathFactory: this._pathFactory,
+                    errorMessages: this._errorMessages,
                     processorMapper: this._processorMapper,
                     value
                 });

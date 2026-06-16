@@ -1,12 +1,12 @@
 'use strict';
 //todo: date and string add auto trim
-import { RegexCache } from "../RegexCache.ts";
-import { Locale } from "../Locale.ts";
 import { Presence } from "../Presence.ts";
+import { RegexCache } from "../RegexCache.ts";
+import { Translation } from "../Translation.ts";
 import { Utils } from "../Utils.ts";
-const padLeft = Utils.padLeft;
 import { DateHelpers } from "./DateHelpers.ts";
 import { UtcDate } from "./UtcDate.ts";
+const padLeft = Utils.padLeft;
 
 // Date building blocks/keys
 const YYYY = '\\d{4}';
@@ -120,11 +120,11 @@ export type TimestampOptions = {
 
 class DateConverter {
 
-    private _locale: Locale;
+    private _calendarText: Translation;
     private _cache: HumanDateCache;
 
-    constructor(locale: Locale) {
-        this._locale = locale;
+    constructor(calendarText: Translation) {
+        this._calendarText = calendarText;
         this._cache = null;
     }
 
@@ -133,12 +133,12 @@ class DateConverter {
             return;
         }
 
-        const locale = this._locale;
-        const longMonthNames = (locale.translate('calendar/months/full') || []) as string[];
-        const shortMonthNames = (locale.translate('calendar/months/short') || []) as string[];
-        const numberSuffixes = (locale.translate('calendar/numberSuffixes') || []) as string[];
-        const longDayNames = (locale.translate('calendar/dayNames/full') || []) as string[];
-        const shortDayNames = (locale.translate('calendar/dayNames/short') || []) as string[];
+        const calendarText = this._calendarText;
+        const longMonthNames = (calendarText.getText('months/full') || []) as string[];
+        const shortMonthNames = (calendarText.getText('months/short') || []) as string[];
+        const numberSuffixes = (calendarText.getText('numberSuffixes') || []) as string[];
+        const longDayNames = (calendarText.getText('dayNames/full') || []) as string[];
+        const shortDayNames = (calendarText.getText('dayNames/short') || []) as string[];
 
         const allMonthNamesLower = longMonthNames.concat(shortMonthNames).map(s => s.toLowerCase());
         const allDayNamesLower = longDayNames.concat(shortDayNames).map(s => s.toLowerCase());
@@ -829,3 +829,4 @@ class DateConverter {
 }
 
 export { DateConverter };
+

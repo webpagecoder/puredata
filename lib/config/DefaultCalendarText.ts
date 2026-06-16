@@ -1,8 +1,6 @@
 'use strict';
 
-import { TextTree } from "../Locale.ts";
-
-const DefaultCalendarText: Record<string, string | string[]> = {
+const DefaultCalendarText: Record<string, string[]> = {
     'dayNames/full': [
         'Sunday',
         'Monday',
