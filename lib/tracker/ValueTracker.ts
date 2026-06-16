@@ -1,12 +1,12 @@
 'use strict';
 
-import { Path } from '../path/Path.ts';
+import { Path } from '../Path.ts';
 import { ArgumentCollection } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Node } from './Node.ts';
-import { Field } from '../fields/Field.ts';
+import { Field } from '../types/Field.ts';
 
 export type TrackerError = {
     args: ArgumentCollection;

@@ -1,32 +1,32 @@
 'use strict';
 
-import { DefaultErrorText } from './config/DefaultErrorText.ts';
-import { DefaultCalendarText } from './config/DefaultCalendarText.ts';
-import { GlobalConfig } from './config/GlobalConfig.ts';
-import { AnyChain } from './fields/AnyChain.ts';
-import { ArrayChain } from './fields/ArrayChain.ts';
-import { BooleanChain } from './fields/BooleanChain.ts';
-import { ChainConstructorParams } from './fields/Chain.ts';
-import { DateChain } from './fields/DateChain.ts';
+import { DefaultErrorText } from './text/DefaultErrorText.ts';
+import { DefaultCalendarText } from './text/DefaultCalendarText.ts';
+import { GlobalConfig } from './GlobalConfig.ts';
+import { AnyChain } from './types/any/AnyChain.ts';
+import { ArrayChain } from './types/array/ArrayChain.ts';
+import { BooleanChain } from './types/boolean/BooleanChain.ts';
+import { ChainConstructorParams } from './fields/chains/Chain.ts';
+import { DateChain } from './types/date/DateChain.ts';
 import { EnumField, EnumStructure } from './fields/EnumField.ts';
-import { Field, FieldConstructorParams } from './fields/Field.ts';
-import { NumberChain } from './fields/NumberChain.ts';
-import { ObjectChain, ObjectChainConstructorParams } from './fields/ObjectChain.ts';
-import { PathReferenceField } from './fields/PathReferenceField.ts';
-import { SchemaChain } from './fields/SchemaChain.ts';
+import { Field, FieldConstructorParams } from './types/Field.ts';
+import { NumberChain } from './types/number/NumberChain.ts';
+import { ObjectChain, ObjectChainConstructorParams } from './types/object/ObjectChain.ts';
+import { PathReferenceField } from './types/PathReferenceField.ts';
+import { SchemaChain } from './types/schema/SchemaChain.ts';
 import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
 import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
-import { StringChain } from './fields/StringChain.ts';
-import { ValueField } from './fields/ValueField.ts';
-import { AnyChainHandler } from './handlers/AnyChainHandler.ts';
-import { ArrayHandler } from './handlers/ArrayHandler.ts';
-import { BooleanHandler } from './handlers/BooleanHandler.ts';
-import { ChainHandler } from './handlers/ChainHandler.ts';
-import { DateHandler } from './handlers/DateHandler.ts';
-import { NumberHandler } from './handlers/NumberHandler.ts';
-import { ObjectHandler } from './handlers/ObjectHandler.ts';
-import { StringHandler } from './handlers/StringHandler.ts';
-import { Path, PathDelimTypes } from './path/Path.ts';
+import { StringChain } from './types/string/StringChain.ts';
+import { ValueField } from './types/value/ValueField.ts';
+import { AnyChainHandler } from './types/any/AnyChainHandler.ts';
+import { ArrayHandler } from './types/array/ArrayHandler.ts';
+import { BooleanHandler } from './types/boolean/BooleanHandler.ts';
+import { ChainHandler } from './types/ChainHandler.ts';
+import { DateHandler } from './types/date/DateHandler.ts';
+import { NumberHandler } from './types/number/NumberHandler.ts';
+import { ObjectHandler } from './types/object/ObjectHandler.ts';
+import { StringHandler } from './types/string/StringHandler.ts';
+import { Path, PathDelimTypes } from './Path.ts';
 import { ProcessorFactory } from './ProcessorFactory.ts';
 import { Translation } from './Translation.ts';
 
@@ -58,13 +58,14 @@ class PureData {
         chainHandler: ChainHandler
     ) {
         return Object.assign(
+            {},
+            this._globalConfig['general'],
             {
                 chainHandler,
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 processorMapper: this._processorMapper,
             },
-            this._globalConfig['general'],
             this._globalConfig[chainType as keyof GlobalConfig],
             props
         ) as T;
@@ -72,12 +73,13 @@ class PureData {
 
     composeFieldProps<T extends FieldConstructorParams>(props: Record<string, unknown> = {}) {
         return Object.assign(
+            {},
+            this._globalConfig['general'],
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 processorMapper: this._processorMapper,
             },
-            this._globalConfig['general'],
             props
         ) as T;
     }
@@ -110,16 +112,16 @@ class PureData {
 
     number(props: Record<string, unknown> = {}) {
         return new NumberChain(this.composeChainProps(
-            props, 
+            props,
             'number',
-             new NumberHandler()
-            ));
+            new NumberHandler()
+        ));
     }
 
     object(props: Record<string, unknown> = {}) {
         return new ObjectChain(this.composeChainProps<ObjectChainConstructorParams>(
-            props, 
-            'object', 
+            props,
+            'object',
             new ObjectHandler()
         ));
     }
@@ -181,13 +183,24 @@ class PureData {
 
     // Settings 
 
-    calendar() { }
+    calendar(overrides: Record<string, string>) {
+        const calendarOverrides: Record<string, string> = {};
+        for (const pathStr of Object.keys(overrides)) {
+            const internalPathStyle = new Path(pathStr, this._pathDelims)
+                .toRelative()
+                .toNormalizedString();
+            calendarOverrides[internalPathStyle] = overrides[pathStr];
+        }
+        this._errorMessages.setText(calendarOverrides);
+    }
 
     errors(overrides: Record<string, string>) {
         const errorOverrides: Record<string, string> = {};
         for (const pathStr of Object.keys(overrides)) {
-            const path = new Path(pathStr, this._pathDelims);
-            errorOverrides[path.toRelative().toString()] = overrides[pathStr];
+            const internalPathStyle = new Path(pathStr, this._pathDelims)
+                .toRelative()
+                .toNormalizedString();
+            errorOverrides[internalPathStyle] = overrides[pathStr];
         }
         this._errorMessages.setText(errorOverrides);
     }
@@ -195,7 +208,6 @@ class PureData {
     pathDelims(delims: PathDelimTypes) {
         this._pathDelims = delims;
     }
-
 
 }
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import { Path } from '../path/Path.ts';
+import { Path } from '../Path.ts';
 
 class Node {
 
