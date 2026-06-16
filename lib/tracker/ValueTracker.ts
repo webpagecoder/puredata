@@ -123,7 +123,7 @@ class ValueTracker extends Node {
             args: args || {},
             errorSlug,
             key: String(path.keys[path.keys.length - 1] || ''),
-            path: path._string,
+            path: path.toString(),
             text,
             value: this._rawValue
         });

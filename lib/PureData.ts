@@ -1,11 +1,11 @@
 'use strict';
 
-import { DEFAULT_LANGUAGE } from './config/DefaultLanguage.ts';
+import { DefaultText } from './config/DefaultErrorText.ts';
 import { GlobalConfig } from './config/GlobalConfig.ts';
 import { AnyChain } from './fields/AnyChain.ts';
 import { ArrayChain } from './fields/ArrayChain.ts';
 import { BooleanChain } from './fields/BooleanChain.ts';
-import { Chain, ChainConstructorParams } from './fields/Chain.ts';
+import { ChainConstructorParams } from './fields/Chain.ts';
 import { DateChain } from './fields/DateChain.ts';
 import { EnumField, EnumStructure } from './fields/EnumField.ts';
 import { Field, FieldConstructorParams } from './fields/Field.ts';
@@ -30,19 +30,19 @@ import { Path, PathDelimTypes } from './path/Path.ts';
 import { PathFactory } from './path/PathFactory.ts';
 import { ProcessorFactory } from './ProcessorFactory.ts';
 
-Locale.register('en-US', DEFAULT_LANGUAGE);
+Locale.register('en-US', DefaultText);
 
 class PureData {
 
     private _locale: Locale;
-    private _pathFactory: PathFactory;
+    private _pathDelims: PathDelimTypes;
     private _processorMapper: ProcessorFactory;
     private _globalConfig: GlobalConfig;
 
     constructor(globalConfig: GlobalConfig, processorMapper = new ProcessorFactory()) {
         this._globalConfig = globalConfig;
         this._locale = new Locale(globalConfig.general.localeCode);
-        this._pathFactory = new PathFactory(globalConfig.general.pathDelims);
+        this._pathDelims = globalConfig.general.pathDelims;
         this._processorMapper = processorMapper;
     }
 
@@ -55,7 +55,7 @@ class PureData {
             {
                 chainHandler,
                 locale: this._locale,
-                pathFactory: this._pathFactory,
+                pathDelims: this._pathDelims,
                 processorMapper: this._processorMapper,
             },
             this._globalConfig['general'],
@@ -68,7 +68,7 @@ class PureData {
         return Object.assign(
             {
                 locale: this._locale,
-                pathFactory: this._pathFactory,
+                pathDelims: this._pathDelims,
                 processorMapper: this._processorMapper,
             },
             this._globalConfig['general'],
@@ -141,8 +141,8 @@ class PureData {
         return new SchemaReferenceField(this.composeFieldProps({
             minDepth,
             maxDepth,
-            fieldPath: this._pathFactory.create(pathStr),
-        }) as unknown as SchemaReferenceFieldConstructorParams);
+            fieldPath: new Path(pathStr, this._pathDelims)
+        }));
     }
 
     // Conditionals
@@ -165,17 +165,22 @@ class PureData {
 
     // Settings 
 
-    pathDelims(delims: PathDelimTypes) {
-        this._pathFactory = new PathFactory(delims);
-    }
+    calendar(){}
 
     errors(overrides: Record<string, string>) {
-        const finalOverrides: Record<string, string> = {};
-        for (const key of Object.keys(overrides)) {
-            finalOverrides[this._pathFactory.fromArray(['errors', key])] = overrides[key];
+        const errorOverrides: Record<string, string> = {};
+        for (const pathStr of Object.keys(overrides)) {
+            const path = new Path(['errors', pathStr], this._pathDelims);
+            errorOverrides[path.toString()] = overrides[pathStr];
         }
 
-        this._locale.override(finalOverrides);
+        this._locale.override(errorOverrides);
+    }
+
+    language(){}
+
+    pathDelims(delims: PathDelimTypes) {
+        this._pathDelims = delims;
     }
 
 

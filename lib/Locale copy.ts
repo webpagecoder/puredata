@@ -4,10 +4,10 @@ import { Path } from './path/Path.ts';
 import { Utils } from './Utils.ts';
 
 export type TextTree = {
-    [key: string]: string | string[];
+    [key: string]: TextTree | string | string[];
 };
 
-export type PathTextTree = [Path, string | string[]][];
+export type PathTextTree = [Path, string][];
 
 class Locale {
 
@@ -65,8 +65,9 @@ class Locale {
     }
 
     override(overrides: PathTextTree): void {
-        for(const [path, value] of overrides) {
-            Utils.setPathValue(this._overrides, path, value);
+        for (const key of Object.keys(overrides)) {
+            const path = Path.create(key).toRelative();
+            this._overrides[path.toString()] = overrides[key] as string;
         }
     }
 }

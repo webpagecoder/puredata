@@ -249,7 +249,7 @@ class Utils {
         return count;
     }
 
-    static getRefByPath(obj: unknown, path: Path, create: boolean = false, overwrite: boolean = false): [NestedStringRecord, string] | null {
+    static getRefByPath(obj: Record<string, unknown>, path: Path, create: boolean = false, overwrite: boolean = false): [NestedStringRecord, string] | null {
         let { keys } = path;
         const { isObject } = Utils;
         if (!isObject(obj) || keys.length === 0) {
@@ -281,16 +281,16 @@ class Utils {
         return isObject(pointer) && hasOwnProperty.call(pointer, lastKey) ? [pointer, lastKey] : null;
     }
 
-    static getPathValue(obj: unknown, path: Path): unknown {
+    static getPathValue(obj: Record<string, unknown>, path: Path): unknown {
         const { keys } = path;
-        let pointer: unknown = obj;
+        let pointer: Record<string, unknown> = obj;
         if (keys.length === 0) {
             return obj;
         }
         const { isObject } = Utils;
         for (const key of keys) {
             if (isObject(pointer)) {
-                pointer = (pointer as Record<string, unknown>)[key];
+                pointer = pointer[key];
             }
             else {
                 return undefined;
@@ -299,11 +299,11 @@ class Utils {
         return pointer;
     }
 
-    static hasPath(obj: unknown, path: Path): boolean {
+    static hasPath(obj: Record<string, unknown>, path: Path): boolean {
         return Utils.getRefByPath(obj, path, false, false) !== null;
     }
 
-    static removePath(obj: unknown, path: Path): boolean {
+    static removePath(obj: Record<string, unknown>, path: Path): boolean {
         const result = Utils.getRefByPath(obj, path, false, false);
         if (result === null) {
             return false;
@@ -313,7 +313,7 @@ class Utils {
         return true;
     }
 
-    static setPathValue(obj: unknown, path: Path, value: unknown, create: boolean = true, overwrite: boolean = true): boolean {
+    static setPathValue(obj: Record<string, unknown>, path: Path, value: unknown, create = true, overwrite = true): boolean {
         const result = Utils.getRefByPath(obj, path, create, overwrite);
         if (result && result.length > 0) {
             const [objRef, key] = result as [unknown, string];

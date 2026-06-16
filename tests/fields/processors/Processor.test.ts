@@ -1,6 +1,6 @@
 'use strict';
 
-import { DefaultLanguage } from '../../../lib/config/DefaultLanguage.ts';
+import { DefaultText } from '../../../lib/config/DefaultText.ts';
 import { Processor } from '../../../lib/processors/Processor.ts';
 import { Path } from '../../../lib/Path.ts';
 
@@ -13,7 +13,7 @@ function createEntity({ required = false, forbidden = false, defaultValue = null
             label: 'Test Field',
             locale: {
                 translate(path) {
-                    let pointer = DefaultLanguage;
+                    let pointer = DefaultText;
                     for (const key of path.keys) {
                         pointer = pointer[key];
                     }
@@ -40,7 +40,7 @@ describe('Processor generic presence errors', () => {
         expect(result.pass).toBe(false);
         expect(errors).toHaveLength(1);
         expect(errors[0].errorSlug).toBe('generic/required');
-        expect(errors[0].text).toBe(DefaultLanguage.errors.generic.required);
+        expect(errors[0].text).toBe(DefaultText.errors.generic.required);
     });
 
     test('should add generic/forbidden when forbidden field is defined', () => {
@@ -52,7 +52,7 @@ describe('Processor generic presence errors', () => {
         expect(result.pass).toBe(false);
         expect(errors).toHaveLength(1);
         expect(errors[0].errorSlug).toBe('generic/forbidden');
-        expect(errors[0].text).toBe(DefaultLanguage.errors.generic.forbidden);
+        expect(errors[0].text).toBe(DefaultText.errors.generic.forbidden);
     });
 
     test('should pass when required field is defined', () => {

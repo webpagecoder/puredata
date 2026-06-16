@@ -32,7 +32,7 @@ class Node {
         this._children[key] = child;
         child._parent = this;
         child._root = this._root;
-        child._path = this._path.move(key);
+        child._path = this._path.addSegment(key);
         return child;
     }
 

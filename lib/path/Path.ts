@@ -1,6 +1,5 @@
 'use strict';
 
-
 export type PathDelimTypes = {
     separator: string;
     up: string;
@@ -9,32 +8,28 @@ export type PathDelimTypes = {
 
 class Path {
 
-    protected _self!: string;
-    protected _separator!: string;
-    protected _up!: string;
-
+    protected _delims!: PathDelimTypes;
     protected _isAbsolute!: boolean;
     protected _keys!: string[];
     protected _string!: string;
     protected _upCount!: number;
 
-    public constructor(pathString: string | string[] | Path = '', delims: PathDelimTypes = {
-        self: '.',
-        separator: '/',
-        up: '..',
-    }) {
+    public constructor(pathString: string | string[] | Path = '', {
+        self,
+        separator,
+        up,
+    }: PathDelimTypes = {
+            self: '.',
+            separator: '/',
+            up: '..',
+        }) {
 
         if (pathString instanceof Path) {
-            return new Path(pathString._string, delims);
+            return new Path(pathString.toString(), pathString.delims);
         }
         else if (Array.isArray(pathString)) {
-            return new Path(pathString.join(delims.separator), delims);
+            return new Path(pathString.join(separator), { self, separator, up });
         }
-
-        const { separator, up, self } = delims;
-        this._self = self;
-        this._separator = separator;
-        this._up = up;
 
         const isAbsolute = pathString.startsWith(separator);
         let upCount = 0;
@@ -56,10 +51,15 @@ class Path {
             }
         }
 
+        this._delims = { self, separator, up };
         this._isAbsolute = isAbsolute;
         this._keys = keys;
         this._string = this.toString();
         this._upCount = upCount;
+    }
+
+    public get delims(): PathDelimTypes {
+        return this._delims;
     }
 
     public get keys(): string[] {
@@ -71,43 +71,36 @@ class Path {
     }
 
     public get isRoot(): boolean {
-        return this._string === this._separator;
+        return this._string === this._delims.separator;
     }
 
     public get isSelf(): boolean {
-        return this._string === this._self;
-    }
-
-    public get string(): string {
-        return this._string;
+        return this._string === this._delims.self;
     }
 
     public get upCount(): number {
         return this._upCount;
     }
 
-    public get self(): string {
-        return this._self;
-    }
-
-    public get separator(): string {
-        return this._separator;
-    }
-
-    public get up(): string {
-        return this._up;
-    }
-
     public parent(): Path {
-        const { _self: self, _separator: separator, _up: up } = this;
-        return new Path(this._string + separator + up, { self, separator, up });
+        const { separator, up } = this._delims;
+        return new Path(this._string + separator + up, this._delims);
     }
 
-    public move(movementPath: Path): Path {
-        const { _self: self, _separator, _up, _string } = movementPath;
-        return _string.startsWith(_separator)
-            ? new Path(movementPath)
-            : new Path(this.toString() + this._separator + _string, { self: this._self, separator: this._separator, up: this._up });
+    public move(targetPath: Path): Path {
+        if (targetPath.isAbsolute) {
+            return new Path(targetPath);
+        }
+        const delims = targetPath._delims;
+        const { separator } = delims;
+        return new Path(
+            this.toString(targetPath._delims) + separator + targetPath._string,
+            delims
+        );
+    }
+
+    public addSegment(key: string): Path {
+        return new Path(this.toString() + this._delims.separator + key, this._delims);
     }
 
     public equals(otherPath: Path): boolean {
@@ -127,32 +120,19 @@ class Path {
         return true;
     }
 
-    public shiftKeys(count: number = 1): Path {
-        if (!this._isAbsolute) {
-            throw new Error('Can only shift absolute paths.');
-        }
-        const { _self: self, _separator: separator, _up: up } = this;
-        const { _isAbsolute, _upCount, _keys } = this;
-        return new Path(
-            (_isAbsolute ? separator : (up + separator).repeat(_upCount)) + _keys.slice(count).join(separator),
-            { self, separator, up }
-        );
-    }
-
     public toAbsolute(): Path {
-        const { _self: self, _separator: separator, _up: up } = this;
-        return new Path(_separator + this._string, { self, separator, up });
+        return new Path(this._delims.separator + this._string, this._delims);
     }
 
     public toRelative(): Path {
-        const { _self: self, _separator: separator, _up: up } = this;
-        return new Path(self + separator + this._string, { self, separator, up });
+        const { separator, self } = this._delims;
+        return new Path(self + separator + this._string, this._delims);
     }
 
     public toString({
-        self = this._self,
-        separator = this._separator,
-        up = this._up
+        self = this._delims.self,
+        separator = this._delims.separator,
+        up = this._delims.up
     } = {}) {
         return (
             this._isAbsolute

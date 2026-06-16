@@ -85,7 +85,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const localBasicProcessors: CompiledSchema = new Map();
         for (let [key, childProcessor] of _localBasicProcessors) {
-            const absoluteSubPath = absolutePath.move(key);
+            const absoluteSubPath = absolutePath.addSegment(key);
 
             const resolvedChildProcessor = childProcessor.compile({
                 absolutePath: absoluteSubPath,
@@ -104,7 +104,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 _localReferenceProcessors.set(key, resolvedChildProcessor);
 
                 const subNode = referenceResolver.getOrCreateNode(
-                    absoluteSubPath.string,
+                    absoluteSubPath.toString(),
                     (context): boolean => {
 
                         const {
@@ -129,7 +129,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
                 for (const reference of resolvedChildProcessor.getReferences()) {
                     const absolutePublisherPath = absoluteSubPath.parent().move(reference.extendedProps.path);
-                    const pubNode = referenceResolver.getOrCreateNode(absolutePublisherPath.string);
+                    const pubNode = referenceResolver.getOrCreateNode(absolutePublisherPath.toString());
                     referenceResolver.linkNodes(pubNode, subNode);
                 }
             }

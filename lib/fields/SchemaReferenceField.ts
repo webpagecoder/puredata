@@ -17,7 +17,7 @@ class SchemaReferenceField extends Field<SchemaReferenceFieldProps> {
     constructor(args: SchemaReferenceFieldConstructorParams) {
         super(args);
         const {
-            fieldPath = this._pathFactory.create('/'),
+            fieldPath = new Path(),
             minDepth = -1,
             maxDepth = -1,
         } = args;

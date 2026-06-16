@@ -36,9 +36,9 @@ class SchemaReferenceProcessor extends Processor<SchemaReferenceField> {
         }
 
         const resolvedRefPath = absolutePath.move(fieldPath);
-        const { separator: separatorChar } = absolutePath;
+        const { separator } = absolutePath.delims;
         const isNest = resolvedRefPath.isRoot
-            || (absolutePath.string + separatorChar).startsWith(resolvedRefPath.string + separatorChar);
+            || (absolutePath.toString() + separator).startsWith(resolvedRefPath.toString() + separator);
 
         if (isNest) {
             this._innerNestedProcessor = referencedProcessor;

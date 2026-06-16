@@ -3,11 +3,11 @@
 import { Field } from '../../lib/fields/Field.ts';
 import { Chain } from '../../lib/fields/Chain.ts';
 import { Locale } from '../../lib/Locale.ts';
-import { DefaultLanguage } from '../../lib/config/DefaultLanguage.ts';
+import { DefaultText } from '../../lib/config/DefaultText.ts';
 
 class DynamicChain extends Chain {}
 
-Locale.register('en-US', DefaultLanguage);
+Locale.register('en-US', DefaultText);
 const locale = new Locale('en-US');
 
 describe('Field proxy fallback', () => {
