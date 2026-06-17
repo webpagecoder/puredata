@@ -4,67 +4,40 @@ import { Node, NodeCallback } from './Node.ts';
 
 export type PubSubContext = Record<string, unknown>;
 
-type PubSubNode = {
-    key: unknown;
-    callback: NodeCallback;
-    children: Set<PubSubNode>;
-};
-
 class PubSub {
-    static _internalId: number = 0;
 
-    id: symbol;
-    internalId: number;
-    nodes: Map<unknown, PubSubNode>;
-    roots: Set<PubSubNode>;
-    _cachedExecutionOrder: Set<PubSubNode> | null;
+    protected _nodes: Map<unknown, Node>;
+    protected _roots: Set<Node>;
+    protected _cachedExecutionOrder: Set<Node> | null;
 
     constructor() {
-        this.id = Symbol();
-        this.internalId = ++PubSub._internalId;
-        this.nodes = new Map<unknown, PubSubNode>();
-        this.roots = new Set<PubSubNode>();
+        this._nodes = new Map<unknown, Node>();
+        this._roots = new Set<Node>();
         this._cachedExecutionOrder = null;
     }
 
-    createNode(key: unknown, callback?: NodeCallback): PubSubNode {
-        const { nodes, roots } = this;
+    public createNode(key: unknown, callback?: NodeCallback): Node {
+        const { _nodes: nodes, _roots: roots } = this;
         if (nodes.has(key)) {
             throw new Error('Cannot create node - the key already exists');
         }
-        const finalCallback: NodeCallback = callback || ((_: PubSubContext = {}): unknown => true);
-        const node = new Node(key, finalCallback as unknown as () => boolean) as unknown as PubSubNode;
+        const node = new Node(key, callback);
         nodes.set(key, node);
         roots.add(node);
         this._cachedExecutionOrder = null;
         return node;
     }
 
-    getOrCreateNode(key: unknown, callback?: NodeCallback): PubSubNode {
-        const node = this.nodes.get(key);
-        if (!node) {
-            return this.createNode(key, callback);
-        }
-        if (callback) {
-            node.callback = callback;
-        }
-        return node;
-    }
-
-    getNode(key: unknown): PubSubNode | null {
-        const { nodes } = this;
+    public getNode(key: unknown): Node | null {
+        const { _nodes: nodes } = this;
         return nodes.get(key) || null;
     }
 
-    hasNode(key: unknown): boolean {
-        return this.nodes.has(key);
-    }
+    public linkNodes(pubNode: Node, subNode: Node): void {
 
-    linkNodes(pubNode: PubSubNode, subNode: PubSubNode): void {
-
-        let stack: PubSubNode[] = [...subNode.children];
+        let stack: Node[] = [...subNode.children];
         while (stack.length) {
-            const nextStack: PubSubNode[] = [];
+            const nextStack: Node[] = [];
             for (const node of stack) {
                 if (node === pubNode) {
                     throw new Error(`Circular pub/sub detected: ${pubNode.key} -> ${subNode.key}`);
@@ -77,20 +50,17 @@ class PubSub {
         }
 
         pubNode.children.add(subNode);
-        this.roots.delete(subNode);
+        this._roots.delete(subNode);
         this._cachedExecutionOrder = null;
     }
 
-    execute(context: PubSubContext = {}): void {
-        const { _cachedExecutionOrder } = this;
+    public execute(context: PubSubContext = {}): void {
 
-        if (!_cachedExecutionOrder) {
-
-            const executionOrder = new Set<PubSubNode>(this.roots);
-            let curLevelNodes: PubSubNode[] = [...this.roots];
-
+        if (!this._cachedExecutionOrder) {
+            const executionOrder = new Set<Node>(this._roots);
+            let curLevelNodes: Node[] = [...this._roots];
             while (curLevelNodes.length > 0) {
-                const nextLevel: PubSubNode[] = [];
+                const nextLevel: Node[] = [];
                 for (const node of curLevelNodes) {
                     for (const child of node.children) {
                         executionOrder.delete(child);
@@ -100,18 +70,12 @@ class PubSub {
                 }
                 curLevelNodes = nextLevel;
             }
-
             this._cachedExecutionOrder = executionOrder;
-        }
-
-        if (!this._cachedExecutionOrder) {
-            return;
         }
 
         for (const node of this._cachedExecutionOrder) {
             node.callback(context);
         }
-
     }
 }
 

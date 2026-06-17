@@ -1,7 +1,7 @@
 'use strict';
 
 import { Processor, ProcessorCtorParams, State } from './Processor.ts';
-import { PathField } from './schema/PathField.ts';
+import { PathValueField } from './schema/pathValue/PathValueField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Chain } from '../../fields/chains/Chain.ts';
 import { Field } from './Field.ts';
@@ -61,7 +61,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
             // todo: this should be moved to object child executePipeline.
             // a regular chain cant really refer to itself
             for (const arg of args) {
-                if (arg instanceof PathField) {
+                if (arg instanceof PathValueField) {
                     const refValueTracker = tracker.parent.resolvePath(arg.extendedProps.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
@@ -92,12 +92,12 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         }
     }
 
-    public override getReferences(): Set<PathField> {
+    public override getReferences(): Set<PathValueField> {
         const references = super.getReferences();
         const { pipeline } = this._field.extendedProps;
         for (const { args } of pipeline) {
             for (const arg of this.resolveStepArgs(args)) {
-                if (arg instanceof PathField) {
+                if (arg instanceof PathValueField) {
                     references.add(arg);
                 }
             }

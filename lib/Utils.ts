@@ -178,7 +178,11 @@ class Utils {
     }
 
     static isPlainObject(value: unknown): boolean {
-        return typeof value === 'object' && value !== null && (value as Record<string, unknown>).constructor === Object;
+        if(value === null || typeof value !== 'object') {
+            return false;
+        }
+        const proto = Object.getPrototypeOf(value);
+        return proto === Object.prototype || proto === null;
     }
 
     static mergeObjects(parent: unknown, child: unknown): unknown {

@@ -66,7 +66,7 @@ class ValueTracker extends Node {
         }
         else {
             for (const key of Object.keys(children)) {
-                children[key].setValue((value as Record<string, unknown>)[key]);
+                children[key].setValue((value as Record<PropertyKey, unknown>)[key]);
             }
         }
     }
@@ -193,6 +193,10 @@ class ValueTracker extends Node {
 
     public get value(): unknown {
         return this.getValue();
+    }
+
+    public get rawValue(): unknown {
+        return this._rawValue;
     }
 
     public get errors(): ErrorTree {

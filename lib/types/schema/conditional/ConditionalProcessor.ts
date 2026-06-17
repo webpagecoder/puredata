@@ -1,8 +1,8 @@
 'use strict';
 
 import { ConditionalField } from './ConditionalField.ts';
-import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
+import { ValueTracker } from '../../../tracker/ValueTracker.ts';
+import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
 
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
@@ -25,13 +25,13 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         const { _field } = this;
         const { comparisonField, conditionalChain, otherwiseField, thenField } = _field.extendedProps;
 
-        this._comparisonProcessor = processorMapper.createProcessor(comparisonField).compile() as Processor;
+        this._comparisonProcessor = processorMapper.resolve(comparisonField).compile() as Processor;
         this._isNested = false;
         this._otherwiseProcessor = otherwiseField
-            ? processorMapper.createProcessor(otherwiseField).compile() as Processor
+            ? processorMapper.resolve(otherwiseField).compile() as Processor
             : null;
         this._thenProcessor = thenField
-            ? processorMapper.createProcessor(thenField).compile() as Processor
+            ? processorMapper.resolve(thenField).compile() as Processor
             : null;
 
 
@@ -39,7 +39,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
                 type,
-                (processorMapper.createProcessor(conditionalField) as ConditionalProcessor)
+                (processorMapper.resolve(conditionalField) as ConditionalProcessor)
                     .compile({ isNested: true }) as ConditionalProcessor
             ]);
         }

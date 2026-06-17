@@ -1,20 +1,20 @@
 'use strict';
 
-import { Path } from '../../Path.ts';
-import { Field, FieldCtorParams, FieldProps } from '../Field.ts';
+import { Path } from '../../../Path.ts';
+import { Field, FieldCtorParams, FieldProps } from '../../Field.ts';
 
-export type ReferenceFieldProps = FieldProps & {
+export type FieldPointerFieldProps = FieldProps & {
     fieldPath: Path;
     minDepth: number;
     maxDepth: number;
 };
 
-export type ReferenceFieldCtorParams = FieldCtorParams
-    & Partial<ReferenceFieldProps>
+export type FieldPointerFieldCtorParams = FieldCtorParams
+    & Partial<FieldPointerFieldProps>
 
-class ReferenceField extends Field<ReferenceFieldProps> {
+class FieldPointerField extends Field<FieldPointerFieldProps> {
 
-    constructor(args: ReferenceFieldCtorParams) {
+    constructor(args: FieldPointerFieldCtorParams) {
         super(args);
         const {
             fieldPath = new Path(),
@@ -30,4 +30,4 @@ class ReferenceField extends Field<ReferenceFieldProps> {
 
 }
 
-export { ReferenceField };
+export { FieldPointerField };

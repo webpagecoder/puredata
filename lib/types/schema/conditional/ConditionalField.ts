@@ -1,9 +1,9 @@
 
 'use strict';
 
-import { Path } from '../../Path.ts';
-import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from '../Field.ts';
-import { ValueField } from '../value/ValueField.ts';
+import { Path } from '../../../Path.ts';
+import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from '../../Field.ts';
+import { ValueField } from '../../value/ValueField.ts';
 
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 

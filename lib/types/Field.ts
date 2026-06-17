@@ -1,6 +1,6 @@
 'use strict';
 
-import { ProcessorFactory } from '../ProcessorFactory.ts';
+import { FieldProcessorMap } from './FieldProcessorMap.ts';
 import { Translation } from '../Translation.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from './Processor.ts';
@@ -17,7 +17,7 @@ export type FieldCtorParams = {
     errorMessages: Translation;
     pathDelims: PathDelimTypes;
     presence?: Presence;
-    processorMapper: ProcessorFactory;
+    processorMapper: FieldProcessorMap;
 };
 
 export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldCtorParams & C>;
@@ -31,7 +31,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
     protected _pathDelims: PathDelimTypes;
     protected _presence: Presence;
     protected _processor: Processor | null;
-    protected _processorMapper: ProcessorFactory;
+    protected _processorMapper: FieldProcessorMap;
     protected _props: C;
 
     public constructor(args: FieldCtorParams) {
@@ -77,17 +77,21 @@ abstract class Field<C extends FieldProps = FieldProps> {
             if (!this._processorMapper) {
                 throw new Error('Field/Processor compilation mapper is not configured');
             }
-            this._processor = this._processorMapper.createProcessor(this).compile();
+            this._processor = this._processorMapper.resolve(this).compile();
         }
         return this._processor;
     }
 
-    public get processorMapper(): ProcessorFactory {
+    public get processorMapper(): FieldProcessorMap {
         return this._processorMapper;
     }
 
     public get autoConvert(): boolean {
         return this._autoConvert;
+    }
+
+    public get pathDelims(): PathDelimTypes {
+        return this._pathDelims;
     }
 
     public clone(args: FieldCloneParams<C> = {}): this {

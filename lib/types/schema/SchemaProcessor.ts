@@ -1,6 +1,6 @@
 'use strict';
 
-import { ProcessorFactory } from '../../ProcessorFactory.ts';
+import { FieldProcessorMap } from '../FieldProcessorMap.ts';
 import { SchemaChain } from './SchemaChain.ts';
 import { Path } from '../../Path.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
@@ -8,8 +8,9 @@ import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessorCtorParams } from '../ChainProcessor.ts';
 import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
-import { ConditionalProcessor } from './ConditionalProcessor.ts';
-import { ReferenceProcessor } from './ReferenceProcessor.ts';
+import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
+import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
+import { Utils } from '../../Utils.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
@@ -38,8 +39,8 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
     protected _localBasicProcessors: CompiledSchema;
     protected _localConditionalProcessors: CompiledSchema<ConditionalProcessor>;
-    protected _localNestProcessors: CompiledSchema<ReferenceProcessor>;
-    protected _localReferenceProcessors: CompiledSchema;
+    protected _localNestProcessors: CompiledSchema<FieldPointerProcessor>;
+    protected _localFieldPointerProcessors: CompiledSchema;
     protected _referenceResolver: PubSub | null;
 
     constructor(args: SchemaProcessorCtorParams) {
@@ -47,18 +48,18 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const {
             field,
-            processorMapper = new ProcessorFactory(),
+            processorMapper = new FieldProcessorMap(),
         } = args;
 
         this._localBasicProcessors = new Map();
         this._localConditionalProcessors = new Map();
         this._localNestProcessors = new Map();
-        this._localReferenceProcessors = new Map();
+        this._localFieldPointerProcessors = new Map();
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.extendedProps.schemaMap) {
-            this._localBasicProcessors.set(key, processorMapper.createProcessor(childField));
+            this._localBasicProcessors.set(key, processorMapper.resolve(childField));
         }
     }
 
@@ -79,7 +80,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         const {
             _localConditionalProcessors,
             _localNestProcessors,
-            _localReferenceProcessors,
+            _localFieldPointerProcessors,
             _localBasicProcessors,
         } = this;
 
@@ -97,39 +98,36 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             if (resolvedChildProcessor instanceof ConditionalProcessor) {
                 _localConditionalProcessors.set(key, resolvedChildProcessor);
             }
-            else if (resolvedChildProcessor instanceof ReferenceProcessor) {
+            else if (resolvedChildProcessor instanceof FieldPointerProcessor) {
                 _localNestProcessors.set(key, resolvedChildProcessor); // guaranteed nest
             }
             else if (resolvedChildProcessor.hasReferences()) {
-                _localReferenceProcessors.set(key, resolvedChildProcessor);
+                _localFieldPointerProcessors.set(key, resolvedChildProcessor);
 
-                const subNode = referenceResolver.getOrCreateNode(
-                    absoluteSubPath.toString(),
-                    (context): boolean => {
+                const subNodeId = absoluteSubPath.toString();
+                const subNode = referenceResolver.getNode(subNodeId) ||
+                    referenceResolver.createNode(subNodeId);
 
-                        const {
-                            failOnFirstError,
-                            rootTracker
-                        } = context as ReferenceResolverContext;
+                subNode.setCallback((context): boolean => {
+                    const {
+                        failOnFirstError,
+                        rootTracker
+                    } = context as ReferenceResolverContext;
 
-                        const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative());
+                    const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative());
 
-                        // const { tracker, failOnFirstError } = context;
-                        // const subTracker = (tracker as ValueTracker).resolvePath(absoluteSubPath.toRelative());
-                        if (subTracker) {
-                            resolvedChildProcessor.process(subTracker);
-                        }
-                        return true;
-
-
-
-
+                    // const { tracker, failOnFirstError } = context;
+                    // const subTracker = (tracker as ValueTracker).resolvePath(absoluteSubPath.toRelative());
+                    if (subTracker) {
+                        resolvedChildProcessor.process(subTracker);
                     }
-                );
+                    return true;
+                });
 
                 for (const reference of resolvedChildProcessor.getReferences()) {
-                    const absolutePublisherPath = absoluteSubPath.parent().move(reference.extendedProps.path);
-                    const pubNode = referenceResolver.getOrCreateNode(absolutePublisherPath.toString());
+                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.extendedProps.path).toString();
+                    const pubNode = referenceResolver.getNode(absolutePublisherPathStr) ||
+                        referenceResolver.createNode(absolutePublisherPathStr);
                     referenceResolver.linkNodes(pubNode, subNode);
                 }
             }
@@ -172,7 +170,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             _localBasicProcessors,
             _localConditionalProcessors,
             _localNestProcessors,
-            _localReferenceProcessors,
+            _localFieldPointerProcessors,
             _referenceResolver,
         } = this;
 
@@ -214,9 +212,9 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             }
         }
 
-        if (_localReferenceProcessors.size > 0) {
-            for (const [key, processor] of _localReferenceProcessors) {
-                tracker.insertChild(processor.field, key);
+        if (_localFieldPointerProcessors.size > 0) {
+            for (const [key, processor] of _localFieldPointerProcessors) {
+                tracker.insertChild(processor.field, key, value[key]);
             }
         }
 
@@ -227,7 +225,13 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
             if (deferredNests.length > 0) {
                 for (const [key, processor, tracker] of deferredNests) {
-                    processor.process(tracker.insertChild(processor.field, key));
+                    const nestedTracker = tracker.insertChild(processor.field, key);
+                    const rawValue = tracker.rawValue;
+                    const value = Utils.isPlainObject(rawValue)
+                        ? (rawValue as Record<PropertyKey, unknown>)[key]
+                        : undefined;
+                    nestedTracker.setValue(value);
+                    processor.process(nestedTracker);
                 }
             }
 
@@ -240,9 +244,6 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
     }
 
     public resolveNodePath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {
-        if (typeof path === 'string') {
-            path = Path.create(path);
-        }
         if (path.isSelf) {
             return this;
         }
@@ -255,7 +256,10 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             ancestors = [...ancestors];
             processor = this;
             let { upCount } = path;
-            while (upCount > 0 && ancestors.length >= 1) {
+            while (upCount > 0) {
+                if(ancestors.length === 0) {
+                    return null;
+                }
                 processor = ancestors.pop() as Processor;
                 upCount--;
             }

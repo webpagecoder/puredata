@@ -75,7 +75,7 @@ class Path {
     }
 
     public get isSelf(): boolean {
-        return this._string === this._delims.self;
+        return this._string === this._delims.self && this.upCount === 0;
     }
 
     public get upCount(): number {

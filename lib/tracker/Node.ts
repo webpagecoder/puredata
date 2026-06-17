@@ -5,13 +5,13 @@ import { Path } from '../Path.ts';
 class Node {
 
     protected _children: Record<string, this>;
-    protected _parent: this;
+    protected _parent: this | null;
     protected _root: this;
     protected _path: Path;
 
     public constructor(path: Path = new Path('/')) {
         this._children = {};
-        this._parent = this;
+        this._parent = null;
         this._root = this;
         this._path = path;
     }
@@ -51,8 +51,8 @@ class Node {
         else {
             tracker = this;
             for (let i = 0; i < path.upCount; ++i) {
-                if (tracker._parent === tracker) {
-                    break;
+                if (tracker._parent === null) {
+                    return null;
                 }
                 tracker = tracker._parent;
             }
@@ -68,7 +68,7 @@ class Node {
         return tracker;
     }
 
-    public get parent(): this {
+    public get parent(): this | null {
         return this._parent;
     }
 

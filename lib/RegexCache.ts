@@ -17,5 +17,4 @@ class RegexCache {
     }
 }
 
-
 export { RegexCache };

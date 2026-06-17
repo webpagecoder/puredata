@@ -1,37 +1,36 @@
 'use strict';
 
-import { ReferenceField } from './ReferenceField.ts';
-import { Path } from '../../Path.ts';
-import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
-import { SchemaProcessor } from './SchemaProcessor.ts';
+import { FieldPointerField } from './FieldPointerField.ts';
+import { Path } from '../../../Path.ts';
+import { ValueTracker } from '../../../tracker/ValueTracker.ts';
+import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
+import { SchemaProcessor } from '../SchemaProcessor.ts';
 
-export type ReferenceProcessorCompilationContext = ProcessorCompilationContext & {
+export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
     ancestors: SchemaProcessor[];
     parent: SchemaProcessor;
     absolutePath: Path;
 }
 
-class ReferenceProcessor extends Processor<ReferenceField> {
+class FieldPointerProcessor extends Processor<FieldPointerField> {
 
     protected _innerNestedProcessor: Processor | null;
 
-    public constructor(args: ProcessorCtorParams<ReferenceField>) {
+    public constructor(args: ProcessorCtorParams<FieldPointerField>) {
         super(args);
         this._innerNestedProcessor = null;
     }
 
-    public override compile(context: ReferenceProcessorCompilationContext): Processor {
+    public override compile(context: FieldPointerProcessorCompilationContext): Processor {
         const { ancestors, parent, absolutePath } = context;
         const { _processorMapper, _field } = this;
         const { fieldPath } = _field.extendedProps;
         const referencedProcessor = parent.resolveNodePath(fieldPath, ancestors);
 
         if (!referencedProcessor) {
-            throw new Error('At key ' + absolutePath
-                + ' - unable to resolve referenced path: ' + fieldPath);
+            throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);
         }
-        if (referencedProcessor instanceof ReferenceProcessor) {
+        if (referencedProcessor instanceof FieldPointerProcessor) {
             throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
         }
 
@@ -45,7 +44,7 @@ class ReferenceProcessor extends Processor<ReferenceField> {
             return this;
         }
         else {
-            return _processorMapper.createProcessor(referencedProcessor.field).compile(context);
+            return _processorMapper.resolve(referencedProcessor.field).compile(context);
         }
     }
 
@@ -79,5 +78,5 @@ class ReferenceProcessor extends Processor<ReferenceField> {
     }
 }
 
-export { ReferenceProcessor };
+export { FieldPointerProcessor };
 
