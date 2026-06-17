@@ -1,7 +1,7 @@
 'use strict';
 
 import { BooleanHandler } from './BooleanHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../../fields/chains/Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 

@@ -1,10 +1,10 @@
 'use strict';
 
-import { EnumField } from '../fields/EnumField.ts';
+import { EnumField } from './EnumField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Processor } from '../Processor.ts';
 
-class EnumFieldProcessor extends Processor<EnumField> {
+class EnumProcessor extends Processor<EnumField> {
 
     public override process(tracker: ValueTracker): void {
         const { structure, isArray } = this.field.extendedProps;
@@ -25,4 +25,4 @@ class EnumFieldProcessor extends Processor<EnumField> {
 
 }
 
-export { EnumFieldProcessor };
+export { EnumProcessor };

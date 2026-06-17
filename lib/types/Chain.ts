@@ -1,8 +1,8 @@
 'use strict';
 
-import { ChainHandler } from '../../handlers/ChainHandler.ts';
-import { HandlerResult } from '../../handlers/HandlerResult.ts';
-import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from '../../types/Field.ts';
+import { ChainHandler } from './ChainHandler.ts';
+import { HandlerResult } from './HandlerResult.ts';
+import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from './Field.ts';
 
 type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {

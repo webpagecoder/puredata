@@ -1,7 +1,7 @@
 'use strict';
 
 import { ObjectHandler } from './ObjectHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams, ChainCloneParams } from '../../fields/chains/Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams, ChainCloneParams } from '../Chain.ts';
 
 export type ObjectChainProps = ChainProps<ObjectHandler> & {
     cloneObject: boolean;

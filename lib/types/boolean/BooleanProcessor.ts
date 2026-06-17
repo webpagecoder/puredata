@@ -1,10 +1,10 @@
 'use strict';
 
-import { BooleanChain } from '../fields/BooleanChain.ts';
+import { BooleanChain } from './BooleanChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessor } from '../ChainProcessor.ts';
 
-class BooleanChainProcessor extends ChainProcessor<BooleanChain> {
+class BooleanProcessor extends ChainProcessor<BooleanChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { field } = this;
@@ -38,4 +38,4 @@ class BooleanChainProcessor extends ChainProcessor<BooleanChain> {
     }
 }
 
-export { BooleanChainProcessor };
+export { BooleanProcessor };

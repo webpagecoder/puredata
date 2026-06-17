@@ -1,24 +1,24 @@
 'use strict';
 
-import { SchemaConditionalField } from '../../fields/SchemaConditionalField.ts';
+import { ConditionalField } from './ConditionalField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from '../Processor.ts';
 
-export type SchemaConditionalFieldProcessorConstructorParams = ProcessorConstructorParams<SchemaConditionalField>;
+export type ConditionalProcessorConstructorParams = ProcessorConstructorParams<ConditionalField>;
 
-export type SchemaConditionalFieldProcessorCompilationContext = ProcessorCompilationContext & {
+export type ConditionalProcessorCompilationContext = ProcessorCompilationContext & {
     isNested?: boolean
 }
 
-class SchemaConditionalFieldProcessor extends Processor<SchemaConditionalField> {
+class ConditionalProcessor extends Processor<ConditionalField> {
 
     protected _comparisonProcessor: Processor;
-    protected _conditionalProcessorChain: [type: 'and' | 'or', SchemaConditionalFieldProcessor][];
+    protected _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
     protected _otherwiseProcessor: Processor | null;
     protected _thenProcessor: Processor | null;
     protected _isNested: boolean;
 
-    constructor(args: SchemaConditionalFieldProcessorConstructorParams) {
+    constructor(args: ConditionalProcessorConstructorParams) {
         super(args);
 
         const { processorMapper } = args;
@@ -39,13 +39,13 @@ class SchemaConditionalFieldProcessor extends Processor<SchemaConditionalField> 
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
                 type,
-                (processorMapper.createProcessor(conditionalField) as SchemaConditionalFieldProcessor)
-                    .compile({ isNested: true }) as SchemaConditionalFieldProcessor
+                (processorMapper.createProcessor(conditionalField) as ConditionalProcessor)
+                    .compile({ isNested: true }) as ConditionalProcessor
             ]);
         }
     }
 
-    public override compile({ isNested = false }: SchemaConditionalFieldProcessorCompilationContext = {}): this {
+    public override compile({ isNested = false }: ConditionalProcessorCompilationContext = {}): this {
         const { _field: { extendedProps: { buildStage } } } = this;
 
         this._isNested = isNested;
@@ -111,4 +111,4 @@ class SchemaConditionalFieldProcessor extends Processor<SchemaConditionalField> 
     }
 }
 
-export { SchemaConditionalFieldProcessor };
+export { ConditionalProcessor };

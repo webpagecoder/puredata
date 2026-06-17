@@ -1,28 +1,28 @@
 'use strict';
 
-import { Path } from '../Path.ts';
-import { Field, FieldCloneParams, FieldProps, FieldConstructorParams } from '../fields/Field.ts';
+import { Path } from '../../Path.ts';
+import { Field, FieldCloneParams, FieldProps, FieldConstructorParams } from '../Field.ts';
 
-export type PathReferenceFieldProps = FieldProps & {
+export type PathFieldProps = FieldProps & {
     path: Path;
     defaultOrCallback: unknown | ((...args: unknown[]) => unknown);
 };
 
-export type PathReferenceFieldConstructorParams = 
+export type PathFieldConstructorParams = 
     FieldConstructorParams
-    & Partial<Omit<PathReferenceFieldProps, 'path'>>
+    & Partial<Omit<PathFieldProps, 'path'>>
     & {
         pathStr: string;
     };
 
-export type PathReferenceFieldCloneParams =
-    FieldCloneParams<PathReferenceFieldProps> & {
+export type PathFieldCloneParams =
+    FieldCloneParams<PathFieldProps> & {
         pathStr?: string;
     };
 
-class PathReferenceField extends Field<PathReferenceFieldProps> {
+class PathField extends Field<PathFieldProps> {
 
-    constructor(args: PathReferenceFieldConstructorParams) {
+    constructor(args: PathFieldConstructorParams) {
         super(args);
 
         const {
@@ -35,7 +35,7 @@ class PathReferenceField extends Field<PathReferenceFieldProps> {
         extendedProps.defaultOrCallback = defaultOrCallback;
     }
 
-    public override clone(args:PathReferenceFieldCloneParams = {}): this {
+    public override clone(args:PathFieldCloneParams = {}): this {
         const clone = super.clone(args);
 
         if (args.pathStr !== undefined) {
@@ -46,5 +46,5 @@ class PathReferenceField extends Field<PathReferenceFieldProps> {
 
 }
 
-export { PathReferenceField };
+export { PathField };
 

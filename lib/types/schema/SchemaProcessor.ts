@@ -1,23 +1,23 @@
 'use strict';
 
 import { ProcessorFactory } from '../../ProcessorFactory.ts';
-import { SchemaChain } from '../fields/SchemaChain.ts';
+import { SchemaChain } from './SchemaChain.ts';
 import { Path } from '../../Path.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessorConstructorParams } from '../ChainProcessor.ts';
-import { ObjectChainProcessor } from '../object/ObjectChainProcessor.ts';
+import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
-import { SchemaConditionalFieldProcessor } from './SchemaConditionalFieldProcessor.ts';
-import { SchemaReferenceFieldProcessor } from './SchemaReferenceFieldProcessor.ts';
+import { ConditionalProcessor } from './ConditionalProcessor.ts';
+import { ReferenceProcessor } from './ReferenceProcessor.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
-export type SchemaChainProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain>;
+export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
-    ancestors?: SchemaChainProcessor[] | null;
-    parent?: SchemaChainProcessor;
+    ancestors?: SchemaProcessor[] | null;
+    parent?: SchemaProcessor;
     absolutePath?: Path;
     referenceResolver?: PubSub;
 };
@@ -34,15 +34,15 @@ export type ReferenceResolverContext = PubSubContext & {
     failOnFirstError?: boolean;
 };
 
-class SchemaChainProcessor extends ObjectChainProcessor<SchemaChain> {
+class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
     protected _localBasicProcessors: CompiledSchema;
-    protected _localConditionalProcessors: CompiledSchema<SchemaConditionalFieldProcessor>;
-    protected _localNestProcessors: CompiledSchema<SchemaReferenceFieldProcessor>;
+    protected _localConditionalProcessors: CompiledSchema<ConditionalProcessor>;
+    protected _localNestProcessors: CompiledSchema<ReferenceProcessor>;
     protected _localReferenceProcessors: CompiledSchema;
     protected _referenceResolver: PubSub | null;
 
-    constructor(args: SchemaChainProcessorConstructorParams) {
+    constructor(args: SchemaProcessorConstructorParams) {
         super(args);
 
         const {
@@ -94,10 +94,10 @@ class SchemaChainProcessor extends ObjectChainProcessor<SchemaChain> {
                 referenceResolver
             });
 
-            if (resolvedChildProcessor instanceof SchemaConditionalFieldProcessor) {
+            if (resolvedChildProcessor instanceof ConditionalProcessor) {
                 _localConditionalProcessors.set(key, resolvedChildProcessor);
             }
-            else if (resolvedChildProcessor instanceof SchemaReferenceFieldProcessor) {
+            else if (resolvedChildProcessor instanceof ReferenceProcessor) {
                 _localNestProcessors.set(key, resolvedChildProcessor); // guaranteed nest
             }
             else if (resolvedChildProcessor.hasReferences()) {
@@ -239,7 +239,7 @@ class SchemaChainProcessor extends ObjectChainProcessor<SchemaChain> {
         }
     }
 
-    public resolveNodePath(path: Path, ancestors: SchemaChainProcessor[] = []): null | Processor {
+    public resolveNodePath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {
         if (typeof path === 'string') {
             path = Path.create(path);
         }
@@ -262,7 +262,7 @@ class SchemaChainProcessor extends ObjectChainProcessor<SchemaChain> {
         }
 
         for (const key of path.keys) {
-            if (!processor || !(processor instanceof SchemaChainProcessor)) {
+            if (!processor || !(processor instanceof SchemaProcessor)) {
                 return null;
             }
             processor = processor._localBasicProcessors.get(key) || null;
@@ -271,5 +271,5 @@ class SchemaChainProcessor extends ObjectChainProcessor<SchemaChain> {
     }
 }
 
-export { SchemaChainProcessor };
+export { SchemaProcessor };
 

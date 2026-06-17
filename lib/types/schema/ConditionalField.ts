@@ -1,13 +1,13 @@
 
 'use strict';
 
-import { Path } from '../Path.ts';
-import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from './Field.ts';
-import { ValueField } from '../types/value/ValueField.ts';
+import { Path } from '../../Path.ts';
+import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from '../Field.ts';
+import { ValueField } from '../value/ValueField.ts';
 
-export type ConditionalChainEntry = ['and' | 'or', SchemaConditionalField];
+export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 
-export type SchemaConditionalFieldProps = FieldProps & {
+export type ConditionalFieldProps = FieldProps & {
     buildStage: number;
     comparisonMode?: 'equals' | 'notEquals';
     comparisonField: Field;
@@ -17,22 +17,22 @@ export type SchemaConditionalFieldProps = FieldProps & {
     thenField: null | Field;
 };
 
-export type SchemaConditionalFieldConstructorParams = FieldConstructorParams
-    & Partial<Omit<SchemaConditionalFieldProps, 'targetPath'>>
-    & Pick<SchemaConditionalFieldProps, 'comparisonField' | 'thenField'>
+export type ConditionalFieldConstructorParams = FieldConstructorParams
+    & Partial<Omit<ConditionalFieldProps, 'targetPath'>>
+    & Pick<ConditionalFieldProps, 'comparisonField' | 'thenField'>
     & {
         targetPathStr: string;
     };
 
-export type SchemaConditionalFieldCloneParams =
-    FieldCloneParams<SchemaConditionalFieldProps> & {
+export type ConditionalFieldCloneParams =
+    FieldCloneParams<ConditionalFieldProps> & {
         targetPathStr?: string;
     };
 
 
-class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
+class ConditionalField extends Field<ConditionalFieldProps> {
 
-    constructor(props: SchemaConditionalFieldConstructorParams) {
+    constructor(props: ConditionalFieldConstructorParams) {
         super(props);
 
         const {
@@ -55,7 +55,7 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         extendedProps.thenField = thenField;
     }
 
-    public override clone(args: SchemaConditionalFieldCloneParams = {}): this {
+    public override clone(args: ConditionalFieldCloneParams = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
             clone.extendedProps.targetPath = new Path(args.targetPathStr);
@@ -63,7 +63,7 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         return clone;
     }
 
-    or(conditionalField: SchemaConditionalField) {
+    or(conditionalField: ConditionalField) {
         const { buildStage, conditionalChain } = this.extendedProps;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "or" in condition chain');
@@ -73,7 +73,7 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
         });
     }
 
-    and(conditionalField: SchemaConditionalField) {
+    and(conditionalField: ConditionalField) {
         const { buildStage, conditionalChain } = this.extendedProps;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "and" in condition chain');
@@ -117,4 +117,4 @@ class SchemaConditionalField extends Field<SchemaConditionalFieldProps> {
 
 }
 
-export { SchemaConditionalField };
+export { ConditionalField };

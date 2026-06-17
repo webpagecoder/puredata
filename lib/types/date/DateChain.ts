@@ -2,7 +2,7 @@
 
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../../fields/chains/Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;

@@ -1,10 +1,10 @@
 'use strict';
 
-import { ArrayChain } from '../fields/ArrayChain.ts';
+import { ArrayChain } from '../array/ArrayChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessor } from '../ChainProcessor.ts';
 
-class ArrayChainProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
+class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { autoConvert, label, extendedProps } = this.field;
@@ -38,4 +38,4 @@ class ArrayChainProcessor<C extends ArrayChain = ArrayChain> extends ChainProces
     }
 }
 
-export { ArrayChainProcessor };
+export { ArrayProcessor };

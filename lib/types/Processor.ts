@@ -2,9 +2,9 @@
 
 import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { Field } from './Field.ts';
-import { PathReferenceField } from './PathReferenceField.ts';
+import { PathField } from './schema/PathField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { PathReferenceFieldProcessor } from './PathReferenceFieldProcessor.ts';
+import { PathProcessor } from './PathProcessor.ts';
 
 export type ProcessorConstructorParams<F extends Field = Field> = {
     field: F;
@@ -21,7 +21,7 @@ abstract class Processor<F extends Field = Field> {
 
     protected _id: number;
     protected _cachedReferences: Set<any> | null;
-    protected _defaultValuePathReferenceFieldProcessor: PathReferenceFieldProcessor | null;
+    protected _defaultValuePathProcessor: PathProcessor | null;
     protected _field: F;
     protected _processorMapper: ProcessorFactory;
 
@@ -33,7 +33,7 @@ abstract class Processor<F extends Field = Field> {
 
         this._id = ++Processor.id;
         this._cachedReferences = null;
-        this._defaultValuePathReferenceFieldProcessor = null;
+        this._defaultValuePathProcessor = null;
         this._field = Object.seal(field);
         this._processorMapper = processorMapper;
     }
@@ -41,9 +41,9 @@ abstract class Processor<F extends Field = Field> {
     public compile(context?: ProcessorCompilationContext): Processor {
         const { _field, _processorMapper } = this;
         const { defaultValue } = _field;
-        if (defaultValue instanceof PathReferenceField) {
-            this._defaultValuePathReferenceFieldProcessor = 
-                _processorMapper.createProcessor(defaultValue).compile(context) as PathReferenceFieldProcessor;
+        if (defaultValue instanceof PathField) {
+            this._defaultValuePathProcessor = 
+                _processorMapper.createProcessor(defaultValue).compile(context) as PathProcessor;
         }
         return this;
     }
@@ -62,9 +62,9 @@ abstract class Processor<F extends Field = Field> {
             tracker.addError('generic/forbidden');
         }
         else if (!isDefined) {
-            const { _defaultValuePathReferenceFieldProcessor } = this;
-            if (_defaultValuePathReferenceFieldProcessor) {
-                _defaultValuePathReferenceFieldProcessor.process(tracker);
+            const { _defaultValuePathProcessor } = this;
+            if (_defaultValuePathProcessor) {
+                _defaultValuePathProcessor.process(tracker);
             }
             else {
                 tracker.setValue(_field.defaultValue);
@@ -76,19 +76,19 @@ abstract class Processor<F extends Field = Field> {
         return this.getReferences().size > 0;
     }
 
-    public getReferences(): Set<PathReferenceField> {
+    public getReferences(): Set<PathField> {
         if (this._cachedReferences) {
             return this._cachedReferences;
         }
 
         const { _field } = this;
-        const references = new Set<PathReferenceField>();
-        if (_field instanceof PathReferenceField) {
+        const references = new Set<PathField>();
+        if (_field instanceof PathField) {
             references.add(_field);
         }
         else {
             const { defaultValue } = _field;
-            if (defaultValue instanceof PathReferenceField) {
+            if (defaultValue instanceof PathField) {
                 references.add(defaultValue);
             }
         }

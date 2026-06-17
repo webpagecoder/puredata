@@ -1,6 +1,6 @@
 'use strict';
 
-import { StringChain } from '../fields/StringChain.ts';
+import { StringChain } from '../string/StringChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessor } from '../ChainProcessor.ts';
 

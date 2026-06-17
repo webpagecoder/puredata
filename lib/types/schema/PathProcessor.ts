@@ -1,10 +1,10 @@
 'use strict';
 
-import { PathReferenceField } from './PathReferenceField.ts';
-import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { Processor } from './Processor.ts';
+import { PathField } from '../PathField.ts';
+import { ValueTracker } from '../../tracker/ValueTracker.ts';
+import { Processor } from '../Processor.ts';
 
-class PathReferenceFieldProcessor extends Processor<PathReferenceField> {
+class PathProcessor extends Processor<PathField> {
 
     public override process(tracker: ValueTracker): void {
         const { path, defaultOrCallback } = this._field.extendedProps;
@@ -35,4 +35,4 @@ class PathReferenceFieldProcessor extends Processor<PathReferenceField> {
     }
 }
 
-export { PathReferenceFieldProcessor };
+export { PathProcessor };

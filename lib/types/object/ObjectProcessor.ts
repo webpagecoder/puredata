@@ -1,12 +1,12 @@
 'use strict';
 
-import { ObjectChain } from '../fields/ObjectChain.ts';
+import { ObjectChain } from './ObjectChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
 import { ChainProcessor } from '../ChainProcessor.ts';
 import { State } from '../Processor.ts';
 
-class ObjectChainProcessor<C extends ObjectChain = ObjectChain> extends ChainProcessor<C> {
+class ObjectProcessor<C extends ObjectChain = ObjectChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
         super.preProcess(tracker);
@@ -41,4 +41,4 @@ class ObjectChainProcessor<C extends ObjectChain = ObjectChain> extends ChainPro
     }
 }
 
-export { ObjectChainProcessor };
+export { ObjectProcessor };

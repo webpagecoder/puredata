@@ -1,7 +1,7 @@
 'use strict';
 
 import { NumberHandler } from './NumberHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../../fields/chains/Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
 
 export type NumberChainProps = ChainProps<NumberHandler> & {
         autoConvert: boolean;

@@ -1,6 +1,6 @@
 'use strict';
 
-import { Chain } from '../../fields/chains/Chain.ts';
+import { Chain } from '../Chain.ts';
 
 class AnyChain extends Chain { }
 

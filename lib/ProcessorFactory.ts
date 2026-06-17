@@ -7,40 +7,40 @@ import { Processor } from './types/Processor.ts';
 
 // Chains & processors
 
-import { ArrayChain } from './fields/ArrayChain.ts';
-import { ArrayChainProcessor } from './types/array/ArrayChainProcessor.ts';
+import { ArrayChain } from './types/array/ArrayChain.ts';
+import { ArrayProcessor } from './types/array/ArrayProcessor.ts';
 
-import { BooleanChain } from './fields/BooleanChain.ts';
-import { BooleanChainProcessor } from './types/boolean/BooleanChainProcessor.ts';
+import { BooleanChain } from './types/boolean/BooleanChain.ts';
+import { BooleanProcessor } from './types/boolean/BooleanProcessor.ts';
 
-import { DateChain } from './fields/DateChain.ts';
-import { DateChainProcessor } from './types/date/DateChainProcessor.ts';
+import { DateChain } from './types/date/DateChain.ts';
+import { DateProcessor } from './types/date/DateProcessor.ts';
 
-import { NumberChain } from './fields/NumberChain.ts';
-import { NumberChainProcessor } from './types/number/NumberChainProcessor.ts';
+import { NumberChain } from './types/number/NumberChain.ts';
+import { NumberProcessor } from './types/number/NumberProcessor.ts';
 
-import { ObjectChain } from './fields/ObjectChain.ts';
-import { ObjectChainProcessor } from './types/object/ObjectChainProcessor.ts';
+import { ObjectChain } from './types/object/ObjectChain.ts';
+import { ObjectProcessor } from './types/object/ObjectProcessor.ts';
 
-import { SchemaChain } from './fields/SchemaChain.ts';
-import { SchemaChainProcessor } from './types/schema/SchemaChainProcessor.ts';
+import { SchemaChain } from './types/schema/SchemaChain.ts';
+import { SchemaProcessor } from './types/schema/SchemaProcessor.ts';
 
-import { StringChain } from './fields/StringChain.ts';
+import { StringChain } from './types/string/StringChain.ts';
 import { StringChainProcessor } from './types/string/StringChainProcessor.ts';
 
 // Others & processors
 
-import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
-import { SchemaReferenceFieldProcessor } from './types/schema/SchemaReferenceFieldProcessor.ts';
+import { ReferenceField } from './types/schema/ReferenceField.ts';
+import { ReferenceProcessor } from './types/schema/ReferenceProcessor.ts';
 
-import { EnumField } from './fields/EnumField.ts';
-import { EnumFieldProcessor } from './types/enum/EnumFieldProcessor.ts';
+import { EnumField } from './types/enum/EnumField.ts';
+import { EnumProcessor } from './types/enum/EnumProcessor.ts';
 
-import { PathReferenceField } from './types/PathReferenceField.ts';
-import { PathReferenceFieldProcessor } from './types/PathReferenceFieldProcessor.ts';
+import { PathField } from './types/schema/PathField.ts';
+import { PathProcessor } from './types/schema/PathProcessor.ts';
 
-import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
-import { SchemaConditionalFieldProcessor } from './types/schema/SchemaConditionalFieldProcessor.ts';
+import { ConditionalField } from './types/schema/ConditionalField.ts';
+import { ConditionalProcessor } from './types/schema/ConditionalProcessor.ts';
 
 import { ValueField } from './types/value/ValueField.ts';
 import { ValueFieldProcessor } from './types/value/ValueFieldProcessor.ts';
@@ -52,19 +52,19 @@ type ProcessorConstructor = new (args: ProcessorConstructorParams) => Processor;
 const MAPPINGS = new Map<FieldConstructor, Processor>();
 
 // Chains
-MAPPINGS.set(ArrayChain, ArrayChainProcessor);
-MAPPINGS.set(BooleanChain, BooleanChainProcessor);
-MAPPINGS.set(DateChain, DateChainProcessor);
-MAPPINGS.set(NumberChain, NumberChainProcessor);
-MAPPINGS.set(ObjectChain, ObjectChainProcessor);
-MAPPINGS.set(SchemaChain, SchemaChainProcessor);
+MAPPINGS.set(ArrayChain, ArrayProcessor);
+MAPPINGS.set(BooleanChain, BooleanProcessor);
+MAPPINGS.set(DateChain, DateProcessor);
+MAPPINGS.set(NumberChain, NumberProcessor);
+MAPPINGS.set(ObjectChain, ObjectProcessor);
+MAPPINGS.set(SchemaChain, SchemaProcessor);
 MAPPINGS.set(StringChain, StringChainProcessor);
 
 // Other types
-MAPPINGS.set(SchemaReferenceField, SchemaReferenceFieldProcessor);
-MAPPINGS.set(EnumField, EnumFieldProcessor);
-MAPPINGS.set(PathReferenceField, PathReferenceFieldProcessor);
-MAPPINGS.set(SchemaConditionalField, SchemaConditionalFieldProcessor);
+MAPPINGS.set(ReferenceField, ReferenceProcessor);
+MAPPINGS.set(EnumField, EnumProcessor);
+MAPPINGS.set(PathField, PathProcessor);
+MAPPINGS.set(ConditionalField, ConditionalProcessor);
 MAPPINGS.set(ValueField, ValueFieldProcessor);
 
 

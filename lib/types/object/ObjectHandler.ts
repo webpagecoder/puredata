@@ -17,7 +17,7 @@ class ObjectHandler extends ChainHandler {
      * @param {any} empties
      * @returns {HandlerResult}
      */
-    public empty(value: any, empties: any= [null, undefined]): HandlerResult {
+    public override empty(value: any, empties: any= [null, undefined]): HandlerResult {
         return super.empty(value, empties).pass || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
     }
 
@@ -27,7 +27,7 @@ class ObjectHandler extends ChainHandler {
      * @param {any} empties
      * @returns {HandlerResult}
      */
-    public notEmpty(value: any, empties: any= [null, undefined]): HandlerResult {
+    public override notEmpty(value: any, empties: any= [null, undefined]): HandlerResult {
         return super.empty(value, empties).fail && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
     }
 

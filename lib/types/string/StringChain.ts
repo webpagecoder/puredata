@@ -1,7 +1,7 @@
 'use strict';
 
 import { StringHandler } from './StringHandler.ts';
-import { Chain, ChainConstructorParams, ChainProps } from '../../fields/chains/Chain.ts';
+import { Chain, ChainConstructorParams, ChainProps } from '../Chain.ts';
 
 export type StringChainProps = ChainProps<StringHandler> & {
     trim: boolean;

@@ -1,27 +1,27 @@
 'use strict';
 
-import { SchemaReferenceField } from '../../fields/SchemaReferenceField.ts';
+import { ReferenceField } from './ReferenceField.ts';
 import { Path } from '../../Path.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from '../Processor.ts';
-import { SchemaChainProcessor } from './SchemaChainProcessor.ts';
+import { SchemaProcessor } from './SchemaProcessor.ts';
 
-export type SchemaReferenceFieldProcessorCompilationContext = ProcessorCompilationContext & {
-    ancestors: SchemaChainProcessor[];
-    parent: SchemaChainProcessor;
+export type ReferenceProcessorCompilationContext = ProcessorCompilationContext & {
+    ancestors: SchemaProcessor[];
+    parent: SchemaProcessor;
     absolutePath: Path;
 }
 
-class SchemaReferenceFieldProcessor extends Processor<SchemaReferenceField> {
+class ReferenceProcessor extends Processor<ReferenceField> {
 
     protected _innerNestedProcessor: Processor | null;
 
-    public constructor(args: ProcessorConstructorParams<SchemaReferenceField>) {
+    public constructor(args: ProcessorConstructorParams<ReferenceField>) {
         super(args);
         this._innerNestedProcessor = null;
     }
 
-    public override compile(context: SchemaReferenceFieldProcessorCompilationContext): Processor {
+    public override compile(context: ReferenceProcessorCompilationContext): Processor {
         const { ancestors, parent, absolutePath } = context;
         const { _processorMapper, _field } = this;
         const { fieldPath } = _field.extendedProps;
@@ -31,7 +31,7 @@ class SchemaReferenceFieldProcessor extends Processor<SchemaReferenceField> {
             throw new Error('At key ' + absolutePath
                 + ' - unable to resolve referenced path: ' + fieldPath);
         }
-        if (referencedProcessor instanceof SchemaReferenceFieldProcessor) {
+        if (referencedProcessor instanceof ReferenceProcessor) {
             throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
         }
 
@@ -79,5 +79,5 @@ class SchemaReferenceFieldProcessor extends Processor<SchemaReferenceField> {
     }
 }
 
-export { SchemaReferenceFieldProcessor };
+export { ReferenceProcessor };
 

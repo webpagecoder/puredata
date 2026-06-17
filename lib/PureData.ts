@@ -6,19 +6,19 @@ import { GlobalConfig } from './GlobalConfig.ts';
 import { AnyChain } from './types/any/AnyChain.ts';
 import { ArrayChain } from './types/array/ArrayChain.ts';
 import { BooleanChain } from './types/boolean/BooleanChain.ts';
-import { ChainConstructorParams } from './fields/chains/Chain.ts';
+import { ChainConstructorParams } from './types/Chain.ts';
 import { DateChain } from './types/date/DateChain.ts';
-import { EnumField, EnumStructure } from './fields/EnumField.ts';
+import { EnumField, EnumStructure } from './types/enum/EnumField.ts';
 import { Field, FieldConstructorParams } from './types/Field.ts';
 import { NumberChain } from './types/number/NumberChain.ts';
 import { ObjectChain, ObjectChainConstructorParams } from './types/object/ObjectChain.ts';
-import { PathReferenceField } from './types/PathReferenceField.ts';
+import { PathField } from './types/schema/PathField.ts';
 import { SchemaChain } from './types/schema/SchemaChain.ts';
-import { SchemaConditionalField } from './fields/SchemaConditionalField.ts';
-import { SchemaReferenceField } from './fields/SchemaReferenceField.ts';
+import { ConditionalField } from './types/schema/ConditionalField.ts';
+import { ReferenceField } from './types/schema/ReferenceField.ts';
 import { StringChain } from './types/string/StringChain.ts';
 import { ValueField } from './types/value/ValueField.ts';
-import { AnyChainHandler } from './types/any/AnyChainHandler.ts';
+import { AnyHandler } from './types/any/AnyHandler.ts';
 import { ArrayHandler } from './types/array/ArrayHandler.ts';
 import { BooleanHandler } from './types/boolean/BooleanHandler.ts';
 import { ChainHandler } from './types/ChainHandler.ts';
@@ -87,7 +87,7 @@ class PureData {
     // Chains
 
     any() {
-        return new AnyChain(this.composeChainProps({}, 'any', new AnyChainHandler()));
+        return new AnyChain(this.composeChainProps({}, 'any', new AnyHandler()));
     }
 
     array(props: Record<string, unknown> = {}) {
@@ -150,13 +150,13 @@ class PureData {
     }
 
     value(pathStr: string, defaultOrCallback: unknown = undefined) {
-        return new PathReferenceField(this.composeFieldProps({ pathStr, defaultOrCallback }));
+        return new PathField(this.composeFieldProps({ pathStr, defaultOrCallback }));
     }
 
     // Field pointer
 
     field(pathStr: string, minDepth?: number, maxDepth?: number) {
-        return new SchemaReferenceField(this.composeFieldProps({
+        return new ReferenceField(this.composeFieldProps({
             minDepth,
             maxDepth,
             fieldPath: new Path(pathStr, this._pathDelims)
@@ -166,7 +166,7 @@ class PureData {
     // Conditionals
 
     satisfies(targetPathStr: string, comparisonField: Field) {
-        return new SchemaConditionalField(this.composeFieldProps({
+        return new ConditionalField(this.composeFieldProps({
             areEqual: true,
             targetPathStr,
             comparisonField,
@@ -174,7 +174,7 @@ class PureData {
     }
 
     violates(targetPathStr: string, comparisonField: Field) {
-        return new SchemaConditionalField(this.composeFieldProps({
+        return new ConditionalField(this.composeFieldProps({
             areEqual: false,
             targetPathStr,
             comparisonField,

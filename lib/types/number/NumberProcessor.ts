@@ -1,11 +1,11 @@
 'use strict';
 
-import { NumberChain } from '../fields/NumberChain.ts';
+import { NumberChain } from '../number/NumberChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
 import { ChainProcessor } from '../ChainProcessor.ts';
 
-class NumberChainProcessor extends ChainProcessor<NumberChain> {
+class NumberProcessor extends ChainProcessor<NumberChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.extendedProps;
@@ -25,4 +25,4 @@ class NumberChainProcessor extends ChainProcessor<NumberChain> {
 
 }
 
-export { NumberChainProcessor };
+export { NumberProcessor };

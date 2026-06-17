@@ -1,15 +1,15 @@
 'use strict';
 
 import { UtcDate } from './UtcDate.ts';
-import { DateChain } from '../fields/DateChain.ts';
+import { DateChain } from './DateChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessor, ChainProcessorConstructorParams } from '../ChainProcessor.ts';
 
-export type DateChainProcessorConstructorParams = ChainProcessorConstructorParams<DateChain>;
+export type DateProcessorConstructorParams = ChainProcessorConstructorParams<DateChain>;
 
-class DateChainProcessor extends ChainProcessor<DateChain> {
+class DateProcessor extends ChainProcessor<DateChain> {
 
-    public constructor(args: DateChainProcessorConstructorParams) {
+    public constructor(args: DateProcessorConstructorParams) {
         super(args);
     }
 
@@ -38,4 +38,4 @@ class DateChainProcessor extends ChainProcessor<DateChain> {
 
 }
 
-export { DateChainProcessor };
+export { DateProcessor };

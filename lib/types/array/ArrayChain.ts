@@ -2,7 +2,7 @@
 
 import { ArrayHandler } from './ArrayHandler.ts';
 import { Path } from '../../Path.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../../fields/chains/Chain.ts';
+import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 

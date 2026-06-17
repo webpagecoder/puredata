@@ -4,7 +4,6 @@ import { ValueField } from './ValueField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Processor, State } from '../Processor.ts';
 
-
 class ValueFieldProcessor extends Processor<ValueField> {
 
     public override process(tracker: ValueTracker): void {
