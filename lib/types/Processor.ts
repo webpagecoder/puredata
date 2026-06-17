@@ -6,7 +6,7 @@ import { PathField } from './schema/PathField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { PathProcessor } from './PathProcessor.ts';
 
-export type ProcessorConstructorParams<F extends Field = Field> = {
+export type ProcessorCtorParams<F extends Field = Field> = {
     field: F;
     processorMapper: ProcessorFactory;
 };
@@ -25,7 +25,7 @@ abstract class Processor<F extends Field = Field> {
     protected _field: F;
     protected _processorMapper: ProcessorFactory;
 
-    constructor(args: ProcessorConstructorParams<F>) {
+    constructor(args: ProcessorCtorParams<F>) {
         const {
             processorMapper = new ProcessorFactory(),
             field,

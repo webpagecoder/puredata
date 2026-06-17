@@ -1,7 +1,7 @@
 'use strict';
 
 import { Handler } from '../../lib/handlers/Handler.ts';
-import { HandlerResult } from '../../lib/HandlerResult.ts';
+import { ChainHandlerResult } from '../../lib/ChainHandlerResult.ts';
 
 // ====================================
 // VALIDATORS
@@ -322,8 +322,8 @@ describe('Handler.custom', () => {
         expect(result.value).toBe(6);
     });
 
-    test('should return HandlerResult.fail from callback as-is', () => {
-        const customResult = HandlerResult.fail('bad', 'generic/custom');
+    test('should return ChainHandlerResult.fail from callback as-is', () => {
+        const customResult = ChainHandlerResult.fail('bad', 'generic/custom');
         const result = Handler.custom('bad', () => customResult);
 
         expect(result).toBe(customResult);
@@ -331,8 +331,8 @@ describe('Handler.custom', () => {
         expect([...result.errors][0].key).toBe('generic/custom');
     });
 
-    test('should return HandlerResult.pass from callback as-is', () => {
-        const customResult = HandlerResult.pass({ ok: true });
+    test('should return ChainHandlerResult.pass from callback as-is', () => {
+        const customResult = ChainHandlerResult.pass({ ok: true });
         const result = Handler.custom('ignored', () => customResult);
 
         expect(result).toBe(customResult);

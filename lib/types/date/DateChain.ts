@@ -2,7 +2,7 @@
 
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
+import { Chain, ChainProps, ChainCtorParams } from '../Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
@@ -15,11 +15,11 @@ export type DateChainProps = ChainProps<DateHandler> & {
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
 };
-export type DateChainConstructorParams = ChainConstructorParams<DateChainProps>;
+export type DateChainCtorParams = ChainCtorParams<DateChainProps>;
 
 class DateChain extends Chain<DateChainProps> {
 
-    constructor(args: DateChainConstructorParams) {
+    constructor(args: DateChainCtorParams) {
         super(args);
 
         const {

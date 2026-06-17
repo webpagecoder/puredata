@@ -5,7 +5,7 @@ import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { Utils } from '../../Utils.ts';
 import { ArrayChain } from '../array/ArrayChain.ts';
 import { Field } from '../Field.ts';
-import { ObjectChain, ObjectChainProps, ObjectChainConstructorParams } from '../object/ObjectChain.ts';
+import { ObjectChain, ObjectChainProps, ObjectChainCtorParams } from '../object/ObjectChain.ts';
 import { ValueField } from '../value/ValueField.ts';
 
 export type SchemaObject = {
@@ -22,15 +22,15 @@ export type SchemaChainProps = ObjectChainProps & {
     stripUnknownKeys: boolean;
 };
 
-export type SchemaChainConstructorParams = ObjectChainConstructorParams<SchemaChainProps> & {
+export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainProps> & {
     schema?: SchemaObject;
 };
 
-export type SchemaChainCloneParams = Partial<SchemaChainConstructorParams>;
+export type SchemaChainCloneParams = Partial<SchemaChainCtorParams>;
     
 class SchemaChain extends ObjectChain<SchemaChainProps> {
 
-    constructor(args: SchemaChainConstructorParams) {
+    constructor(args: SchemaChainCtorParams) {
         super(args);
 
         const {

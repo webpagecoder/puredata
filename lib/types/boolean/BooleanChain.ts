@@ -1,7 +1,7 @@
 'use strict';
 
 import { BooleanHandler } from './BooleanHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
+import { Chain, ChainProps, ChainCtorParams } from '../Chain.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
@@ -11,11 +11,11 @@ export type BooleanChainProps = ChainProps<BooleanHandler>&{
     transformer: (value: unknown) => unknown;
 };
 
-export type BooleanChainConstructorParams = ChainConstructorParams<BooleanChainProps>;
+export type BooleanChainCtorParams = ChainCtorParams<BooleanChainProps>;
 
 class BooleanChain extends Chain<BooleanChainProps> {
 
-    public constructor(args: BooleanChainConstructorParams) {
+    public constructor(args: BooleanChainCtorParams) {
         super(args);
         const {
             allowBoolish = false,

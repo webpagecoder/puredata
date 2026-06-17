@@ -1,7 +1,7 @@
 'use strict';
 
 import { ObjectHandler } from './ObjectHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams, ChainCloneParams } from '../Chain.ts';
+import { Chain, ChainProps, ChainCtorParams, ChainCloneParams } from '../Chain.ts';
 
 export type ObjectChainProps = ChainProps<ObjectHandler> & {
     cloneObject: boolean;
@@ -10,12 +10,12 @@ export type ObjectChainProps = ChainProps<ObjectHandler> & {
     maxKeyCount: number | null;
 };
 
-export type ObjectChainConstructorParams<C extends ObjectChainProps =
-    ObjectChainProps> = ChainConstructorParams<C>;
+export type ObjectChainCtorParams<C extends ObjectChainProps =
+    ObjectChainProps> = ChainCtorParams<C>;
 
 class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C> {
 
-    constructor(args: ObjectChainConstructorParams<C>) {
+    constructor(args: ObjectChainCtorParams<C>) {
         super(args);
         const {
             cloneObject = false,

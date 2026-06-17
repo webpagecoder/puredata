@@ -5,7 +5,7 @@ import { SchemaChain } from './SchemaChain.ts';
 import { Path } from '../../Path.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { ChainProcessorConstructorParams } from '../ChainProcessor.ts';
+import { ChainProcessorCtorParams } from '../ChainProcessor.ts';
 import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
 import { ConditionalProcessor } from './ConditionalProcessor.ts';
@@ -13,7 +13,7 @@ import { ReferenceProcessor } from './ReferenceProcessor.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
-export type SchemaProcessorConstructorParams = ChainProcessorConstructorParams<SchemaChain>;
+export type SchemaProcessorCtorParams = ChainProcessorCtorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
     ancestors?: SchemaProcessor[] | null;
@@ -42,7 +42,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
     protected _localReferenceProcessors: CompiledSchema;
     protected _referenceResolver: PubSub | null;
 
-    constructor(args: SchemaProcessorConstructorParams) {
+    constructor(args: SchemaProcessorCtorParams) {
         super(args);
 
         const {

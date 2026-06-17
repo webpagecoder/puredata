@@ -1,7 +1,7 @@
 'use strict';
 
 import { StringHandler } from './StringHandler.ts';
-import { Chain, ChainConstructorParams, ChainProps } from '../Chain.ts';
+import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
 
 export type StringChainProps = ChainProps<StringHandler> & {
     trim: boolean;
@@ -9,10 +9,10 @@ export type StringChainProps = ChainProps<StringHandler> & {
     truncate: boolean;
 };
 
-export type StringChainConstructorParams = ChainConstructorParams<StringChainProps>;
+export type StringChainCtorParams = ChainCtorParams<StringChainProps>;
 
 class StringChain extends Chain<StringChainProps> {
-    constructor(args: StringChainConstructorParams) {
+    constructor(args: StringChainCtorParams) {
         super(args);
 
         const {

@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
-import { Field, FieldConstructorParams, FieldProps } from '../Field.ts';
+import { Field, FieldCtorParams, FieldProps } from '../Field.ts';
 
 export type ReferenceFieldProps = FieldProps & {
     fieldPath: Path;
@@ -9,12 +9,12 @@ export type ReferenceFieldProps = FieldProps & {
     maxDepth: number;
 };
 
-export type ReferenceFieldConstructorParams = FieldConstructorParams
+export type ReferenceFieldCtorParams = FieldCtorParams
     & Partial<ReferenceFieldProps>
 
 class ReferenceField extends Field<ReferenceFieldProps> {
 
-    constructor(args: ReferenceFieldConstructorParams) {
+    constructor(args: ReferenceFieldCtorParams) {
         super(args);
         const {
             fieldPath = new Path(),

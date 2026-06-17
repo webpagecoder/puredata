@@ -1,18 +1,18 @@
 'use strict';
 
-import { Field, FieldProps, FieldConstructorParams } from '../Field.ts';
+import { Field, FieldProps, FieldCtorParams } from '../Field.ts';
 
 export type ValueFieldProps = FieldProps & {
     mutable: boolean;
     value: unknown;
 };
 
-export type ValueFieldConstructorParams = FieldConstructorParams
+export type ValueFieldCtorParams = FieldCtorParams
     & Partial<ValueFieldProps>;
 
 class ValueField extends Field<ValueFieldProps> {
 
-    public constructor(args: ValueFieldConstructorParams) {
+    public constructor(args: ValueFieldCtorParams) {
         super(args);
         const {
             mutable = false,

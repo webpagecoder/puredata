@@ -1,7 +1,7 @@
 'use strict';
 
 import { NumberHandler } from './NumberHandler.ts';
-import { Chain, ChainProps, ChainConstructorParams } from '../Chain.ts';
+import { Chain, ChainProps, ChainCtorParams } from '../Chain.ts';
 
 export type NumberChainProps = ChainProps<NumberHandler> & {
         autoConvert: boolean;
@@ -10,11 +10,11 @@ export type NumberChainProps = ChainProps<NumberHandler> & {
         preservePrecision: boolean;
 };
 
-export type NumberChainConstructorParams = ChainConstructorParams<NumberChainProps>;
+export type NumberChainCtorParams = ChainCtorParams<NumberChainProps>;
 
 class NumberChain extends Chain<NumberChainProps> {
 
-    public constructor(args: NumberChainConstructorParams) {
+    public constructor(args: NumberChainCtorParams) {
         super(args);
         const {
             autoConvert = true,

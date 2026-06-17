@@ -6,12 +6,12 @@ import { GlobalConfig } from './GlobalConfig.ts';
 import { AnyChain } from './types/any/AnyChain.ts';
 import { ArrayChain } from './types/array/ArrayChain.ts';
 import { BooleanChain } from './types/boolean/BooleanChain.ts';
-import { ChainConstructorParams } from './types/Chain.ts';
+import { ChainCtorParams } from './types/Chain.ts';
 import { DateChain } from './types/date/DateChain.ts';
 import { EnumField, EnumStructure } from './types/enum/EnumField.ts';
-import { Field, FieldConstructorParams } from './types/Field.ts';
+import { Field, FieldCtorParams } from './types/Field.ts';
 import { NumberChain } from './types/number/NumberChain.ts';
-import { ObjectChain, ObjectChainConstructorParams } from './types/object/ObjectChain.ts';
+import { ObjectChain, ObjectChainCtorParams } from './types/object/ObjectChain.ts';
 import { PathField } from './types/schema/PathField.ts';
 import { SchemaChain } from './types/schema/SchemaChain.ts';
 import { ConditionalField } from './types/schema/ConditionalField.ts';
@@ -52,7 +52,7 @@ class PureData {
         this._processorMapper = processorMapper;
     }
 
-    composeChainProps<T extends ChainConstructorParams>(
+    composeChainProps<T extends ChainCtorParams>(
         props: Record<string, unknown> = {},
         chainType: string,
         chainHandler: ChainHandler
@@ -71,7 +71,7 @@ class PureData {
         ) as T;
     }
 
-    composeFieldProps<T extends FieldConstructorParams>(props: Record<string, unknown> = {}) {
+    composeFieldProps<T extends FieldCtorParams>(props: Record<string, unknown> = {}) {
         return Object.assign(
             {},
             this._globalConfig['general'],
@@ -119,7 +119,7 @@ class PureData {
     }
 
     object(props: Record<string, unknown> = {}) {
-        return new ObjectChain(this.composeChainProps<ObjectChainConstructorParams>(
+        return new ObjectChain(this.composeChainProps<ObjectChainCtorParams>(
             props,
             'object',
             new ObjectHandler()

@@ -2,9 +2,9 @@
 
 import { ConditionalField } from './ConditionalField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from '../Processor.ts';
+import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
 
-export type ConditionalProcessorConstructorParams = ProcessorConstructorParams<ConditionalField>;
+export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
 export type ConditionalProcessorCompilationContext = ProcessorCompilationContext & {
     isNested?: boolean
@@ -18,7 +18,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     protected _thenProcessor: Processor | null;
     protected _isNested: boolean;
 
-    constructor(args: ConditionalProcessorConstructorParams) {
+    constructor(args: ConditionalProcessorCtorParams) {
         super(args);
 
         const { processorMapper } = args;

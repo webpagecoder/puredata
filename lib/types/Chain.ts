@@ -1,12 +1,12 @@
 'use strict';
 
 import { ChainHandler } from './ChainHandler.ts';
-import { HandlerResult } from './HandlerResult.ts';
-import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from './Field.ts';
+import { ChainHandlerResult } from './ChainHandlerResult.ts';
+import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from './Field.ts';
 
 type StepArgsOrFn = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
-    fn: (value: unknown, ...args: unknown[]) => HandlerResult;
+    fn: (value: unknown, ...args: unknown[]) => ChainHandlerResult;
     args?: StepArgsOrFn;
 };
 
@@ -17,8 +17,8 @@ export type ChainProps<H extends ChainHandler = ChainHandler> =
         pipeline: Step[];
     };
 
-export type ChainConstructorParams<C extends ChainProps = ChainProps> =
-    FieldConstructorParams & Partial<C> & Pick<C, 'chainHandler'>;
+export type ChainCtorParams<C extends ChainProps = ChainProps> =
+    FieldCtorParams & Partial<C> & Pick<C, 'chainHandler'>;
 
 export type ChainCloneParams<C extends ChainProps = ChainProps> =
     FieldCloneParams<C> & {
@@ -30,7 +30,7 @@ abstract class Chain<
     L extends ChainCloneParams<C> = ChainCloneParams<C>
 > extends Field<C> {
 
-    public constructor(args: ChainConstructorParams<C>) {
+    public constructor(args: ChainCtorParams<C>) {
         super(args);
 
         const {

@@ -1,20 +1,20 @@
 'use strict';
 
-import { HandlerResult } from './HandlerResult.ts';
+import { ChainHandlerResult } from './ChainHandlerResult.ts';
 import { Utils } from '../Utils.ts';
-const { pass, fail } = HandlerResult;
+const { pass, fail } = ChainHandlerResult;
 
 type PrimitiveTypeName = 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint';
 type PropertyKeyLike = string | number | symbol;
-type ConstructorLike = abstract new (...args: never[]) => object;
-type CustomHandlerFn = (value: unknown) => HandlerResult | unknown;
+type CtorLike = abstract new (...args: never[]) => object;
+type CustomHandlerFn = (value: unknown) => ChainHandlerResult | unknown;
 
 abstract class ChainHandler {
 
     // // ====================================
     // // FORMATTER
     // // ====================================
-    // public format(value: unknown): HandlerResult {
+    // public format(value: unknown): ChainHandlerResult {
     //     return fail(value, 'generic/format');
     // }
 
@@ -26,9 +26,9 @@ abstract class ChainHandler {
      * Executes the equals handler step.
      * @param {any} value
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public equals(value: unknown, comparison: unknown): HandlerResult {
+    public equals(value: unknown, comparison: unknown): ChainHandlerResult {
         return Utils.areEqual(value, comparison)
             ? pass(value)
             : fail(value, 'generic/equals', { comparison });
@@ -37,9 +37,9 @@ abstract class ChainHandler {
     /**
      * Executes the defined handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public defined(value: unknown): HandlerResult {
+    public defined(value: unknown): ChainHandlerResult {
         return value !== undefined ? pass(value) : fail(value, 'generic/defined');
     }
 
@@ -47,9 +47,9 @@ abstract class ChainHandler {
      * Executes the empty handler step.
      * @param {any} value
      * @param {any} empties
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public empty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
+    public empty(value: unknown, empties: unknown[] = [null, undefined]): ChainHandlerResult {
         return ChainHandler.oneOf(value, empties).pass
             ? pass(value)
             : fail(value, 'generic/empty');
@@ -58,9 +58,9 @@ abstract class ChainHandler {
     /**
      * Executes the falsy handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public falsy(value: unknown): HandlerResult {
+    public falsy(value: unknown): ChainHandlerResult {
         return value ? fail(value, 'generic/falsy') : pass(value);
     }
 
@@ -68,9 +68,9 @@ abstract class ChainHandler {
      * Executes the notEmpty handler step.
      * @param {any} value
      * @param {any} empties
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
+    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): ChainHandlerResult {
         return ChainHandler.oneOf(value, empties).fail
             ? pass(value)
             : fail(value, 'generic/notEmpty');
@@ -79,9 +79,9 @@ abstract class ChainHandler {
     /**
      * Executes the notNull handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public notNull(value: unknown): HandlerResult {
+    public notNull(value: unknown): ChainHandlerResult {
         return value !== null ? pass(value) : fail(value, 'generic/notNull');
     }
 
@@ -89,9 +89,9 @@ abstract class ChainHandler {
      * Executes the notOneOf handler step.
      * @param {any} value
      * @param {any} forbiddenValues
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public notOneOf(value: unknown, forbiddenValues: unknown[] = []): HandlerResult {
+    public notOneOf(value: unknown, forbiddenValues: unknown[] = []): ChainHandlerResult {
         for (const forbidden of forbiddenValues) {
             if (Utils.areEqual(value, forbidden)) {
                 return fail(value, 'generic/notOneOf', { forbiddenValues });
@@ -103,9 +103,9 @@ abstract class ChainHandler {
     /**
      * Executes the null handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public null(value: unknown): HandlerResult {
+    public null(value: unknown): ChainHandlerResult {
         return value === null ? pass(value) : fail(value, 'generic/null');
     }
 
@@ -113,9 +113,9 @@ abstract class ChainHandler {
      * Executes the oneOf handler step.
      * @param {any} value
      * @param {any} allowedValues
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public oneOf(value: unknown, allowedValues: unknown[] = []): HandlerResult {
+    public oneOf(value: unknown, allowedValues: unknown[] = []): ChainHandlerResult {
         for (const allowed of allowedValues) {
             if (Utils.areEqual(value, allowed)) {
                 return pass(value);
@@ -128,9 +128,9 @@ abstract class ChainHandler {
      * Executes the primitive handler step.
      * @param {any} value
      * @param {any} type
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public primitive(value: unknown, type: PrimitiveTypeName | null = null): HandlerResult {
+    public primitive(value: unknown, type: PrimitiveTypeName | null = null): ChainHandlerResult {
         const actualType = typeof value;
         const primitives: PrimitiveTypeName[] = ['string', 'number', 'boolean', 'undefined', 'symbol', 'bigint'];
         if (type) {
@@ -143,7 +143,7 @@ abstract class ChainHandler {
             : fail(value, 'generic/primitive', { actualType: type });
     }
 
-    // public property(value: unknown, property: PropertyKeyLike): HandlerResult {
+    // public property(value: unknown, property: PropertyKeyLike): ChainHandlerResult {
     //     if (value == null) {
     //         return fail(value, 'generic/notNull');
     //     }
@@ -156,9 +156,9 @@ abstract class ChainHandler {
      * Executes the instanceOf handler step.
      * @param {any} value
      * @param {any} constructor
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public instanceOf(value: unknown, constructor: ConstructorLike): HandlerResult {
+    public instanceOf(value: unknown, constructor: CtorLike): ChainHandlerResult {
         return value instanceof constructor
             ? pass(value)
             : fail(value, 'generic/equals', { comparison: constructor });
@@ -167,27 +167,27 @@ abstract class ChainHandler {
     /**
      * Executes the truthy handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public truthy(value: unknown): HandlerResult {
+    public truthy(value: unknown): ChainHandlerResult {
         return value ? pass(value) : fail(value, 'generic/truthy');
     }
 
     /**
      * Executes the notDefined handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public notDefined(value: unknown): HandlerResult {
+    public notDefined(value: unknown): ChainHandlerResult {
         return value === undefined ? pass(value) : fail(value, 'generic/notDefined');
     }
 
     /**
      * Executes the nullOrUndefined handler step.
      * @param {any} value
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public nullOrUndefined(value: unknown): HandlerResult {
+    public nullOrUndefined(value: unknown): ChainHandlerResult {
         return value === null || value === undefined
             ? pass(value)
             : fail(value, 'generic/empty');
@@ -197,16 +197,15 @@ abstract class ChainHandler {
      * Executes the notEquals handler step.
      * @param {any} value
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public notEquals(value: unknown, comparison: unknown): HandlerResult {
+    public notEquals(value: unknown, comparison: unknown): ChainHandlerResult {
         return !Utils.areEqual(value, comparison)
             ? pass(value)
             : fail(value, 'generic/notEquals', { comparison });
     }
 
 
-    
     // ====================================
     // MUTATORS
     // ====================================
@@ -215,11 +214,11 @@ abstract class ChainHandler {
      * Executes the custom handler step.
      * @param {any} value
      * @param {any} filterFn
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public custom(value: unknown, filterFn: CustomHandlerFn): HandlerResult {
+    public custom(value: unknown, filterFn: CustomHandlerFn): ChainHandlerResult {
         const result = filterFn(value);
-        if (result instanceof HandlerResult) {
+        if (result instanceof ChainHandlerResult) {
             return result;
         }
         return pass(result);

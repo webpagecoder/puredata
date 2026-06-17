@@ -1,9 +1,9 @@
 'use strict';
 //todo: the paths below need to accept both strings and actual Path
-import { HandlerResult } from '../HandlerResult.ts';
+import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { Utils } from '../../Utils.ts';
 import { ChainHandler } from '../ChainHandler.ts';
-const { pass, fail } = HandlerResult;
+const { pass, fail } = ChainHandlerResult;
 
 class ObjectHandler extends ChainHandler {
 
@@ -15,9 +15,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the empty handler step.
      * @param {any} value
      * @param {any} empties
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public override empty(value: any, empties: any= [null, undefined]): HandlerResult {
+    public override empty(value: any, empties: any= [null, undefined]): ChainHandlerResult {
         return super.empty(value, empties).pass || Object.keys(value).length === 0 ? pass(value) : fail(value, 'object/empty');
     }
 
@@ -25,9 +25,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the notEmpty handler step.
      * @param {any} value
      * @param {any} empties
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public override notEmpty(value: any, empties: any= [null, undefined]): HandlerResult {
+    public override notEmpty(value: any, empties: any= [null, undefined]): ChainHandlerResult {
         return super.empty(value, empties).fail && Object.keys(value).length > 0 ? pass(value) : fail(value, 'object/notEmpty');
     }
 
@@ -35,9 +35,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the property handler step.
      * @param {any} value
      * @param {any} property
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public property(value: any, property: any): HandlerResult {
+    public property(value: any, property: any): ChainHandlerResult {
         if (value == null) {
             return fail(value, 'object/property', { property });
         }
@@ -50,9 +50,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the instanceOf handler step.
      * @param {any} obj
      * @param {any} constructor
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public instanceOf(obj: any, constructor: any): HandlerResult {
+    public instanceOf(obj: any, constructor: any): ChainHandlerResult {
         return obj.constructor === constructor
             ? pass(obj)
             : fail(obj, 'object/instanceOf', { constructor });
@@ -62,9 +62,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the maxDepth handler step.
      * @param {any} obj
      * @param {any} maxDepth
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public maxDepth(obj: any, maxDepth: any): HandlerResult {
+    public maxDepth(obj: any, maxDepth: any): ChainHandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth > maxDepth
             ? fail(obj, 'object/maxDepth', { actualDepth, maxDepth })
@@ -75,9 +75,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the minDepth handler step.
      * @param {any} obj
      * @param {any} minDepth
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public minDepth(obj: any, minDepth: any): HandlerResult {
+    public minDepth(obj: any, minDepth: any): ChainHandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth < minDepth
             ? fail(obj, 'object/minDepth', { actualDepth, minDepth })
@@ -88,9 +88,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the depth handler step.
      * @param {any} obj
      * @param {any} depth
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public depth(obj: any, depth: any): HandlerResult {
+    public depth(obj: any, depth: any): ChainHandlerResult {
         const actualDepth = Utils.getDepth(obj);
         return actualDepth !== depth
             ? fail(obj, 'object/depth', { actualDepth, depth })
@@ -101,9 +101,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the maxKeyCount handler step.
      * @param {any} obj
      * @param {any} maxKeyCount
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public maxKeyCount(obj: any, maxKeyCount: any): HandlerResult {
+    public maxKeyCount(obj: any, maxKeyCount: any): ChainHandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCount', { actualKeyCount, maxKeyCount })
@@ -114,9 +114,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the maxKeyCountRecursive handler step.
      * @param {any} obj
      * @param {any} maxKeyCount
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public maxKeyCountRecursive(obj: any, maxKeyCount: any): HandlerResult {
+    public maxKeyCountRecursive(obj: any, maxKeyCount: any): ChainHandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCountRecursive', { actualKeyCount, maxKeyCount })
@@ -127,9 +127,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the minKeyCount handler step.
      * @param {any} obj
      * @param {any} minKeyCount
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public minKeyCount(obj: any, minKeyCount: any): HandlerResult {
+    public minKeyCount(obj: any, minKeyCount: any): ChainHandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCount', { actualKeyCount, minKeyCount })
@@ -140,9 +140,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the minKeyCountRecursive handler step.
      * @param {any} obj
      * @param {any} minKeyCount
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public minKeyCountRecursive(obj: any, minKeyCount: any): HandlerResult {
+    public minKeyCountRecursive(obj: any, minKeyCount: any): ChainHandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCountRecursive', { actualKeyCount, minKeyCount })
@@ -153,9 +153,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the keyCount handler step.
      * @param {any} obj
      * @param {any} keyCount
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public keyCount(obj: any, keyCount: any): HandlerResult {
+    public keyCount(obj: any, keyCount: any): ChainHandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCount', { actualKeyCount, keyCount })
@@ -166,9 +166,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the keyCountRecursive handler step.
      * @param {any} obj
      * @param {any} keyCount
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public keyCountRecursive(obj: any, keyCount: any): HandlerResult {
+    public keyCountRecursive(obj: any, keyCount: any): ChainHandlerResult {
         const actualKeyCount = Utils.getRecursiveKeyCount(obj);
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCountRecursive', { actualKeyCount, keyCount })
@@ -179,9 +179,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the noneOfPaths handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public noneOfPaths(obj: any, paths: any= []): HandlerResult {
+    public noneOfPaths(obj: any, paths: any= []): ChainHandlerResult {
         return this.someOfPaths(obj, paths).pass
             ? fail(obj, 'object/noneOfPaths', { paths })
             : pass(obj);
@@ -191,9 +191,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the someOfPaths handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public someOfPaths(obj: any, paths: any= []): HandlerResult {
+    public someOfPaths(obj: any, paths: any= []): ChainHandlerResult {
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
                 return pass(obj);
@@ -206,9 +206,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the allOfPaths handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public allOfPaths(obj: any, paths: any= []): HandlerResult {
+    public allOfPaths(obj: any, paths: any= []): ChainHandlerResult {
         const missingPaths = [];
         const { hasPath } = Utils;
         for (const path of paths) {
@@ -225,9 +225,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the exactlyPaths handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public exactlyPaths(obj: any, paths: any= []): HandlerResult {
+    public exactlyPaths(obj: any, paths: any= []): ChainHandlerResult {
         if (Utils.getPathCount(obj) !== paths.length) {
             return fail(obj, 'object/exactlyPaths', { paths });
         }
@@ -243,9 +243,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the onlyPaths handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public onlyPaths(obj: any, paths: any= []): HandlerResult {
+    public onlyPaths(obj: any, paths: any= []): ChainHandlerResult {
         let pathsFound = 0;
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
@@ -261,9 +261,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the pathsOtherThan handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public pathsOtherThan(obj: any, paths: any= []): HandlerResult {
+    public pathsOtherThan(obj: any, paths: any= []): ChainHandlerResult {
         return this.onlyPaths(obj, paths).pass
             ? fail(obj, 'object/pathsOtherThan', { paths })
             : pass(obj);
@@ -274,9 +274,9 @@ class ObjectHandler extends ChainHandler {
      * @param {any} obj
      * @param {any} count
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public xOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
+    public xOfPaths(obj: any, count: any, paths: any= []): ChainHandlerResult {
         let found = 0;
         for (const path of paths) {
             if (Utils.hasPath(obj, path)) {
@@ -296,9 +296,9 @@ class ObjectHandler extends ChainHandler {
      * @param {any} obj
      * @param {any} count
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public allOfButXOfPaths(obj: any, count: any, paths: any= []): HandlerResult {
+    public allOfButXOfPaths(obj: any, count: any, paths: any= []): ChainHandlerResult {
         return this.xOfPaths(obj, paths.length - count, paths).pass
             ? pass(obj)
             : fail(obj, 'object/allOfButXOfPaths', { count, paths });
@@ -307,9 +307,9 @@ class ObjectHandler extends ChainHandler {
     /**
      * Executes the plain handler step.
      * @param {any} obj
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public plain(obj: any): HandlerResult {
+    public plain(obj: any): ChainHandlerResult {
         return Utils.isPlainObject(obj) ? pass(obj) : fail(obj, 'object/plain');
     }
 
@@ -323,9 +323,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the pickRandom handler step.
      * @param {any} obj
      * @param {any} count
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public pickRandom(obj: any, count: any): HandlerResult {
+    public pickRandom(obj: any, count: any): ChainHandlerResult {
         const keys = Object.keys(obj);
         if (count >= keys.length) {
             return pass(Object.assign({}, obj));
@@ -387,12 +387,12 @@ class ObjectHandler extends ChainHandler {
      * @param {any} fromRegex
      * @param {any} toRegex
      * @param {any} param4
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
     public renameKeys(obj: Object, fromRegex: RegExp, toRegex: RegExp, {
         deleteOriginalKey = true,
         overrideExistingKey = true
-    } = {}): HandlerResult {
+    } = {}): ChainHandlerResult {
         const objectCopy = Object.assign({}, obj);
         for (const originalKey of Object.keys(obj)) {
             let renamedKey = originalKey.replace(fromRegex, toRegex);
@@ -411,9 +411,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the removePaths handler step.
      * @param {any} obj
      * @param {any} paths
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public removePaths(obj: any, paths: any= []): HandlerResult {
+    public removePaths(obj: any, paths: any= []): ChainHandlerResult {
         for (const path of paths) {
             Utils.removePath(obj, path);
         }
@@ -426,9 +426,9 @@ class ObjectHandler extends ChainHandler {
      * @param {any} pathValues
      * @param {any} overwrite
      * @param {any} create
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public setPaths(obj: any, pathValues: any= {}, overwrite: any= true, create: any= true): HandlerResult {
+    public setPaths(obj: any, pathValues: any= {}, overwrite: any= true, create: any= true): ChainHandlerResult {
         for (const path of Object.keys(pathValues)) {
             Utils.setPathValue(obj, path as any, pathValues[path], create, overwrite);
         }
@@ -439,9 +439,9 @@ class ObjectHandler extends ChainHandler {
      * Executes the stripUnknownKeys handler step.
      * @param {any} obj
      * @param {any} exceptFor
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public stripKeys(obj: any, exceptFor: any= []): HandlerResult {
+    public stripKeys(obj: any, exceptFor: any= []): ChainHandlerResult {
         const copy: Record<string, any> = {};
         for (const key of exceptFor) {
             copy[key] = obj[key];

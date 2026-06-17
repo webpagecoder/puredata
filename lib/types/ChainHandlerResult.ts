@@ -2,7 +2,7 @@
 
 import { ArgumentCollection, ErrorCollection } from '../types.ts';
 
-class HandlerResult {
+class ChainHandlerResult {
 
     value: unknown;
     pass: boolean;
@@ -33,14 +33,14 @@ class HandlerResult {
         this.errors[errorKey] = args;
     }
 
-    public static pass(value: unknown): HandlerResult {
-        return new HandlerResult({ value, pass: true });
+    public static pass(value: unknown): ChainHandlerResult {
+        return new ChainHandlerResult({ value, pass: true });
     }
 
-    public static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): HandlerResult {
-        return new HandlerResult({ value, pass: false, errorKey, args });
+    public static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): ChainHandlerResult {
+        return new ChainHandlerResult({ value, pass: false, errorKey, args });
     }
 
 }
 
-export { HandlerResult };
+export { ChainHandlerResult };

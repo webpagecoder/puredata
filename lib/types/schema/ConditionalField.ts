@@ -2,7 +2,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
-import { Field, FieldCloneParams, FieldConstructorParams, FieldProps } from '../Field.ts';
+import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from '../Field.ts';
 import { ValueField } from '../value/ValueField.ts';
 
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
@@ -17,7 +17,7 @@ export type ConditionalFieldProps = FieldProps & {
     thenField: null | Field;
 };
 
-export type ConditionalFieldConstructorParams = FieldConstructorParams
+export type ConditionalFieldCtorParams = FieldCtorParams
     & Partial<Omit<ConditionalFieldProps, 'targetPath'>>
     & Pick<ConditionalFieldProps, 'comparisonField' | 'thenField'>
     & {
@@ -32,7 +32,7 @@ export type ConditionalFieldCloneParams =
 
 class ConditionalField extends Field<ConditionalFieldProps> {
 
-    constructor(props: ConditionalFieldConstructorParams) {
+    constructor(props: ConditionalFieldCtorParams) {
         super(props);
 
         const {

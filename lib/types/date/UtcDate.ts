@@ -2,7 +2,7 @@
 
 import { GenericDateInput } from "./DateConverter.ts";
 
-export type UtcDateConstructorParams = {
+export type UtcDateCtorParams = {
     localDate: Date;
     offsetMinutes?: number;
     raw?: GenericDateInput | null;
@@ -14,7 +14,7 @@ class UtcDate {
     private _raw: GenericDateInput | null;
     private _offsetMinutes: number;
 
-    public constructor(dateInfo: UtcDateConstructorParams) {
+    public constructor(dateInfo: UtcDateCtorParams) {
         const { raw = null, offsetMinutes = 0, localDate = new Date() } = dateInfo;
 
         this._localDate = new Date(localDate);

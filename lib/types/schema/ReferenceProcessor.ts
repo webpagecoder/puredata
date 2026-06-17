@@ -3,7 +3,7 @@
 import { ReferenceField } from './ReferenceField.ts';
 import { Path } from '../../Path.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { Processor, ProcessorCompilationContext, ProcessorConstructorParams } from '../Processor.ts';
+import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 
 export type ReferenceProcessorCompilationContext = ProcessorCompilationContext & {
@@ -16,7 +16,7 @@ class ReferenceProcessor extends Processor<ReferenceField> {
 
     protected _innerNestedProcessor: Processor | null;
 
-    public constructor(args: ProcessorConstructorParams<ReferenceField>) {
+    public constructor(args: ProcessorCtorParams<ReferenceField>) {
         super(args);
         this._innerNestedProcessor = null;
     }

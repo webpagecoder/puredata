@@ -1,6 +1,6 @@
 'use strict';
 
-import { Field, FieldCloneParams, FieldProps, FieldConstructorParams } from '../Field.ts';
+import { Field, FieldCloneParams, FieldProps, FieldCtorParams } from '../Field.ts';
 
 export type EnumStructure = unknown[] | Record<string, unknown>;
 
@@ -9,7 +9,7 @@ export type EnumFieldProps = FieldProps & {
     isArray: boolean;
 };
 
-export type EnumFieldConstructorParams = FieldConstructorParams
+export type EnumFieldCtorParams = FieldCtorParams
     & Partial<Omit<EnumFieldProps, 'isArray'>>;
 
 export type EnumFieldCloneParams =
@@ -17,7 +17,7 @@ export type EnumFieldCloneParams =
 
 class EnumField extends Field<EnumFieldProps> {
 
-    constructor(args: EnumFieldConstructorParams) {
+    constructor(args: EnumFieldCtorParams) {
         super(args);
         const {
             structure = [],

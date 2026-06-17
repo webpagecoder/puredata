@@ -1,11 +1,11 @@
 'use strict';
 
-import { Processor, ProcessorConstructorParams, State } from './Processor.ts';
+import { Processor, ProcessorCtorParams, State } from './Processor.ts';
 import { PathField } from './schema/PathField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Chain } from '../../fields/chains/Chain.ts';
 import { Field } from './Field.ts';
-import { HandlerResult } from './HandlerResult.ts';
+import { ChainHandlerResult } from './ChainHandlerResult.ts';
 
 type PipelineError = {
     key: string;
@@ -23,7 +23,7 @@ type PipelineStep = {
     args?: unknown[] | ((this: Field) => unknown[]);
 };
 
-export type ChainProcessorConstructorParams<C extends Chain = Chain> = ProcessorConstructorParams<C> & {
+export type ChainProcessorCtorParams<C extends Chain = Chain> = ProcessorCtorParams<C> & {
     // hasPipelineHooks?: boolean;
 };
 
@@ -31,7 +31,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
     // protected _hasPipelineHooks: boolean;
 
-    constructor(args: ChainProcessorConstructorParams<C>) {
+    constructor(args: ChainProcessorCtorParams<C>) {
         super(args);
     }
 
@@ -83,7 +83,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
         }
     }
 
-    protected _copyResultToTracker(tracker: ValueTracker, result: HandlerResult): void {
+    protected _copyResultToTracker(tracker: ValueTracker, result: ChainHandlerResult): void {
         tracker.setValue(result.value);
         if (result.fail) {
             for (const key of Object.keys(result.errors)) {

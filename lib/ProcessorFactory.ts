@@ -44,12 +44,12 @@ import { ConditionalProcessor } from './types/schema/ConditionalProcessor.ts';
 
 import { ValueField } from './types/value/ValueField.ts';
 import { ValueFieldProcessor } from './types/value/ValueFieldProcessor.ts';
-import { ProcessorConstructorParams } from './types/Processor.ts';
+import { ProcessorCtorParams } from './types/Processor.ts';
 
-type FieldConstructor = abstract new (...args: any[]) => Field;
-type ProcessorConstructor = new (args: ProcessorConstructorParams) => Processor;
+type FieldCtor = abstract new (...args: any[]) => Field;
+type ProcessorCtor = new (args: ProcessorCtorParams) => Processor;
 
-const MAPPINGS = new Map<FieldConstructor, Processor>();
+const MAPPINGS = new Map<FieldCtor, Processor>();
 
 // Chains
 MAPPINGS.set(ArrayChain, ArrayProcessor);
@@ -71,11 +71,11 @@ MAPPINGS.set(ValueField, ValueFieldProcessor);
 class ProcessorFactory {
 
     createProcessor(field: Field, context: Record<string, any> = {}): Processor {
-        const ProcessorConstructor = MAPPINGS.get(field.constructor as FieldConstructor);
-        if (!ProcessorConstructor) {
+        const ProcessorCtor = MAPPINGS.get(field.constructor as FieldCtor);
+        if (!ProcessorCtor) {
             throw new Error(`No processor found for field of type ${field.constructor.name}`);
         }
-        return new ProcessorConstructor(Object.assign(
+        return new ProcessorCtor(Object.assign(
             {
                 field,
                 processorMapper: this,

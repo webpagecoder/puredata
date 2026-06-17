@@ -1,8 +1,8 @@
 'use strict';
 
-import { HandlerResult } from '../HandlerResult.ts';
+import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { ChainHandler } from '../ChainHandler.ts';
-const { pass, fail } = HandlerResult;
+const { pass, fail } = ChainHandlerResult;
 
 
 class NumberHandler extends ChainHandler {
@@ -16,9 +16,9 @@ class NumberHandler extends ChainHandler {
      * @param {any} num
      * @param {any} comparison
      * @param {any} tolerance
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public approx(num: any, comparison: any, tolerance: any= Number.EPSILON): HandlerResult {
+    public approx(num: any, comparison: any, tolerance: any= Number.EPSILON): ChainHandlerResult {
         return Math.abs(num - comparison) < tolerance
             ? pass(num)
             : fail(num, 'number/approx', { comparison, tolerance });
@@ -27,9 +27,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the number handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public number(num: any): HandlerResult {
+    public number(num: any): ChainHandlerResult {
         return typeof num === 'number' && !Number.isNaN(num)
             ? pass(num)
             : fail(num, 'number/base');
@@ -40,9 +40,9 @@ class NumberHandler extends ChainHandler {
      * @param {any} num
      * @param {any} min
      * @param {any} max
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public between(num: any, min: any, max: any): HandlerResult {
+    public between(num: any, min: any, max: any): ChainHandlerResult {
         return (num >= min && num <= max)
             ? pass(num)
             : fail(num, 'number/between', { num, min, max });
@@ -52,12 +52,12 @@ class NumberHandler extends ChainHandler {
      * Executes the decimal handler step.
      * @param {any} num
      * @param {any} param2
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
     public decimal(num: any, {
         minDecimalPlaces = 0,
         maxDecimalPlaces = 20,
-    }: any= {}): HandlerResult {
+    }: any= {}): ChainHandlerResult {
         if (Number.isInteger(num)) {
             return fail(num, 'number/decimal');
         }
@@ -84,9 +84,9 @@ class NumberHandler extends ChainHandler {
      * Executes the equals handler step.
      * @param {any} num
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public equals(num: any, comparison: any): HandlerResult {
+    public equals(num: any, comparison: any): ChainHandlerResult {
         return (num === comparison)
             ? pass(num)
             : fail(num, 'number/equals', { comparison });
@@ -95,9 +95,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the even handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public even(num: any): HandlerResult {
+    public even(num: any): ChainHandlerResult {
         return (num % 2 === 0)
             ? pass(num)
             : fail(num, 'number/even');
@@ -107,9 +107,9 @@ class NumberHandler extends ChainHandler {
      * Executes the factor handler step.
      * @param {any} num
      * @param {any} multiple
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public factor(num: any, multiple: any): HandlerResult {
+    public factor(num: any, multiple: any): ChainHandlerResult {
         return (multiple % num === 0)
             ? pass(num)
             : fail(num, 'number/factor', { num, multiple });
@@ -118,9 +118,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the finite handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public finite(num: any): HandlerResult {
+    public finite(num: any): ChainHandlerResult {
         return Number.isFinite(num) ? pass(num) : fail(num, 'number/finite');
     }
 
@@ -128,9 +128,9 @@ class NumberHandler extends ChainHandler {
      * Executes the greaterThan handler step.
      * @param {any} num
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public greaterThan(num: any, comparison: any): HandlerResult {
+    public greaterThan(num: any, comparison: any): ChainHandlerResult {
         return (num > comparison)
             ? pass(num)
             : fail(num, 'number/greaterThan', { comparison });
@@ -139,9 +139,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the infinity handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public infinity(num: any): HandlerResult {
+    public infinity(num: any): ChainHandlerResult {
         return (num === Infinity || num === -Infinity)
             ? pass(num)
             : fail(num, 'number/infinity');
@@ -150,9 +150,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the integer handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public integer(num: any): HandlerResult {
+    public integer(num: any): ChainHandlerResult {
         return Number.isInteger(num)
             ? pass(num)
             : fail(num, 'number/integer');
@@ -162,9 +162,9 @@ class NumberHandler extends ChainHandler {
      * Executes the lessThan handler step.
      * @param {any} num
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public lessThan(num: any, comparison: any): HandlerResult {
+    public lessThan(num: any, comparison: any): ChainHandlerResult {
         return (num < comparison)
             ? pass(num)
             : fail(num, 'number/lessThan', { comparison });
@@ -174,9 +174,9 @@ class NumberHandler extends ChainHandler {
      * Executes the max handler step.
      * @param {any} num
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public max(num: any, comparison: any): HandlerResult {
+    public max(num: any, comparison: any): ChainHandlerResult {
         return (num <= comparison)
             ? pass(num)
             : fail(num, 'number/max', { comparison });
@@ -186,9 +186,9 @@ class NumberHandler extends ChainHandler {
      * Executes the min handler step.
      * @param {any} num
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public min(num: any, comparison: any): HandlerResult {
+    public min(num: any, comparison: any): ChainHandlerResult {
         return (num >= comparison)
             ? pass(num)
             : fail(num, 'number/min', { comparison });
@@ -197,9 +197,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the minusSign handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public minusSign(num: any): HandlerResult {
+    public minusSign(num: any): ChainHandlerResult {
         return String(num)[0] === '-'
             ? pass(num)
             : fail(num, 'number/minusSign');
@@ -209,9 +209,9 @@ class NumberHandler extends ChainHandler {
      * Executes the multiple handler step.
      * @param {any} num
      * @param {any} factor
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public multiple(num: any, factor: any): HandlerResult {
+    public multiple(num: any, factor: any): ChainHandlerResult {
         return (num % factor === 0)
             ? pass(num)
             : fail(num, 'number/multiple', { num, factor });
@@ -220,9 +220,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the negative handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public negative(num: any): HandlerResult {
+    public negative(num: any): ChainHandlerResult {
         return (num < 0)
             ? pass(num)
             : fail(num, 'number/negative');
@@ -232,9 +232,9 @@ class NumberHandler extends ChainHandler {
      * Executes the notEquals handler step.
      * @param {any} num
      * @param {any} comparison
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public notEquals(num: any, comparison: any): HandlerResult {
+    public notEquals(num: any, comparison: any): ChainHandlerResult {
         return (num !== comparison)
             ? pass(num)
             : fail(num, 'number/notEquals', { comparison });
@@ -243,9 +243,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the odd handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public odd(num: any): HandlerResult {
+    public odd(num: any): ChainHandlerResult {
         return (num % 2 !== 0)
             ? pass(num)
             : fail(num, 'number/odd');
@@ -254,9 +254,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the plusSign handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public plusSign(num: any): HandlerResult {
+    public plusSign(num: any): ChainHandlerResult {
         return String(num)[0] === '+'
             ? pass(num)
             : fail(num, 'number/plusSign');
@@ -265,9 +265,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the positive handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public positive(num: any): HandlerResult {
+    public positive(num: any): ChainHandlerResult {
         return (num > 0)
             ? pass(num)
             : fail(num, 'number/positive');
@@ -277,9 +277,9 @@ class NumberHandler extends ChainHandler {
      * Executes the precision handler step.
      * @param {any} num
      * @param {any} precision
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public precision(num: any, precision: any): HandlerResult {
+    public precision(num: any, precision: any): ChainHandlerResult {
         const multiplier = Math.pow(10, precision);
         return (Math.round(num * multiplier) === num * multiplier)
             ? pass(num)
@@ -289,9 +289,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the prime handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public prime(num: any): HandlerResult {
+    public prime(num: any): ChainHandlerResult {
         if (!Number.isInteger(num) || num < 2) {
             return fail(num, 'number/prime');
         }
@@ -306,9 +306,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the safe handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public safe(num: any): HandlerResult {
+    public safe(num: any): ChainHandlerResult {
         return num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER
             ? fail(num, 'number/safe')
             : pass(num);
@@ -317,9 +317,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the safeInteger handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public safeInteger(num: any): HandlerResult {
+    public safeInteger(num: any): ChainHandlerResult {
         return Number.isSafeInteger(num)
             ? pass(num)
             : fail(num, 'number/safeInteger');
@@ -328,9 +328,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the signed handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public signed(num: any): HandlerResult {
+    public signed(num: any): ChainHandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? pass(num)
@@ -340,9 +340,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the unsigned handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public unsigned(num: any): HandlerResult {
+    public unsigned(num: any): ChainHandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? fail(num, 'number/unsigned', { sign })
@@ -352,9 +352,9 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the zero handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public zero(num: any): HandlerResult {
+    public zero(num: any): ChainHandlerResult {
         return (num === 0)
             ? pass(num)
             : fail(num, 'number/zero');
@@ -370,9 +370,9 @@ class NumberHandler extends ChainHandler {
      * @param {any} num
      * @param {any} min
      * @param {any} max
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public clampBetween(num: any, min: any, max: any): HandlerResult {
+    public clampBetween(num: any, min: any, max: any): ChainHandlerResult {
         if(num > max) {
             return pass(max);
         }
@@ -387,18 +387,18 @@ class NumberHandler extends ChainHandler {
      * @param {any} num
      * @param {any} min
      * @param {any} max
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public constrain(num: any, min: any, max: any): HandlerResult {
+    public constrain(num: any, min: any, max: any): ChainHandlerResult {
         return pass(Math.min(Math.max(num, min), max));
     }
 
     /**
      * Executes the negate handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public negate(num: any): HandlerResult {
+    public negate(num: any): ChainHandlerResult {
         return pass(-num);
     }
 
@@ -406,9 +406,9 @@ class NumberHandler extends ChainHandler {
      * Executes the round handler step.
      * @param {any} num
      * @param {any} numDecimals
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public round(num: any, numDecimals: any= 0): HandlerResult {
+    public round(num: any, numDecimals: any= 0): ChainHandlerResult {
         const multiplier = Math.pow(10, numDecimals);
         return pass(Math.round(num * multiplier) / multiplier);
     }
@@ -416,27 +416,27 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the roundDown handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public roundDown(num: any): HandlerResult {
+    public roundDown(num: any): ChainHandlerResult {
         return pass(Math.floor(num));
     }
 
     /**
      * Executes the roundUp handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public roundUp(num: any): HandlerResult {
+    public roundUp(num: any): ChainHandlerResult {
         return pass(Math.ceil(num));
     }
 
     /**
      * Executes the stripSign handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public stripSign(num: any): HandlerResult {
+    public stripSign(num: any): ChainHandlerResult {
         return pass(Math.abs(num));
     }
 
@@ -444,9 +444,9 @@ class NumberHandler extends ChainHandler {
      * Executes the toPower handler step.
      * @param {any} num
      * @param {any} exponent
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public toPower(num: any, exponent: any): HandlerResult {
+    public toPower(num: any, exponent: any): ChainHandlerResult {
         return pass(Math.pow(num, exponent));
     }
 
@@ -457,9 +457,9 @@ class NumberHandler extends ChainHandler {
      * @param {any} fromMax
      * @param {any} toMin
      * @param {any} toMax
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public toScale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
+    public toScale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): ChainHandlerResult {
         const scaled = ((num - fromMin) / (fromMax - fromMin))
             * (toMax - toMin) + toMin;
         return pass(scaled);
@@ -468,27 +468,27 @@ class NumberHandler extends ChainHandler {
     /**
      * Executes the truncate handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public truncate(num: any): HandlerResult {
+    public truncate(num: any): ChainHandlerResult {
         return pass(Math.trunc(num));
     }
 
     /**
      * Executes the abs handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public abs(num: any): HandlerResult {
+    public abs(num: any): ChainHandlerResult {
         return this.stripSign(num);
     }
 
     /**
      * Executes the ceil handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public ceil(num: any): HandlerResult {
+    public ceil(num: any): ChainHandlerResult {
         return this.roundUp(num);
     }
 
@@ -497,18 +497,18 @@ class NumberHandler extends ChainHandler {
      * @param {any} num
      * @param {any} min
      * @param {any} max
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public clamp(num: any, min: any, max: any): HandlerResult {
+    public clamp(num: any, min: any, max: any): ChainHandlerResult {
         return this.clampBetween(num, min, max);
     }
 
     /**
      * Executes the floor handler step.
      * @param {any} num
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public floor(num: any): HandlerResult {
+    public floor(num: any): ChainHandlerResult {
         return this.roundDown(num);
     }
 
@@ -516,9 +516,9 @@ class NumberHandler extends ChainHandler {
      * Executes the pow handler step.
      * @param {any} num
      * @param {any} exponent
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public pow(num: any, exponent: any): HandlerResult {
+    public pow(num: any, exponent: any): ChainHandlerResult {
         return this.toPower(num, exponent);
     }
 
@@ -529,9 +529,9 @@ class NumberHandler extends ChainHandler {
      * @param {any} fromMax
      * @param {any} toMin
      * @param {any} toMax
-     * @returns {HandlerResult}
+     * @returns {ChainHandlerResult}
      */
-    public scale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
+    public scale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): ChainHandlerResult {
         return this.toScale(num, fromMin, fromMax, toMin, toMax);
     }
 }

@@ -10,7 +10,7 @@ import { PathDelimTypes } from '../Path.ts';
 
 export type FieldProps = {};
 
-export type FieldConstructorParams = {
+export type FieldCtorParams = {
     autoConvert?: boolean;
     defaultValue?: unknown;
     label?: string;
@@ -20,7 +20,7 @@ export type FieldConstructorParams = {
     processorMapper: ProcessorFactory;
 };
 
-export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldConstructorParams & C>;
+export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldCtorParams & C>;
 
 abstract class Field<C extends FieldProps = FieldProps> {
 
@@ -34,7 +34,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
     protected _processorMapper: ProcessorFactory;
     protected _props: C;
 
-    public constructor(args: FieldConstructorParams) {
+    public constructor(args: FieldCtorParams) {
         const {
             autoConvert = true,
             defaultValue = undefined,
@@ -91,7 +91,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
     }
 
     public clone(args: FieldCloneParams<C> = {}): this {
-        const Constructor = this.constructor as new (props?: FieldConstructorParams) => this;
+        const Ctor = this.constructor as new (props?: FieldCtorParams) => this;
         const {
             autoConvert = this._autoConvert,
             defaultValue = this._defaultValue,
@@ -101,7 +101,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             presence = this._presence,
             processorMapper = this._processorMapper,
         } = args;
-        const clone = new Constructor({
+        const clone = new Ctor({
             autoConvert,
             defaultValue,
             label,
@@ -109,7 +109,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             pathDelims,
             presence,
             processorMapper,
-        } as FieldConstructorParams);
+        } as FieldCtorParams);
 
         const { _props } = this;
         for (const key of Object.keys(_props) as (keyof C)[]) {
