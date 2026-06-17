@@ -4,7 +4,7 @@ import { ProcessorFactory } from '../ProcessorFactory.ts';
 import { Field } from './Field.ts';
 import { PathField } from './schema/PathField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { PathProcessor } from './PathProcessor.ts';
+import { PathProcessor } from './schema/PathProcessor.ts';
 
 export type ProcessorCtorParams<F extends Field = Field> = {
     field: F;
