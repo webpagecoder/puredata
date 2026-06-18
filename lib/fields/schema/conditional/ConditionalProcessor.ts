@@ -34,7 +34,6 @@ class ConditionalProcessor extends Processor<ConditionalField> {
             ? processorMapper.resolve(thenField).compile() as Processor
             : null;
 
-
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
@@ -69,7 +68,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
         let referencedValueTracker = targetPath.isSelf
             ? tracker
-            : tracker.parent.resolvePath(targetPath);
+            : tracker.resolvePath(targetPath);
 
         if (!referencedValueTracker) {
             //todo: should fail like this in regular reference processors too.
@@ -88,8 +87,11 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         }
 
         for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
-            conditionalProcessor.process(tracker);
-            let result = tracker.pass; //todo: can we do a shortcircuit to fail on first error to save compute?
+            //todo: double cloning - where can we eliminate?
+            const trackerClone = tracker.cloneWithoutErrors();
+            conditionalProcessor.process(trackerClone);
+
+            let result = trackerClone.pass; //todo: can we do a shortcircuit to fail on first error to save compute?
             if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
                 result = !result;
             }
@@ -102,11 +104,17 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         }
 
         if (this._isNested) {
-            // If this is nested, then the tracker is a clone of the parent conditional's tracker,
+            // Nested conditionals cannot have then/otherwise, so we just set pass/fail
             predicateValue ? tracker.setPass() : tracker.setFail();
         }
         else {
-            (predicateValue ? _thenProcessor : _otherwiseProcessor)!.process(tracker);//TODO:!!! NO RETURNING
+            // Root must have then/otherwise processors
+            if(predicateValue) {
+                _thenProcessor!.process(tracker);
+            }
+            else {
+                _otherwiseProcessor!.process(tracker);
+            }
         }
     }
 }

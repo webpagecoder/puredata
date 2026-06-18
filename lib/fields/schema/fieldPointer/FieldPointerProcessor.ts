@@ -22,14 +22,21 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
     }
 
     public override compile(context: FieldPointerProcessorCompilationContext): Processor {
+        
         const { ancestors, parent, absolutePath } = context;
         const { _processorMapper, _field } = this;
         const { fieldPath } = _field.extendedProps;
-        const referencedProcessor = parent.resolveNodePath(fieldPath, ancestors);
+    
+        const referencedProcessor = parent.resolvePath(fieldPath, this, ancestors);
+
+        if(referencedProcessor === this) {
+            throw new Error('At key ' + absolutePath + ' - field pointer cannot point to self');
+        }
 
         if (!referencedProcessor) {
             throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);
         }
+
         if (referencedProcessor instanceof FieldPointerProcessor) {
             throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
         }

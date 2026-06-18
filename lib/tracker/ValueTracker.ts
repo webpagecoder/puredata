@@ -6,7 +6,7 @@ import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Node } from './Node.ts';
-import { Field } from '../types/Field.ts';
+import { Field } from '../fields/Field.ts';
 
 export type TrackerError = {
     args: ArgumentCollection;
@@ -22,37 +22,64 @@ export type ErrorTree = {
     children: Record<string, ErrorTree>;
 };
 
-class ValueTracker extends Node {
+class ValueTracker {
 
-    protected _errorCollection: TrackerError[];
-    protected _field: Field;
+    // Navigation
     protected _nestDepth: number;
     protected _nestRoot: ValueTracker | null;
+    protected _parent: this | null;
+    protected _path: Path;
+    protected _root: this;
+
+    // Data
+    protected _children: Record<string, ValueTracker>;
+    protected _errorCollection: TrackerError[];
+    protected _field: Field;
     protected _rawValue: unknown;
 
     public constructor(field: Field, value?: unknown) {
-        super();
-        this._errorCollection = [];
-        this._field = field;
         this._nestDepth = 0;
         this._nestRoot = null;
+        this._parent = null;
+        this._path = new Path('/');
+        this._root = this;
+
+        this._children = {};
+        this._errorCollection = [];
+        this._field = field;
         this.setValue(value);
     }
 
-    public override cloneWithoutErrors(): this {
-        const clone = super.cloneWithoutErrors();
-        clone._field = this._field;
+    public cloneWithoutErrors(): ValueTracker {
+        const clone = new ValueTracker(this._field);
         clone._nestDepth = this._nestDepth;
         clone._nestRoot = this._nestRoot;
+        clone._parent = this._parent;
+        clone._path = this._path;
+        clone._root = this._root;
+
+        for (const key of Object.keys(this._children)) {
+            clone._children[key] = this._children[key].cloneWithoutErrors();
+        }
+
         clone.setValue(this._rawValue);
         return clone;
     }
 
-    public insertChild(field: Field, key: string, value?: unknown): this {
-        const child = super.createChild(key);
-        child._field = field;
+    public createChild(field: Field, key: string, value?: unknown): ValueTracker {
+        const child = new ValueTracker(field);
+        this._children[key] = child;
+
+        child._parent = this;
+        child._path = this._path.addSegment(key);
+        child._root = this._root;
+
         child.setValue(value);
         return child;
+    }
+
+    public hasChildren(): boolean {
+        return Object.keys(this._children).length > 0;
     }
 
     public setValue(value: unknown = undefined): void {
@@ -189,6 +216,48 @@ class ValueTracker extends Node {
         return formatter.format(this);
     }
 
+    public resolvePath(path: Path): ValueTracker | null {
+        if (path.isSelf) {
+            return this;
+        }
+
+        let tracker: ValueTracker | null = this;
+
+        // Determine starting point based on abs/relative positioning
+        if (path.isAbsolute) {
+            tracker = this._root;
+        }
+        else {
+            let i = path.upCount;
+            while (tracker._parent && i > 0) {
+                tracker = tracker._parent;
+                --i;
+            }
+        }
+
+        if (!tracker) {
+            return null;
+        }
+
+        // Dive into path keys
+        for (const key of path.keys) {
+            const child:ValueTracker | undefined = tracker._children[key];
+            if (!child) {
+                return null;
+            }
+            tracker = child;
+        }
+        return tracker;
+    }
+
+    public setNestRoot(root: ValueTracker | null): void {
+        this._nestRoot = root;
+    }
+
+    public setNestDepth(depth: number): void {
+        this._nestDepth = depth;
+    }
+
     // Convenience getters
 
     public get value(): unknown {
@@ -219,13 +288,18 @@ class ValueTracker extends Node {
         return this._nestRoot;
     }
 
-    public setNestRoot(root: ValueTracker | null): void {
-        this._nestRoot = root;
+    public get parent(): this | null {
+        return this._parent;
     }
 
-    public setNestDepth(depth: number): void {
-        this._nestDepth = depth;
+    public get path(): Path {
+        return this._path;
     }
+
+    public get root(): this {
+        return this._root;
+    }
+
 }
 
 

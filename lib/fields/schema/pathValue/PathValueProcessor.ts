@@ -18,7 +18,7 @@ class PathValueProcessor extends Processor<PathValueField> {
             return;
         }
         
-        const referencedValueTracker = tracker.parent && tracker.parent.resolvePath(path);
+        const referencedValueTracker = tracker.parent && tracker.resolvePath(path);
         let resolvedValue = undefined;
         if (referencedValueTracker) {
             resolvedValue = isCallback

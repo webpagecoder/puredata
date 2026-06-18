@@ -197,7 +197,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         const value = tracker.getValue() as Record<string, any>;
 
         for (let [key, processor] of _localBasicProcessors) {
-            processor.process(tracker.insertChild(processor.field, key, value[key]), state);
+            processor.process(tracker.createChild(processor.field, key, value[key]), state);
         }
 
         if (_localConditionalProcessors.size > 0) {
@@ -214,7 +214,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         if (_localFieldPointerProcessors.size > 0) {
             for (const [key, processor] of _localFieldPointerProcessors) {
-                tracker.insertChild(processor.field, key, value[key]);
+                tracker.createChild(processor.field, key, value[key]);
             }
         }
 
@@ -223,29 +223,36 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
             _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failOnFirstError });
 
-            if (deferredNests.length > 0) {
-                for (const [key, processor, tracker] of deferredNests) {
-                    const nestedTracker = tracker.insertChild(processor.field, key);
+            if (deferredConditionals.length > 0) {
+                for (const [key, processor, tracker] of deferredConditionals) {
+                    const childTracker = tracker.createChild(processor.field, key);
                     const rawValue = tracker.rawValue;
                     const value = Utils.isPlainObject(rawValue)
                         ? (rawValue as Record<PropertyKey, unknown>)[key]
                         : undefined;
-                    nestedTracker.setValue(value);
-                    processor.process(nestedTracker);
+                    childTracker.setValue(value);
+                    processor.process(childTracker);
                 }
             }
 
-            if (deferredConditionals.length > 0) {
-                for (const [key, processor, tracker] of deferredConditionals) {
-                    processor.process(tracker.insertChild(processor.field, key));
+            if (deferredNests.length > 0) {
+                for (const [key, processor, tracker] of deferredNests) {
+                    const childTracker = tracker.createChild(processor.field, key);
+                    const rawValue = tracker.rawValue;
+                    const value = Utils.isPlainObject(rawValue)
+                        ? (rawValue as Record<PropertyKey, unknown>)[key]
+                        : undefined;
+                    childTracker.setValue(value);
+                    processor.process(childTracker);
                 }
             }
+
         }
     }
 
-    public resolveNodePath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {
+    public resolvePath(path: Path, self: Processor, ancestors: SchemaProcessor[] = []): null | Processor {
         if (path.isSelf) {
-            return this;
+            return self;
         }
 
         let processor: Processor | null;
@@ -253,15 +260,15 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             processor = ancestors[0];
         }
         else {
-            ancestors = [...ancestors];
+            ancestors = ancestors.slice(0, -1);
             processor = this;
-            let { upCount } = path;
+            let upCount = path.upCount - 1; // -1 because we are already on the parent processor
             while (upCount > 0) {
                 if(ancestors.length === 0) {
                     return null;
                 }
                 processor = ancestors.pop() as Processor;
-                upCount--;
+                --upCount;
             }
         }
 

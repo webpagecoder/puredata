@@ -62,7 +62,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
             // a regular chain cant really refer to itself
             for (const arg of args) {
                 if (arg instanceof PathValueField) {
-                    const refValueTracker = tracker.parent.resolvePath(arg.extendedProps.path);
+                    const refValueTracker = tracker.resolvePath(arg.extendedProps.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {
