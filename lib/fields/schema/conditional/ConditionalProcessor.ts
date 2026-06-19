@@ -61,60 +61,50 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         return this;
     }
 
-    public override process(tracker: ValueTracker): void {
+    protected _nestedProcess(tracker: ValueTracker): void {
 
-        const { _field, _comparisonProcessor, _thenProcessor, _otherwiseProcessor, _conditionalProcessorChain,  } = this;
+        const { _field, _comparisonProcessor, _conditionalProcessorChain, } = this;
         const { comparisonMode, targetPath } = _field.extendedProps;
 
-        let referencedValueTracker = targetPath.isSelf
+        let targetTracker = targetPath.isSelf
             ? tracker
             : tracker.resolvePath(targetPath);
 
-        if (!referencedValueTracker) {
-            //todo: should fail like this in regular reference processors too.
+        if (!targetTracker) {
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);
         }
 
-        const trackerClone = referencedValueTracker.cloneWithoutErrors();
-        _comparisonProcessor.process(trackerClone);
-        // why we have to clone tracker before passing back or something...
-        // trackerClone yes should be passed here, but it is referring to testing
-        // the value at referenceValueTracker
+        const targetTrackerClone = targetTracker.cloneWithoutErrors();
+        _comparisonProcessor.process(targetTrackerClone);
 
-        let predicateValue = trackerClone.pass;
-        if (comparisonMode === 'notEquals') {
-            predicateValue = !predicateValue;
-        }
+        let predicateResult = comparisonMode === 'equals'
+            ? targetTrackerClone.pass
+            : !targetTrackerClone.pass;
 
         for (let [type, conditionalProcessor] of _conditionalProcessorChain) {
-            //todo: double cloning - where can we eliminate?
             const trackerClone = tracker.cloneWithoutErrors();
-            conditionalProcessor.process(trackerClone);
+            conditionalProcessor._nestedProcess(trackerClone);
 
-            let result = trackerClone.pass; //todo: can we do a shortcircuit to fail on first error to save compute?
-            if (conditionalProcessor.field.extendedProps.comparisonMode === 'notEquals') {
-                result = !result;
-            }
-            if (type === 'and') {
-                predicateValue = predicateValue && result;
-            }
-            else {
-                predicateValue = predicateValue || result;
-            }
+            let chainPredicateResult = conditionalProcessor.field.extendedProps.comparisonMode === 'equals'
+                ? trackerClone.pass
+                : !trackerClone.pass;
+
+            predicateResult = type === 'and'
+                ? predicateResult && chainPredicateResult
+                : predicateResult || chainPredicateResult;
         }
 
-        if (this._isNested) {
-            // Nested conditionals cannot have then/otherwise, so we just set pass/fail
-            predicateValue ? tracker.setPass() : tracker.setFail();
+        predicateResult ? tracker.setPass() : tracker.setFail();
+    }
+
+    public override process(tracker: ValueTracker): void {
+        const trackerClone = tracker.cloneWithoutErrors();
+        this._nestedProcess(trackerClone);
+        if (trackerClone.pass) {
+            this._thenProcessor!.process(tracker);
         }
         else {
-            // Root must have then/otherwise processors
-            if(predicateValue) {
-                _thenProcessor!.process(tracker);
-            }
-            else {
-                _otherwiseProcessor!.process(tracker);
-            }
+            this._otherwiseProcessor!.process(tracker);
         }
     }
 }

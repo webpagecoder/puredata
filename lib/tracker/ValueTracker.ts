@@ -83,7 +83,6 @@ class ValueTracker {
     }
 
     public setValue(value: unknown = undefined): void {
-        // this.cachedErrorMessages = null;
         this._rawValue = value;
         const children = this._children;
         if (!Utils.isPlainObject(value)) {
@@ -301,8 +300,6 @@ class ValueTracker {
     }
 
 }
-
-
 
 export { ValueTracker };
 
