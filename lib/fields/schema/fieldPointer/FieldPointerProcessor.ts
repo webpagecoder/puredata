@@ -24,7 +24,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
     public override compile(context: FieldPointerProcessorCompilationContext): Processor {
         
         const { ancestors, parent, absolutePath } = context;
-        const { _processorMapper, _field } = this;
+        const { _fieldProcessorMap, _field } = this;
         const { fieldPath } = _field.extendedProps;
     
         const referencedProcessor = parent.resolvePath(fieldPath, this, ancestors);
@@ -51,7 +51,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
             return this;
         }
         else {
-            return _processorMapper.resolve(referencedProcessor.field).compile(context);
+            return _fieldProcessorMap.resolve(referencedProcessor.field).compile(context);
         }
     }
 

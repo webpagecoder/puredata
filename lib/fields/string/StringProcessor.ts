@@ -4,10 +4,19 @@ import { StringChain } from '../string/StringChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { ChainProcessor } from '../ChainProcessor.ts';
 
-class StringChainProcessor extends ChainProcessor<StringChain> {
+class StringProcessor extends ChainProcessor<StringChain> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, extendedProps: { trim, maxLength, truncate } } = this._field;
+        const {
+            autoConvert,
+            extendedProps: {
+                matching,
+                maxLength,
+                trim,
+                truncate
+            }
+        } = this._field;
+
         if (typeof tracker.getValue() !== 'string') {
             if (!autoConvert) {
                 tracker.addError('string/base');
@@ -33,4 +42,4 @@ class StringChainProcessor extends ChainProcessor<StringChain> {
 
 }
 
-export { StringChainProcessor };
+export { StringProcessor };

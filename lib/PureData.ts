@@ -30,26 +30,26 @@ import { Path, PathDelimTypes } from './Path.ts';
 import { FieldProcessorMap } from './fields/FieldProcessorMap.ts';
 import { Translation } from './Translation.ts';
 
-
 class PureData {
 
     protected _calendarText: Translation;
     protected _errorMessages: Translation;
-    protected _pathDelims: PathDelimTypes;
-    protected _processorMapper: FieldProcessorMap;
+    protected _fieldProcessorMap: FieldProcessorMap;
     protected _globalConfig: GlobalConfig;
+    protected _pathDelims: PathDelimTypes;
 
-    constructor(
-        globalConfig = GlobalConfig,
-        processorMapper = new FieldProcessorMap(),
+    constructor({
+        calendarText = new Translation(DefaultCalendarText),
         errorMessages = new Translation(DefaultErrorText),
-        calendarText = new Translation(DefaultCalendarText)
-    ) {
-        this._errorMessages = errorMessages;
+        fieldProcessorMap = new FieldProcessorMap(),
+        globalConfig = GlobalConfig,
+    } = {}) {
         this._calendarText = calendarText;
+        this._errorMessages = errorMessages;
+        this._fieldProcessorMap = fieldProcessorMap;
         this._globalConfig = globalConfig;
         this._pathDelims = globalConfig.general.pathDelims;
-        this._processorMapper = processorMapper;
+
     }
 
     public get instance() {
@@ -68,7 +68,7 @@ class PureData {
                 chainHandler,
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
-                processorMapper: this._processorMapper,
+                fieldProcessorMap: this._fieldProcessorMap,
             },
             this._globalConfig[chainType as keyof GlobalConfig],
             props
@@ -82,7 +82,7 @@ class PureData {
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
-                processorMapper: this._processorMapper,
+                fieldProcessorMap: this._fieldProcessorMap,
             },
             props
         ) as T;
@@ -108,7 +108,7 @@ class PureData {
 
     public date(props: Record<string, unknown> = {}) {
         return new DateChain(this._composeChainProps(
-            Object.assign(props),
+            props,
             'date',
             new DateHandler(this._calendarText)
         ));
@@ -132,11 +132,19 @@ class PureData {
 
     public schema(schema: SchemaObject = {}, props: Record<string, unknown> = {}) {
         const finalProps = Object.assign({ schema }, props);
-        return new SchemaChain(this._composeChainProps(finalProps, 'object', new ObjectHandler()));
+        return new SchemaChain(this._composeChainProps(
+            finalProps,
+            'object',
+            new ObjectHandler()
+        ));
     }
 
     public string(props: Record<string, unknown> = {}) {
-        return new StringChain(this._composeChainProps(props, 'string', new StringHandler()));
+        return new StringChain(this._composeChainProps(
+            props,
+            'string',
+            new StringHandler()
+        ));
     }
 
     // Fields
@@ -212,7 +220,6 @@ class PureData {
     public pathDelims(delims: PathDelimTypes) {
         this._pathDelims = delims;
     }
-
 }
 
 const PureDataInstance = new PureData();

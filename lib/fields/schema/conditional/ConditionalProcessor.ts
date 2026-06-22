@@ -21,24 +21,24 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     constructor(args: ConditionalProcessorCtorParams) {
         super(args);
 
-        const { processorMapper } = args;
+        const { fieldProcessorMap } = args;
         const { _field } = this;
         const { comparisonField, conditionalChain, otherwiseField, thenField } = _field.extendedProps;
 
-        this._comparisonProcessor = processorMapper.resolve(comparisonField).compile() as Processor;
+        this._comparisonProcessor = fieldProcessorMap.resolve(comparisonField).compile() as Processor;
         this._isNested = false;
         this._otherwiseProcessor = otherwiseField
-            ? processorMapper.resolve(otherwiseField).compile() as Processor
+            ? fieldProcessorMap.resolve(otherwiseField).compile() as Processor
             : null;
         this._thenProcessor = thenField
-            ? processorMapper.resolve(thenField).compile() as Processor
+            ? fieldProcessorMap.resolve(thenField).compile() as Processor
             : null;
 
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
                 type,
-                (processorMapper.resolve(conditionalField) as ConditionalProcessor)
+                (fieldProcessorMap.resolve(conditionalField) as ConditionalProcessor)
                     .compile({ isNested: true }) as ConditionalProcessor
             ]);
         }
@@ -49,10 +49,8 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
         this._isNested = isNested;
 
-        if (isNested) {
-            if (buildStage !== 0) {
-                throw new Error('Nested conditionals may NOT contain then/otherwise');
-            }
+        if (isNested && buildStage !== 0) {
+            throw new Error('Nested conditionals may NOT contain then/otherwise');
         }
         else if (buildStage !== 2) {
             throw new Error('Conditionals must contain a complete then/otherwise pair');

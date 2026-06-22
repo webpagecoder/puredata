@@ -5,7 +5,7 @@ export type GlobalConfig = typeof GlobalConfig;
 const GlobalConfig = Object.seal({
     general: {
         autoConvert: true,
-        emptyValues: [null, undefined, ''],
+        emptyValues: [null, undefined, '', NaN],
         // cloneValueBeforeFilter: false,
         // exceptions: false, //todo: throw exceptions in special functions like delete/insert in chain only if this is true
         pathDelims: {
@@ -20,7 +20,6 @@ const GlobalConfig = Object.seal({
         removeEmpties: true,
     },
     boolean: {
-        // autoConvert: true,
         allowBoolish: false,
         boolishPairs: [
             [1, 0],
@@ -30,14 +29,13 @@ const GlobalConfig = Object.seal({
             ['true', 'false'],
             ['t', 'f'],
         ],
-        transformer: x => typeof x === 'string' ? x.toLowerCase() : x, // Transforms boolish strings if needed
+        transformer: (x: unknown) => typeof x === 'string' ? x.toLowerCase() : x, // Transforms boolish strings if needed
     },
     date: {
         dateOrder: 'MDY',
         utcOffsetMinutes: -180 // NOTE: Does *not* take into account any daylight savings
     },
     number: {
-        autoConvert: true,
         ensureSafe: true,
         ensureFinite: true,
         preservePrecision: true,

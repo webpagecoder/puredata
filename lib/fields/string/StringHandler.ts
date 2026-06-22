@@ -1,17 +1,13 @@
 'use strict';
 
 import { Presence } from '../../Presence.ts';
-import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { RegexCache } from '../../RegexCache.ts';
 import { Utils } from '../../Utils.ts';
 import { ChainHandler } from '../ChainHandler.ts';
+import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { NumberHandler } from '../number/NumberHandler.ts';
 const { pass, fail } = ChainHandlerResult;
-const { Optional, Required, Forbidden } = Presence;
-const optional = Optional;
-const required = Required;
-const forbidden = Forbidden;
-
+const { optional, required, forbidden } = Presence;
 
 class StringHandler extends ChainHandler {
 
@@ -26,7 +22,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public alpha(str: any): ChainHandlerResult {
+    public alpha(str: string): ChainHandlerResult {
         return /^[A-Z]+$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alpha');
@@ -37,7 +33,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public alphanumeric(str: any): ChainHandlerResult {
+    public alphanumeric(str: string): ChainHandlerResult {
         return /^[A-Z0-9]+$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alphanumeric');
@@ -48,7 +44,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public ascii(str: any): ChainHandlerResult {
+    public ascii(str: string): ChainHandlerResult {
         return /^[\x00-\x7F]*$/.test(str)
             ? pass(str)
             : fail(str, 'string/ascii');
@@ -61,7 +57,7 @@ class StringHandler extends ChainHandler {
      * @param {any} closeChar
      * @returns {ChainHandlerResult}
      */
-    public balanced(str: any, openChar: any= '(', closeChar: any= ')'): ChainHandlerResult {
+    public balanced(str: string, openChar: string = '(', closeChar: string = ')'): ChainHandlerResult {
         let openCount = 0;
         for (let index = 0, max = str.length; index < max; ++index) {
             const char = str[index];
@@ -94,7 +90,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public base64(str: any): ChainHandlerResult {
+    public base64(str: string): ChainHandlerResult {
         return /^[A-Za-z0-9+/]+={0,2}$/.test(str) && str.length % 4 === 0
             ? pass(str)
             : fail(str, 'string/base64');
@@ -105,7 +101,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public base64Decode(str: any): ChainHandlerResult {
+    public base64Decode(str: string): ChainHandlerResult {
         if (typeof Buffer !== 'undefined') {
             return pass(Buffer.from(str, 'base64').toString('utf8'));
         }
@@ -120,7 +116,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public base64Encode(str: any): ChainHandlerResult {
+    public base64Encode(str: string): ChainHandlerResult {
         if (typeof Buffer !== 'undefined') {
             return pass(Buffer.from(str, 'utf8').toString('base64'));
         }
@@ -135,7 +131,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public binary(str: any): ChainHandlerResult {
+    public binary(str: string): ChainHandlerResult {
         return /^[01]+$/.test(str)
             ? pass(str)
             : fail(str, 'string/binary');
@@ -146,7 +142,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public bmp(str: any): ChainHandlerResult {
+    public bmp(str: string): ChainHandlerResult {
         return /^[\u0000-\uFFFF]*$/u.test(str)
             ? pass(str)
             : fail(str, 'string/bmp');
@@ -158,7 +154,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public complex(str: any, options: any= {}): ChainHandlerResult {
+    public complex(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             minLen = 8,
             maxLen = 100,
@@ -205,7 +201,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public contains(str: any, substring: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public contains(str: string, substring: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { ignoreCase } = options;
 
         if (ignoreCase) {
@@ -224,7 +220,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public creditCard(str: any, options: any= {}): ChainHandlerResult {
+    public creditCard(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '',
             types: null
@@ -334,7 +330,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public currencyCode(str: any, options: any= {}): ChainHandlerResult {
+    public currencyCode(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             allowLooseFormat,
         } = Object.assign({}, StringHandler.matchingDefaults, options);
@@ -366,7 +362,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public dataUrl(str: any, options: any= {}): ChainHandlerResult {
+    public dataUrl(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             allowedTypes = ['image', 'video', 'audio', 'text'],
         } = options;
@@ -387,7 +383,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public digits(str: any): ChainHandlerResult {
+    public digits(str: string): ChainHandlerResult {
         return /^\d+$/.test(str)
             ? pass(str)
             : fail(str, 'string/digits');
@@ -399,7 +395,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public domain(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public domain(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             wildcards = forbidden,
             subdomains = optional,
@@ -436,7 +432,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public e164(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public e164(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
 
         const finalOptions = Object.assign({
             delim: ' ',
@@ -480,7 +476,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public email(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public email(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             normalize,
         } = options;
@@ -501,11 +497,11 @@ class StringHandler extends ChainHandler {
 
     /**
      * Executes the empty handler step.
-     * @param {any} value
+     * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public empty(value: any): ChainHandlerResult {
-        return value.length === 0 ? pass(value) : fail(value, 'string/empty');
+    public empty(str: string): ChainHandlerResult {
+        return str.length === 0 ? pass(str) : fail(str, 'string/empty');
     }
 
     /**
@@ -515,7 +511,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public endsWith(str: any, suffix: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public endsWith(str: string, suffix: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { ignoreCase } = options;
 
         if (ignoreCase) {
@@ -534,7 +530,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public excludesChars(str: any, chars: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public excludesChars(str: string, chars: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             ignoreCase,
         } = options;
@@ -556,7 +552,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public gtin(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public gtin(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '',
             lengths: [8, 12, 13, 14]
@@ -617,7 +613,7 @@ class StringHandler extends ChainHandler {
      * @param {any} algorithm
      * @returns {ChainHandlerResult}
      */
-    public hash(str: any, algorithm: any): ChainHandlerResult {
+    public hash(str: string, algorithm: string): ChainHandlerResult {
         const algo = (algorithm || 'md5').toLowerCase();
         const hashLengths = {
             md5: 32, sha1: 40, sha256: 64, sha512: 128, ripemd: 32,
@@ -638,7 +634,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public hex(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public hex(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { normalize } = options;
         return /^[0-9A-F]+$/i.test(str)
             ? pass(normalize ? str.toLowerCase() : str)
@@ -651,7 +647,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public hexColor(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public hexColor(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { normalize } = options;
         return /^#?([0-9A-F]{3}|[0-9A-F]{6})$/i.test(str)
             ? pass(normalize ? str.toLowerCase() : str)
@@ -664,7 +660,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public imei(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public imei(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
         }, options);
@@ -708,7 +704,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public ip(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public ip(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { normalize } = options;
 
         const ipV4Test = this.ipV4(str);
@@ -729,7 +725,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public ipCidr(str: any): ChainHandlerResult {
+    public ipCidr(str: string): ChainHandlerResult {
         return this.ipCidrV4(str).pass || this.ipCidrV6(str).pass
             ? pass(str)
             : fail(str, 'string/ipCidr');
@@ -740,7 +736,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public ipCidrV4(str: any): ChainHandlerResult {
+    public ipCidrV4(str: string): ChainHandlerResult {
         const parts = str.split('/');
         if (parts.length !== 2) {
             return fail(str, 'string/ipCidrV4');
@@ -756,7 +752,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public ipCidrV6(str: any): ChainHandlerResult {
+    public ipCidrV6(str: string): ChainHandlerResult {
         const parts = str.split('/');
         if (parts.length !== 2) {
             return fail(str, 'string/ipCidrV6');
@@ -773,7 +769,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public ipV4(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public ipV4(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { normalize } = options;
         const digits = '(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         return RegexCache(`^${digits}\\.${digits}\\.${digits}\\.${digits}$`).test(str)
@@ -787,7 +783,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public ipV6(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public ipV6(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { normalize } = options;
         const digits = '(?:\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         const v4 = `${digits}\\.${digits}\\.${digits}\\.${digits}`;
@@ -810,7 +806,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public json(str: any): ChainHandlerResult {
+    public json(str: string): ChainHandlerResult {
         try { JSON.parse(str); } catch (e) { return fail(str, 'string/json'); }
         return pass(str);
     }
@@ -820,7 +816,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public jwt(str: any): ChainHandlerResult {
+    public jwt(str: string): ChainHandlerResult {
         return /^(?=((?:[a-z\d_=-]+\.){2}[a-z\d_=-]+))\1$/i.test(str)
             ? pass(str)
             : fail(str, 'string/jwt');
@@ -832,7 +828,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public label(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public label(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             normalize,
         } = options;
@@ -856,8 +852,7 @@ class StringHandler extends ChainHandler {
      * @param {any} length
      * @returns {ChainHandlerResult}
      */
-    // @ts-expect-error Runtime API requires static method name `length`.
-    public ['length'](str: any, length: any): ChainHandlerResult {
+    public length(str: string, length: number): ChainHandlerResult {
         return str.length === length
             ? pass(str)
             : fail(str, 'string/length', { length });
@@ -870,7 +865,7 @@ class StringHandler extends ChainHandler {
      * @param {any} max
      * @returns {ChainHandlerResult}
      */
-    public lengthBetween(str: any, min: any, max: any): ChainHandlerResult {
+    public lengthBetween(str: string, min: number, max: number): ChainHandlerResult {
         if (str.length >= min && str.length <= max) {
             return pass(str);
         }
@@ -882,7 +877,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public lowerCase(str: any): ChainHandlerResult {
+    public lowerCase(str: string): ChainHandlerResult {
         return str === str.toLowerCase()
             ? pass(str)
             : fail(str, 'string/lowerCase');
@@ -893,7 +888,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public luhn(str: any): ChainHandlerResult {
+    public luhn(str: string): ChainHandlerResult {
         return Utils.validateWithCheckDigit(str, {
             weights: [2, 1],
             mod: 10,
@@ -910,7 +905,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public mac(str: any, options: any= {}): ChainHandlerResult {
+    public mac(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: ':',
         }, options);
@@ -949,7 +944,7 @@ class StringHandler extends ChainHandler {
      * @param {any} regex
      * @returns {ChainHandlerResult}
      */
-    public matches(str: any, regex: any): ChainHandlerResult {
+    public matches(str: string, regex: RegExp): ChainHandlerResult {
         return regex.test(str)
             ? pass(str)
             : fail(str, 'string/matches', { regex: regex.toString() });
@@ -961,7 +956,7 @@ class StringHandler extends ChainHandler {
      * @param {any} max
      * @returns {ChainHandlerResult}
      */
-    public maxLength(str: any, max: any): ChainHandlerResult {
+    public maxLength(str: string, max: number): ChainHandlerResult {
         return str.length <= max
             ? pass(str)
             : fail(str, 'string/maxLength', { max });
@@ -974,7 +969,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public maxWords(str: any, max: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public maxWords(str: string, max: number, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         const count = Utils.splitOnDelims(str, allowedDelims).length;
         return count <= max
             ? pass(str)
@@ -991,7 +986,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public measurement(str: any, options: any= {}): ChainHandlerResult {
+    public measurement(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             units
         } = options;
@@ -1011,7 +1006,7 @@ class StringHandler extends ChainHandler {
      * @param {any} min
      * @returns {ChainHandlerResult}
      */
-    public minLength(str: any, min: any): ChainHandlerResult {
+    public minLength(str: string, min: number): ChainHandlerResult {
         return str.length >= min
             ? pass(str)
             : fail(str, 'string/minLength', { min });
@@ -1024,7 +1019,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public minWords(str: any, min: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public minWords(str: string, min: number, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         const count = Utils.splitOnDelims(str, allowedDelims).length;
         return count >= min
             ? pass(str)
@@ -1041,7 +1036,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public money(str: any, options: any= {}): ChainHandlerResult {
+    public money(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             parens = forbidden,
             leadingSymbol = '$',
@@ -1077,7 +1072,7 @@ class StringHandler extends ChainHandler {
      * @param {any} value
      * @returns {ChainHandlerResult}
      */
-    public notEmpty(value: any): ChainHandlerResult {
+    public notEmpty(value: string): ChainHandlerResult {
         return value.length > 0 ? pass(value) : fail(value, 'string/notEmpty');
     }
 
@@ -1087,7 +1082,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public numeric(str: any, options: any= {}): ChainHandlerResult {
+    public numeric(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             plus = forbidden,
             minus = optional,
@@ -1212,7 +1207,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public octal(str: any): ChainHandlerResult {
+    public octal(str: string): ChainHandlerResult {
         return /^[0-7]+$/.test(str)
             ? pass(str)
             : fail(str, 'string/octal');
@@ -1225,7 +1220,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public onlyChars(str: any, chars: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public onlyChars(str: string, chars: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             ignoreCase,
         } = options;
@@ -1247,7 +1242,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public path(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public path(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             style = 'unix',
             fileExtensions = '',
@@ -1301,7 +1296,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public phone(str: any, options: any= {}): ChainHandlerResult {
+    public phone(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
         }, options);
@@ -1343,7 +1338,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public repetition(str: any, fragment: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public repetition(str: string, fragment: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const {
             min = 1,
             max = null,
@@ -1375,7 +1370,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public slug(str: any): ChainHandlerResult {
+    public slug(str: string): ChainHandlerResult {
         return /^(?=([a-z\d]+(-[a-z\d]+)*))\1$/.test(str)
             ? pass(str)
             : fail(str, 'string/slug');
@@ -1387,7 +1382,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public ssn(str: any, options: any= {}): ChainHandlerResult {
+    public ssn(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
         }, options);
@@ -1429,7 +1424,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public startsWith(str: any, prefix: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public startsWith(str: string, prefix: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         const { ignoreCase } = options;
 
         if (ignoreCase) {
@@ -1447,7 +1442,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public state(str: any, options: any= {}): ChainHandlerResult {
+    public state(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const {
             allowLooseFormat,
         } = Object.assign({}, StringHandler.matchingDefaults, options);
@@ -1471,7 +1466,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public upperCase(str: any): ChainHandlerResult {
+    public upperCase(str: string): ChainHandlerResult {
         return str === str.toUpperCase()
             ? pass(str)
             : fail(str, 'string/upperCase');
@@ -1483,7 +1478,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public url(str: any, options: any= StringHandler.matchingDefaults): ChainHandlerResult {
+    public url(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): ChainHandlerResult {
         let {
             normalize,
             rootRelative = false,
@@ -1577,7 +1572,7 @@ class StringHandler extends ChainHandler {
      * @param {any} version
      * @returns {ChainHandlerResult}
      */
-    public uuid(str: any, version: any): ChainHandlerResult {
+    public uuid(str: string, version: string | number): ChainHandlerResult {
         return RegexCache([
             '^(?=([a-f\\d]{8}-[a-f\\d]{4}-[',
             !version ? '12345' : version,
@@ -1595,7 +1590,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public wordCount(str: any, min: any, max: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public wordCount(str: string, min: number, max: number, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         const count = Utils.splitOnDelims(str, allowedDelims).length;
         return count <= max && count >= min
             ? pass(str)
@@ -1613,7 +1608,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public zip(str: any, options: any= {}): ChainHandlerResult {
+    public zip(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '',
             zip4: optional
@@ -1676,7 +1671,7 @@ class StringHandler extends ChainHandler {
      * @param {any} char
      * @returns {ChainHandlerResult}
      */
-    public collapseRepeats(str: any, char: any): ChainHandlerResult {
+    public collapseRepeats(str: string, char: string): ChainHandlerResult {
         return pass(str.replace(RegexCache('(' + (char ? Utils.escapeForRegex(char) : '.') + ')\\1+', 'g'), '$1'));
     }
 
@@ -1685,7 +1680,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public collapseSpacing(str: any): ChainHandlerResult {
+    public collapseSpacing(str: string): ChainHandlerResult {
         return pass(str.replace(/\s+/g, ' '));
     }
 
@@ -1694,7 +1689,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public escapeHtml(str: any): ChainHandlerResult {
+    public escapeHtml(str: string): ChainHandlerResult {
         return pass(str
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -1708,7 +1703,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public hexDecode(str: any): ChainHandlerResult {
+    public hexDecode(str: string): ChainHandlerResult {
         let decoded = '';
         for (const match of str.matchAll(/.{1,2}/g)) {
             decoded += String.fromCharCode(parseInt(match[0], 16));
@@ -1721,7 +1716,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public hexEncode(str: any): ChainHandlerResult {
+    public hexEncode(str: string): ChainHandlerResult {
         let encoded = '';
         for (const char of [...str]) {
             encoded += Utils.padLeft(char.charCodeAt(0).toString(16), 2, '0');
@@ -1735,7 +1730,7 @@ class StringHandler extends ChainHandler {
      * @param {any} lineBreak
      * @returns {ChainHandlerResult}
      */
-    public normalizeLineBreaks(str: any, lineBreak: any= '\n'): ChainHandlerResult {
+    public normalizeLineBreaks(str: string, lineBreak: string = '\n'): ChainHandlerResult {
         return pass(str.replace(/\r\n|\r|\n/g, lineBreak));
     }
 
@@ -1745,7 +1740,7 @@ class StringHandler extends ChainHandler {
      * @param {any} type
      * @returns {ChainHandlerResult}
      */
-    public normalizeUnicode(str: any, type: any= 'NFC'): ChainHandlerResult {
+    public normalizeUnicode(str: string, type: string = 'NFC'): ChainHandlerResult {
         return pass(str.normalize(type));
     }
 
@@ -1756,7 +1751,7 @@ class StringHandler extends ChainHandler {
      * @param {any} char
      * @returns {ChainHandlerResult}
      */
-    public padLeft(str: any, length: any, char: any): ChainHandlerResult {
+    public padLeft(str: string, length: number, char: string): ChainHandlerResult {
         return pass(Utils.padLeft(str, length, char));
     }
 
@@ -1767,7 +1762,7 @@ class StringHandler extends ChainHandler {
      * @param {any} char
      * @returns {ChainHandlerResult}
      */
-    public padRight(str: any, length: any, char: any): ChainHandlerResult {
+    public padRight(str: string, length: number, char: string): ChainHandlerResult {
         return pass(Utils.padRight(str, length, char));
     }
 
@@ -1776,7 +1771,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public removeSpacing(str: any): ChainHandlerResult {
+    public removeSpacing(str: string): ChainHandlerResult {
         return pass(str.replace(/\s/g, ''));
     }
 
@@ -1787,7 +1782,7 @@ class StringHandler extends ChainHandler {
      * @param {any} endIndex
      * @returns {ChainHandlerResult}
      */
-    public slice(str: any, startIndex: any, endIndex: any): ChainHandlerResult {
+    public slice(str: string, startIndex: number, endIndex: number): ChainHandlerResult {
         return pass(str.slice(startIndex, endIndex));
     }
 
@@ -1797,7 +1792,7 @@ class StringHandler extends ChainHandler {
      * @param {any} count
      * @returns {ChainHandlerResult}
      */
-    public sliceFirst(str: any, count: any= 1): ChainHandlerResult {
+    public sliceFirst(str: string, count: number = 1): ChainHandlerResult {
         return pass(str.slice(0, count));
     }
 
@@ -1807,7 +1802,7 @@ class StringHandler extends ChainHandler {
      * @param {any} count
      * @returns {ChainHandlerResult}
      */
-    public sliceLast(str: any, count: any= 1): ChainHandlerResult {
+    public sliceLast(str: string, count: number = 1): ChainHandlerResult {
         return pass(str.slice(-count));
     }
 
@@ -1816,7 +1811,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public stripHtml(str: any): ChainHandlerResult {
+    public stripHtml(str: string): ChainHandlerResult {
         return pass(str.replace(/<[^>]*>/g, ''));
     }
 
@@ -1826,7 +1821,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public toCamelCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public toCamelCase(str: string, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '',
@@ -1841,7 +1836,7 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public toDelimited(str: any, options: any= {}): ChainHandlerResult {
+    public toDelimited(str: string, options: Record<string, unknown> = {}): ChainHandlerResult {
         const finalOptions = Object.assign({
             delim: '-',
             transformer: (x: string): string => x,
@@ -1880,7 +1875,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public toKebabCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public toKebabCase(str: string, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '-',
@@ -1893,7 +1888,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public toLowerCase(str: any): ChainHandlerResult {
+    public toLowerCase(str: string): ChainHandlerResult {
         return pass(str.toLowerCase());
     }
 
@@ -1903,7 +1898,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public toPascalCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public toPascalCase(str: string, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '',
@@ -1917,7 +1912,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public toSentenceCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public toSentenceCase(str: string, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: ' ',
@@ -1932,7 +1927,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public toSnakeCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public toSnakeCase(str: string, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: '_',
@@ -1946,7 +1941,7 @@ class StringHandler extends ChainHandler {
      * @param {any} allowedDelims
      * @returns {ChainHandlerResult}
      */
-    public toTitleCase(str: any, allowedDelims: any= StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
+    public toTitleCase(str: string, allowedDelims: string = StringHandler.matchingDefaults.allowedDelims): ChainHandlerResult {
         return this.toDelimited(str, {
             allowedDelims,
             delim: ' ',
@@ -1959,7 +1954,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public toUpperCase(str: any): ChainHandlerResult {
+    public toUpperCase(str: string): ChainHandlerResult {
         return pass(str.toUpperCase());
     }
 
@@ -1969,7 +1964,7 @@ class StringHandler extends ChainHandler {
      * @param {any} chars
      * @returns {ChainHandlerResult}
      */
-    public trim(str: any, chars: any= ' '): ChainHandlerResult {
+    public trim(str: string, chars: string = ' '): ChainHandlerResult {
         const finalChars = chars === ' ' ? '\\s' : Utils.escapeForRegex(chars);
         return pass(str.replace(RegexCache(`^[${finalChars}]+|[${finalChars}]+$`, 'g'), ''));
     }
@@ -1980,7 +1975,7 @@ class StringHandler extends ChainHandler {
      * @param {any} chars
      * @returns {ChainHandlerResult}
      */
-    public trimLeft(str: any, chars: any= ' '): ChainHandlerResult {
+    public trimLeft(str: string, chars: string = ' '): ChainHandlerResult {
         const finalChars = chars === ' ' ? '\\s' : Utils.escapeForRegex(chars);
         return pass(str.replace(RegexCache('^[' + finalChars + ']+'), ''));
     }
@@ -1991,7 +1986,7 @@ class StringHandler extends ChainHandler {
      * @param {any} chars
      * @returns {ChainHandlerResult}
      */
-    public trimRight(str: any, chars: any= ' '): ChainHandlerResult {
+    public trimRight(str: string, chars: string = ' '): ChainHandlerResult {
         const finalChars = chars === ' ' ? '\\s' : Utils.escapeForRegex(chars);
         return pass(str.replace(RegexCache('[' + finalChars + ']+$'), ''));
     }
@@ -2001,7 +1996,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public urlDecode(str: any): ChainHandlerResult {
+    public urlDecode(str: string): ChainHandlerResult {
         return pass(decodeURIComponent(str));
     }
 
@@ -2010,7 +2005,7 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @returns {ChainHandlerResult}
      */
-    public urlEncode(str: any): ChainHandlerResult {
+    public urlEncode(str: string): ChainHandlerResult {
         return pass(encodeURIComponent(str));
     }
 
@@ -2026,3 +2021,4 @@ StringHandler.matchingDefaults = {
 
 
 export { StringHandler };
+

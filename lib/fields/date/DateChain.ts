@@ -58,9 +58,11 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
      */
-    public human(options: HumanParseOptions = {}) {
+    public human(options: HumanParseOptions = {}): this {
         this.assertEmptyPipeline('human');
-        return this.clone({ skipGenericParse: true, outputPrecision: null }).addStep('human', [Object.assign({ dateOrder: this.extendedProps.dateOrder }, options)]);
+        return this
+            .clone({ skipGenericParse: true, outputPrecision: null })
+            .addStep('human', [Object.assign({ dateOrder: this.extendedProps.dateOrder }, options)]);
     }
 
     /**
@@ -74,7 +76,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.iso() // Accepts "2023-01-01", "2023-01-01T12:00:00Z", etc.
      */
-    public iso(options: IsoParseOptions = {}) {
+    public iso(options: IsoParseOptions = {}): this {
         this.assertEmptyPipeline('iso');
         return this.clone({ skipGenericParse: true }).addStep('iso', [options]);
     }
@@ -88,7 +90,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.isoOrdinal() // Accepts "2023-001", "2023-365", etc.
      */
-    public isoOrdinal(options: IsoOrdinalParseOptions = {}) {
+    public isoOrdinal(options: IsoOrdinalParseOptions = {}): this {
         this.assertEmptyPipeline('isoOrdinal');
         return this.clone({ skipGenericParse: true }).addStep('isoOrdinal', [options]);
     }
@@ -102,7 +104,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.isoWeek() // Accepts "2023-W01-1", "2023-W52-7", etc.
      */
-    public isoWeek(options: IsoWeekParseOptions = {}) {
+    public isoWeek(options: IsoWeekParseOptions = {}): this {
         this.assertEmptyPipeline('isoWeek');
         return this.clone({ skipGenericParse: true }).addStep('isoWeek', [options]);
     }
@@ -116,7 +118,7 @@ class DateChain extends Chain<DateChainProps> {
      * date.timestamp() // Accepts JavaScript timestamps in milliseconds
      * date.timestamp(false) // Accepts Unix timestamps in seconds
      */
-    public timestamp(isMilliseconds: boolean = true) {
+    public timestamp(isMilliseconds: boolean = true): this {
         this.assertEmptyPipeline('timestamp');
         return this.clone({ skipGenericParse: true }).addStep('timestamp', [isMilliseconds]);
     }
@@ -127,7 +129,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.today() // Must be today's date
      */
-    public today() {
+    public today(): this {
         const now = new Date();
         now.setUTCMinutes(now.getUTCMinutes() + this.extendedProps.utcOffsetMinutes);
         return this.addStep('today', [now]);
@@ -137,11 +139,11 @@ class DateChain extends Chain<DateChainProps> {
 
 
     // Exporters
-    public toFormat(outputStringFormat: string, outputTimeMode: TimeMode = 'utc') {
+    public toFormat(outputStringFormat: string, outputTimeMode: TimeMode = 'utc'): this {
         return this.clone({ outputStringFormat, outputTimeMode });
     }
 
-    public toDate() {
+    public toDate(): this {
         return this.clone({ outputStringFormat: 'object' });
     }
 
@@ -151,7 +153,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
-    public toIso(outputPrecision: IsoPrecision = 'timezone', expanded = true) {
+    public toIso(outputPrecision: IsoPrecision = 'timezone', expanded = true): this {
         let outputStringFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
@@ -184,7 +186,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
-    public toIsoOrdinal(outputPrecision: IsoOrdinalPrecision = 'timezone', expanded = true) {
+    public toIsoOrdinal(outputPrecision: IsoOrdinalPrecision = 'timezone', expanded = true): this {
         let outputStringFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
@@ -213,7 +215,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
-    public toIsoWeek(outputPrecision: IsoWeekPrecision = 'timezone', expanded = true) {
+    public toIsoWeek(outputPrecision: IsoWeekPrecision = 'timezone', expanded = true): this {
         let outputStringFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
@@ -244,7 +246,7 @@ class DateChain extends Chain<DateChainProps> {
      * @example
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
-    public toTimestamp() {
+    public toTimestamp(): this {
         return this.clone({ outputStringFormat: 'timestamp' });
     }
 

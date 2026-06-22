@@ -165,7 +165,6 @@ class ArrayHandler extends ChainHandler {
      * @param requiredLength Exact required array length.
      * @returns Pass result when the length matches.
      */
-    // @ts-expect-error Runtime API requires public method name `length`.
     public length(arr: unknown[], requiredLength: number): ChainHandlerResult {
         return arr.length === requiredLength
             ? pass(arr)
@@ -225,6 +224,17 @@ class ArrayHandler extends ChainHandler {
     }
 
     /**
+     * Validates that the array contains at least one item.
+     * @param arr Array being validated.
+     * @returns Pass result when the array is not empty.
+     */
+    public notEmpty(arr: unknown[]): ChainHandlerResult {
+        return arr.length > 0
+            ? pass(arr)
+            : fail(arr, 'array/notEmpty');
+    }
+
+    /**
      * Validates that the array contains none of the forbidden values.
      * @param arr Array being validated.
      * @param forbiddenValues Values that must not appear in the array.
@@ -244,17 +254,6 @@ class ArrayHandler extends ChainHandler {
             }
         }
         return pass(arr);
-    }
-
-    /**
-     * Validates that the array contains at least one item.
-     * @param arr Array being validated.
-     * @returns Pass result when the array is not empty.
-     */
-    public notEmpty(arr: unknown[]): ChainHandlerResult {
-        return arr.length > 0
-            ? pass(arr)
-            : fail(arr, 'array/notEmpty');
     }
 
     /**
@@ -332,8 +331,8 @@ class ArrayHandler extends ChainHandler {
      * @param arr Array being validated.
      * @param pathOrSortComparator Optional path or comparator to determine ordering.
      * If a path is provided, values at that path will be compared. 
- * If a comparator is provided, it will be used directly, ignoring the order parameter. 
- * If neither is provided, natural ordering will be used.
+     * If a comparator is provided, it will be used directly, ignoring the order parameter. 
+     * If neither is provided, natural ordering will be used.
      * @returns Pass result when the array is sorted.
      */
     public sorted(arr: unknown[], pathOrSortComparator: PathOrSortComparator = null): ChainHandlerResult {
@@ -401,12 +400,12 @@ class ArrayHandler extends ChainHandler {
 
         for (let y = 0; y < arr.length - 1; y++) {
             const a = path
-                ? Utils.getPathValue(arr[y], path)
+                ? Utils.getPathValue(arr[y] as Record<string, unknown>, path)
                 : arr[y];
 
             for (let z = y + 1; z < arr.length; z++) {
                 const b = path
-                    ? Utils.getPathValue(arr[z], path)
+                    ? Utils.getPathValue(arr[z] as Record<string, unknown>, path)
                     : arr[z];
 
                 if (!comparator(a, b)) {
@@ -420,6 +419,9 @@ class ArrayHandler extends ChainHandler {
         }
         return pass(arr);
     }
+
+
+
 
     // ====================================
     // MUTATORS 
@@ -501,7 +503,7 @@ class ArrayHandler extends ChainHandler {
             if (!groups.has(mapKey)) {
                 groups.set(mapKey, []);
             }
-            groups.get(mapKey)?.push(value);
+            groups.get(mapKey)!.push(value);
         }
 
         const finalGroups: unknown[][] = [];
@@ -622,12 +624,12 @@ class ArrayHandler extends ChainHandler {
 
         for (let y = 0; y < filteredArr.length - 1; y++) {
             const a = path
-                ? Utils.getPathValue(filteredArr[y], path)
+                ? Utils.getPathValue(filteredArr[y] as Record<string, unknown>, path)
                 : filteredArr[y];
 
             for (let z = y + 1; z < filteredArr.length; z++) {
                 const b = path
-                    ? Utils.getPathValue(filteredArr[z], path)
+                    ? Utils.getPathValue(filteredArr[z] as Record<string, unknown>, path)
                     : filteredArr[z];
 
                 if (!comparator(a, b)) {
@@ -719,20 +721,6 @@ class ArrayHandler extends ChainHandler {
     }
 
     /**
-     * Splices the array by removing and optionally inserting values.
-     * @param arr Source array.
-     * @param startIndex Index at which to begin changes.
-     * @param deleteCount Number of items to remove.
-     * @param insertValues Values to insert at the start index.
-     * @returns Pass result containing the spliced array.
-     */
-    public splice(arr: unknown[], startIndex: number, deleteCount: number = 0, insertValues: unknown[] = []): ChainHandlerResult {
-        const arrCopy = [...arr];
-        arrCopy.splice(startIndex, deleteCount, ...insertValues);
-        return pass(arrCopy);
-    }
-
-    /**
      * Sorts the array in ascending order.
      * @param arr Source array.
      * @param pathOrSortComparator Optional path or comparator used for sorting.
@@ -756,6 +744,20 @@ class ArrayHandler extends ChainHandler {
      */
     public sortDesc(arr: unknown[], pathOrSortComparator: PathOrSortComparator = null): ChainHandlerResult {
         return pass([...arr].sort(getSorter(-1, pathOrSortComparator)));
+    }
+
+    /**
+     * Splices the array by removing and optionally inserting values.
+     * @param arr Source array.
+     * @param startIndex Index at which to begin changes.
+     * @param deleteCount Number of items to remove.
+     * @param insertValues Values to insert at the start index.
+     * @returns Pass result containing the spliced array.
+     */
+    public splice(arr: unknown[], startIndex: number, deleteCount: number = 0, insertValues: unknown[] = []): ChainHandlerResult {
+        const arrCopy = [...arr];
+        arrCopy.splice(startIndex, deleteCount, ...insertValues);
+        return pass(arrCopy);
     }
 
 }

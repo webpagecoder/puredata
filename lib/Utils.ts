@@ -294,7 +294,7 @@ class Utils {
         const { isObject } = Utils;
         for (const key of keys) {
             if (isObject(pointer)) {
-                pointer = pointer[key];
+                pointer = pointer[key] as Record<string, unknown>;
             }
             else {
                 return undefined;

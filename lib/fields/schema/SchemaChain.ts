@@ -37,7 +37,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             arrayChain = new ArrayChain({
                 chainHandler: new ArrayHandler(),
                 errorMessages: this._errorMessages,
-                processorMapper: this._processorMapper,
+                fieldProcessorMap: this._fieldProcessorMap,
             }),
             failOnFirstError = false,
             renameKeysArgs = null,
@@ -86,7 +86,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             else {
                 field = new ValueField({
                     errorMessages: this._errorMessages,
-                    processorMapper: this._processorMapper,
+                    fieldProcessorMap: this._fieldProcessorMap,
                     value
                 });
             }

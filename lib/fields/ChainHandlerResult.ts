@@ -1,19 +1,17 @@
 'use strict';
 
-import { ArgumentCollection, ErrorCollection } from '../types.ts';
-
 class ChainHandlerResult {
 
     value: unknown;
     pass: boolean;
     fail: boolean;
-    errors: ErrorCollection;
+    errors: Record<string, Record<string, unknown>>;
 
     constructor(args: {
         value?: unknown;
         pass?: boolean;
         errorKey?: string;
-        args?: ArgumentCollection;
+        args?: Record<string, unknown>;
     } = {}) {
         this.value = args.value;
         this.pass = args.pass || false;
@@ -26,7 +24,7 @@ class ChainHandlerResult {
         }
     }
 
-    public addError(errorKey: string, args: ArgumentCollection): void {
+    public addError(errorKey: string, args: Record<string, unknown>): void {
         if (this.pass) {
             throw new Error('Errors cannot be added to a Result that passed');
         }
@@ -37,7 +35,7 @@ class ChainHandlerResult {
         return new ChainHandlerResult({ value, pass: true });
     }
 
-    public static fail(value: unknown, errorKey: string, args: ArgumentCollection = {}): ChainHandlerResult {
+    public static fail(value: unknown, errorKey: string, args: Record<string, unknown> = {}): ChainHandlerResult {
         return new ChainHandlerResult({ value, pass: false, errorKey, args });
     }
 

@@ -2,10 +2,12 @@
 
 import { StringHandler } from './StringHandler.ts';
 import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
 
 export type StringChainProps = ChainProps<StringHandler> & {
-    trim: boolean;
+    matching: GlobalConfig['string']['matching'];
     maxLength: number | null;
+    trim: boolean;
     truncate: boolean;
 };
 
@@ -16,14 +18,16 @@ class StringChain extends Chain<StringChainProps> {
         super(args);
 
         const {
-            trim = true,
+            matching = GlobalConfig.string.matching,
             maxLength = null,
+            trim = true,
             truncate = false,
         } = args;
 
         const { extendedProps: props } = this;
-        props.trim = trim;
+        props.matching = matching;
         props.maxLength = maxLength;
+        props.trim = trim;
         props.truncate = truncate;
     }
 }

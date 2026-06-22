@@ -4,11 +4,11 @@ import { FieldProcessorMap } from './FieldProcessorMap.ts';
 import { Field } from './Field.ts';
 import { PathValueField } from './schema/pathValue/PathValueField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { PathValueProcessor } from './schema/PathValueProcessor.ts';
+import { PathValueProcessor } from './schema/pathValue/PathValueProcessor.ts';
 
 export type ProcessorCtorParams<F extends Field = Field> = {
     field: F;
-    processorMapper: FieldProcessorMap;
+    fieldProcessorMap: FieldProcessorMap;
 };
 
 export type State = Record<string, unknown> | undefined;
@@ -23,11 +23,11 @@ abstract class Processor<F extends Field = Field> {
     protected _cachedReferences: Set<any> | null;
     protected _defaultValuePathValueProcessor: PathValueProcessor | null;
     protected _field: F;
-    protected _processorMapper: FieldProcessorMap;
+    protected _fieldProcessorMap: FieldProcessorMap;
 
     constructor(args: ProcessorCtorParams<F>) {
         const {
-            processorMapper = new FieldProcessorMap(),
+            fieldProcessorMap = new FieldProcessorMap(),
             field,
         } = args;
 
@@ -35,15 +35,15 @@ abstract class Processor<F extends Field = Field> {
         this._cachedReferences = null;
         this._defaultValuePathValueProcessor = null;
         this._field = Object.seal(field);
-        this._processorMapper = processorMapper;
+        this._fieldProcessorMap = fieldProcessorMap;
     }
 
     public compile(context?: ProcessorCompilationContext): Processor {
-        const { _field, _processorMapper } = this;
+        const { _field, _fieldProcessorMap } = this;
         const { defaultValue } = _field;
         if (defaultValue instanceof PathValueField) {
             this._defaultValuePathValueProcessor = 
-                _processorMapper.resolve(defaultValue).compile(context) as PathValueProcessor;
+                _fieldProcessorMap.resolve(defaultValue).compile(context) as PathValueProcessor;
         }
         return this;
     }

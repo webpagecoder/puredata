@@ -25,7 +25,7 @@ import { PathValueProcessor } from './schema/pathValue/PathValueProcessor.ts';
 import { FieldPointerField } from './schema/fieldPointer/FieldPointerField.ts';
 import { FieldPointerProcessor } from './schema/fieldPointer/FieldPointerProcessor.ts';
 import { StringChain } from './string/StringChain.ts';
-import { StringChainProcessor } from './string/StringChainProcessor.ts';
+import { StringProcessor } from './string/StringProcessor.ts';
 import { ValueField } from './value/ValueField.ts';
 import { ValueFieldProcessor } from './value/ValueFieldProcessor.ts';
 
@@ -44,7 +44,7 @@ MAPPINGS.set(SchemaChain, SchemaProcessor);
 MAPPINGS.set(ConditionalField, ConditionalProcessor);
 MAPPINGS.set(PathValueField, PathValueProcessor);
 MAPPINGS.set(FieldPointerField, FieldPointerProcessor);
-MAPPINGS.set(StringChain, StringChainProcessor);
+MAPPINGS.set(StringChain, StringProcessor);
 MAPPINGS.set(ValueField, ValueFieldProcessor);
 
 class FieldProcessorMap {
@@ -53,7 +53,7 @@ class FieldProcessorMap {
         if (!ProcessorCtor) {
             throw new Error(`No processor found for field of type ${field.constructor.name}`);
         }
-        return new ProcessorCtor(Object.assign({ field, processorMapper: this, }, context));
+        return new ProcessorCtor(Object.assign({ field, fieldProcessorMap: this, }, context));
     }
 }
 

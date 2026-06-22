@@ -1,15 +1,13 @@
 'use strict';
 
 import { Path } from '../Path.ts';
-import { ArgumentCollection } from '../types.ts';
 import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
-import { Node } from './Node.ts';
 import { Field } from '../fields/Field.ts';
 
 export type TrackerError = {
-    args: ArgumentCollection;
+    args: Record<string, unknown>;
     errorKey: string;
     key: string;
     path: string;
@@ -129,7 +127,7 @@ class ValueTracker {
         return false;
     }
 
-    public addError(errorKey: string, args?: ArgumentCollection): this {
+    public addError(errorKey: string, args?: Record<string, unknown>): this {
         if (!this._field) {
             throw new Error('ValueTracker compiled field is not configured');
         }
@@ -183,7 +181,7 @@ class ValueTracker {
         this._errorCollection = [];
     }
 
-    public setFail(errorKey: string = 'generic/base', args?: ArgumentCollection) {
+    public setFail(errorKey: string = 'generic/base', args?: Record<string, unknown>) {
         this._errorCollection = [];
         this.addError(errorKey, args);
     }

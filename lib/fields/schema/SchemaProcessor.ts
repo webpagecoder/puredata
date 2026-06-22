@@ -48,7 +48,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const {
             field,
-            processorMapper = new FieldProcessorMap(),
+            fieldProcessorMap = new FieldProcessorMap(),
         } = args;
 
         this._localBasicProcessors = new Map();
@@ -59,7 +59,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.extendedProps.schemaMap) {
-            this._localBasicProcessors.set(key, processorMapper.resolve(childField));
+            this._localBasicProcessors.set(key, fieldProcessorMap.resolve(childField));
         }
     }
 

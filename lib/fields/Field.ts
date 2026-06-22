@@ -17,7 +17,8 @@ export type FieldCtorParams = {
     errorMessages: Translation;
     pathDelims: PathDelimTypes;
     presence?: Presence;
-    processorMapper: FieldProcessorMap;
+    fieldProcessorMap: FieldProcessorMap;
+    strip?: boolean;
 };
 
 export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldCtorParams & C>;
@@ -31,8 +32,9 @@ abstract class Field<C extends FieldProps = FieldProps> {
     protected _pathDelims: PathDelimTypes;
     protected _presence: Presence;
     protected _processor: Processor | null;
-    protected _processorMapper: FieldProcessorMap;
+    protected _fieldProcessorMap: FieldProcessorMap;
     protected _props: C;
+    protected _strip: boolean;
 
     public constructor(args: FieldCtorParams) {
         const {
@@ -42,7 +44,8 @@ abstract class Field<C extends FieldProps = FieldProps> {
             errorMessages,
             pathDelims,
             presence = 'required',
-            processorMapper
+            fieldProcessorMap,
+            strip = false
         } = args;
 
         this._props = {} as C;
@@ -53,7 +56,8 @@ abstract class Field<C extends FieldProps = FieldProps> {
         this._pathDelims = pathDelims;
         this._presence = presence;
         this._processor = null;
-        this._processorMapper = processorMapper;
+        this._fieldProcessorMap = fieldProcessorMap;
+        this._strip = strip;
     }
 
     public get defaultValue(): unknown {
@@ -74,16 +78,16 @@ abstract class Field<C extends FieldProps = FieldProps> {
 
     public get processor(): Processor {
         if (!this._processor) {
-            if (!this._processorMapper) {
+            if (!this._fieldProcessorMap) {
                 throw new Error('Field/Processor compilation mapper is not configured');
             }
-            this._processor = this._processorMapper.resolve(this).compile();
+            this._processor = this._fieldProcessorMap.resolve(this).compile();
         }
         return this._processor;
     }
 
-    public get processorMapper(): FieldProcessorMap {
-        return this._processorMapper;
+    public get fieldProcessorMap(): FieldProcessorMap {
+        return this._fieldProcessorMap;
     }
 
     public get autoConvert(): boolean {
@@ -103,7 +107,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             errorMessages = this._errorMessages.override(),
             pathDelims = this._pathDelims,
             presence = this._presence,
-            processorMapper = this._processorMapper,
+            fieldProcessorMap = this._fieldProcessorMap,
         } = args;
         const clone = new Ctor({
             autoConvert,
@@ -112,7 +116,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
             errorMessages,
             pathDelims,
             presence,
-            processorMapper,
+            fieldProcessorMap,
         } as FieldCtorParams);
 
         const { _props } = this;
@@ -185,6 +189,9 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this.clone({ presence: 'required' } as FieldCloneParams<C>);
     }
 
+    public strip(strip: boolean = true): this {
+        return this.clone({ strip } as FieldCloneParams<C>);
+    }
 
 }
 
