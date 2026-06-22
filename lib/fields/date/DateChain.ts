@@ -1,13 +1,15 @@
 'use strict';
 
+import { Translation } from '../../Translation.ts';
+import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
-import { Chain, ChainProps, ChainCtorParams } from '../Chain.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
 export type DateChainProps = ChainProps<DateHandler> & {
+    calendarText: Translation;
     dateOrder: DateOrder;
     outputStringFormat: OutputFormat | null;
     outputPrecision: OutputPrecision | null;
@@ -23,20 +25,25 @@ class DateChain extends Chain<DateChainProps> {
         super(args);
 
         const {
+            calendarText = new Translation(),
             dateOrder = 'MDY',
             outputStringFormat = null,
             outputPrecision = null,
             outputTimeMode = 'utc',
+            skipGenericParse = false,
             utcOffsetMinutes = 0,
         } = args;
 
         const { extendedProps: props } = this;
+        props.calendarText = calendarText;
         props.dateOrder = dateOrder;
         props.outputStringFormat = outputStringFormat;
         props.outputPrecision = outputPrecision;
         props.outputTimeMode = outputTimeMode;
         props.utcOffsetMinutes = utcOffsetMinutes;
-        props.skipGenericParse = false;
+        props.skipGenericParse = skipGenericParse;
+
+        this._props.chainHandler.configCalendarConverter(calendarText, utcOffsetMinutes);
     }
 
     public assertEmptyPipeline(dateSubType: string): void {

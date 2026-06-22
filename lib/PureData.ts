@@ -59,13 +59,13 @@ class PureData {
     protected _composeChainProps<T extends ChainCtorParams>(
         props: Record<string, unknown> = {},
         chainType: string,
-        chainHandler: ChainHandler
+        chainHandlerCtor: typeof ChainHandler
     ) {
         return Object.assign(
             {},
             this._globalConfig['general'],
             {
-                chainHandler,
+                chainHandlerCtor,
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 fieldProcessorMap: this._fieldProcessorMap,
@@ -91,26 +91,29 @@ class PureData {
     // Chains
 
     public any() {
-        return new AnyChain(this._composeChainProps({}, 'any', new AnyHandler()));
+        return new AnyChain(this._composeChainProps({}, 'any', AnyHandler));
     }
 
     public array(props: Record<string, unknown> = {}) {
         return new ArrayChain(
-            this._composeChainProps(props, 'array', new ArrayHandler())
+            this._composeChainProps(props, 'array', ArrayHandler)
         );
     }
 
     public boolean(props: Record<string, unknown> = {}) {
         return new BooleanChain(
-            this._composeChainProps(props, 'boolean', new BooleanHandler())
+            this._composeChainProps(props, 'boolean', BooleanHandler)
         );
     }
 
     public date(props: Record<string, unknown> = {}) {
+        const finalProps = Object.assign({ 
+            calendarText: this._calendarText 
+        }, props);
         return new DateChain(this._composeChainProps(
-            props,
+            finalProps,
             'date',
-            new DateHandler(this._calendarText)
+            DateHandler
         ));
     }
 
@@ -118,7 +121,7 @@ class PureData {
         return new NumberChain(this._composeChainProps(
             props,
             'number',
-            new NumberHandler()
+            NumberHandler
         ));
     }
 
@@ -126,7 +129,7 @@ class PureData {
         return new ObjectChain(this._composeChainProps<ObjectChainCtorParams>(
             props,
             'object',
-            new ObjectHandler()
+            ObjectHandler
         ));
     }
 
@@ -135,7 +138,7 @@ class PureData {
         return new SchemaChain(this._composeChainProps(
             finalProps,
             'object',
-            new ObjectHandler()
+            ObjectHandler
         ));
     }
 
@@ -143,7 +146,7 @@ class PureData {
         return new StringChain(this._composeChainProps(
             props,
             'string',
-            new StringHandler()
+            StringHandler
         ));
     }
 

@@ -99,7 +99,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
     }
 
     public clone(args: FieldCloneParams<C> = {}): this {
-        const Ctor = this.constructor as new (props?: FieldCtorParams) => this;
+
         const {
             autoConvert = this._autoConvert,
             defaultValue = this._defaultValue,
@@ -109,22 +109,30 @@ abstract class Field<C extends FieldProps = FieldProps> {
             presence = this._presence,
             fieldProcessorMap = this._fieldProcessorMap,
         } = args;
-        const clone = new Ctor({
-            autoConvert,
-            defaultValue,
-            label,
-            errorMessages,
-            pathDelims,
-            presence,
-            fieldProcessorMap,
-        } as FieldCtorParams);
 
-        const { _props } = this;
-        for (const key of Object.keys(_props) as (keyof C)[]) {
-            clone._props[key] = key in args
-                ? (args as Partial<C>)[key] as C[keyof C]
-                : _props[key];
-        }
+        const allProps = Object.assign(
+            {
+                autoConvert,
+                defaultValue,
+                label,
+                errorMessages,
+                pathDelims,
+                presence,
+                fieldProcessorMap,
+            },
+            this._props,
+            args as Partial<C>
+        );
+
+        const Ctor = this.constructor as new (props?: FieldCtorParams) => this;
+        const clone = new Ctor(allProps);
+
+        // const { _props } = this;
+        // for (const key of Object.keys(_props) as (keyof C)[]) {
+        //     clone._props[key] = key in args
+        //         ? (args as Partial<C>)[key] as C[keyof C]
+        //         : _props[key];
+        // }
 
         return clone;
     }

@@ -121,11 +121,13 @@ export type TimestampOptions = {
 class DateConverter {
 
     private _calendarText: Translation;
+    private _defaultUtcOffsetMinutes: number;
     private _cache: HumanDateCache;
 
-    constructor(calendarText: Translation) {
+    constructor(calendarText: Translation, defaultOffsetMinutes: number = 0) {
         this._calendarText = calendarText;
         this._cache = null;
+        this._defaultUtcOffsetMinutes = defaultOffsetMinutes;
     }
 
     private _loadCache() {
@@ -251,10 +253,10 @@ class DateConverter {
         }
 
         let hour = null, minute = null, second = null, meridiem = null,
-            timezone = null, offsetHour = null, offsetMinute = null;
+            timezone = null, offsetHours = null, offsetMinutes = null;
 
         // Check time portion (if it exists)
-        const timeString = matchResult[4];
+        const timeString = matchResult[6];
         if (timeString) {
 
             if (options.maxPrecision === "date") {
@@ -268,13 +270,13 @@ class DateConverter {
 
             ([
                 , hour, minute = null, second = null, meridiem = null,
-                timezone = null, offsetHour = null, offsetMinute = null
+                timezone = null, offsetHours = null, offsetMinutes = null
             ] = matchResult);
 
-            if (options.minPrecision === "timezone" && !timezone && !offsetHour) {
+            if (options.minPrecision === "timezone" && !timezone && !offsetHours) {
                 return null;
             }
-            if (options.maxPrecision === "time" && (timezone || offsetHour)) {
+            if (options.maxPrecision === "time" && (timezone || offsetHours)) {
                 return null;
             }
 
@@ -309,8 +311,16 @@ class DateConverter {
                 .replace(/\s*,\s*/g, ', ')
                 .replace(/\s*([:/.-])\s*/g, '$1');
         }
-
-        const offsetHourNum = Number(offsetHour);
+        
+        let totalOffsetMinutes;
+        if(offsetHours === null) {
+            totalOffsetMinutes = this._defaultUtcOffsetMinutes;
+        } 
+        else {
+            const offsetHoursNum = Number(offsetHours);
+            const offsetMinutesNum = Number(offsetMinutes);
+            totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
+        }
 
         return new UtcDate({
             localDate: new Date(Date.UTC(
@@ -321,7 +331,7 @@ class DateConverter {
                 Number(minute),
                 Number(second)
             )),
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute)),
+            offsetMinutes: totalOffsetMinutes,
             raw: dateString as string
         });
     }
@@ -343,7 +353,7 @@ class DateConverter {
         const [
             , year, monthDelim = '', month = null, dayDelim = '', day = null,                                // date
             hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
-            zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
+            zulu = null, offsetHours = null, offsetMinutesDelim = '', offsetMinutes = null,               // offset
         ] = matchResult;
 
         if (month && !day && monthDelim.length === 0) {
@@ -363,7 +373,7 @@ class DateConverter {
             day && delimSize !== dayDelim.length ||
             minute && delimSize !== minuteDelim.length ||
             second && delimSize !== secondDelim.length ||
-            offsetMinute && delimSize !== offsetMinuteDelim.length
+            offsetMinutes && delimSize !== offsetMinutesDelim.length
         ) {
             return null;
         }
@@ -407,7 +417,7 @@ class DateConverter {
                 }
                 break;
             case "timezone":
-                if (!zulu && !offsetHour) {
+                if (!zulu && !offsetHours) {
                     return null;
                 }
                 break;
@@ -447,7 +457,7 @@ class DateConverter {
                 break;
             case "time":
             case "millisecond":
-                if (zulu || offsetHour) {
+                if (zulu || offsetHours) {
                     return null;
                 }
                 break;
@@ -461,7 +471,15 @@ class DateConverter {
             return null;
         }
 
-        const offsetHourNum = Number(offsetHour);
+        let totalOffsetMinutes;
+        if(offsetHours === null && zulu === null) {
+            totalOffsetMinutes = this._defaultUtcOffsetMinutes;
+        } 
+        else {
+            const offsetHoursNum = Number(offsetHours);
+            const offsetMinutesNum = Number(offsetMinutes);
+            totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
+        }
 
         return new UtcDate({
             localDate: new Date(Date.UTC(
@@ -473,7 +491,7 @@ class DateConverter {
                 Number(second),
                 Number(millisecond)
             )),
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute)),
+            offsetMinutes: totalOffsetMinutes,
             raw: dateString,
         });
     }
@@ -495,7 +513,7 @@ class DateConverter {
         const [
             , year, dayDelim = '', dayOfYear = null,                                                       // date
             hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
-            zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
+            zulu = null, offsetHours = null, offsetMinutesDelim = '', offsetMinutes = null,               // offset
         ] = matchResult;
 
         // Check delims
@@ -509,7 +527,7 @@ class DateConverter {
         if (
             minute && delimSize !== minuteDelim.length ||
             second && delimSize !== secondDelim.length ||
-            offsetMinute && delimSize !== offsetMinuteDelim.length
+            offsetMinutes && delimSize !== offsetMinutesDelim.length
         ) {
             return null;
         }
@@ -544,7 +562,7 @@ class DateConverter {
                 }
                 break;
             case "timezone":
-                if (!zulu && !offsetHour) {
+                if (!zulu && !offsetHours) {
                     return null;
                 }
                 break;
@@ -574,7 +592,7 @@ class DateConverter {
                 break;
             case "time":
             case "millisecond":
-                if (zulu || offsetHour) {
+                if (zulu || offsetHours) {
                     return null;
                 }
                 break;
@@ -587,7 +605,15 @@ class DateConverter {
             return null;
         }
 
-        const offsetHourNum = Number(offsetHour);
+        let totalOffsetMinutes;
+        if(offsetHours === null && zulu === null) {
+            totalOffsetMinutes = this._defaultUtcOffsetMinutes;
+        } 
+        else {
+            const offsetHoursNum = Number(offsetHours);
+            const offsetMinutesNum = Number(offsetMinutes);
+            totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
+        }
 
         return new UtcDate({
             localDate: new Date(Date.UTC(
@@ -599,7 +625,7 @@ class DateConverter {
                 Number(second),
                 Number(millisecond)
             )),
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + Number(offsetMinute)),
+            offsetMinutes: totalOffsetMinutes,
             raw: dateString
         });
     }
@@ -621,7 +647,7 @@ class DateConverter {
         const [
             , year, weekDelim = '', week, dayDelim = '', dayOfWeek = null,                                   // date
             hour = null, minuteDelim = '', minute = null, secondDelim = '', second = null, millisecond = null,   // time
-            zulu = null, offsetHour = null, offsetMinuteDelim = '', offsetMinute = null,               // offset
+            zulu = null, offsetHours = null, offsetMinutesDelim = '', offsetMinutes = null,               // offset
         ] = matchResult;
 
         // check delims
@@ -636,7 +662,7 @@ class DateConverter {
             dayOfWeek && delimSize !== dayDelim.length ||
             minute && delimSize !== minuteDelim.length ||
             second && delimSize !== secondDelim.length ||
-            offsetMinute && delimSize !== offsetMinuteDelim.length
+            offsetMinutes && delimSize !== offsetMinutesDelim.length
         ) {
             return null;
         }
@@ -675,7 +701,7 @@ class DateConverter {
                 }
                 break;
             case "timezone":
-                if (!zulu && !offsetHour) {
+                if (!zulu && !offsetHours) {
                     return null;
                 }
                 break;
@@ -710,7 +736,7 @@ class DateConverter {
                 break;
             case "time":
             case "millisecond":
-                if (zulu || offsetHour) {
+                if (zulu || offsetHours) {
                     return null;
                 }
                 break;
@@ -726,12 +752,19 @@ class DateConverter {
 
         const date = DateHelpers.isoWeekToDate(yearNum, weekNum, dayNum);
 
-        const offsetHourNum = Number(offsetHour);
-        const offsetMinuteNum = Number(offsetMinute);
+        let totalOffsetMinutes;
+        if(offsetHours === null && zulu === null) {
+            totalOffsetMinutes = this._defaultUtcOffsetMinutes;
+        } 
+        else {
+            const offsetHoursNum = Number(offsetHours);
+            const offsetMinutesNum = Number(offsetMinutes);
+            totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
+        }
 
         return new UtcDate({
             localDate: date,
-            offsetMinutes: Math.sign(offsetHourNum) * (Math.abs(offsetHourNum) * 60 + offsetMinuteNum),
+            offsetMinutes: totalOffsetMinutes,
             raw: dateString,
         });
 

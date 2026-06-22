@@ -1,5 +1,6 @@
 'use strict';
 
+import { AnyHandler } from './any/AnyHandler.ts';
 import { ChainHandler } from './ChainHandler.ts';
 import { ChainHandlerResult } from './ChainHandlerResult.ts';
 import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from './Field.ts';
@@ -14,11 +15,15 @@ export type ChainProps<H extends ChainHandler = ChainHandler> =
     FieldProps & {
         emptyValues: unknown[];
         chainHandler: H;
+        chainHandlerCtor: new (field: Chain) => H;
         pipeline: Step[];
     };
 
 export type ChainCtorParams<C extends ChainProps = ChainProps> =
-    FieldCtorParams & Partial<C> & Pick<C, 'chainHandler'>;
+    FieldCtorParams & Partial<C> & {
+        chainHandlerCtor: new (field: Chain) => C['chainHandler'];
+        chainHandler: never;
+    };
 
 export type ChainCloneParams<C extends ChainProps = ChainProps> =
     FieldCloneParams<C> & {
@@ -34,13 +39,14 @@ abstract class Chain<
         super(args);
 
         const {
-            chainHandler,
+            chainHandlerCtor = AnyHandler,
             emptyValues = [null, undefined],
             pipeline = [],
         } = args;
 
         this._props = {
-            chainHandler,
+            chainHandler: new chainHandlerCtor(this),
+            chainHandlerCtor,
             emptyValues,
             pipeline
         } as C;
@@ -50,9 +56,8 @@ abstract class Chain<
 
     public override clone(args: L = {} as L): this {
         const clone = super.clone(args);
-
         if (args.addStep) {
-            clone.extendedProps.pipeline = [...clone.extendedProps.pipeline, args.addStep];
+            clone._props.pipeline = [...clone._props.pipeline, args.addStep];
         }
         return clone;
     }
@@ -65,7 +70,7 @@ abstract class Chain<
     }
 
     public addStep(fnKey: keyof C['chainHandler'], args: StepArgsOrFn = []): this {
-        const chainHandler = this.extendedProps.chainHandler as C['chainHandler'];
+        const chainHandler = this._props.chainHandler as C['chainHandler'];
         const fn = chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
@@ -89,7 +94,7 @@ abstract class Chain<
      */
     public empty(): this {
         return this.addStep('empty', function (this: Chain): unknown[] {
-            return [this.extendedProps.emptyValues];
+            return [this._props.emptyValues];
         });
     }
 
@@ -102,17 +107,10 @@ abstract class Chain<
      */
     public notEmpty(): this {
         return this.addStep('notEmpty', function (this: Chain): unknown[] {
-            return [this.extendedProps.emptyValues];
+            return [this._props.emptyValues];
         });
     }
 
-    // public get pipeline(): Step[] {
-    //     return this.props.pipeline;
-    // }
-
-    // public get chainHandler(): C['chainHandler'] {
-    //     return this.props.chainHandler;
-    // }
 
 }
 

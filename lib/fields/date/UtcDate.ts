@@ -15,7 +15,11 @@ class UtcDate {
     private _offsetMinutes: number;
 
     public constructor(dateInfo: UtcDateCtorParams) {
-        const { raw = null, offsetMinutes = 0, localDate = new Date() } = dateInfo;
+        const { 
+            raw = null, 
+            offsetMinutes = 0, 
+            localDate = new Date() 
+        } = dateInfo;
 
         this._localDate = new Date(localDate);
         this._offsetMinutes = offsetMinutes;
