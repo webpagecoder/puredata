@@ -61,18 +61,18 @@ class Utils {
         return true;
     }
 
-    static clone(variable: unknown): unknown {
+    static clone<T = unknown>(variable: T): T {
         if (variable === null || typeof variable !== 'object') {
             return variable;
         }
         if (Array.isArray(variable)) {
-            return variable.map((item: unknown): unknown => Utils.clone(item));
+            return variable.map((item) => Utils.clone(item)) as T;
         }
         const clone: Record<string, unknown> = {};
         for (const key of Object.keys(variable as object)) {
             clone[key] = Utils.clone((variable as Record<string, unknown>)[key]);
         }
-        return clone;
+        return clone as T;
     }
 
 
@@ -185,7 +185,7 @@ class Utils {
         return proto === Object.prototype || proto === null;
     }
 
-    static mergeObjects(parent: unknown, child: unknown): unknown {
+    static mergeObjects(parent: Record<string, unknown>, child: Record<string, unknown>): unknown {
         let stack: [unknown, unknown][] = [[
             parent = Utils.clone(parent),
             Utils.clone(child)

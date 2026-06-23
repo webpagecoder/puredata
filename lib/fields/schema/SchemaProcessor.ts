@@ -58,7 +58,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
-        for (let [key, childField] of field.extendedProps.schemaMap) {
+        for (let [key, childField] of field.props.schemaMap) {
             this._localBasicProcessors.set(key, fieldProcessorMap.resolve(childField));
         }
     }
@@ -125,7 +125,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 });
 
                 for (const reference of resolvedChildProcessor.getReferences()) {
-                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.extendedProps.path).toString();
+                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.props.path).toString();
                     const pubNode = referenceResolver.getNode(absolutePublisherPathStr) ||
                         referenceResolver.createNode(absolutePublisherPathStr);
                     referenceResolver.linkNodes(pubNode, subNode);
@@ -176,7 +176,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const {
             chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
-        } = _field.extendedProps;
+        } = _field.props;
 
         // Do any required key renaming
         if (renameKeysArgs) {
@@ -187,7 +187,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         if (stripUnknownKeys) {
             tracker.setValue(stripKeys(
                 tracker.getValue(),
-                Array.from(_field.extendedProps.schemaMap.keys())
+                Array.from(_field.props.schemaMap.keys())
             ).value);
         }
 

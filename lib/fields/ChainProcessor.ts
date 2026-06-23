@@ -51,7 +51,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
     }
 
     public executePipeline(tracker: ValueTracker): void {
-        const pipeline = this._field.extendedProps.pipeline || [];
+        const pipeline = this._field.props.pipeline || [];
         // const { _hasPipelineHooks } = this;
         for (const step of pipeline) {
             let { fn, args } = step;
@@ -62,7 +62,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
             // a regular chain cant really refer to itself
             for (const arg of args) {
                 if (arg instanceof PathValueField) {
-                    const refValueTracker = tracker.resolvePath(arg.extendedProps.path);
+                    const refValueTracker = tracker.resolvePath(arg.props.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {
@@ -94,7 +94,7 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
 
     public override getReferences(): Set<PathValueField> {
         const references = super.getReferences();
-        const { pipeline } = this._field.extendedProps;
+        const { pipeline } = this._field.props;
         for (const { args } of pipeline) {
             for (const arg of this.resolveStepArgs(args)) {
                 if (arg instanceof PathValueField) {

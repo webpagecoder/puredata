@@ -45,7 +45,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             stripUnknownKeys = true,
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.arrayChain = arrayChain;
         props.cloneObject = true;
         props.ensurePlain = true;
@@ -61,7 +61,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             schema = null
         } = args;
         if (schema) {
-            clone.extendedProps.schemaMap = this._createSchemaMap(schema);
+            clone.props.schemaMap = this._createSchemaMap(schema);
         }
         return clone;
     }
@@ -81,7 +81,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
                 });
             }
             else if (Array.isArray(value)) {
-                field = this.extendedProps.arrayChain.tuple(value);
+                field = this.props.arrayChain.tuple(value);
             }
             else {
                 field = new ValueField({

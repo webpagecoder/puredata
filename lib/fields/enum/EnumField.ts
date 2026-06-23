@@ -23,14 +23,14 @@ class EnumField extends Field<EnumFieldProps> {
             structure = [],
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.structure = structure;
         props.isArray = Array.isArray(structure);
     }
 
     public override clone(args: EnumFieldCloneParams = {}): this {
         const clone = super.clone(args);
-        clone.extendedProps.isArray = Array.isArray(clone.extendedProps.structure);
+        clone.props.isArray = Array.isArray(clone.props.structure);
         return clone;
     }
 }

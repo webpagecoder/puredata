@@ -1,7 +1,7 @@
 'use strict';
 
 import { FieldProcessorMap } from './FieldProcessorMap.ts';
-import { Translation } from '../Translation.ts';
+import { Translation, TranslationStringRecord } from '../Translation.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from './Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
@@ -13,28 +13,29 @@ export type FieldProps = {};
 export type FieldCtorParams = {
     autoConvert?: boolean;
     defaultValue?: unknown;
-    label?: string;
     errorMessages: Translation;
+    fieldProcessorMap: FieldProcessorMap;
+    label?: string;
     pathDelims: PathDelimTypes;
     presence?: Presence;
-    fieldProcessorMap: FieldProcessorMap;
     strip?: boolean;
 };
 
-export type FieldCloneParams<C extends FieldProps = FieldProps> = Partial<FieldCtorParams & C>;
+export type FieldCloneParams<P extends FieldProps = FieldProps> = Partial<FieldCtorParams & P>;
 
-abstract class Field<C extends FieldProps = FieldProps> {
+abstract class Field<P extends FieldProps = FieldProps> {
 
     protected _autoConvert: boolean;
     protected _defaultValue: unknown;
+    protected _fieldProcessorMap: FieldProcessorMap;
     protected _label: string
     protected _errorMessages: Translation;
     protected _pathDelims: PathDelimTypes;
     protected _presence: Presence;
-    protected _processor: Processor | null;
-    protected _fieldProcessorMap: FieldProcessorMap;
-    protected _props: C;
     protected _strip: boolean;
+
+    protected _cachedProcessor: Processor | null;
+    protected _props: P;
 
     public constructor(args: FieldCtorParams) {
         const {
@@ -42,29 +43,30 @@ abstract class Field<C extends FieldProps = FieldProps> {
             defaultValue = undefined,
             label = 'Field',
             errorMessages,
+            fieldProcessorMap,
             pathDelims,
             presence = 'required',
-            fieldProcessorMap,
             strip = false
         } = args;
 
-        this._props = {} as C;
         this._autoConvert = autoConvert;
         this._defaultValue = defaultValue;
         this._label = label;
         this._errorMessages = errorMessages.override();
         this._pathDelims = pathDelims;
         this._presence = presence;
-        this._processor = null;
         this._fieldProcessorMap = fieldProcessorMap;
         this._strip = strip;
+
+        this._cachedProcessor = null;
+        this._props = {} as P;
     }
 
     public get defaultValue(): unknown {
         return this._defaultValue;
     }
 
-    public get extendedProps(): C {
+    public get props(): P {
         return this._props;
     }
 
@@ -77,13 +79,13 @@ abstract class Field<C extends FieldProps = FieldProps> {
     }
 
     public get processor(): Processor {
-        if (!this._processor) {
+        if (!this._cachedProcessor) {
             if (!this._fieldProcessorMap) {
                 throw new Error('Field/Processor compilation mapper is not configured');
             }
-            this._processor = this._fieldProcessorMap.resolve(this).compile();
+            this._cachedProcessor = this._fieldProcessorMap.resolve(this).compile();
         }
-        return this._processor;
+        return this._cachedProcessor;
     }
 
     public get fieldProcessorMap(): FieldProcessorMap {
@@ -98,7 +100,7 @@ abstract class Field<C extends FieldProps = FieldProps> {
         return this._pathDelims;
     }
 
-    public clone(args: FieldCloneParams<C> = {}): this {
+    public clone(args: FieldCloneParams<P> = {}): this {
 
         const {
             autoConvert = this._autoConvert,
@@ -121,20 +123,10 @@ abstract class Field<C extends FieldProps = FieldProps> {
                 fieldProcessorMap,
             },
             this._props,
-            args as Partial<C>
+            args as Partial<P>
         );
 
-        const Ctor = this.constructor as new (props?: FieldCtorParams) => this;
-        const clone = new Ctor(allProps);
-
-        // const { _props } = this;
-        // for (const key of Object.keys(_props) as (keyof C)[]) {
-        //     clone._props[key] = key in args
-        //         ? (args as Partial<C>)[key] as C[keyof C]
-        //         : _props[key];
-        // }
-
-        return clone;
+        return new (this.constructor as new (props?: FieldCtorParams) => this)(allProps);
     }
 
     public process(value?: unknown): ValueTracker {
@@ -160,17 +152,18 @@ abstract class Field<C extends FieldProps = FieldProps> {
     }
 
     // Declarative API
-    public config(config: C) {
+    public config(config: P): this {
+
         return this.clone(config);
     }
 
     public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' } as FieldCloneParams<C>);
+        return this.clone({ defaultValue, presence: 'optional' } as FieldCloneParams<P>);
     }
 
-    public errors(overrides: Record<string, string>): this {
+    public errorText(overrides: Record<string, string>): this {
         const clone = this.clone();
-        const errorOverrides: Record<string, string> = {};
+        const errorOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {
             const internalPathStyle = new Path(pathStr, this._pathDelims)
                 .toRelative()
@@ -182,23 +175,23 @@ abstract class Field<C extends FieldProps = FieldProps> {
     }
 
     public forbidden(): this {
-        return this.clone({ presence: 'forbidden' } as FieldCloneParams<C>);
+        return this.clone({ presence: 'forbidden' } as FieldCloneParams<P>);
     }
 
     public label(label: string): this {
-        return this.clone({ label } as FieldCloneParams<C>);
+        return this.clone({ label } as FieldCloneParams<P>);
     }
 
     public optional(): this {
-        return this.clone({ presence: 'optional' } as FieldCloneParams<C>);
+        return this.clone({ presence: 'optional' } as FieldCloneParams<P>);
     }
 
     public required(): this {
-        return this.clone({ presence: 'required' } as FieldCloneParams<C>);
+        return this.clone({ presence: 'required' } as FieldCloneParams<P>);
     }
 
     public strip(strip: boolean = true): this {
-        return this.clone({ strip } as FieldCloneParams<C>);
+        return this.clone({ strip } as FieldCloneParams<P>);
     }
 
 }

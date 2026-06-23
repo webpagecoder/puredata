@@ -23,7 +23,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
             removeEmpties = false,
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.castSingle = castSingle;
         props.maxLength = maxLength;
         props.removeEmpties = removeEmpties;
@@ -44,7 +44,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
     public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
         return this.clone({
             removeEmpties,
-            emptyValues: [...this.extendedProps.emptyValues, ...addEmptyValues],
+            emptyValues: [...this.props.emptyValues, ...addEmptyValues],
         });
     }
 
@@ -122,7 +122,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
      */
     public removeEmpties(): this {
         return this.addStep('removeEmpties', function (this: ArrayChain): unknown[] {
-            return [this.extendedProps.emptyValues];
+            return [this.props.emptyValues];
         });
     }
 

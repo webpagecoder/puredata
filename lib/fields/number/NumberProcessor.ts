@@ -8,7 +8,7 @@ import { ChainProcessor } from '../ChainProcessor.ts';
 class NumberProcessor extends ChainProcessor<NumberChain> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.extendedProps;
+        const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.props;
         const result = Utils.parseNumber(tracker.getValue(), {
             autoConvert,
             ensureSafe,

@@ -8,7 +8,7 @@ class ValueFieldProcessor extends Processor<ValueField> {
 
     public override process(tracker: ValueTracker): void {
         this.preProcess(tracker);
-        const { mutable, value } = this._field.extendedProps;
+        const { mutable, value } = this._field.props;
         if (!mutable || tracker.getValue() === undefined) {
             tracker.setValue(value);
         }

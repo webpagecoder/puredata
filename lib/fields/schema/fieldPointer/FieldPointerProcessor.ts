@@ -25,7 +25,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
         
         const { ancestors, parent, absolutePath } = context;
         const { _fieldProcessorMap, _field } = this;
-        const { fieldPath } = _field.extendedProps;
+        const { fieldPath } = _field.props;
     
         const referencedProcessor = parent.resolvePath(fieldPath, this, ancestors);
 
@@ -58,7 +58,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
     // Note: this will only be called if the reference is a nest (i.e. it points to an ancestor)
     public override process(tracker: ValueTracker): void {
 
-        const { minDepth, maxDepth } = this._field.extendedProps;
+        const { minDepth, maxDepth } = this._field.props;
 
         tracker.setNestDepth(tracker.parent.nestDepth + 1);
 

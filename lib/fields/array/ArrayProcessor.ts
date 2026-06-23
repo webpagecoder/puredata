@@ -7,11 +7,11 @@ import { ChainProcessor } from '../ChainProcessor.ts';
 class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, label, extendedProps } = this.field;
+        const { autoConvert, label, props } = this.field;
         const value = tracker.getValue();
 
         if (!Array.isArray(value)) {
-            if (autoConvert || extendedProps.castSingle && value !== undefined) {
+            if (autoConvert || props.castSingle && value !== undefined) {
                 tracker.setValue([value]);
             }
             else {
@@ -20,7 +20,7 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C
             }
         }
 
-        const { chainHandler, maxLength, removeEmpties, emptyValues } = extendedProps;
+        const { chainHandler, maxLength, removeEmpties, emptyValues } = props;
 
         if (removeEmpties) {
             tracker.setValue(chainHandler.removeEmpties(tracker.getValue() as unknown[], emptyValues).value);

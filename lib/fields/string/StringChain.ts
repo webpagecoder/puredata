@@ -24,12 +24,16 @@ class StringChain extends Chain<StringChainProps> {
             truncate = false,
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.matching = matching;
         props.maxLength = maxLength;
         props.trim = trim;
         props.truncate = truncate;
+
+        this._props.chainHandler.configMatchingDefaults(matching);
     }
+
+    
 }
 
 export { StringChain };

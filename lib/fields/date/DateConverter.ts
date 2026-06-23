@@ -47,9 +47,9 @@ const ISO_WEEK = `^(${YYYY})(-?)W(${WW})(?:(-?)(${E})(?:T${ISO_TIME_TZ})?)?$`;
 const HUMAN = (allMonthNames: string, allDayNames: string, numberSuffixes: string) => {
     return {
         regexes: {
-            MDY: `(?:${allDayNames}[., ]+)?(?:(?:(${M_OR_MM})[/. -]+(${D_OR_DD})[/. -]+)|(?:(${allMonthNames})[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+))(${YYYY})(?:[, ]+(.*))?$`,
-            DMY: `(?:${allDayNames}[., ]+)?(?:(?:(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+)(?:(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[ ,]+))(${YYYY})(?:[, ]+(.*))?$`,
-            YMD: `(?:${allDayNames}[., ]+)?(${YYYY})(?:(?:[/. -]+(${M_OR_MM})[/. -]+(${D_OR_DD}))|(?:[ ,]+(?:(${allMonthNames}))[ ,]+(${D_OR_DD})(?:\\s*${numberSuffixes})?))(?:[, ]+(.*))?$`
+            MDY: `(?:${allDayNames}[., ]+)?(?:(?:(${M_OR_MM})[/. -]+(${D_OR_DD})[/. -]+)|(?:(${allMonthNames})[., ]+(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+))(${YYYY})(?:[, ]+(.*))?$`,
+            DMY: `(?:${allDayNames}[., ]+)?(?:(?:(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+)(?:(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[., ]+))(${YYYY})(?:[, ]+(.*))?$`,
+            YMD: `(?:${allDayNames}[., ]+)?(${YYYY})(?:(?:[/. -]+(${M_OR_MM})[/. -]+(${D_OR_DD}))|(?:[ ,]+(?:(${allMonthNames}))[., ]+(${D_OR_DD})(?:\\s*${numberSuffixes})?))(?:[, ]+(.*))?$`
         },
         indexes: {
             MDY: { numStyleMonth: 1, numStyleDay: 2, wordStyleMonth: 3, wordStyleDay: 4, year: 5 },

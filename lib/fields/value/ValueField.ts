@@ -19,7 +19,7 @@ class ValueField extends Field<ValueFieldProps> {
             value = null,
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.mutable = mutable;
         props.value = value;
     }

@@ -19,23 +19,23 @@ export type ChainProps<H extends ChainHandler = ChainHandler> =
         pipeline: Step[];
     };
 
-export type ChainCtorParams<C extends ChainProps = ChainProps> =
-    FieldCtorParams & Partial<C> & {
-        chainHandlerCtor: new (field: Chain) => C['chainHandler'];
+export type ChainCtorParams<P extends ChainProps = ChainProps> =
+    FieldCtorParams & Partial<P> & {
+        chainHandlerCtor: new (field: Chain) => P['chainHandler'];
         chainHandler: never;
     };
 
-export type ChainCloneParams<C extends ChainProps = ChainProps> =
-    FieldCloneParams<C> & {
+export type ChainCloneParams<P extends ChainProps = ChainProps> =
+    FieldCloneParams<P> & {
         addStep?: Step;
     };
 
 abstract class Chain<
-    C extends ChainProps = ChainProps,
-    L extends ChainCloneParams<C> = ChainCloneParams<C>
-> extends Field<C> {
+    P extends ChainProps = ChainProps,
+    C extends ChainCloneParams<P> = ChainCloneParams<P>
+> extends Field<P> {
 
-    public constructor(args: ChainCtorParams<C>) {
+    public constructor(args: ChainCtorParams<P>) {
         super(args);
 
         const {
@@ -49,12 +49,12 @@ abstract class Chain<
             chainHandlerCtor,
             emptyValues,
             pipeline
-        } as C;
+        } as P;
 
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
-    public override clone(args: L = {} as L): this {
+    public override clone(args: C = {} as C): this {
         const clone = super.clone(args);
         if (args.addStep) {
             clone._props.pipeline = [...clone._props.pipeline, args.addStep];
@@ -66,11 +66,11 @@ abstract class Chain<
         if (key in target) {
             return (target as Record<PropertyKey, unknown>)[key];
         }
-        return (...args: unknown[]): this => this.addStep(key as keyof C['chainHandler'], args);
+        return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
     }
 
-    public addStep(fnKey: keyof C['chainHandler'], args: StepArgsOrFn = []): this {
-        const chainHandler = this._props.chainHandler as C['chainHandler'];
+    public addStep(fnKey: keyof P['chainHandler'], args: StepArgsOrFn = []): this {
+        const chainHandler = this._props.chainHandler as P['chainHandler'];
         const fn = chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
@@ -81,7 +81,7 @@ abstract class Chain<
                 fn: (fn as Step['fn']).bind(chainHandler),
                 args,
             },
-        } as L);
+        } as C);
     }
 
     // Validators

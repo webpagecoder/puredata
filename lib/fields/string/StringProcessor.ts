@@ -9,7 +9,7 @@ class StringProcessor extends ChainProcessor<StringChain> {
     public override preProcess(tracker: ValueTracker): void {
         const {
             autoConvert,
-            extendedProps: {
+            props: {
                 matching,
                 maxLength,
                 trim,

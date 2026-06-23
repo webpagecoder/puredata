@@ -23,7 +23,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
             transformer = x => x
         } = args;
 
-        const {extendedProps: props} = this;
+        const {props} = this;
         props.allowBoolish = allowBoolish;
         props.boolishPairs = boolishPairs;
         props.transformer = transformer;
@@ -41,7 +41,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
     public configBoolish(allowBoolish: boolean = true, addBoolishPairs: BoolishPair[] = []): this {
         return this.clone({
             allowBoolish,
-            boolishPairs: [...(this.extendedProps.boolishPairs || []), ...addBoolishPairs]
+            boolishPairs: [...(this.props.boolishPairs || []), ...addBoolishPairs]
         });
     }
 
@@ -57,7 +57,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
      */
     public override truthy(): this {
         return this.addStep('truthy', (function (this: BooleanChain): unknown[] {
-            const { allowBoolish, boolishPairs = [] } = this.extendedProps;
+            const { allowBoolish, boolishPairs = [] } = this.props;
             return [allowBoolish ? boolishPairs.map(([truthy,]: [unknown, unknown]): unknown => truthy) : []];
         }));
     }
@@ -72,7 +72,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
      */
     public override falsy(): this {
         return this.addStep('falsy', (function (this: BooleanChain): unknown[] {
-            const { allowBoolish, boolishPairs = [] } = this.extendedProps;
+            const { allowBoolish, boolishPairs = [] } = this.props;
             return [allowBoolish ? boolishPairs.map(([, falsy]: [unknown, unknown]): unknown => falsy) : []];
         }));
     }
@@ -90,7 +90,7 @@ class BooleanChain extends Chain<BooleanChainProps> {
      */
     public invert(): this {
         return this.addStep('invert', (function (this: BooleanChain): unknown[] {
-            const { allowBoolish, boolishPairs = [] } = this.extendedProps;
+            const { allowBoolish, boolishPairs = [] } = this.props;
             return [allowBoolish ? boolishPairs : []];
         }));
     }

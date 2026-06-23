@@ -29,13 +29,14 @@ import { StringHandler } from './fields/string/StringHandler.ts';
 import { Path, PathDelimTypes } from './Path.ts';
 import { FieldProcessorMap } from './fields/FieldProcessorMap.ts';
 import { Translation } from './Translation.ts';
+import { Utils } from './Utils.ts';
 
 class PureData {
 
     protected _calendarText: Translation;
     protected _errorMessages: Translation;
     protected _fieldProcessorMap: FieldProcessorMap;
-    protected _globalConfig: GlobalConfig;
+    protected _config: GlobalConfig;
     protected _pathDelims: PathDelimTypes;
 
     constructor({
@@ -47,8 +48,8 @@ class PureData {
         this._calendarText = calendarText;
         this._errorMessages = errorMessages;
         this._fieldProcessorMap = fieldProcessorMap;
-        this._globalConfig = globalConfig;
-        this._pathDelims = globalConfig.general.pathDelims;
+        this._config = Utils.clone(globalConfig);
+        this._pathDelims = this._config.general.pathDelims;
 
     }
 
@@ -63,14 +64,14 @@ class PureData {
     ) {
         return Object.assign(
             {},
-            this._globalConfig['general'],
+            this._config['general'],
             {
                 chainHandlerCtor,
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 fieldProcessorMap: this._fieldProcessorMap,
             },
-            this._globalConfig[chainType as keyof GlobalConfig],
+            this._config[chainType as keyof GlobalConfig],
             props
         ) as T;
     }
@@ -78,7 +79,7 @@ class PureData {
     protected _composeFieldProps<T extends FieldCtorParams>(props: Record<string, unknown> = {}) {
         return Object.assign(
             {},
-            this._globalConfig['general'],
+            this._config['general'],
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
@@ -198,7 +199,12 @@ class PureData {
 
     // Settings 
 
-    public calendar(overrides: Record<string, string>) {
+    public config(config: Partial<GlobalConfig> = {}) {
+        this._config = Utils.mergeObjects(this._config, config) as GlobalConfig;
+        this._pathDelims = this._config.general.pathDelims;
+    }
+
+    public calendarText(overrides: Record<string, string>) {
         const calendarOverrides: Record<string, string> = {};
         for (const pathStr of Object.keys(overrides)) {
             const internalPathStyle = new Path(pathStr, this._pathDelims)
@@ -206,10 +212,10 @@ class PureData {
                 .toNormalizedString();
             calendarOverrides[internalPathStyle] = overrides[pathStr];
         }
-        this._errorMessages.setText(calendarOverrides);
+        this._calendarText.setText(calendarOverrides);
     }
 
-    public errors(overrides: Record<string, string>) {
+    public errorText(overrides: Record<string, string>) {
         const errorOverrides: Record<string, string> = {};
         for (const pathStr of Object.keys(overrides)) {
             const internalPathStyle = new Path(pathStr, this._pathDelims)
@@ -220,9 +226,9 @@ class PureData {
         this._errorMessages.setText(errorOverrides);
     }
 
-    public pathDelims(delims: PathDelimTypes) {
-        this._pathDelims = delims;
-    }
+    // public pathDelims(delims: PathDelimTypes) {
+    //     this._pathDelims = delims;
+    // }
 }
 
 const PureDataInstance = new PureData();

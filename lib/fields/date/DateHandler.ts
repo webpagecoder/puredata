@@ -14,7 +14,7 @@ class DateHandler extends ChainHandler {
     protected _dateConverter: DateConverter | undefined;
 
     
-    public configCalendarConverter(calendarText: Translation, utcOffsetMinutes: number = 0) {
+    public configDateConverter(calendarText: Translation, utcOffsetMinutes: number = 0) {
         this._dateConverter = new DateConverter(calendarText, utcOffsetMinutes);
     }
 

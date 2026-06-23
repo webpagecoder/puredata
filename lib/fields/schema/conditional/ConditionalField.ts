@@ -32,8 +32,8 @@ export type ConditionalFieldCloneParams =
 
 class ConditionalField extends Field<ConditionalFieldProps> {
 
-    constructor(props: ConditionalFieldCtorParams) {
-        super(props);
+    constructor(args: ConditionalFieldCtorParams) {
+        super(args);
 
         const {
             buildStage = 0,
@@ -43,28 +43,28 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             otherwiseField = null,
             targetPathStr,
             thenField = null,
-        } = props;
+        } = args;
 
-        const { extendedProps } = this;
-        extendedProps.comparisonMode = comparisonMode;
-        extendedProps.comparisonField = comparisonField;
-        extendedProps.conditionalChain = conditionalChain;
-        extendedProps.otherwiseField = otherwiseField;
-        extendedProps.buildStage = buildStage;
-        extendedProps.targetPath = new Path(targetPathStr);
-        extendedProps.thenField = thenField;
+        const { props } = this;
+        props.comparisonMode = comparisonMode;
+        props.comparisonField = comparisonField;
+        props.conditionalChain = conditionalChain;
+        props.otherwiseField = otherwiseField;
+        props.buildStage = buildStage;
+        props.targetPath = new Path(targetPathStr);
+        props.thenField = thenField;
     }
 
     public override clone(args: ConditionalFieldCloneParams = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
-            clone.extendedProps.targetPath = new Path(args.targetPathStr);
+            clone.props.targetPath = new Path(args.targetPathStr);
         }
         return clone;
     }
 
     or(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this.extendedProps;
+        const { buildStage, conditionalChain } = this.props;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "or" in condition chain');
         }
@@ -74,7 +74,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     and(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this.extendedProps;
+        const { buildStage, conditionalChain } = this.props;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "and" in condition chain');
         }
@@ -84,7 +84,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     then(thenResult: unknown | Field) {
-        if (this.extendedProps.buildStage !== 0) {
+        if (this.props.buildStage !== 0) {
             throw new Error('Illegal placement of "then" in condition chain');
         }
         return this.clone({
@@ -100,7 +100,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     otherwise(otherwiseResult: unknown | Field) {
-        if (this.extendedProps.buildStage !== 1) {
+        if (this.props.buildStage !== 1) {
             throw new Error('Illegal placement of "otherwise" in condition chain');
         }
         return this.clone({

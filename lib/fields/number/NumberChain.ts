@@ -23,7 +23,7 @@ class NumberChain extends Chain<NumberChainProps> {
             preservePrecision = false,
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.autoConvert = autoConvert;
         props.ensureSafe = ensureSafe;
         props.ensureFinite = ensureFinite;

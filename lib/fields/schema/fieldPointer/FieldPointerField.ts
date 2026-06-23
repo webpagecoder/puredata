@@ -22,10 +22,10 @@ class FieldPointerField extends Field<FieldPointerFieldProps> {
             maxDepth = -1,
         } = args;
 
-        const { extendedProps } = this;
-        extendedProps.fieldPath = fieldPath;
-        extendedProps.minDepth = minDepth;
-        extendedProps.maxDepth = maxDepth;
+        const { props } = this;
+        props.fieldPath = fieldPath;
+        props.minDepth = minDepth;
+        props.maxDepth = maxDepth;
     }
 
 }

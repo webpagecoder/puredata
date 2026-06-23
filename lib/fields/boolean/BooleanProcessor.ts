@@ -8,7 +8,7 @@ class BooleanProcessor extends ChainProcessor<BooleanChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { field } = this;
-        const { autoConvert, extendedProps: { boolishPairs, allowBoolish, transformer } } = field;
+        const { autoConvert, props: { boolishPairs, allowBoolish, transformer } } = field;
 
         let value = transformer(tracker.getValue());
 

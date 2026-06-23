@@ -1,6 +1,7 @@
 'use strict';
 
-import { Translation } from '../../Translation.ts';
+import { Path } from '../../Path.ts';
+import { Translation, TranslationStringRecord } from '../../Translation.ts';
 import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
@@ -17,7 +18,9 @@ export type DateChainProps = ChainProps<DateHandler> & {
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
 };
-export type DateChainCtorParams = ChainCtorParams<DateChainProps>;
+export type DateChainCtorParams = ChainCtorParams<DateChainProps> & {
+    calendarText: Translation;
+};
 
 class DateChain extends Chain<DateChainProps> {
 
@@ -25,7 +28,7 @@ class DateChain extends Chain<DateChainProps> {
         super(args);
 
         const {
-            calendarText = new Translation(),
+            calendarText,
             dateOrder = 'MDY',
             outputStringFormat = null,
             outputPrecision = null,
@@ -34,8 +37,8 @@ class DateChain extends Chain<DateChainProps> {
             utcOffsetMinutes = 0,
         } = args;
 
-        const { extendedProps: props } = this;
-        props.calendarText = calendarText;
+        const { props } = this;
+        props.calendarText = calendarText.override();
         props.dateOrder = dateOrder;
         props.outputStringFormat = outputStringFormat;
         props.outputPrecision = outputPrecision;
@@ -43,13 +46,26 @@ class DateChain extends Chain<DateChainProps> {
         props.utcOffsetMinutes = utcOffsetMinutes;
         props.skipGenericParse = skipGenericParse;
 
-        this._props.chainHandler.configCalendarConverter(calendarText, utcOffsetMinutes);
+        this._props.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
     }
 
     public assertEmptyPipeline(dateSubType: string): void {
-        if (this.extendedProps.pipeline.length > 0) {
+        if (this.props.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
+    }
+
+    public calendarText(overrides: Record<string, string>): this {
+        const clone = this.clone();
+        const calendarOverrides: TranslationStringRecord = {};
+        for (const pathStr of Object.keys(overrides)) {
+            const internalPathStyle = new Path(pathStr, this._pathDelims)
+                .toRelative()
+                .toString({ self: '.', separator: '/', up: '..' });
+            calendarOverrides[internalPathStyle] = overrides[pathStr];
+        }
+        clone._props.calendarText.setText(calendarOverrides);
+        return clone;
     }
 
     // Validators
@@ -69,7 +85,7 @@ class DateChain extends Chain<DateChainProps> {
         this.assertEmptyPipeline('human');
         return this
             .clone({ skipGenericParse: true, outputPrecision: null })
-            .addStep('human', [Object.assign({ dateOrder: this.extendedProps.dateOrder }, options)]);
+            .addStep('human', [Object.assign({ dateOrder: this.props.dateOrder }, options)]);
     }
 
     /**
@@ -138,7 +154,7 @@ class DateChain extends Chain<DateChainProps> {
      */
     public today(): this {
         const now = new Date();
-        now.setUTCMinutes(now.getUTCMinutes() + this.extendedProps.utcOffsetMinutes);
+        now.setUTCMinutes(now.getUTCMinutes() + this.props.utcOffsetMinutes);
         return this.addStep('today', [now]);
     }
 

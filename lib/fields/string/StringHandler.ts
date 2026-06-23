@@ -1,5 +1,6 @@
 'use strict';
 
+import { GlobalConfig } from '../../GlobalConfig.ts';
 import { Presence } from '../../Presence.ts';
 import { RegexCache } from '../../RegexCache.ts';
 import { Utils } from '../../Utils.ts';
@@ -9,9 +10,17 @@ import { NumberHandler } from '../number/NumberHandler.ts';
 const { pass, fail } = ChainHandlerResult;
 const { optional, required, forbidden } = Presence;
 
+export type StringMatchingDefaults = GlobalConfig['string']['matching'];
+
 class StringHandler extends ChainHandler {
 
-    public matchingDefaults: Record<string, any>;
+    public matchingDefaults!: StringMatchingDefaults;
+
+    protected _matchingDefaults: StringMatchingDefaults | undefined;
+
+    public configMatchingDefaults(matchingDefaults: StringMatchingDefaults): void {
+        this._matchingDefaults = matchingDefaults;
+    }
 
     // ====================================
     // VALIDATORS

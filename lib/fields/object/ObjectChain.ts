@@ -24,7 +24,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
             maxKeyCount = null
         } = args;
 
-        const { extendedProps: props } = this;
+        const { props } = this;
         props.cloneObject = cloneObject;
         props.ensurePlain = ensurePlain;
         props.maxDepth = maxDepth;
@@ -41,7 +41,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
      */
     public removeEmpties(): this {
         return this.clone({ cloneObject: true } as ChainCloneParams<C>).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
-            return [this.extendedProps.emptyValues];
+            return [this.props.emptyValues];
         });
     }
 
@@ -53,7 +53,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
      */
     public removeEmptiesRecursive(): this {
         return this.clone({ cloneObject: true } as ChainCloneParams<C>).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
-            return [this.extendedProps.emptyValues];
+            return [this.props.emptyValues];
         });
     }
 

@@ -30,16 +30,16 @@ class PathValueField extends Field<PathValueFieldProps> {
             defaultOrCallback = undefined
         } = args;
 
-        const { extendedProps } = this;
-        extendedProps.path = new Path(pathStr, this._pathDelims);
-        extendedProps.defaultOrCallback = defaultOrCallback;
+        const { props } = this;
+        props.path = new Path(pathStr, this._pathDelims);
+        props.defaultOrCallback = defaultOrCallback;
     }
 
     public override clone(args: PathValueFieldCloneParams = {}): this {
         const clone = super.clone(args);
 
         if (args.pathStr !== undefined) {
-            clone.extendedProps.path = new Path(args.pathStr, this._pathDelims);
+            clone.props.path = new Path(args.pathStr, this._pathDelims);
         }
         return clone;
     }
