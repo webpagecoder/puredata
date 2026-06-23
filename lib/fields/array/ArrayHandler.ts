@@ -68,7 +68,7 @@ function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number
     ++index;
     if (index < dimensions.length) {
         for (const item of arr) {
-            if (!Array.isArray(item) || dimensionsRecursive(item, dimensions, index).fail) {
+            if (!Array.isArray(item) || dimensionsRecursive(item, dimensions, index)._fail) {
                 return fail(arr, "array/dimensions", { dimensions });
             }
         }
@@ -481,7 +481,7 @@ class ArrayHandler extends ChainHandler {
         const flattened: unknown[] = [];
         for (const item of arr) {
             if (Array.isArray(item)) {
-                const innerFlatten = this.flatten(item as unknown[]).value as unknown[];
+                const innerFlatten = this.flatten(item as unknown[])._value as unknown[];
                 flattened.push(...innerFlatten);
             } else {
                 flattened.push(item);

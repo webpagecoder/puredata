@@ -182,7 +182,7 @@ class ObjectHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public noneOfPaths(obj: any, paths: any= []): ChainHandlerResult {
-        return this.someOfPaths(obj, paths).pass
+        return this.someOfPaths(obj, paths)._pass
             ? fail(obj, 'object/noneOfPaths', { paths })
             : pass(obj);
     }
@@ -264,7 +264,7 @@ class ObjectHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public pathsOtherThan(obj: any, paths: any= []): ChainHandlerResult {
-        return this.onlyPaths(obj, paths).pass
+        return this.onlyPaths(obj, paths)._pass
             ? fail(obj, 'object/pathsOtherThan', { paths })
             : pass(obj);
     }
@@ -299,7 +299,7 @@ class ObjectHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public allOfButXOfPaths(obj: any, count: any, paths: any= []): ChainHandlerResult {
-        return this.xOfPaths(obj, paths.length - count, paths).pass
+        return this.xOfPaths(obj, paths.length - count, paths)._pass
             ? pass(obj)
             : fail(obj, 'object/allOfButXOfPaths', { count, paths });
     }

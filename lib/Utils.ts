@@ -4,10 +4,20 @@ import { RegexCache } from './RegexCache.ts';
 import { Field } from './fields/Field.ts';
 import { Path } from './Path.ts';
 
+export type CommonStringMatchingDefaults = {
+    allowLooseFormat: boolean;
+    ignoreCase: boolean;
+    looseFormatDelims: string;
+    normalize: boolean;
+};
+
 export type NestedStringRecord = {
     [key: string]: NestedStringRecord | string | undefined;
 };
 
+export type RegexMatchOptions = Omit<CommonStringMatchingDefaults, 'normalize'> & {
+    normalizedDelim: string;
+};
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -178,7 +188,7 @@ class Utils {
     }
 
     static isPlainObject(value: unknown): boolean {
-        if(value === null || typeof value !== 'object') {
+        if (value === null || typeof value !== 'object') {
             return false;
         }
         const proto = Object.getPrototypeOf(value);
@@ -379,30 +389,34 @@ class Utils {
         return strValue + padding;
     }
 
-    static regexMatch(str: string, regex: RegExp | RegExp[] | string | string[], options: Record<string, unknown> = {}): RegExpExecArray | null {
+    static runRegex(str: string, regexStrings: string[], options: RegexMatchOptions): RegExpExecArray | null {
         const {
-            allowedDelims,
-            delim,
-            allowLooseFormat
-        } = options as { allowedDelims?: string; delim?: string; allowLooseFormat?: boolean };
+            allowLooseFormat,
+            ignoreCase,
+            looseFormatDelims,
+            normalizedDelim,
+        } = options;
 
-        let matchData: RegExpExecArray | null;
-        const bareStr = Utils.replaceChars(str, (allowedDelims || '') + (delim || ''));
 
-        const toPattern = (input: RegExp | string): string => input instanceof RegExp ? input.source : input;
+        const combinedDelims = looseFormatDelims + normalizedDelim;
+        const bareStr = combinedDelims.length > 0 ? Utils.replaceChars(str, combinedDelims) : str;
 
-        // Loose match
+        let testStr: string;
+        let joinPortion: string;
+
         if (allowLooseFormat) {
-            matchData = Array.isArray(regex)
-                ? RegexCache.get('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')(') + ')$', 'i').exec(bareStr)
-                : RegexCache.get(toPattern(regex as RegExp | string), 'i').exec(bareStr);
+            testStr = bareStr;
+            joinPortion = ')(';
         }
         else {
-            matchData = Array.isArray(regex)
-                ? RegexCache.get('^(' + (regex as Array<RegExp | string>).map((r: RegExp | string): string => toPattern(r)).join(')' + Utils.escapeForRegex(delim || '') + '(') + ')$')
-                    .exec(str)
-                : RegexCache.get(toPattern(regex as RegExp | string)).exec(str);
+            testStr = str;
+            joinPortion = ')' + Utils.escapeForRegex(normalizedDelim) + '(';
         }
+
+        const matchData = RegexCache.get(
+            '^(' + regexStrings.join(joinPortion) + ')$',
+            ignoreCase ? 'i' : ''
+        ).exec(testStr);
 
         if (matchData) {
             matchData[0] = bareStr;
@@ -415,12 +429,10 @@ class Utils {
         return str.replace(RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);
     }
 
-    static splitOnDelims(str: string, chars: string): string[] {
-        const split = str.length > 0
-            ? str.split(RegexCache.get('[' + Utils.escapeForRegex(chars) + ']+'))
-            : [];
+    static splitOnDelims(str: string, delims: string): string[] {
+        const splitter = delims.length > 0 ? RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+') : '';
         const final: string[] = [];
-        for (const part of split) {
+        for (const part of str.split(splitter)) {
             if (part.length > 0) {
                 final.push(part);
             }

@@ -217,4 +217,4 @@ const config = {
   // watchman: true,
 };
 
-export { config };
+export default config;

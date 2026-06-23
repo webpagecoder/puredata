@@ -44,7 +44,7 @@ class AnyHandler extends ChainHandler {
      * @returns A passing result when the value is considered empty; otherwise a failing result.
      */
     public empty(value: unknown, empties: unknown[] = [null, undefined]): ChainHandlerResult {
-        return this.anyOf(value, empties).pass
+        return this.anyOf(value, empties)._pass
             ? pass(value)
             : fail(value, 'generic/empty');
     }
@@ -57,7 +57,7 @@ class AnyHandler extends ChainHandler {
      * @returns A passing result when the value is not considered empty; otherwise a failing result.
      */
     public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): ChainHandlerResult {
-        return this.anyOf(value, empties).fail
+        return this.anyOf(value, empties)._fail
             ? pass(value)
             : fail(value, 'generic/notEmpty');
     }

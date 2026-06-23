@@ -180,7 +180,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         // Do any required key renaming
         if (renameKeysArgs) {
-            tracker.setValue(renameKeys(...renameKeysArgs).value);
+            tracker.setValue(renameKeys(...renameKeysArgs)._value);
         }
 
         // Strip unknown keys if needed
@@ -188,7 +188,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             tracker.setValue(stripKeys(
                 tracker.getValue(),
                 Array.from(_field.props.schemaMap.keys())
-            ).value);
+            )._value);
         }
 
         this.executePipeline(tracker);

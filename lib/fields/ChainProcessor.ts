@@ -84,10 +84,10 @@ abstract class ChainProcessor<C extends Chain = Chain> extends Processor<C> {
     }
 
     protected _copyResultToTracker(tracker: ValueTracker, result: ChainHandlerResult): void {
-        tracker.setValue(result.value);
-        if (result.fail) {
-            for (const key of Object.keys(result.errors)) {
-                tracker.addError(key, result.errors[key]);
+        tracker.setValue(result._value);
+        if (result._fail) {
+            for (const key of Object.keys(result._errors)) {
+                tracker.addError(key, result._errors[key]);
             }
         }
     }

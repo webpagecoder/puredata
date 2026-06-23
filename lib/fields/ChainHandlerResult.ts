@@ -1,23 +1,23 @@
 'use strict';
 
-class ChainHandlerResult {
+class ChainHandlerResult<T = unknown> {
 
-    value: unknown;
-    pass: boolean;
-    fail: boolean;
-    errors: Record<string, Record<string, unknown>>;
+    protected _value: T;
+    protected _pass: boolean;
+    protected _fail: boolean;
+    protected _errors: Record<string, Record<string, unknown>>;
 
-    constructor(args: {
-        value?: unknown;
-        pass?: boolean;
+    public constructor(args: {
+        value: T;
+        pass: boolean;
         errorKey?: string;
         args?: Record<string, unknown>;
-    } = {}) {
-        this.value = args.value;
-        this.pass = args.pass || false;
-        this.fail = !this.pass;
-        this.errors = {}
-        if (!this.pass) {
+    }) {
+        this._value = args.value;
+        this._pass = args.pass || false;
+        this._fail = !this._pass;
+        this._errors = {}
+        if (!this._pass) {
             if (args.errorKey) {
                 this.addError(args.errorKey, args.args || {});
             }
@@ -25,18 +25,34 @@ class ChainHandlerResult {
     }
 
     public addError(errorKey: string, args: Record<string, unknown>): void {
-        if (this.pass) {
+        if (this._pass) {
             throw new Error('Errors cannot be added to a Result that passed');
         }
-        this.errors[errorKey] = args;
+        this._errors[errorKey] = args;
     }
 
-    public static pass(value: unknown): ChainHandlerResult {
+    public static pass<T = unknown>(value: T): ChainHandlerResult<T> {
         return new ChainHandlerResult({ value, pass: true });
     }
 
-    public static fail(value: unknown, errorKey: string, args: Record<string, unknown> = {}): ChainHandlerResult {
+    public static fail<T = unknown>(value: T, errorKey: string, args: Record<string, unknown> = {}): ChainHandlerResult<T> {
         return new ChainHandlerResult({ value, pass: false, errorKey, args });
+    }
+
+    public get value(): T {
+        return this._value;
+    }
+
+    public get pass(): boolean {
+        return this._pass;
+    }
+
+    public get fail(): boolean {
+        return this._fail;
+    }
+
+    public get errors(): Record<string, Record<string, unknown>> {
+        return this._errors;
     }
 
 }

@@ -1,11 +1,11 @@
 {
   "name": "puredata",
   "version": "0.1.0",
-  "description": "A comprehensive javascript validation and transformation library",
+  "description": "A comprehensive typescript/javascript validation and transformation library",
   "type": "module",
-  "main": "val.js",
+  "main": "val.ts",
   "scripts": {
-    "test": "node --import { tsx } --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --import tsx --experimental-vm-modules node_modules/jest/bin/jest.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"{lib,_misc,tests}/**/*.ts\"",
     "lint:fix": "eslint \"{lib,_misc,tests}/**/*.ts\" --fix",
@@ -15,11 +15,13 @@
     "push-major": "npm version major && git push",
     "misc": "tsx ./_misc/misc.ts",
     "watch": "npm-watch misc",
-    "test:unit": "node --import { tsx } --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=tests/"
+    "test:unit": "node --import tsx --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=tests/"
   },
   "author": "j0hnc0des",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.0.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
     "eslint": "^8.57.1",

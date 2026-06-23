@@ -16,13 +16,15 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "noEmit": true,
     "noImplicitOverride": true,
   },
   "include": [
     "lib/**/*.ts",
     "lib/**/*.d.ts",
-    "_misc/**/*.ts"
+    "_misc/**/*.ts",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "node_modules",

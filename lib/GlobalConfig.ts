@@ -51,13 +51,11 @@ const GlobalConfig = Object.seal({
         stripUnknownKeys: true
     },
     string: {
-        matching: {          // options for str matching
-            exactFormat: true,
-            looseFormat: true,
-            ignoreCase: false,
-            normalize: true,
-            delims: ' -',
-        },
+        looseFormatDelims: ' -',
+        allowLooseFormat: true,
+        ignoreCase: false,
+        normalize: true,
+        
         maxLength: 2000,    // max length allowed for a string being validated todo: THIS PART
         trim: true,
         truncate: true //todo
