@@ -26,8 +26,8 @@ export type ToDelimitedOptions = {
 };
 
 export type ComplexOptions = {
-    minLen: number;
-    maxLen: number;
+    minLength: number;
+    maxLength: number;
     minLowercase: number;
     minUppercase: number;
     minDigits: number;
@@ -108,7 +108,6 @@ class StringHandler extends ChainHandler {
                 return fail(str, 'string/balanced/negative', {
                     openChar,
                     closeChar,
-                    index,
                     openCount
                 });
             }
@@ -175,8 +174,8 @@ class StringHandler extends ChainHandler {
 
     public complex(str: string, options: Partial<ComplexOptions> = {}): StringHandlerResult {
         const finalOptions: ComplexOptions = Object.assign({
-            minLen: 8,
-            maxLen: 100,
+            minLength: 8,
+            maxLength: 100,
             minLowercase: 1,
             minUppercase: 1,
             minDigits: 1,
@@ -185,8 +184,8 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            minLen,
-            maxLen,
+            minLength,
+            maxLength,
             minLowercase,
             minUppercase,
             minDigits,
@@ -194,30 +193,30 @@ class StringHandler extends ChainHandler {
             maxRepeats
         } = finalOptions;
 
-        let len = str.length, lower = 0, upper = 0, digits = 0, specials = 0;
-        if (len < minLen || len > maxLen) {
-            return fail(str, 'string/complex/length', { minLen, maxLen });
+        let length = str.length, numLowerCase = 0, numUppercase = 0, numDigits = 0, numSpecials = 0;
+        if (length < minLength || length > maxLength) {
+            return fail(str, 'string/complex/length', { length, minLength, maxLength });
         }
 
-        (str.match(/[A-Z]/g) || []).forEach((_: string): void => { ++upper; }); // count uppercase letters
-        if (upper < minUppercase) {
-            return fail(str, 'string/complex/uppercase', { minUppercase });
+        (str.match(/[A-Z]/g) || []).forEach((_: string): void => { ++numUppercase; }); // count uppercase letters
+        if (numUppercase < minUppercase) {
+            return fail(str, 'string/complex/uppercase', { minUppercase, numUppercase });
         }
-        (str.match(/[a-z]/g) || []).forEach((_: string): void => { ++lower; }); // count lowercase letters
-        if (lower < minLowercase) {
-            return fail(str, 'string/complex/lowercase', { minLowercase });
+        (str.match(/[a-z]/g) || []).forEach((_: string): void => { ++numLowerCase; }); // count lowercase letters
+        if (numLowerCase < minLowercase) {
+            return fail(str, 'string/complex/lowercase', { minLowercase, numLowerCase });
         }
-        (str.match(/\d/g) || []).forEach((_: string): void => { ++digits; });   // count digits
-        if (digits < minDigits) {
-            return fail(str, 'string/complex/digits', { minDigits });
+        (str.match(/\d/g) || []).forEach((_: string): void => { ++numDigits; });   // count digits
+        if (numDigits < minDigits) {
+            return fail(str, 'string/complex/digits', { minDigits, numDigits });
         }
-        (str.match(/[^a-z0-9]/ig) || []).forEach((_: string): void => { ++specials; }); // count specials
-        if (specials < minSpecialChars) {
-            return fail(str, 'string/complex/specialChars', { minSpecialChars });
+        (str.match(/[^a-z0-9]/ig) || []).forEach((_: string): void => { ++numSpecials; }); // count specials
+        if (numSpecials < minSpecialChars) {
+            return fail(str, 'string/complex/specialChars', { minSpecialChars, numSpecials });
         }
         const failsRepeat = RegexCache.get('(.)\\1{' + maxRepeats + '}', 'g').test(str); // check repetition
         if (failsRepeat) {
-            return fail(str, 'string/complex/repeats', Object.assign({ maxRepeats }, finalOptions));
+            return fail(str, 'string/complex/repeats', { maxRepeats });
         }
 
         return pass(str);
@@ -239,6 +238,13 @@ class StringHandler extends ChainHandler {
             ? pass(str)
             : fail(str, 'string/contains', Object.assign({ substring }, finalOptions));
     }
+
+
+    //     allowLooseFormat: boolean;
+    // ignoreCase: boolean;
+    // looseFormatDelims: string;
+    // normalize: boolean;
+    // normalizedDelim: string;
 
     public creditCard(str: string, options: Partial<CreditCardOptions> = {}): StringHandlerResult {
 
@@ -324,11 +330,7 @@ class StringHandler extends ChainHandler {
                 continue;
             }
 
-            const matchData = Utils.runRegex(
-                str,
-                regexes,
-                finalOptions
-            );
+            const matchData = Utils.runRegex(str, regexes, finalOptions);
 
             if (matchData) {
                 const [bareStr, ...parts] = matchData;
@@ -351,25 +353,6 @@ class StringHandler extends ChainHandler {
         }
         return fail(str, 'string/creditCard', finalOptions);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public currencyCode(str: string, options: Partial<CurrencyCodeOptions> = {}): StringHandlerResult {
 
@@ -457,9 +440,7 @@ class StringHandler extends ChainHandler {
     public e164(str: string, options: Partial<E164Type> = {}): StringHandlerResult {
 
         const finalOptions = Object.assign(
-            {
-                normalizedDelim: ''
-            },
+            { normalizedDelim: '' },
             this._matchingDefaults,
             options
         );
@@ -469,12 +450,9 @@ class StringHandler extends ChainHandler {
             normalize,
         } = finalOptions;
 
-        const pattern = Utils.escapeForRegex(normalizedDelim) + '\\d';
-        const optionalPattern = Utils.escapeForRegex(normalizedDelim) + '?\\d';
-
         const matchData = Utils.runRegex(
             str,
-            ['\\+[1-9]'].concat(Array(6).fill(pattern)).concat(Array(8).fill(optionalPattern)),
+            '^\\+(?=(?:\\D*\\d){7,15}$)\\d{1,3}(?:' + normalizedDelim + '\\d{1,13})+$',
             finalOptions
         );
 
@@ -482,7 +460,7 @@ class StringHandler extends ChainHandler {
             return fail(str, 'string/e164', finalOptions);
         }
 
-        return pass(normalize ? matchData.slice(1).join(normalizedDelim) : str);
+        return pass(normalize ? matchData[0] : str);
     }
 
     /**

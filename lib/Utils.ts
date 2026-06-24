@@ -389,7 +389,7 @@ class Utils {
         return strValue + padding;
     }
 
-    static runRegex(str: string, regexStrings: string[], options: RegexMatchOptions): RegExpExecArray | null {
+    static runRegex(str: string, regexStr: string, options: RegexMatchOptions): RegExpExecArray | null {
         const {
             allowLooseFormat,
             ignoreCase,
@@ -397,33 +397,53 @@ class Utils {
             normalizedDelim,
         } = options;
 
-
-        const combinedDelims = looseFormatDelims + normalizedDelim;
-        const bareStr = combinedDelims.length > 0 ? Utils.replaceChars(str, combinedDelims) : str;
-
-        let testStr: string;
-        let joinPortion: string;
-
-        if (allowLooseFormat) {
-            testStr = bareStr;
-            joinPortion = ')(';
-        }
-        else {
-            testStr = str;
-            joinPortion = ')' + Utils.escapeForRegex(normalizedDelim) + '(';
+        if (!allowLooseFormat) {
+            return RegexCache.get(regexStr, ignoreCase ? 'i' : '').exec(str);
         }
 
-        const matchData = RegexCache.get(
-            '^(' + regexStrings.join(joinPortion) + ')$',
-            ignoreCase ? 'i' : ''
-        ).exec(testStr);
-
-        if (matchData) {
-            matchData[0] = bareStr;
-        }
-
-        return matchData;
+        const cleanStr = str.replace(
+            RegexCache.get('[' + Utils.escapeForRegex(looseFormatDelims + normalizedDelim + ' ') + ']+', 'g'),
+            ' '
+        );
+        const cleanParts = cleanStr.split(' ').filter((part) => part.length > 0);
+        const testStr = cleanParts.join(normalizedDelim);
+        return RegexCache.get(regexStr, ignoreCase ? 'i' : '').exec(testStr);
     }
+
+    // static runRegex(str: string, regexStrings: string[], options: RegexMatchOptions): RegExpExecArray | null {
+    //     const {
+    //         allowLooseFormat,
+    //         ignoreCase,
+    //         looseFormatDelims,
+    //         normalizedDelim,
+    //     } = options;
+
+    //     const combinedDelims = looseFormatDelims + normalizedDelim;
+    //     const bareStr = combinedDelims.length > 0 ? Utils.replaceChars(str, combinedDelims) : str;
+
+    //     let testStr: string;
+    //     let joinPortion: string;
+
+    //     if (allowLooseFormat) {
+    //         testStr = bareStr;
+    //         joinPortion = ')(';
+    //     }
+    //     else {
+    //         testStr = str;
+    //         joinPortion = ')' + Utils.escapeForRegex(normalizedDelim) + '(';
+    //     }
+
+    //     const matchData = RegexCache.get(
+    //         '^(' + regexStrings.join(joinPortion) + ')$',
+    //         ignoreCase ? 'i' : ''
+    //     ).exec(testStr);
+
+    //     if (matchData) {
+    //         matchData[0] = bareStr;
+    //     }
+
+    //     return matchData;
+    // }
 
     static replaceChars(str: string, delims: string, replacement: string = ''): string {
         return str.replace(RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);
