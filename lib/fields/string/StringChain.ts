@@ -11,9 +11,8 @@ export type StringChainProps = ChainProps<StringHandler> & {
     truncate: boolean;
 
     // Matching options
-    allowLooseFormat: boolean;
     ignoreCase: boolean;
-    looseFormatDelims: string;
+    cleanDelims: string;
     normalize: boolean;
 };
 
@@ -28,9 +27,8 @@ class StringChain extends Chain<StringChainProps> {
             trim = true,
             truncate = false,
 
-            allowLooseFormat = false,
             ignoreCase = false,
-            looseFormatDelims = '',
+            cleanDelims = '',
             normalize = false
         } = args;
 
@@ -39,15 +37,13 @@ class StringChain extends Chain<StringChainProps> {
         props.trim = trim;
         props.truncate = truncate;
 
-        props.allowLooseFormat = allowLooseFormat;
         props.ignoreCase = ignoreCase;
-        props.looseFormatDelims = looseFormatDelims;
+        props.cleanDelims = cleanDelims;
         props.normalize = normalize;
 
         this._props.chainHandler.configMatchingDefaults({
-            allowLooseFormat,
             ignoreCase,
-            looseFormatDelims,
+            cleanDelims,
             normalize
         });
     }

@@ -5,9 +5,8 @@ import { Field } from './fields/Field.ts';
 import { Path } from './Path.ts';
 
 export type CommonStringMatchingDefaults = {
-    allowLooseFormat: boolean;
     ignoreCase: boolean;
-    looseFormatDelims: string;
+    cleanDelims: string;
     normalize: boolean;
 };
 
@@ -17,6 +16,7 @@ export type NestedStringRecord = {
 
 export type RegexMatchOptions = Omit<CommonStringMatchingDefaults, 'normalize'> & {
     normalizedDelim: string;
+    respectChunking?: boolean;
 };
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -389,61 +389,52 @@ class Utils {
         return strValue + padding;
     }
 
-    static runRegex(str: string, regexStr: string, options: RegexMatchOptions): RegExpExecArray | null {
+    static runRegex(str: string, regexParts: string[], options: RegexMatchOptions): [string, string] | null {
         const {
-            allowLooseFormat,
+            allowLooseMatch,
             ignoreCase,
-            looseFormatDelims,
+            cleanDelims,
             normalizedDelim,
         } = options;
 
-        if (!allowLooseFormat) {
-            return RegexCache.get(regexStr, ignoreCase ? 'i' : '').exec(str);
+        const normalizedDelimEsc = Utils.escapeForRegex(normalizedDelim);
+
+        let finalStr: string;
+
+        if (cleanDelims) {
+            const replaceChars = cleanDelims + normalizedDelim;
+            finalStr =
+                replaceChars === ''
+                    ? str
+                    : str.replace(
+                        RegexCache.get('[' + Utils.escapeForRegex(replaceChars) + ']+', 'g'),
+                        normalizedDelim
+                    );
+        }
+        else {
+            finalStr = str;
         }
 
-        const cleanStr = str.replace(
-            RegexCache.get('[' + Utils.escapeForRegex(looseFormatDelims + normalizedDelim + ' ') + ']+', 'g'),
-            ' '
-        );
-        const cleanParts = cleanStr.split(' ').filter((part) => part.length > 0);
-        const testStr = cleanParts.join(normalizedDelim);
-        return RegexCache.get(regexStr, ignoreCase ? 'i' : '').exec(testStr);
+        let match;
+        if(allowLooseMatch) {
+            const regex = RegexCache.get('^' + regexParts.join('(?:' + normalizedDelimEsc + ')?') + '$', ignoreCase ? 'i' : '');
+            match = regex.exec(finalStr);
+        }
+        else {
+            const regex = RegexCache.get('^' + regexParts.join(normalizedDelimEsc) + '$', ignoreCase ? 'i' : '');
+            match = regex.exec(finalStr);
+        }
+
+        if (!match) {
+            return null;
+        }
+
+        return [
+            match.slice(1).filter(part => Boolean(part)).join(normalizedDelim),
+            finalStr.replace(new RegExp(normalizedDelimEsc, 'g'), '')
+        ];
     }
 
-    // static runRegex(str: string, regexStrings: string[], options: RegexMatchOptions): RegExpExecArray | null {
-    //     const {
-    //         allowLooseFormat,
-    //         ignoreCase,
-    //         looseFormatDelims,
-    //         normalizedDelim,
-    //     } = options;
-
-    //     const combinedDelims = looseFormatDelims + normalizedDelim;
-    //     const bareStr = combinedDelims.length > 0 ? Utils.replaceChars(str, combinedDelims) : str;
-
-    //     let testStr: string;
-    //     let joinPortion: string;
-
-    //     if (allowLooseFormat) {
-    //         testStr = bareStr;
-    //         joinPortion = ')(';
-    //     }
-    //     else {
-    //         testStr = str;
-    //         joinPortion = ')' + Utils.escapeForRegex(normalizedDelim) + '(';
-    //     }
-
-    //     const matchData = RegexCache.get(
-    //         '^(' + regexStrings.join(joinPortion) + ')$',
-    //         ignoreCase ? 'i' : ''
-    //     ).exec(testStr);
-
-    //     if (matchData) {
-    //         matchData[0] = bareStr;
-    //     }
-
-    //     return matchData;
-    // }
 
     static replaceChars(str: string, delims: string, replacement: string = ''): string {
         return str.replace(RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);

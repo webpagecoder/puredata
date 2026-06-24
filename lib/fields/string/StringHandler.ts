@@ -10,9 +10,8 @@ import { NumberHandler } from '../number/NumberHandler.ts';
 export type StringHandlerResult = ChainHandlerResult<string>;
 
 export type CommonStringMatchingDefaults = {
-    allowLooseFormat: boolean;
     ignoreCase: boolean;
-    looseFormatDelims: string;
+    cleanDelims: string;
     normalize: boolean;
     normalizedDelim: string;
 };
@@ -239,13 +238,6 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/contains', Object.assign({ substring }, finalOptions));
     }
 
-
-    //     allowLooseFormat: boolean;
-    // ignoreCase: boolean;
-    // looseFormatDelims: string;
-    // normalize: boolean;
-    // normalizedDelim: string;
-
     public creditCard(str: string, options: Partial<CreditCardOptions> = {}): StringHandlerResult {
 
         const finalOptions = Object.assign(
@@ -258,6 +250,7 @@ class StringHandler extends ChainHandler {
         );
 
         const {
+            cleanDelims,
             normalize,
             normalizedDelim,
             types
@@ -267,7 +260,7 @@ class StringHandler extends ChainHandler {
             // visa 4(13 or 16 total)
             [
                 'visa',
-                ['4\\d{3}', '\\d{4}', '\\d{4}', '\\d\\d{3}?'],
+                ['(4\\d{3})', '(\\d{4})', '(\\d{4})', '(\\d{4}|\\d)'],
                 true,
             ],
 
@@ -275,8 +268,10 @@ class StringHandler extends ChainHandler {
             [
                 'mastercard',
                 [
-                    '5[1-5]\\d{2}|2(?:2[2-9]\\d|[3-6]\\d{2}|7[01]\\d|720)',
-                    '\\d{4}', '\\d{4}', '\\d{4}'
+                    '(5[1-5]\\d{2}|2(?:2[2-9]\\d|[3-6]\\d{2}|7[01]\\d|720))',
+                    '(\\d{4})',
+                    '(\\d{4})',
+                    '(\\d{4})',
                 ],
                 true,
             ],
@@ -284,7 +279,7 @@ class StringHandler extends ChainHandler {
             // amex (34,37)(15 total) 
             [
                 'amex',
-                ['3[47]\\d{2}', '\\d{6}', '\\d{5}'],
+                ['(3[47]\\d{2})', '(\\d{6})', '(\\d{5})'],
                 true,
             ],
 
@@ -292,12 +287,11 @@ class StringHandler extends ChainHandler {
             [
                 'discover',
                 [
-                    '(?=6011|65\\d{2}|64[4-9]\\d|622(?:12[6-9]|1[3-9]\\d|[2-8]\\d{2}|9[01]\\d|92[0-5]))',
-                    '\\d{4}',
-                    '\\d{4}',
-                    '\\d{4}',
-                    '\\d{4}',
-                    '(?:\\d{3})?'
+                    '(6(?:011|5\\d{2}|4[4-9]\\d|22[1-9]\\d|22[2-9]\\d{2}))',
+                    '(\\d{4})',
+                    '(\\d{4})',
+                    '(\\d{4})',
+                    '(\\d{1,3})?'
                 ],
                 true,
             ],
@@ -305,50 +299,37 @@ class StringHandler extends ChainHandler {
             // diners classic 14 digits 
             [
                 'diners',
-                ['30[0-5]\\d|3[689]\\d{2}', '\\d{6}', '\\d{4}'],
+                ['(30[0-5]\\d|3[689]\\d{2})', '(\\d{6})', '(\\d{4})'],
                 true,
             ],
 
             // diners 16 digits 
             [
                 'diners16',
-                ['30[0-5]\\d|3[689]\\d{2}', '\\d{4}', '\\d{4}', '\\d{4}'],
+                ['(5[4-5]\\d{2})', '(\\d{4})', '(\\d{4})', '(\\d{4})'],
                 true,
             ],
 
             // jcb (3528–3589)(16-19 total) or (353,356)(16 total)
             [
                 'jcb',
-                ['352[89]|35[3-8]\\d', '\\d{4}', '\\d{4}', '\\d{4}', '\\d{0,3}'],
+                ['(352[89]|35[3-8]\\d)', '(\\d{4})', '(\\d{4})', '(\\d{4})', '(\\d{0,3})'],
                 true,
             ],
 
         ];
 
-        for (const [type, regexes, checkLuhn] of cardTypes) {
+        for (const [type, regexParts, checkLuhn] of cardTypes) {
             if (types && types.indexOf(type) === -1) {
                 continue;
             }
-
-            const matchData = Utils.runRegex(str, regexes, finalOptions);
-
+            const matchData = Utils.runRegex(str, regexParts, finalOptions);
             if (matchData) {
-                const [bareStr, ...parts] = matchData;
-                if (checkLuhn && !this.luhn(bareStr).pass) {
+                const [normalized, stripped] = matchData;
+                if (checkLuhn && !this.luhn(stripped).pass) {
                     return fail(str, 'string/creditCard', finalOptions);
                 }
-
-                if (normalize) {
-                    const finalParts = [];
-                    for (const part of parts) {
-                        if (part) {
-                            finalParts.push(part);
-                        }
-                    }
-                    return pass(finalParts.join(normalizedDelim));
-                }
-
-                return pass(str);
+                return pass(normalize ? normalized : str);
             }
         }
         return fail(str, 'string/creditCard', finalOptions);
@@ -446,13 +427,12 @@ class StringHandler extends ChainHandler {
         );
 
         const {
-            normalizedDelim,
             normalize,
         } = finalOptions;
 
         const matchData = Utils.runRegex(
             str,
-            '^\\+(?=(?:\\D*\\d){7,15}$)\\d{1,3}(?:' + normalizedDelim + '\\d{1,13})+$',
+            ['(?=\\+(?:\\D*\\d){7,15}$)', '(\\+\\d{1,3})', ...new Array(13).fill('(\\d{0,14})')],
             finalOptions
         );
 
@@ -553,8 +533,7 @@ class StringHandler extends ChainHandler {
 
         const {
             lengths,
-            allowLooseFormat,
-            looseFormatDelims,
+            cleanDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -579,8 +558,7 @@ class StringHandler extends ChainHandler {
                 regex,
                 {
                     normalizedDelim: delim,
-                    looseFormatDelims,
-                    allowLooseFormat
+                    cleanDelims
                 }
             );
 
@@ -659,8 +637,7 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            allowLooseFormat,
-            looseFormatDelims,
+            cleanDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -670,8 +647,7 @@ class StringHandler extends ChainHandler {
             ['\\d{2}', '\\d{6}', '\\d{6}', '\\d'],
             {
                 normalizedDelim: delim,
-                looseFormatDelims,
-                allowLooseFormat
+                cleanDelims
             }
         );
 
@@ -904,8 +880,7 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            allowLooseFormat,
-            looseFormatDelims,
+            cleanDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -915,8 +890,7 @@ class StringHandler extends ChainHandler {
             new Array(6).fill('[a-f\\d]{2}'),
             {
                 normalizedDelim: delim,
-                looseFormatDelims,
-                allowLooseFormat
+                cleanDelims,
             }
         );
 
@@ -959,17 +933,17 @@ class StringHandler extends ChainHandler {
      * Executes the maxWords handler step.
      * @param {any} str
      * @param {any} max
-     * @param {any} looseFormatDelims
+     * @param {any} cleanDelims
      * @returns {ChainHandlerResult}
      */
-    public maxWords(str: string, max: number, looseFormatDelims: string = StringHandler.matchingDefaults.looseFormatDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, looseFormatDelims).length;
+    public maxWords(str: string, max: number, cleanDelims: string = StringHandler.matchingDefaults.cleanDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, cleanDelims).length;
         return count <= max
             ? pass(str)
             : fail(str, 'string/maxWords', {
                 count,
                 max,
-                looseFormatDelims
+                cleanDelims
             });
     }
 
@@ -1009,17 +983,17 @@ class StringHandler extends ChainHandler {
      * Executes the minWords handler step.
      * @param {any} str
      * @param {any} min
-     * @param {any} looseFormatDelims
+     * @param {any} cleanDelims
      * @returns {ChainHandlerResult}
      */
-    public minWords(str: string, min: number, looseFormatDelims: string = StringHandler.matchingDefaults.looseFormatDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, looseFormatDelims).length;
+    public minWords(str: string, min: number, cleanDelims: string = StringHandler.matchingDefaults.cleanDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, cleanDelims).length;
         return count >= min
             ? pass(str)
             : fail(str, 'string/minWords', {
                 count,
                 min,
-                looseFormatDelims
+                cleanDelims
             });
     }
 
@@ -1092,12 +1066,11 @@ class StringHandler extends ChainHandler {
             leadingSymbol = '',
             trailingSymbol = '',
             ignoreCase,
-            allowLooseFormat
         } = Object.assign({}, StringHandler.matchingDefaults, options);
 
         const leadingSymbolArr = [].concat(leadingSymbol);
         const trailingSymbolArr = [].concat(trailingSymbol);
-        const looseSpacing = allowLooseFormat ? '\\s*' : '';
+        const looseSpacing = allowLooseFormat ? '\\s*' : ''; //???????????????????????????????????????
         const parts = RegexCache.get(
             '^(\\+?)(-?)'
             + looseSpacing
@@ -1295,8 +1268,7 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            allowLooseFormat,
-            looseFormatDelims,
+            cleanDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -1306,8 +1278,7 @@ class StringHandler extends ChainHandler {
             ['(?:\\+?1)?', '(?:\\d{3}|\\(\\d{3}\\))', '\\d{3}', '\\d{4}'],
             {
                 normalizedDelim: delim,
-                looseFormatDelims,
-                allowLooseFormat
+                cleanDelims
             }
         );
 
@@ -1381,7 +1352,7 @@ class StringHandler extends ChainHandler {
 
         const matchData = Utils.runRegex(
             str,
-            ['(?!000|666|9\\d{2})\\d{3}', '(?!00)\\d{2}', '(?!0000)\\d{4}'],
+            ['((?!000|666|9\\d{2})\\d{3})', '((?!00)\\d{2})', '((?!0000)\\d{4})'],
             finalOptions
         );
 
@@ -1389,11 +1360,9 @@ class StringHandler extends ChainHandler {
             return fail(str, 'string/ssn', finalOptions);
         }
 
-        const [, part1, part2, part3] = matchData;
-
         return pass(
             finalOptions.normalize
-                ? part1 + finalOptions.normalizedDelim + part2 + finalOptions.normalizedDelim + part3
+                ? matchData[0]
                 : str
         );
     }
@@ -1568,18 +1537,18 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @param {any} min
      * @param {any} max
-     * @param {any} looseFormatDelims
+     * @param {any} cleanDelims
      * @returns {ChainHandlerResult}
      */
-    public wordCount(str: string, min: number, max: number, looseFormatDelims: string = StringHandler.matchingDefaults.looseFormatDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, looseFormatDelims).length;
+    public wordCount(str: string, min: number, max: number, cleanDelims: string = StringHandler.matchingDefaults.cleanDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, cleanDelims).length;
         return count <= max && count >= min
             ? pass(str)
             : fail(str, 'string/wordCount', {
                 count,
                 min,
                 max,
-                looseFormatDelims
+                cleanDelims
             });
     }
 
@@ -1597,7 +1566,7 @@ class StringHandler extends ChainHandler {
 
         const {
             allowLooseFormat,
-            looseFormatDelims,
+            cleanDelims,
             delim,
             normalize,
             zip4
@@ -1610,7 +1579,7 @@ class StringHandler extends ChainHandler {
             ['(?!0{5})\\d{5}', '(?!0{4})(?:\\d{4})?'],
             {
                 normalizedDelim: delim,
-                looseFormatDelims,
+                cleanDelims,
                 allowLooseFormat
             }
         );

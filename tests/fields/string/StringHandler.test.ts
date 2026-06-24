@@ -129,7 +129,7 @@ describe('StringHandler validators (up to line 330)', () => {
         const result6 = handler.complex('AAAa1!bc');
         expect(result6.fail).toBe(true);
 
-        const result7 = handler.complex('aaaa', { minLen: 4, minUppercase: 0, minDigits: 0, minSpecialChars: 0 });
+        const result7 = handler.complex('aaaa', { minLength: 4, minUppercase: 0, minDigits: 0, minSpecialChars: 0 });
         expect(result7.pass).toBe(true);
     });
 
@@ -148,8 +148,7 @@ describe('StringHandler validators (up to line 330)', () => {
         
         handler.configMatchingDefaults({
             normalizedDelim: '',
-            allowLooseFormat: false,
-            looseFormatDelims: ' -',
+            cleanDelims: ' -',
             normalize: false,
             ignoreCase: false,
         });
@@ -167,8 +166,7 @@ describe('StringHandler validators (up to line 330)', () => {
         expect(result4.fail).toBe(true);
 
         const result5 = handler.creditCard('4111 1111 1111 1111', {
-            allowLooseFormat: true,
-            looseFormatDelims: ' -',
+            cleanDelims: ' -',
             normalize: true
         });
         expect(result5.pass).toBe(true);
@@ -181,8 +179,7 @@ describe('StringHandler validators (up to line 330)', () => {
         expect(result7.fail).toBe(true);
 
         const result8 = handler.creditCard('4111-1111-1111-1112', {
-            allowLooseFormat: true,
-            looseFormatDelims: ' -',
+            cleanDelims: ' -',
             normalize: true
         });
         expect(result8.fail).toBe(true);
@@ -194,8 +191,7 @@ describe('StringHandler validators (up to line 330)', () => {
         expect(result10.fail).toBe(true);
 
         const result11 = handler.creditCard('4111x1111x1111x1111', {
-            allowLooseFormat: true,
-            looseFormatDelims: ' -',
+            cleanDelims: ' -',
             normalize: true
         });
         expect(result11.fail).toBe(true);
