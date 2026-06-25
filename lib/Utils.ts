@@ -390,49 +390,37 @@ class Utils {
     }
 
     static runRegex(str: string, regexParts: string[], options: RegexMatchOptions): [string, string] | null {
-        const {
-            allowLooseMatch,
+        let {
             ignoreCase,
             cleanDelims,
             normalizedDelim,
         } = options;
 
-        const normalizedDelimEsc = Utils.escapeForRegex(normalizedDelim);
 
-        let finalStr: string;
+        if (cleanDelims && normalizedDelim && cleanDelims.indexOf(normalizedDelim) > -1) {
+            cleanDelims = cleanDelims.replace(new RegExp(Utils.escapeForRegex(normalizedDelim), 'g'), '');
+        }
 
         if (cleanDelims) {
-            const replaceChars = cleanDelims + normalizedDelim;
-            finalStr =
-                replaceChars === ''
-                    ? str
-                    : str.replace(
-                        RegexCache.get('[' + Utils.escapeForRegex(replaceChars) + ']+', 'g'),
-                        normalizedDelim
-                    );
-        }
-        else {
-            finalStr = str;
+            const finalStr = str.replace(
+                RegexCache.get('[' + Utils.escapeForRegex(cleanDelims) + ']+', 'g'),
+                ''
+            );
+
+            const regex = new RegExp('^' + regexParts.join(Utils.escapeForRegex(normalizedDelim)) + '$', ignoreCase ? 'i' : '');
+            console.log(regex);
+            const match = finalStr.match(regex);
+
+            if (match) {
+                return [
+                    finalStr,
+                    str.replace(new RegExp(Utils.escapeForRegex(cleanDelims), 'g'), '')
+                ];
+            }
+
         }
 
-        let match;
-        if(allowLooseMatch) {
-            const regex = RegexCache.get('^' + regexParts.join('(?:' + normalizedDelimEsc + ')?') + '$', ignoreCase ? 'i' : '');
-            match = regex.exec(finalStr);
-        }
-        else {
-            const regex = RegexCache.get('^' + regexParts.join(normalizedDelimEsc) + '$', ignoreCase ? 'i' : '');
-            match = regex.exec(finalStr);
-        }
-
-        if (!match) {
-            return null;
-        }
-
-        return [
-            match.slice(1).filter(part => Boolean(part)).join(normalizedDelim),
-            finalStr.replace(new RegExp(normalizedDelimEsc, 'g'), '')
-        ];
+        return null;
     }
 
 

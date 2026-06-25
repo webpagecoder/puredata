@@ -430,9 +430,14 @@ class StringHandler extends ChainHandler {
             normalize,
         } = finalOptions;
 
+        let compares = [];
+        for(let i = 0; i < 13; ++i) {
+            compares.push('(?:' + finalOptions.normalizedDelim + '(\\d{1,14}))?');
+        }
+
         const matchData = Utils.runRegex(
             str,
-            ['(?=\\+(?:\\D*\\d){7,15}$)', '(\\+\\d{1,3})', ...new Array(13).fill('(\\d{0,14})')],
+            ['(?=\\+(?:\\D*\\d){7,15}$)(\\+\\d{1,3})', ...compares],
             finalOptions
         );
 
