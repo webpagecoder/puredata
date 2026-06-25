@@ -406,9 +406,17 @@ class Utils {
      * @param str The string to perform the match on
      * @param regexParts The pieces of the regex, split on where the delims would appear
      * @param options @see RegexMatchOptions
-     * @returns The result of the regex match, including the normalized string, the string with delims removed, and the original string if no match was found
+     * @param hasKnownDelimPlacement If true, the string is assumed to have delims in known places
+     * @returns The result of the regex match, including the normalized string, the string with all delims removed, 
+     * and the a "massaged" suggestion string
      */
-    static regexMatch(str: string, regexParts: string[], options: RegexMatchOptions): RegexMatchResult {
+    static regexMatch(
+        str: string,
+        regexParts: string[],
+        options: RegexMatchOptions,
+        hasKnownDelimPlacement: boolean = true
+    ): RegexMatchResult {
+
         let {
             strictMode,
             acceptableDelims,
@@ -417,73 +425,96 @@ class Utils {
             sweepDelims,
         } = options;
 
-        const regex = new RegExp('^' + regexParts.join(Utils.escapeForRegex(normalizedDelim)) + '$', ignoreCase ? 'i' : '');
-
+        const normalizedDelimEscaped = Utils.escapeForRegex(normalizedDelim);
         if (strictMode) {
-            const match = str.match(regex);
+            const match = str.match(
+                new RegExp('^' + regexParts.join(normalizedDelimEscaped) + '$', ignoreCase ? 'i' : '')
+            );
             if (match) {
                 // Glue matched parts together
                 const normalizedStr = match.slice(1).join('');
                 return [
                     normalizedStr,
-                    normalizedStr.replace(new RegExp(Utils.escapeForRegex(normalizedDelim), 'g'), ''),
+                    normalizedStr.replace(new RegExp(normalizedDelimEscaped, 'g'), ''),
                     null
                 ];
             }
             return [null, null, str];
         }
 
-        let massagedString = str;
 
-        const sweepDelimsSet = new Set(sweepDelims.split(''));
-        const acceptableDelimsSet = new Set([...acceptableDelims.split(''), normalizedDelim]);
+        // Non-strict matching
+        let massagedStr = str;
+        let matchResult;
         const allDelims = sweepDelims + acceptableDelims + normalizedDelim;
+        const allDelimsEscaped = Utils.escapeForRegex(allDelims);
 
-        if (allDelims.length > 0) {
-            // Trim *all* delims from beginning/end of the string
-            massagedString = massagedString.replace(
-                RegexCache.get('^[' + Utils.escapeForRegex(allDelims) + ']+|[' + Utils.escapeForRegex(allDelims) + ']+$', 'g'),
-                ''
-            );
-        }
+        if (!hasKnownDelimPlacement) {
 
-        if (sweepDelimsSet.size > 0) {
+            // Need to track where the user indicates delims should be placed
+            const delimsToDelete = new Set(sweepDelims.split(''));
+            const delimsToSave = new Set([...acceptableDelims.split(''), normalizedDelim]);
 
-            // Remove any acceptable delims from the sweepDelims set so they are not removed from the string entirely
-            if (acceptableDelimsSet.size > 0) {
-                for (const delim of acceptableDelimsSet) {
-                    sweepDelimsSet.delete(delim);
+            // Need to do some extra work to respect user delim placement...
+            if (delimsToDelete.size > 0) {
+
+                // Remove any delimsToSave from the delimsToDelete set so they are not removed from the string entirely
+                // otherwise we will lose placement of delims that the user has indicated should be preserved
+                if (delimsToSave.size > 0) {
+                    for (const delim of delimsToSave) {
+                        delimsToDelete.delete(delim);
+                    }
                 }
+
+                // Remove the remaining delimsToDelete from the string entirely
+                massagedStr = massagedStr.replace(
+                    RegexCache.get('[' + Utils.escapeForRegex([...delimsToDelete].join('')) + ']+', 'g'),
+                    ''
+                );
             }
 
-            // Remove the remaining clean delims from the string entirely
-            massagedString = massagedString.replace(
-                RegexCache.get('[' + Utils.escapeForRegex([...sweepDelimsSet].join('')) + ']+', 'g'),
+            if (delimsToSave.size > 0) {
+                // Normalize the string by replacing all delimsToSave with the indicated normalizedDelim
+                massagedStr = massagedStr.replace(
+                    RegexCache.get('([' + Utils.escapeForRegex([...delimsToSave].join('')) + ']+)', 'g'),
+                    normalizedDelim
+                );
+            }
+
+            if (normalizedDelim.length > 0) {
+                // Trim *all* normalizedDelim from beginning/end of the string
+                massagedStr = massagedStr.replace(
+                    RegexCache.get('^[' + normalizedDelimEscaped + ']+|[' + normalizedDelimEscaped + ']+$', 'g'),
+                    ''
+                );
+            }
+
+            const regex = new RegExp('^' + regexParts.join(normalizedDelimEscaped) + '$', ignoreCase ? 'i' : '');
+            matchResult = massagedStr.match(regex);
+        }
+        else {
+
+            // Delims are in known places, get rid of all delims and match pattern
+            massagedStr = massagedStr.replace(
+                RegexCache.get('[' + allDelimsEscaped + ']+', 'g'),
                 ''
             );
-        }
-
-        if (acceptableDelimsSet.size > 0) {
-            // Normalize the string by replacing all acceptable delims with the single normalized delim
-            massagedString = massagedString.replace(
-                RegexCache.get('([' + Utils.escapeForRegex([...acceptableDelimsSet].join('')) + ']+)', 'g'),
-                normalizedDelim
-            );
+            const regex = new RegExp('^' + regexParts.join('') + '$', ignoreCase ? 'i' : '');
+            matchResult = massagedStr.match(regex);
         }
 
         // At this point the string is as normalized as possible....
-        const match = massagedString.match(regex);
-        if (match) {
+        if (matchResult) {
             // Glue matched parts together (delims already solved)
-            const normalizedStr = match.slice(1).join(normalizedDelim); // Glue matched parts together (delims already solved)
+            const normalizedStr = matchResult.slice(1).join(normalizedDelim);
             return [
                 normalizedStr,
-                normalizedStr.replace(new RegExp('[' + Utils.escapeForRegex(allDelims) + ']', 'g'), ''),
+                normalizedStr.replace(new RegExp('[' + normalizedDelim + ']', 'g'), ''),
                 null
             ];
         }
 
-        return [null, null, massagedString];
+        return [null, null, massagedStr];
     }
 
     static replaceChars(str: string, delims: string, replacement: string = ''): string {

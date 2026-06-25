@@ -60,6 +60,10 @@ export type GtinOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'
     lengths: number[];
 };
 
+export type HexOptions = NormalizeOption;
+
+export type ImeiOptions = NormalizeOption;
+
 export type StartsWithOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
 
 export type SsnOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'>;
@@ -437,7 +441,8 @@ class StringHandler extends ChainHandler {
         const [normalized, , suggestion] = Utils.regexMatch(
             str,
             ['(?=\\+(?:\\D*\\d){7,15}$)(\\+\\d{1,3}(?:(?:', ')?\\d{1,14})+)'],
-            resolvedOptions
+            resolvedOptions,
+            false
         );
 
         // Final "massage" - if there is a space between
@@ -466,7 +471,8 @@ class StringHandler extends ChainHandler {
         const [normalized, , suggestion] = Utils.regexMatch(
             str,
             ['(\\+\\d{7,15})'],
-            resolvedOptions
+            resolvedOptions,
+            false
         );
 
         // Final "massage" - if there is a space between
@@ -594,12 +600,7 @@ class StringHandler extends ChainHandler {
         return fail(str, 'string/gtin', resolvedOptions);
     }
 
-    /**
-     * Executes the hash handler step.
-     * @param {any} str
-     * @param {any} algorithm
-     * @returns {ChainHandlerResult}
-     */
+
     public hash(str: string, algorithm: string): StringHandlerResult {
         const algo = (algorithm || 'md5').toLowerCase();
         const hashLengths = {
@@ -615,72 +616,53 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/hash', { algorithm });
     }
 
-    /**
-     * Executes the hex handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public hex(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { normalize } = options;
+    public hex(str: string, options: Partial<HexOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
         return /^[0-9A-F]+$/i.test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/hex', options);
+            ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/hex', resolvedOptions);
     }
 
-    /**
-     * Executes the hexColor handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public hexColor(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { normalize } = options;
+
+    public hexColor(str: string, options: Partial<HexOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
         return /^#?([0-9A-F]{3}|[0-9A-F]{6})$/i.test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/hexColor', options);
+            ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/hexColor', resolvedOptions);
     }
 
-    /**
-     * Executes the imei handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public imei(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const resolvedOptions = Object.assign({
-            delim: '-',
-        }, options);
+    public imei(str: string, options: Partial<ImeiOptions> = {}): StringHandlerResult {
 
-        const {
-            sweepDelims,
-            delim,
-            normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
 
         const matchData = Utils.regexMatch(
             str,
-            ['\\d{2}', '\\d{6}', '\\d{6}', '\\d'],
-            {
-                normalizedDelim: delim,
-                sweepDelims
-            }
+            ['(\\d{2})', '(\\d{6})', '(\\d{6})', '(\\d)'],
+            resolvedOptions
         );
 
-        if (!matchData) {
-            return fail(str, 'string/imei', resolvedOptions);
-        }
+        const [normalized, stripped, suggestion] = matchData;
 
-        const [bareStr, ...parts] = matchData;
-
-        if (this.luhn(bareStr).pass) {
-            return pass(
-                normalize
-                    ? parts.join(delim)
-                    : str
-            );
+        if (normalized !== null) {
+            if (this.luhn(stripped as string).pass) {
+                return pass(
+                    resolvedOptions.normalize ? normalized : str
+                );
+            }
         }
-        return fail(str, 'string/imei', resolvedOptions);
+        return fail(str, 'string/imei', Object.assign({ suggestion }, resolvedOptions));
     }
 
     /**
