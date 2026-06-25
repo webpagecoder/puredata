@@ -12,7 +12,7 @@ export type StringChainProps = ChainProps<StringHandler> & {
 
     // Matching options
     ignoreCase: boolean;
-    cleanDelims: string;
+    sweepDelims: string;
     normalize: boolean;
 };
 
@@ -28,7 +28,7 @@ class StringChain extends Chain<StringChainProps> {
             truncate = false,
 
             ignoreCase = false,
-            cleanDelims = '',
+            sweepDelims = '',
             normalize = false
         } = args;
 
@@ -38,12 +38,12 @@ class StringChain extends Chain<StringChainProps> {
         props.truncate = truncate;
 
         props.ignoreCase = ignoreCase;
-        props.cleanDelims = cleanDelims;
+        props.sweepDelims = sweepDelims;
         props.normalize = normalize;
 
         this._props.chainHandler.configMatchingDefaults({
             ignoreCase,
-            cleanDelims,
+            sweepDelims,
             normalize
         });
     }

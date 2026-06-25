@@ -11,7 +11,7 @@ export type StringHandlerResult = ChainHandlerResult<string>;
 
 export type CommonStringMatchingDefaults = {
     ignoreCase: boolean;
-    cleanDelims: string;
+    sweepDelims: string;
     normalize: boolean;
     normalizedDelim: string;
 };
@@ -250,7 +250,7 @@ class StringHandler extends ChainHandler {
         );
 
         const {
-            cleanDelims,
+            sweepDelims,
             normalize,
             normalizedDelim,
             types
@@ -430,22 +430,19 @@ class StringHandler extends ChainHandler {
             normalize,
         } = finalOptions;
 
-        let compares = [];
-        for(let i = 0; i < 13; ++i) {
-            compares.push('(?:' + finalOptions.normalizedDelim + '(\\d{1,14}))?');
-        }
-
-        const matchData = Utils.runRegex(
+        const [normalized, stripped, suggestion] = Utils.runRegex(
             str,
-            ['(?=\\+(?:\\D*\\d){7,15}$)(\\+\\d{1,3})', ...compares],
+            ['(?=\\+(?:\\D*\\d){7,15}$)(\\+)(\\d{1,3}(?:(?:', ')?\\d{1,14})+)'],
             finalOptions
         );
 
-        if (!matchData) {
-            return fail(str, 'string/e164', finalOptions);
+        // Final "massage" - if there is a space between
+
+        if (normalized === null) {
+            return fail(str, 'string/e164', Object.assign({ suggestion }, finalOptions));
         }
 
-        return pass(normalize ? matchData[0] : str);
+        return pass(normalize ? normalized : str);
     }
 
     /**
@@ -538,7 +535,7 @@ class StringHandler extends ChainHandler {
 
         const {
             lengths,
-            cleanDelims,
+            sweepDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -563,7 +560,7 @@ class StringHandler extends ChainHandler {
                 regex,
                 {
                     normalizedDelim: delim,
-                    cleanDelims
+                    sweepDelims
                 }
             );
 
@@ -642,7 +639,7 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            cleanDelims,
+            sweepDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -652,7 +649,7 @@ class StringHandler extends ChainHandler {
             ['\\d{2}', '\\d{6}', '\\d{6}', '\\d'],
             {
                 normalizedDelim: delim,
-                cleanDelims
+                sweepDelims
             }
         );
 
@@ -885,7 +882,7 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            cleanDelims,
+            sweepDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -895,7 +892,7 @@ class StringHandler extends ChainHandler {
             new Array(6).fill('[a-f\\d]{2}'),
             {
                 normalizedDelim: delim,
-                cleanDelims,
+                sweepDelims,
             }
         );
 
@@ -938,17 +935,17 @@ class StringHandler extends ChainHandler {
      * Executes the maxWords handler step.
      * @param {any} str
      * @param {any} max
-     * @param {any} cleanDelims
+     * @param {any} sweepDelims
      * @returns {ChainHandlerResult}
      */
-    public maxWords(str: string, max: number, cleanDelims: string = StringHandler.matchingDefaults.cleanDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, cleanDelims).length;
+    public maxWords(str: string, max: number, sweepDelims: string = StringHandler.matchingDefaults.sweepDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, sweepDelims).length;
         return count <= max
             ? pass(str)
             : fail(str, 'string/maxWords', {
                 count,
                 max,
-                cleanDelims
+                sweepDelims
             });
     }
 
@@ -988,17 +985,17 @@ class StringHandler extends ChainHandler {
      * Executes the minWords handler step.
      * @param {any} str
      * @param {any} min
-     * @param {any} cleanDelims
+     * @param {any} sweepDelims
      * @returns {ChainHandlerResult}
      */
-    public minWords(str: string, min: number, cleanDelims: string = StringHandler.matchingDefaults.cleanDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, cleanDelims).length;
+    public minWords(str: string, min: number, sweepDelims: string = StringHandler.matchingDefaults.sweepDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, sweepDelims).length;
         return count >= min
             ? pass(str)
             : fail(str, 'string/minWords', {
                 count,
                 min,
-                cleanDelims
+                sweepDelims
             });
     }
 
@@ -1273,7 +1270,7 @@ class StringHandler extends ChainHandler {
         }, options);
 
         const {
-            cleanDelims,
+            sweepDelims,
             delim,
             normalize,
         } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
@@ -1283,7 +1280,7 @@ class StringHandler extends ChainHandler {
             ['(?:\\+?1)?', '(?:\\d{3}|\\(\\d{3}\\))', '\\d{3}', '\\d{4}'],
             {
                 normalizedDelim: delim,
-                cleanDelims
+                sweepDelims
             }
         );
 
@@ -1542,18 +1539,18 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @param {any} min
      * @param {any} max
-     * @param {any} cleanDelims
+     * @param {any} sweepDelims
      * @returns {ChainHandlerResult}
      */
-    public wordCount(str: string, min: number, max: number, cleanDelims: string = StringHandler.matchingDefaults.cleanDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, cleanDelims).length;
+    public wordCount(str: string, min: number, max: number, sweepDelims: string = StringHandler.matchingDefaults.sweepDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, sweepDelims).length;
         return count <= max && count >= min
             ? pass(str)
             : fail(str, 'string/wordCount', {
                 count,
                 min,
                 max,
-                cleanDelims
+                sweepDelims
             });
     }
 
@@ -1571,7 +1568,7 @@ class StringHandler extends ChainHandler {
 
         const {
             allowLooseFormat,
-            cleanDelims,
+            sweepDelims,
             delim,
             normalize,
             zip4
@@ -1584,7 +1581,7 @@ class StringHandler extends ChainHandler {
             ['(?!0{5})\\d{5}', '(?!0{4})(?:\\d{4})?'],
             {
                 normalizedDelim: delim,
-                cleanDelims,
+                sweepDelims,
                 allowLooseFormat
             }
         );

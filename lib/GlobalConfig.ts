@@ -51,7 +51,7 @@ const GlobalConfig = Object.seal({
         stripUnknownKeys: true
     },
     string: {
-        cleanDelims: '-',
+        sweepDelims: '-',
         ignoreCase: false,
         normalize: true,
         
