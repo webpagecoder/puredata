@@ -18,7 +18,9 @@
     "resolveJsonModule": true,
     "types": ["node", "jest"],
     "noEmit": true,
+    "noErrorTruncation": true,
     "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true
   },
   "include": [
     "lib/**/*.ts",

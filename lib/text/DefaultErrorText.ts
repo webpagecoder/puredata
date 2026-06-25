@@ -145,6 +145,7 @@ const DefaultErrorText: Record<string, string> = {
     'string/dataUrl': 'Must be a valid data URL',
     'string/digits': 'Must contain only digits',
     'string/domain': 'Must be a valid domain',
+    'string/e123': 'Must be a valid E.123 phone number',
     'string/e164': 'Must be a valid E.164 phone number',
     'string/email': 'Must be a valid email address',
     'string/empty': 'Must be empty',

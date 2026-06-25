@@ -2,19 +2,12 @@
 
 import { Presence } from '../../Presence.ts';
 import { RegexCache } from '../../RegexCache.ts';
-import { Utils } from '../../Utils.ts';
+import { RegexMatchOptions, StrictPartial, Utils } from '../../Utils.ts';
 import { ChainHandler } from '../ChainHandler.ts';
 import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { NumberHandler } from '../number/NumberHandler.ts';
 
 export type StringHandlerResult = ChainHandlerResult<string>;
-
-export type CommonStringMatchingDefaults = {
-    ignoreCase: boolean;
-    sweepDelims: string;
-    normalize: boolean;
-    normalizedDelim: string;
-};
 
 export type ToDelimitedOptions = {
     fromDelims: string | null;
@@ -34,37 +27,53 @@ export type ComplexOptions = {
     maxRepeats: number;
 };
 
-export type ContainsOptions = Pick<CommonStringMatchingDefaults, 'ignoreCase'>;
+export type NormalizeOption = {
+    normalize: boolean;
+}
 
-export type CreditCardOptions = Omit<CommonStringMatchingDefaults, 'ignoreCase'> & {
+export type ContainsOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+
+export type CreditCardOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'> & {
     types: string[] | null;
 };
 
-export type CurrencyCodeOptions = Pick<CommonStringMatchingDefaults, 'ignoreCase'>;
+export type CurrencyCodeOptions = NormalizeOption & Pick<RegexMatchOptions, 'ignoreCase'>;
 
 export type DataUrlOptions = {
     allowedTypes: ('image' | 'video' | 'audio' | 'text')[];
 }
 
-export type DomainOptions = Pick<CommonStringMatchingDefaults, 'normalize'> & {
+export type DomainOptions = NormalizeOption & {
     wildcards: Presence;
     subdomains: Presence;
 }
 
-export type E164Type = Omit<CommonStringMatchingDefaults, 'ignoreCase'>;
+export type E123Options = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'>;
 
-export type SsnOptions = Omit<CommonStringMatchingDefaults, 'ignoreCase'>;
+export type EmailOptions = NormalizeOption;
+
+export type EndsWithOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+
+export type ExcludesCharsOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+
+export type GtinOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'> & {
+    lengths: number[];
+};
+
+export type StartsWithOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+
+export type SsnOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'>;
 
 const { pass, fail } = ChainHandlerResult;
 const { optional, required, forbidden } = Presence;
 
 class StringHandler extends ChainHandler {
 
-    public matchingDefaults!: CommonStringMatchingDefaults;
+    public matchingDefaults!: RegexMatchOptions;
 
-    protected _matchingDefaults: CommonStringMatchingDefaults | undefined;
+    protected _matchingDefaults: RegexMatchOptions | undefined;
 
-    public configMatchingDefaults(matchingDefaults: CommonStringMatchingDefaults): void {
+    public configMatchingDefaults(matchingDefaults: RegexMatchOptions): void {
         this._matchingDefaults = matchingDefaults;
     }
 
@@ -172,7 +181,7 @@ class StringHandler extends ChainHandler {
 
 
     public complex(str: string, options: Partial<ComplexOptions> = {}): StringHandlerResult {
-        const finalOptions: ComplexOptions = Object.assign({
+        const resolvedOptions: ComplexOptions = Object.assign({
             minLength: 8,
             maxLength: 100,
             minLowercase: 1,
@@ -190,7 +199,7 @@ class StringHandler extends ChainHandler {
             minDigits,
             minSpecialChars,
             maxRepeats
-        } = finalOptions;
+        } = resolvedOptions;
 
         let length = str.length, numLowerCase = 0, numUppercase = 0, numDigits = 0, numSpecials = 0;
         if (length < minLength || length > maxLength) {
@@ -222,25 +231,25 @@ class StringHandler extends ChainHandler {
     }
 
     public contains(str: string, substring: string, options: Partial<ContainsOptions> = {}): StringHandlerResult {
-        const finalOptions = Object.assign(
+        const resolvedOptions = Object.assign(
             { ignoreCase: false },
             this._matchingDefaults,
             options
         );
 
-        if (finalOptions.ignoreCase) {
+        if (resolvedOptions.ignoreCase) {
             str = str.toLowerCase();
             substring = substring.toLowerCase();
         }
 
         return str.indexOf(substring) !== -1
             ? pass(str)
-            : fail(str, 'string/contains', Object.assign({ substring }, finalOptions));
+            : fail(str, 'string/contains', Object.assign({ substring }, resolvedOptions));
     }
 
     public creditCard(str: string, options: Partial<CreditCardOptions> = {}): StringHandlerResult {
 
-        const finalOptions = Object.assign(
+        const resolvedOptions = Object.assign(
             {
                 normalizedDelim: '',
                 types: null as string[] | null
@@ -249,14 +258,7 @@ class StringHandler extends ChainHandler {
             options
         );
 
-        const {
-            sweepDelims,
-            normalize,
-            normalizedDelim,
-            types
-        } = finalOptions;
-
-        const cardTypes: [string, string[], boolean][] = [
+        const allTypes: [string, string[], boolean][] = [
             // visa 4(13 or 16 total)
             [
                 'visa',
@@ -319,26 +321,26 @@ class StringHandler extends ChainHandler {
 
         ];
 
-        for (const [type, regexParts, checkLuhn] of cardTypes) {
+        const { normalize, types } = resolvedOptions;
+        for (const [type, regexParts, checkLuhn] of allTypes) {
             if (types && types.indexOf(type) === -1) {
                 continue;
             }
-            const matchData = Utils.runRegex(str, regexParts, finalOptions);
-            if (matchData) {
-                const [normalized, stripped] = matchData;
-                if (checkLuhn && !this.luhn(stripped).pass) {
-                    return fail(str, 'string/creditCard', finalOptions);
+            const [normalized, stripped, suggestion] = Utils.regexMatch(str, regexParts, resolvedOptions);
+            if (normalized !== null) {
+                if (checkLuhn && !this.luhn(stripped as string).pass) {
+                    return fail(str, 'string/creditCard', Object.assign({ suggestion }, resolvedOptions));
                 }
                 return pass(normalize ? normalized : str);
             }
         }
-        return fail(str, 'string/creditCard', finalOptions);
+        return fail(str, 'string/creditCard', resolvedOptions);
     }
 
     public currencyCode(str: string, options: Partial<CurrencyCodeOptions> = {}): StringHandlerResult {
 
-        const finalOptions = Object.assign(
-            { ignoreCase: false },
+        const resolvedOptions = Object.assign(
+            {},
             this._matchingDefaults,
             options
         );
@@ -358,10 +360,10 @@ class StringHandler extends ChainHandler {
             'XOF', 'XPD', 'XPF', 'XPT', 'XSU', 'XTS', 'XUA', 'XXX', 'YER', 'ZAR', 'ZMW', 'ZWL'
         ];
 
-        const search = finalOptions.ignoreCase ? str.toUpperCase() : str;
-        return codes.indexOf(search) > -1
-            ? pass(search)
-            : fail(str, 'string/currencyCode', finalOptions);
+        const uppercase = resolvedOptions.ignoreCase ? str.toUpperCase() : str;
+        return codes.indexOf(uppercase) > -1
+            ? pass(resolvedOptions.normalize ? uppercase : str)
+            : fail(str, 'string/currencyCode', resolvedOptions);
     }
 
     public dataUrl(str: string, options: Partial<DataUrlOptions> = {}): StringHandlerResult {
@@ -418,166 +420,178 @@ class StringHandler extends ChainHandler {
     }
 
 
-    public e164(str: string, options: Partial<E164Type> = {}): StringHandlerResult {
+    public e123(str: string, options: Partial<E123Options> = {}): StringHandlerResult {
 
-        const finalOptions = Object.assign(
-            { normalizedDelim: '' },
+        const resolvedOptions = Object.assign(
+            {
+                normalizedDelim: ' '
+            },
             this._matchingDefaults,
             options
         );
 
         const {
             normalize,
-        } = finalOptions;
+        } = resolvedOptions;
 
-        const [normalized, stripped, suggestion] = Utils.runRegex(
+        const [normalized, , suggestion] = Utils.regexMatch(
             str,
-            ['(?=\\+(?:\\D*\\d){7,15}$)(\\+)(\\d{1,3}(?:(?:', ')?\\d{1,14})+)'],
-            finalOptions
+            ['(?=\\+(?:\\D*\\d){7,15}$)(\\+\\d{1,3}(?:(?:', ')?\\d{1,14})+)'],
+            resolvedOptions
         );
 
         // Final "massage" - if there is a space between
 
         if (normalized === null) {
-            return fail(str, 'string/e164', Object.assign({ suggestion }, finalOptions));
+            return fail(str, 'string/e123', Object.assign({ suggestion }, resolvedOptions));
         }
 
         return pass(normalize ? normalized : str);
     }
 
-    /**
-     * Executes the email handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public email(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
+    public e164(str: string, options: Partial<E123Options> = {}): StringHandlerResult {
+
+        const resolvedOptions = Object.assign(
+            {
+                normalizedDelim: ''
+            },
+            this._matchingDefaults,
+            options
+        );
+
         const {
             normalize,
-        } = options;
+        } = resolvedOptions;
+
+        const [normalized, , suggestion] = Utils.regexMatch(
+            str,
+            ['(\\+\\d{7,15})'],
+            resolvedOptions
+        );
+
+        // Final "massage" - if there is a space between
+
+        if (normalized === null) {
+            return fail(str, 'string/e164', Object.assign({ suggestion }, resolvedOptions));
+        }
+
+        return pass(normalize ? normalized : str);
+    }
+
+
+    // ------------------START NEW TESTS HERE
+    public email(str: string, options: Partial<EmailOptions> = {}): StringHandlerResult {
+
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
+
         const parts = str.split('@');
 
         // Make sure there are two parts and the domain passes
         if (parts.length !== 2 || this.domain(parts[1]).fail) {
-            return fail(str, 'string/email', options);
+            return fail(str, 'string/email', resolvedOptions);
         }
 
         const noDot = "[a-zA-Z0-9!#$%&'*+\\-/=?^_`{|}~]";
         const dot = "[a-zA-Z0-9!#$%&'*+\\-/=?^_`{|}~.]";
         const fullRegex = `^(?=(${noDot}+))\\1(?=(${dot}*${noDot}+)?)\\2$`;
         return RegexCache.get(fullRegex).test(parts[0])
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/email', options);
+            ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/email', resolvedOptions);
     }
 
-    /**
-     * Executes the empty handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public empty(str: string): StringHandlerResult {
         return str.length === 0 ? pass(str) : fail(str, 'string/empty');
     }
 
-    /**
-     * Executes the endsWith handler step.
-     * @param {any} str
-     * @param {any} suffix
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public endsWith(str: string, suffix: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { ignoreCase } = options;
+    public endsWith(str: string, suffix: string, options: Partial<EndsWithOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
 
-        if (ignoreCase) {
+        if (resolvedOptions.ignoreCase) {
             str = str.toLowerCase();
             suffix = suffix.toLowerCase();
         }
         return str.endsWith(suffix)
             ? pass(str)
-            : fail(str, 'string/endsWith', Object.assign({ suffix }, options));
+            : fail(str, 'string/endsWith', Object.assign({ suffix }, resolvedOptions));
     }
 
-    /**
-     * Executes the excludesChars handler step.
-     * @param {any} str
-     * @param {any} chars
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public excludesChars(str: string, chars: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const {
-            ignoreCase,
-        } = options;
+    public excludesChars(str: string, chars: string, options: Partial<ExcludesCharsOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
 
         return str.replace(
             RegexCache.get(
                 `[${Utils.escapeForRegex(chars)}]`,
-                'g' + (ignoreCase ? 'i' : '')
+                'g' + (resolvedOptions.ignoreCase ? 'i' : '')
             ),
             ''
         ).length === str.length
             ? pass(str)
-            : fail(str, 'string/excludesChars', Object.assign({ chars }, options));
+            : fail(str, 'string/excludesChars', Object.assign({ chars }, resolvedOptions));
     }
 
-    /**
-     * Executes the gtin handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public gtin(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const finalOptions = Object.assign({
-            delim: '',
-            lengths: [8, 12, 13, 14]
-        }, options);
+
+    public gtin(str: string, options: Partial<GtinOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {
+                normalizedDelim: '',
+                lengths: [8, 12, 13, 14]
+            },
+            this._matchingDefaults,
+            options
+        );
 
         const {
             lengths,
-            sweepDelims,
-            delim,
             normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
+        } = resolvedOptions;
 
         const patterns = [];
         if (lengths.indexOf(8) > -1) {
-            patterns.push(['\\d{4}', '\\d{4}']);
+            patterns.push(['(\\d{4})', '(\\d{4})']);
         }
         if (lengths.indexOf(12) > -1) {
-            patterns.push(['\\d', '\\d{5}', '\\d{5}', '\\d']);
+            patterns.push(['(\\d)', '(\\d{5})', '(\\d{5})', '(\\d)']);
         }
         if (lengths.indexOf(13) > -1) {
-            patterns.push(['\\d', '\\d{6}', '\\d{6}']);
+            patterns.push(['(\\d)', '(\\d{6})', '(\\d{6})']);
         }
         if (lengths.indexOf(14) > -1) {
-            patterns.push(['\\d', '\\d{6}', '\\d{6}', '\\d']);
+            patterns.push(['(\\d)', '(\\d{6})', '(\\d{6})', '(\\d)']);
         }
 
         for (const regex of patterns) {
-            const matchData = Utils.runRegex(
+            const [normalized, stripped, suggestion] = Utils.regexMatch(
                 str,
                 regex,
-                {
-                    normalizedDelim: delim,
-                    sweepDelims
-                }
+                resolvedOptions
             );
 
-            if (matchData) {
-                const [bareStr, ...parts] = matchData;
-                if (!Utils.validateWithCheckDigit(bareStr, { weights: [3, 1], reverse: true })) {
-                    return fail(str, 'string/gtin', finalOptions);
+            if (normalized !== null) {
+                if (!Utils.validateWithCheckDigit(stripped as string, {
+                    weights: [3, 1],
+                    reverse: true
+                })) {
+                    return fail(str, 'string/gtin', Object.assign({ lengths, suggestion }, resolvedOptions));
                 }
                 return pass(
-                    normalize
-                        ? parts.join(delim)
-                        : str
+                    normalize ? normalized : str
                 );
             }
         }
 
-        return fail(str, 'string/gtin', finalOptions);
+        return fail(str, 'string/gtin', resolvedOptions);
     }
 
     /**
@@ -634,7 +648,7 @@ class StringHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public imei(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const finalOptions = Object.assign({
+        const resolvedOptions = Object.assign({
             delim: '-',
         }, options);
 
@@ -642,9 +656,9 @@ class StringHandler extends ChainHandler {
             sweepDelims,
             delim,
             normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
+        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
 
-        const matchData = Utils.runRegex(
+        const matchData = Utils.regexMatch(
             str,
             ['\\d{2}', '\\d{6}', '\\d{6}', '\\d'],
             {
@@ -654,7 +668,7 @@ class StringHandler extends ChainHandler {
         );
 
         if (!matchData) {
-            return fail(str, 'string/imei', finalOptions);
+            return fail(str, 'string/imei', resolvedOptions);
         }
 
         const [bareStr, ...parts] = matchData;
@@ -666,7 +680,7 @@ class StringHandler extends ChainHandler {
                     : str
             );
         }
-        return fail(str, 'string/imei', finalOptions);
+        return fail(str, 'string/imei', resolvedOptions);
     }
 
     /**
@@ -877,7 +891,7 @@ class StringHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public mac(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const finalOptions = Object.assign({
+        const resolvedOptions = Object.assign({
             delim: ':',
         }, options);
 
@@ -885,9 +899,9 @@ class StringHandler extends ChainHandler {
             sweepDelims,
             delim,
             normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
+        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
 
-        const matchData = Utils.runRegex(
+        const matchData = Utils.regexMatch(
             str,
             new Array(6).fill('[a-f\\d]{2}'),
             {
@@ -897,7 +911,7 @@ class StringHandler extends ChainHandler {
         );
 
         if (!matchData) {
-            return fail(str, 'string/mac', finalOptions);
+            return fail(str, 'string/mac', resolvedOptions);
         }
 
         return pass(
@@ -1265,7 +1279,7 @@ class StringHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public phone(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const finalOptions = Object.assign({
+        const resolvedOptions = Object.assign({
             delim: '-',
         }, options);
 
@@ -1273,9 +1287,9 @@ class StringHandler extends ChainHandler {
             sweepDelims,
             delim,
             normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
+        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
 
-        const matchData = Utils.runRegex(
+        const matchData = Utils.regexMatch(
             str,
             ['(?:\\+?1)?', '(?:\\d{3}|\\(\\d{3}\\))', '\\d{3}', '\\d{4}'],
             {
@@ -1285,7 +1299,7 @@ class StringHandler extends ChainHandler {
         );
 
         if (!matchData) {
-            return fail(str, 'string/phone', finalOptions);
+            return fail(str, 'string/phone', resolvedOptions);
         }
 
         const [, , part1, part2, part3] = matchData;
@@ -1344,7 +1358,7 @@ class StringHandler extends ChainHandler {
 
     public ssn(str: string, options: Partial<SsnOptions> = {}): StringHandlerResult {
 
-        const finalOptions = Object.assign(
+        const resolvedOptions = Object.assign(
             {
                 normalizedDelim: '-'
             },
@@ -1352,40 +1366,38 @@ class StringHandler extends ChainHandler {
             options
         );
 
-        const matchData = Utils.runRegex(
+        const matchData = Utils.regexMatch(
             str,
             ['((?!000|666|9\\d{2})\\d{3})', '((?!00)\\d{2})', '((?!0000)\\d{4})'],
-            finalOptions
+            resolvedOptions
         );
 
         if (!matchData) {
-            return fail(str, 'string/ssn', finalOptions);
+            return fail(str, 'string/ssn', resolvedOptions);
         }
 
         return pass(
-            finalOptions.normalize
+            resolvedOptions.normalize
                 ? matchData[0]
                 : str
         );
     }
 
-    /**
-     * Executes the startsWith handler step.
-     * @param {any} str
-     * @param {any} prefix
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public startsWith(str: string, prefix: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { ignoreCase } = options;
 
-        if (ignoreCase) {
+    public startsWith(str: string, prefix: string, options: Partial<StartsWithOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
+
+        if (resolvedOptions.ignoreCase) {
             str = str.toLowerCase();
             prefix = prefix.toLowerCase();
         }
         return str.startsWith(prefix)
             ? pass(str)
-            : fail(str, 'string/startsWith', Object.assign({ prefix }, options));
+            : fail(str, 'string/startsWith', Object.assign({ prefix }, resolvedOptions));
     }
 
     /**
@@ -1561,7 +1573,7 @@ class StringHandler extends ChainHandler {
      * @returns {ChainHandlerResult}
      */
     public zip(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const finalOptions = Object.assign({
+        const resolvedOptions = Object.assign({
             delim: '',
             zip4: optional
         }, options);
@@ -1572,11 +1584,11 @@ class StringHandler extends ChainHandler {
             delim,
             normalize,
             zip4
-        } = Object.assign({}, StringHandler.matchingDefaults, finalOptions);
+        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
 
 
         // 00 through 12, 21 through 32, 61 through 72, or 80
-        const matchData = Utils.runRegex(
+        const matchData = Utils.regexMatch(
             str,
             ['(?!0{5})\\d{5}', '(?!0{4})(?:\\d{4})?'],
             {
@@ -1587,7 +1599,7 @@ class StringHandler extends ChainHandler {
         );
 
         if (!matchData) {
-            return fail(str, 'string/zip/base', finalOptions);
+            return fail(str, 'string/zip/base', resolvedOptions);
         }
 
         const [, zip, zip4Str = ''] = matchData;
@@ -1779,7 +1791,7 @@ class StringHandler extends ChainHandler {
      * @param options Delimiter and transformation options.
      */
     public toDelimited(str: string, options: Partial<ToDelimitedOptions> = {}): StringHandlerResult {
-        const finalOptions: ToDelimitedOptions = Object.assign({
+        const resolvedOptions: ToDelimitedOptions = Object.assign({
             fromDelims: null,
             toDelim: '',
             transformer1: (x: string): string => x,
@@ -1793,7 +1805,7 @@ class StringHandler extends ChainHandler {
             transformer1,
             transformer2,
             transformerSwitchIndex
-        } = finalOptions;
+        } = resolvedOptions;
 
         return pass(
             (fromDelims == null ? [str] : Utils.splitOnDelims(str, fromDelims))

@@ -4,12 +4,6 @@ import { RegexCache } from './RegexCache.ts';
 import { Field } from './fields/Field.ts';
 import { Path } from './Path.ts';
 
-export type CommonStringMatchingDefaults = {
-    ignoreCase: boolean;
-    sweepDelims: string;
-    normalize: boolean;
-};
-
 export type NestedStringRecord = {
     [key: string]: NestedStringRecord | string | undefined;
 };
@@ -22,11 +16,12 @@ export type NestedStringRecord = {
  * @property {string} acceptableDelims - A string of characters that are considered acceptable delimiters in the string. 
  * These will be normalized to the normalizedDelim character if a match is made.
  * @property {string} normalizedDelim - The character that acceptable delimiters will be normalized to.
- * @property {string} sweepDelims - A string of characters that should be completely removed from the string before
- * running the regex (any acceptable/normalized delimiters that appear in sweepDelims are safe).
+ * @property {string} sweepDelims - Characters to clean up. Recommended to set this to any characters that are 
+ * common delims - any {@link acceptableDelims}/{@link normalizedDelim} delimiters that appear in sweepDelims will 
+ * be ignored.
  * @property {boolean} ignoreCase - If true, the regex match will be case-insensitive.
  */
-export type RegexMatchOptions = Omit<CommonStringMatchingDefaults, 'normalize'> & {
+export type RegexMatchOptions = {
     strictMode: boolean;
     acceptableDelims: string;
     ignoreCase: boolean;
@@ -413,7 +408,7 @@ class Utils {
      * @param options @see RegexMatchOptions
      * @returns The result of the regex match, including the normalized string, the string with delims removed, and the original string if no match was found
      */
-    static runRegex(str: string, regexParts: string[], options: RegexMatchOptions): RegexMatchResult {
+    static regexMatch(str: string, regexParts: string[], options: RegexMatchOptions): RegexMatchResult {
         let {
             strictMode,
             acceptableDelims,
@@ -480,10 +475,10 @@ class Utils {
         const match = massagedString.match(regex);
         if (match) {
             // Glue matched parts together (delims already solved)
-            const normalizedStr = match.slice(1).join(''); // Glue matched parts together (delims already solved)
+            const normalizedStr = match.slice(1).join(normalizedDelim); // Glue matched parts together (delims already solved)
             return [
                 normalizedStr,
-                normalizedStr.replace(new RegExp(Utils.escapeForRegex(allDelims), 'g'), ''),
+                normalizedStr.replace(new RegExp('[' + Utils.escapeForRegex(allDelims) + ']', 'g'), ''),
                 null
             ];
         }
