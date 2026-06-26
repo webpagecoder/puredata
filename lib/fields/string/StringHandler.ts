@@ -2,7 +2,7 @@
 
 import { Presence } from '../../Presence.ts';
 import { RegexCache } from '../../RegexCache.ts';
-import { RegexMatchOptions, StrictPartial, Utils } from '../../Utils.ts';
+import { RegexMatchOptions, Utils } from '../../Utils.ts';
 import { ChainHandler } from '../ChainHandler.ts';
 import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { NumberHandler } from '../number/NumberHandler.ts';
@@ -64,6 +64,12 @@ export type HexOptions = NormalizeOption;
 
 export type ImeiOptions = NormalizeOption;
 
+export type IpOptions = NormalizeOption;
+
+export type LabelOptions = NormalizeOption;
+
+export type MacOptions = NormalizeOption;
+
 export type StartsWithOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
 
 export type SsnOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'>;
@@ -76,6 +82,12 @@ class StringHandler extends ChainHandler {
     public matchingDefaults!: RegexMatchOptions;
 
     protected _matchingDefaults: RegexMatchOptions | undefined;
+    protected _numberHandler: NumberHandler;
+
+    constructor() {
+        super();
+        this._numberHandler = new NumberHandler();
+    }
 
     public configMatchingDefaults(matchingDefaults: RegexMatchOptions): void {
         this._matchingDefaults = matchingDefaults;
@@ -665,93 +677,73 @@ class StringHandler extends ChainHandler {
         return fail(str, 'string/imei', Object.assign({ suggestion }, resolvedOptions));
     }
 
-    /**
-     * Executes the ip handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public ip(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { normalize } = options;
+    public ip(str: string, options: Partial<IpOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
 
         const ipV4Test = this.ipV4(str);
         if (ipV4Test.pass) {
-            return pass(normalize ? str.toLowerCase() : str);
+            return pass(resolvedOptions.normalize ? str.toLowerCase() : str);
         }
 
         const ipV6Test = this.ipV6(str);
         if (ipV6Test.pass) {
-            return pass(normalize ? str.toLowerCase() : str);
+            return pass(resolvedOptions.normalize ? str.toLowerCase() : str);
         }
 
-        return fail(str, 'string/ip', options);
+        return fail(str, 'string/ip', resolvedOptions);
     }
 
-    /**
-     * Executes the ipCidr handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public ipCidr(str: string): StringHandlerResult {
         return this.ipCidrV4(str).pass || this.ipCidrV6(str).pass
             ? pass(str)
             : fail(str, 'string/ipCidr');
     }
 
-    /**
-     * Executes the ipCidrV4 handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public ipCidrV4(str: string): StringHandlerResult {
         const parts = str.split('/');
         if (parts.length !== 2) {
             return fail(str, 'string/ipCidrV4');
         }
         const num = Utils.parseNumber(parts[1]);
-        return num !== null && this.ipV4(parts[0]).pass && NumberHandler.between(num, 0, 32).pass
+        return num !== null && this.ipV4(parts[0]).pass && this._numberHandler.between(num, 0, 32).pass
             ? pass(str)
             : fail(str, 'string/ipCidrV4');
     }
 
-    /**
-     * Executes the ipCidrV6 handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public ipCidrV6(str: string): StringHandlerResult {
         const parts = str.split('/');
         if (parts.length !== 2) {
             return fail(str, 'string/ipCidrV6');
         }
         const num = Utils.parseNumber(parts[1]);
-        return num !== null && this.ipV6(parts[0]).pass && NumberHandler.between(num, 0, 128).pass
+        return num !== null && this.ipV6(parts[0]).pass && this._numberHandler.between(num, 0, 128).pass
             ? pass(str)
             : fail(str, 'string/ipCidrV6');
     }
 
-    /**
-     * Executes the ipV4 handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public ipV4(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { normalize } = options;
+    public ipV4(str: string, options: Partial<IpOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
+        
         const digits = '(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         return RegexCache.get(`^${digits}\\.${digits}\\.${digits}\\.${digits}$`).test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/ipV4', options);
+            ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/ipV4', resolvedOptions);
     }
 
-    /**
-     * Executes the ipV6 handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public ipV6(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const { normalize } = options;
+    public ipV6(str: string, options: Partial<IpOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
         const digits = '(?:\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         const v4 = `${digits}\\.${digits}\\.${digits}\\.${digits}`;
         const hex = '[0-9a-f]{1,4}';
@@ -764,74 +756,47 @@ class StringHandler extends ChainHandler {
         ].join('|');
 
         return RegexCache.get(v6, 'i').test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/ipV6', options);
+            ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/ipV6', resolvedOptions);
     }
 
-    /**
-     * Executes the json handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public json(str: string): StringHandlerResult {
         try { JSON.parse(str); } catch (e) { return fail(str, 'string/json'); }
         return pass(str);
     }
 
-    /**
-     * Executes the jwt handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public jwt(str: string): StringHandlerResult {
         return /^(?=((?:[a-z\d_=-]+\.){2}[a-z\d_=-]+))\1$/i.test(str)
             ? pass(str)
             : fail(str, 'string/jwt');
     }
-
-    /**
-     * Executes the label handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public label(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const {
-            normalize,
-        } = options;
+ 
+    public label(str: string, options: Partial<LabelOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            this._matchingDefaults,
+            options
+        );
 
         if (
             !this.lengthBetween(str, 1, 63).pass
             || str.startsWith('-')
             || str.endsWith('-')
         ) {
-            return fail(str, 'string/label', options);
+            return fail(str, 'string/label', resolvedOptions);
         }
 
         return /^(?=([a-z0-9\-]+))\1$/i.test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/label', options);
+            ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/label', resolvedOptions);
     }
 
-    /**
-     * Executes the length handler step.
-     * @param {any} str
-     * @param {any} length
-     * @returns {ChainHandlerResult}
-     */
     public length(str: string, length: number): StringHandlerResult {
         return str.length === length
             ? pass(str)
             : fail(str, 'string/length', { length });
     }
 
-    /**
-     * Executes the lengthBetween handler step.
-     * @param {any} str
-     * @param {any} min
-     * @param {any} max
-     * @returns {ChainHandlerResult}
-     */
     public lengthBetween(str: string, min: number, max: number): StringHandlerResult {
         if (str.length >= min && str.length <= max) {
             return pass(str);
@@ -839,22 +804,12 @@ class StringHandler extends ChainHandler {
         return fail(str, 'string/lengthBetween', { min, max });
     }
 
-    /**
-     * Executes the lowerCase handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public lowerCase(str: string): StringHandlerResult {
         return str === str.toLowerCase()
             ? pass(str)
             : fail(str, 'string/lowerCase');
     }
 
-    /**
-     * Executes the luhn handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public luhn(str: string): StringHandlerResult {
         return Utils.validateWithCheckDigit(str, {
             weights: [2, 1],
@@ -872,61 +827,54 @@ class StringHandler extends ChainHandler {
      * @param {any} options
      * @returns {ChainHandlerResult}
      */
-    public mac(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const resolvedOptions = Object.assign({
-            delim: ':',
-        }, options);
-
-        const {
-            sweepDelims,
-            delim,
-            normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
-
-        const matchData = Utils.regexMatch(
-            str,
-            new Array(6).fill('[a-f\\d]{2}'),
+    public mac(str: string, options: Partial<MacOptions> = {}): StringHandlerResult {
+        
+        const resolvedOptions = Object.assign(
             {
-                normalizedDelim: delim,
-                sweepDelims,
-            }
+                normalizedDelim: ''
+            },
+            this._matchingDefaults,
+            options
         );
 
-        if (!matchData) {
-            return fail(str, 'string/mac', resolvedOptions);
+        const normalize = resolvedOptions.normalize;
+
+        const [normalized, , suggestion] = Utils.regexMatch(
+            str,
+            new Array(6).fill('([a-f\\d]{2})'),
+            resolvedOptions
+        );
+
+        if (normalized === null) {
+            return fail(str, 'string/mac', Object.assign({ suggestion }, resolvedOptions));
         }
 
-        return pass(
-            normalize
-                ? matchData.slice(1).join(delim)
-                : str
-        );
+        return pass(normalize ? normalized : str);
     }
 
-    /**
-     * Executes the matches handler step.
-     * @param {any} str
-     * @param {any} regex
-     * @returns {ChainHandlerResult}
-     */
     public matches(str: string, regex: RegExp): StringHandlerResult {
         return regex.test(str)
             ? pass(str)
             : fail(str, 'string/matches', { regex: regex.toString() });
     }
 
-    /**
-     * Executes the maxLength handler step.
-     * @param {any} str
-     * @param {any} max
-     * @returns {ChainHandlerResult}
-     */
     public maxLength(str: string, max: number): StringHandlerResult {
         return str.length <= max
             ? pass(str)
             : fail(str, 'string/maxLength', { max });
     }
 
+
+
+
+
+
+
+
+
+
+
+    
     /**
      * Executes the maxWords handler step.
      * @param {any} str
@@ -1481,8 +1429,8 @@ class StringHandler extends ChainHandler {
             hasPort = portValue.length > 0,
             goodPort = hasPort &&
                 portValueNum !== null
-                && NumberHandler.integer(portValueNum).pass
-                && NumberHandler.between(portValueNum, 1, 65535).pass,
+                && this._numberHandler.integer(portValueNum).pass
+                && this._numberHandler.between(portValueNum, 1, 65535).pass,
 
             hasFrag = fragmentValue.length > 0,
             hasQuery = queryValue.length > 0,

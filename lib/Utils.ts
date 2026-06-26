@@ -406,7 +406,7 @@ class Utils {
      * @param str The string to perform the match on
      * @param regexParts The pieces of the regex, split on where the delims would appear
      * @param options @see RegexMatchOptions
-     * @param hasKnownDelimPlacement If true, the string is assumed to have delims in known places
+     * @param isStrictlyDelimited If true, the string is assumed to have delims in known places
      * @returns The result of the regex match, including the normalized string, the string with all delims removed, 
      * and the a "massaged" suggestion string
      */
@@ -414,7 +414,7 @@ class Utils {
         str: string,
         regexParts: string[],
         options: RegexMatchOptions,
-        hasKnownDelimPlacement: boolean = true
+        isStrictlyDelimited: boolean = true
     ): RegexMatchResult {
 
         let {
@@ -449,7 +449,7 @@ class Utils {
         const allDelims = sweepDelims + acceptableDelims + normalizedDelim;
         const allDelimsEscaped = Utils.escapeForRegex(allDelims);
 
-        if (!hasKnownDelimPlacement) {
+        if (!isStrictlyDelimited) {
 
             // Need to track where the user indicates delims should be placed
             const delimsToDelete = new Set(sweepDelims.split(''));
