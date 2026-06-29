@@ -27,17 +27,21 @@ export type ComplexOptions = {
     maxRepeats: number;
 };
 
+export type IgnoreCaseOption = {
+    ignoreCase: boolean;
+}
 export type NormalizeOption = {
     normalize: boolean;
 }
+export type GenericMatchOptions = NormalizeOption & RegexMatchOptions;
 
-export type ContainsOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+export type ContainsOptions = IgnoreCaseOption;
 
-export type CreditCardOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'> & {
+export type CreditCardOptions = GenericMatchOptions & {
     types: string[] | null;
 };
 
-export type CurrencyCodeOptions = NormalizeOption & Pick<RegexMatchOptions, 'ignoreCase'>;
+export type CurrencyCodeOptions = NormalizeOption & IgnoreCaseOption;
 
 export type DataUrlOptions = {
     allowedTypes: ('image' | 'video' | 'audio' | 'text')[];
@@ -48,40 +52,75 @@ export type DomainOptions = NormalizeOption & {
     subdomains: Presence;
 }
 
-export type E123Options = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'>;
+export type E123Options = GenericMatchOptions
 
 export type EmailOptions = NormalizeOption;
 
-export type EndsWithOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+export type EndsWithOptions = IgnoreCaseOption;
 
-export type ExcludesCharsOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+export type ExcludesCharsOptions = IgnoreCaseOption;
 
-export type GtinOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'> & {
+export type GtinOptions = GenericMatchOptions & {
     lengths: number[];
 };
 
 export type HexOptions = NormalizeOption;
 
-export type ImeiOptions = NormalizeOption;
+export type ImeiOptions = GenericMatchOptions;
 
 export type IpOptions = NormalizeOption;
 
 export type LabelOptions = NormalizeOption;
 
-export type MacOptions = NormalizeOption;
+export type MacOptions = GenericMatchOptions;
 
-export type StartsWithOptions = Pick<RegexMatchOptions, 'ignoreCase'>;
+export type MeasurementOptions = NumericOptions & {
+    units: string;
+}
 
-export type SsnOptions = NormalizeOption & Omit<RegexMatchOptions, 'ignoreCase'>;
+export type MoneyOptions = {
+    parens: Presence;
+    leadingSymbols: string[];
+    trailingSymbols: string[];
+};
+
+export type NumericOptions = {
+    plus: Presence;
+    minus: Presence;
+    alignment: 'left' | 'right';
+    min: number,
+    max: number,
+    decimal: Presence;
+    thousandsDelim: string;
+    decimalDelim: string;
+    minPrecision: number;
+    maxPrecision: number;
+    leadingZero: Presence;
+    trailingZero: Presence;
+    leadingSymbols: string[];
+    trailingSymbols: string[];
+    looseSpacing: boolean;
+};
+
+export type PhoneOptions = GenericMatchOptions;
+
+export type StartsWithOptions = IgnoreCaseOption;
+
+export type SsnOptions = GenericMatchOptions
+
+export type UuidOptions = GenericMatchOptions & {
+    version: string | number | null;
+};
+
+export type ZipOptions = NormalizeOption & {
+    zip4: Presence;
+}
 
 const { pass, fail } = ChainHandlerResult;
-const { optional, required, forbidden } = Presence;
 
 class StringHandler extends ChainHandler {
 
-    public matchingDefaults!: RegexMatchOptions;
-
-    protected _matchingDefaults: RegexMatchOptions | undefined;
+    protected _matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> | undefined;
     protected _numberHandler: NumberHandler;
 
     constructor() {
@@ -89,7 +128,7 @@ class StringHandler extends ChainHandler {
         this._numberHandler = new NumberHandler();
     }
 
-    public configMatchingDefaults(matchingDefaults: RegexMatchOptions): void {
+    public configMatchingDefaults(matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption>): void {
         this._matchingDefaults = matchingDefaults;
     }
 
@@ -248,7 +287,7 @@ class StringHandler extends ChainHandler {
 
     public contains(str: string, substring: string, options: Partial<ContainsOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            { ignoreCase: false },
+            {},
             this._matchingDefaults,
             options
         );
@@ -267,6 +306,7 @@ class StringHandler extends ChainHandler {
 
         const resolvedOptions = Object.assign(
             {
+                acceptableDelims: ' -_./',
                 normalizedDelim: '',
                 types: null as string[] | null
             },
@@ -337,19 +377,25 @@ class StringHandler extends ChainHandler {
 
         ];
 
-        const { normalize, types } = resolvedOptions;
+        const {
+            normalize,
+            normalizedDelim,
+            types
+        } = resolvedOptions;
+
         for (const [type, regexParts, checkLuhn] of allTypes) {
             if (types && types.indexOf(type) === -1) {
                 continue;
             }
-            const [normalized, stripped, suggestion] = Utils.regexMatch(str, regexParts, resolvedOptions);
+            const [normalized, suggestion] = Utils.regexMatch(str, regexParts, resolvedOptions);
             if (normalized !== null) {
-                if (checkLuhn && !this.luhn(stripped as string).pass) {
+                if (checkLuhn && !this.luhn(normalized.replace(new RegExp(Utils.escapeForRegex(normalizedDelim), 'g'), ''),).pass) {
                     return fail(str, 'string/creditCard', Object.assign({ suggestion }, resolvedOptions));
                 }
                 return pass(normalize ? normalized : str);
             }
         }
+
         return fail(str, 'string/creditCard', resolvedOptions);
     }
 
@@ -406,22 +452,22 @@ class StringHandler extends ChainHandler {
 
     public domain(str: string, options: Partial<DomainOptions> = {}): StringHandlerResult {
         const {
-            wildcards = forbidden,
-            subdomains = optional,
+            wildcards = 'forbidden',
+            subdomains = 'optional',
             normalize = false,
         } = options;
 
         const regexResult = RegexCache.get([
             `^`, (
-                // Start with *. if allowed/required
-                wildcards === optional && '(?:\\*\\.)?'
-                || wildcards === required && '(?:\\*\\.)' || ''
+                // Start with *. if allowed/'required'
+                wildcards === 'optional' && '(?:\\*\\.)?'
+                || wildcards === 'required' && '(?:\\*\\.)' || ''
             ),
             `(?=(`,
             // [a-z0-9-] up to 63 chars, can't start or end w/ dash
             `(?:[a-z\\d](?:[-a-z\\d]{0,61}[a-z\\d])?\\.)`, (
-                subdomains === optional
-                && '+' || subdomains === required
+                subdomains === 'optional'
+                && '+' || subdomains === 'required'
                 && '{2,}' || '' // Subdomains or not
             ),
             `))\\1`,
@@ -440,24 +486,34 @@ class StringHandler extends ChainHandler {
 
         const resolvedOptions = Object.assign(
             {
-                normalizedDelim: ' '
+                acceptableDelims: ' -./',
+                normalizedDelim: ' ',
             },
             this._matchingDefaults,
             options
         );
 
         const {
+            mode,
             normalize,
         } = resolvedOptions;
 
-        const [normalized, , suggestion] = Utils.regexMatch(
+        let [normalized, suggestion] = Utils.regexMatch(
             str,
             ['(?=\\+(?:\\D*\\d){7,15}$)(\\+\\d{1,3}(?:(?:', ')?\\d{1,14})+)'],
             resolvedOptions,
             false
         );
 
-        // Final "massage" - if there is a space between
+        if (normalized === null && mode === 'loose') {
+            // Try match without + if in loose mode
+            [normalized, suggestion] = Utils.regexMatch(
+                str,
+                ['(?=(?:\\D*\\d){7,15}$)(\\+\\d{1,3}(?:(?:', ')?\\d{1,14})+)'],
+                resolvedOptions,
+                false
+            );
+        }
 
         if (normalized === null) {
             return fail(str, 'string/e123', Object.assign({ suggestion }, resolvedOptions));
@@ -470,24 +526,34 @@ class StringHandler extends ChainHandler {
 
         const resolvedOptions = Object.assign(
             {
-                normalizedDelim: ''
+                acceptableDelims: ' -./',
+                normalizedDelim: '',
             },
             this._matchingDefaults,
             options
         );
 
         const {
+            mode,
             normalize,
         } = resolvedOptions;
 
-        const [normalized, , suggestion] = Utils.regexMatch(
+        let [normalized, suggestion] = Utils.regexMatch(
             str,
             ['(\\+\\d{7,15})'],
             resolvedOptions,
             false
         );
 
-        // Final "massage" - if there is a space between
+        if (normalized === null && mode === 'loose') {
+            // Try match without + if in loose mode
+            [normalized, suggestion] = Utils.regexMatch(
+                str,
+                ['(\\d{7,15})'],
+                resolvedOptions,
+                false
+            );
+        }
 
         if (normalized === null) {
             return fail(str, 'string/e164', Object.assign({ suggestion }, resolvedOptions));
@@ -563,6 +629,7 @@ class StringHandler extends ChainHandler {
     public gtin(str: string, options: Partial<GtinOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {
+                acceptableDelims: ' -_./',
                 normalizedDelim: '',
                 lengths: [8, 12, 13, 14]
             },
@@ -573,6 +640,7 @@ class StringHandler extends ChainHandler {
         const {
             lengths,
             normalize,
+            normalizedDelim,
         } = resolvedOptions;
 
         const patterns = [];
@@ -590,17 +658,20 @@ class StringHandler extends ChainHandler {
         }
 
         for (const regex of patterns) {
-            const [normalized, stripped, suggestion] = Utils.regexMatch(
+            const [normalized, suggestion] = Utils.regexMatch(
                 str,
                 regex,
                 resolvedOptions
             );
 
             if (normalized !== null) {
-                if (!Utils.validateWithCheckDigit(stripped as string, {
-                    weights: [3, 1],
-                    reverse: true
-                })) {
+                if (!Utils.validateWithCheckDigit(
+                    normalized.replace(new RegExp(Utils.escapeForRegex(normalizedDelim), 'g'), ''),
+                    {
+                        weights: [3, 1],
+                        reverse: true
+                    }
+                )) {
                     return fail(str, 'string/gtin', Object.assign({ lengths, suggestion }, resolvedOptions));
                 }
                 return pass(
@@ -654,21 +725,24 @@ class StringHandler extends ChainHandler {
     public imei(str: string, options: Partial<ImeiOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {},
+            {
+                acceptableDelims: ' -_./',
+                normalizedDelim: '',
+            },
             this._matchingDefaults,
             options
         );
 
-        const matchData = Utils.regexMatch(
+        const [normalized, suggestion] = Utils.regexMatch(
             str,
             ['(\\d{2})', '(\\d{6})', '(\\d{6})', '(\\d)'],
             resolvedOptions
         );
 
-        const [normalized, stripped, suggestion] = matchData;
-
         if (normalized !== null) {
-            if (this.luhn(stripped as string).pass) {
+            if (this.luhn(
+                normalized.replace(new RegExp(Utils.escapeForRegex(resolvedOptions.normalizedDelim), 'g'), '')
+            ).pass) {
                 return pass(
                     resolvedOptions.normalize ? normalized : str
                 );
@@ -731,7 +805,7 @@ class StringHandler extends ChainHandler {
             this._matchingDefaults,
             options
         );
-        
+
         const digits = '(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])';
         return RegexCache.get(`^${digits}\\.${digits}\\.${digits}\\.${digits}$`).test(str)
             ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
@@ -770,7 +844,7 @@ class StringHandler extends ChainHandler {
             ? pass(str)
             : fail(str, 'string/jwt');
     }
- 
+
     public label(str: string, options: Partial<LabelOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
@@ -821,27 +895,25 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/luhn');
     }
 
-    /**
-     * Executes the mac handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
     public mac(str: string, options: Partial<MacOptions> = {}): StringHandlerResult {
-        
+
         const resolvedOptions = Object.assign(
             {
-                normalizedDelim: ''
+                version: null,
+                acceptableDelims: ': -_./',
+                normalizedDelim: ':',
             },
             this._matchingDefaults,
             options
         );
 
-        const normalize = resolvedOptions.normalize;
+        const {
+            normalize,
+        } = resolvedOptions;
 
-        const [normalized, , suggestion] = Utils.regexMatch(
+        let [normalized, suggestion] = Utils.regexMatch(
             str,
-            new Array(6).fill('([a-f\\d]{2})'),
+            new Array(6).fill('([a-fA-F\\d]{2})'),
             resolvedOptions
         );
 
@@ -849,7 +921,7 @@ class StringHandler extends ChainHandler {
             return fail(str, 'string/mac', Object.assign({ suggestion }, resolvedOptions));
         }
 
-        return pass(normalize ? normalized : str);
+        return pass(normalize ? normalized.toLowerCase() : str);
     }
 
     public matches(str: string, regex: RegExp): StringHandlerResult {
@@ -864,251 +936,253 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/maxLength', { max });
     }
 
-
-
-
-
-
-
-
-
-
-
-    
-    /**
-     * Executes the maxWords handler step.
-     * @param {any} str
-     * @param {any} max
-     * @param {any} sweepDelims
-     * @returns {ChainHandlerResult}
-     */
-    public maxWords(str: string, max: number, sweepDelims: string = StringHandler.matchingDefaults.sweepDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, sweepDelims).length;
+    public maxWords(str: string, max: number, delim: string = ' '): StringHandlerResult {
+        const count = str.split(delim).length;
         return count <= max
             ? pass(str)
             : fail(str, 'string/maxWords', {
                 count,
                 max,
-                sweepDelims
+                delim
             });
     }
 
-    /**
-     * Executes the measurement handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public measurement(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
+    public measurement(str: string, options: Partial<MeasurementOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            { units: 'cm' },
+            this._matchingDefaults,
+            options
+        );
+
         const {
             units
-        } = options;
+        } = resolvedOptions;
+
         const mergedOptions = Object.assign({
-            trailingSymbol: units || 'cm'
-        }, options);
+            trailingSymbol: units
+        }, resolvedOptions);
+
         const result = this.numeric(str, mergedOptions);
         return result.pass
-            ? pass(result._value)
-            : fail(str, 'string/measurement', options);
+            ? pass(result.value)
+            : fail(str, 'string/measurement', resolvedOptions);
 
     }
 
-    /**
-     * Executes the minLength handler step.
-     * @param {any} str
-     * @param {any} min
-     * @returns {ChainHandlerResult}
-     */
     public minLength(str: string, min: number): StringHandlerResult {
         return str.length >= min
             ? pass(str)
             : fail(str, 'string/minLength', { min });
     }
 
-    /**
-     * Executes the minWords handler step.
-     * @param {any} str
-     * @param {any} min
-     * @param {any} sweepDelims
-     * @returns {ChainHandlerResult}
-     */
-    public minWords(str: string, min: number, sweepDelims: string = StringHandler.matchingDefaults.sweepDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, sweepDelims).length;
+    public minWords(str: string, min: number, delim: string = ' '): StringHandlerResult {
+        const count = str.split(delim).length;
         return count >= min
             ? pass(str)
             : fail(str, 'string/minWords', {
                 count,
                 min,
-                sweepDelims
+                delim
             });
     }
 
-    /**
-     * Executes the money handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public money(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const {
-            parens = forbidden,
-            leadingSymbol = '$',
-            trailingSymbol = '',
-        } = options;
+    public money(str: string, options: Partial<MoneyOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {
+                parens: 'forbidden',
+                leadingSymbols: ['$'],
+                trailingSymbols: [],
+            },
+            this._matchingDefaults,
+            options
+        );
 
-        if (parens !== required) {
-            const mergedOptions = Object.assign({}, options, {
-                leadingSymbol,
-                trailingSymbol
-            });
-            const result = this.numeric(str, mergedOptions);
+        const {
+            parens,
+            leadingSymbols,
+            trailingSymbols
+        } = resolvedOptions;
+
+        if (parens !== 'required') {
+            const result = this.numeric(str, resolvedOptions);
             if (result.pass) {
-                return pass(result._value);
+                return pass(result.value);
             }
-            else if (parens === forbidden) {
-                return fail(str, 'string/money', options);
+            else if (parens === 'forbidden') {
+                return fail(str, 'string/money', resolvedOptions);
             }
         }
 
-        const mergedOptions = Object.assign({}, options, {
-            leadingSymbol: '(' + leadingSymbol,
-            trailingSymbol: trailingSymbol + ')'
-        });
-        const result = this.numeric(str, mergedOptions);
+        const result = this.numeric(str, Object.assign({}, resolvedOptions, {
+            leadingSymbols: leadingSymbols.map(str => '(' + str),
+            trailingSymbols: trailingSymbols.map(str => str + ')'),
+        }));
+
         return result.pass
-            ? pass(result._value)
-            : fail(str, 'string/money', options);
+            ? pass(result.value)
+            : fail(str, 'string/money', resolvedOptions);
     }
 
-    /**
-     * Executes the notEmpty handler step.
-     * @param {any} value
-     * @returns {ChainHandlerResult}
-     */
+
     public notEmpty(value: string): StringHandlerResult {
         return value.length > 0 ? pass(value) : fail(value, 'string/notEmpty');
     }
 
-    /**
-     * Executes the numeric handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public numeric(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
+
+    public numeric(str: string, options: Partial<NumericOptions> = {}): StringHandlerResult {
+        const resolvedOptions: NumericOptions = Object.assign(
+            {
+                plus: 'optional',
+                minus: 'optional',
+                alignment: 'left',
+                min: null,
+                max: null,
+                decimal: 'optional',
+                thousandsDelim: ',',
+                decimalDelim: '.',
+                minPrecision: 0,
+                maxPrecision: null,
+                leadingZero: 'optional',
+                trailingZero: 'optional',
+                leadingSymbols: [''],
+                trailingSymbols: [''],
+                looseSpacing: false,
+            },
+            this._matchingDefaults || {},
+            options
+        );
+
         const {
-            plus = forbidden,
-            minus = optional,
-            leftAlign = true,
+            plus,
+            minus,
+            alignment,
             min,
             max,
-            decimal = optional,
-            thousandsDelim = ',',
-            decimalDelim = '.',
-            minPrecision = 0,
+            decimal,
+            thousandsDelim,
+            decimalDelim,
+            minPrecision,
             maxPrecision,
-            leadingZero = optional,
-            trailingZero = optional,
-            leadingSymbol = '',
-            trailingSymbol = '',
-            ignoreCase,
-        } = Object.assign({}, StringHandler.matchingDefaults, options);
+            leadingZero,
+            trailingZero,
+            leadingSymbols,
+            trailingSymbols,
+            looseSpacing
+        } = resolvedOptions;
 
-        const leadingSymbolArr = [].concat(leadingSymbol);
-        const trailingSymbolArr = [].concat(trailingSymbol);
-        const looseSpacing = allowLooseFormat ? '\\s*' : ''; //???????????????????????????????????????
+        const looseRegex = looseSpacing ? '\\s*' : '';
         const parts = RegexCache.get(
             '^(\\+?)(-?)'
-            + looseSpacing
-            + `(?:${leadingSymbolArr.map(Utils.escapeForRegex).join('|')})`
-            + looseSpacing
+            + looseRegex
+            + (leadingSymbols.length > 0
+                ? `(${leadingSymbols.map(Utils.escapeForRegex).join('|')})`
+                : '')
+            + looseRegex
             + '(.+?)'
-            + looseSpacing
-            + `(?:${trailingSymbolArr.map(Utils.escapeForRegex).join('|')})`
-            + looseSpacing
+            + looseRegex
+            + (trailingSymbols.length > 0
+                ? `(${trailingSymbols.map(Utils.escapeForRegex).join('|')})`
+                : '')
+            + looseRegex
             + '(\\+?)(-?)$'
-            , ignoreCase ? 'i' : '')
-            .exec(str);
+        ).exec(str);
+
         if (!parts) {
-            return fail(str, 'string/numeric/base', options);
+            return fail(str, 'string/numeric/base', resolvedOptions);
         }
 
-        const [, leftPlus, leftMinus, number, rightPlus, rightMinus] = parts;
-        const [plusStr, minusStr] = leftAlign ? [leftPlus, leftMinus] : [rightPlus, rightMinus];
+        const [
+            ,
+            leftPlus = '',
+            leftMinus = '',
+            leadingSymbol = '',
+            number = '',
+            trailingSymbol = '',
+            rightPlus = '',
+            rightMinus = ''
+        ] = parts;
+        const [plusStr, minusStr] = alignment === 'left' ? [leftPlus, leftMinus] : [rightPlus, rightMinus];
 
         // Sign checks
-        if ((leftAlign && (rightPlus || rightMinus)) || (!leftAlign && (leftPlus || leftMinus))) {
-            return fail(str, 'string/numeric/missingSign', options);
+        if (
+            (alignment === 'left' && (rightPlus || rightMinus)) ||
+            (alignment === 'right' && (leftPlus || leftMinus))
+        ) {
+            return fail(str, 'string/numeric/missingSign', resolvedOptions);
         }
-        if (plus === required && !plusStr) {
-            return fail(str, 'string/numeric/missingPlusSign', options);
+        if (plus === 'required' && !plusStr) {
+            return fail(str, 'string/numeric/missingPlusSign', resolvedOptions);
         }
-        if (plus === forbidden && plusStr) {
-            return fail(str, 'string/numeric', options);
+        if (plus === 'forbidden' && plusStr) {
+            return fail(str, 'string/numeric/forbiddenPlusSign', resolvedOptions);
         }
-        if (minus === required && !minusStr) {
-            return fail(str, 'string/numeric/missingMinusSign', options);
+        if (minus === 'required' && !minusStr) {
+            return fail(str, 'string/numeric/missingMinusSign', resolvedOptions);
         }
-        if (minus === forbidden && minusStr) {
-            return fail(str, 'string/numeric/forbiddenMinusSign', options);
-        }
-
-        const [integral = '', fractional = ''] = number.split(decimalDelim, 2);
-        if (decimal === forbidden && fractional !== '') {
-            return fail(str, 'string/numeric/forbiddenDecimal', options);
-        }
-        if (decimal === required && fractional === '') {
-            return fail(str, 'string/numeric/missingDecimal', options);
+        if (minus === 'forbidden' && minusStr) {
+            return fail(str, 'string/numeric/forbiddenMinusSign', resolvedOptions);
         }
 
+        // Split into integral and fractional parts
+        const [
+            integral = '',
+            fractional = ''
+        ] = number.split(decimalDelim, 2);
+        
+        if (decimal === 'forbidden' && fractional !== '') {
+            return fail(str, 'string/numeric/forbiddenDecimal', resolvedOptions);
+        }
+        if (decimal === 'required' && fractional === '') {
+            return fail(str, 'string/numeric/missingDecimal', resolvedOptions);
+        }
+
+        // Integral check
         let integralRegex = thousandsDelim
             ? `^(|0|[1-9]\\d{0,2}(?:${Utils.escapeForRegex(thousandsDelim)}\\d{3})*)$`
             : '^(\\d*)$';
         const integralMatch = RegexCache.get(integralRegex).exec(integral);
-
         if (!integralMatch) {
-            return fail(str, 'string/numeric/invalidIntegral', options);
+            return fail(str, 'string/numeric/invalidIntegral', resolvedOptions);
         }
 
-        // Leading/trailing 0 check
-        if (leadingZero === required && integral === '') {
-            return fail(str, 'string/numeric', options);
+        // Leading 0 check
+        if (leadingZero === 'required' && integral === '') {
+            return fail(str, 'string/numeric/missingLeadingZero', resolvedOptions);
         }
-        if (leadingZero === forbidden && integral === '0') {
-            return fail(str, 'string/numeric/forbiddenLeadingZero', options);
+        if (leadingZero === 'forbidden' && integral === '0') {
+            return fail(str, 'string/numeric/forbiddenLeadingZero', resolvedOptions);
         }
 
-        const fractionalMatch = RegexCache.get(`^(\\d{${minPrecision || 0},${isNaN(maxPrecision) ? '' : maxPrecision}})$`).exec(fractional);
+        // Fractional check
+        const fractionalMatch = RegexCache.get(
+            `^(\\d{${minPrecision || 0},${maxPrecision !== null ? maxPrecision : ''}})$`
+        ).exec(fractional);
+
         if (!fractionalMatch) {
-            return fail(str, 'string/numeric/invalidFractional', options);
+            return fail(str, 'string/numeric/invalidFractional', resolvedOptions);
         }
 
-        if (trailingZero === required && fractional === '') {
-            return fail(str, 'string/numeric/missingTrailingZero', options);
+        // Fractional 0 check
+        if (trailingZero === 'required' && fractional === '') {
+            return fail(str, 'string/numeric/missingTrailingZero', resolvedOptions);
         }
-        if (trailingZero === forbidden && fractional === '0') {
-            return fail(str, 'string/numeric/forbiddenTrailingZero', options);
+        if (trailingZero === 'forbidden' && fractional === '0') {
+            return fail(str, 'string/numeric/forbiddenTrailingZero', resolvedOptions);
         }
 
+        // Get the full number and check min/max
         const integralNumPlain = integral.replace(new RegExp(Utils.escapeForRegex(thousandsDelim), 'g'), '');
         const fullNumber = Number(
-            plusStr
-            + minusStr
-            + (integralNumPlain || '0') + '.' + (fractional || '0')
+            plusStr + minusStr + (integralNumPlain || '0') + '.' + (fractional || '0')
         );
-
         if (isNaN(fullNumber)) {
-            return fail(str, 'string/numeric/base', options);
+            return fail(str, 'string/numeric/base', resolvedOptions);
         }
-
-        if (min !== undefined || max !== undefined) {
-
-            if (min !== undefined && fullNumber < min) {
-                return fail(str, 'string/numeric/min', options);
-            }
-            if (max !== undefined && fullNumber > max) {
-                return fail(str, 'string/numeric/max', options);
-            }
+        if (min !== null && fullNumber < min) {
+            return fail(str, 'string/numeric/min', resolvedOptions);
+        }
+        if (max !== null && fullNumber > max) {
+            return fail(str, 'string/numeric/max', resolvedOptions);
         }
 
         return pass(leftPlus + leftMinus + leadingSymbol + number + trailingSymbol + rightPlus + rightMinus);
@@ -1184,7 +1258,7 @@ class StringHandler extends ChainHandler {
             '^(',
             '?=(',
             startRegex,
-            `(?:${dir}[^/${forbidden}]{0,${maxLabelLength}}[^${forbidden}\\s.])*`,
+            `(?:${dir}[^/${'forbidden'}]{0,${maxLabelLength}}[^${'forbidden'}\\s.])*`,
             (
                 // Force any file
                 fileExtensionsArray[0] === '.*' && '\\.[a-z]{1,15}' ||
@@ -1202,43 +1276,27 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/path', options)
     }
 
-    /**
-     * Executes the phone handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public phone(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const resolvedOptions = Object.assign({
-            delim: '-',
-        }, options);
-
-        const {
-            sweepDelims,
-            delim,
-            normalize,
-        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
-
-        const matchData = Utils.regexMatch(
-            str,
-            ['(?:\\+?1)?', '(?:\\d{3}|\\(\\d{3}\\))', '\\d{3}', '\\d{4}'],
+    public phone(str: string, options: Partial<PhoneOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
             {
-                normalizedDelim: delim,
-                sweepDelims
-            }
+                acceptableDelims: ' -_./',
+                normalizedDelim: '-',
+            },
+            this._matchingDefaults,
+            options
         );
 
-        if (!matchData) {
-            return fail(str, 'string/phone', resolvedOptions);
+        const [normalized, suggestion] = Utils.regexMatch(
+            str,
+            ['(?:\\+?1)?\\(?(\\d{3})\\)?', '(\\d{3})', '(\\d{4})'],
+            resolvedOptions
+        );
+
+        if (normalized === null) {
+            return fail(str, 'string/phone', Object.assign({ suggestion }, resolvedOptions));
         }
 
-        const [, , part1, part2, part3] = matchData;
-
-        return pass(
-            normalize
-                ? part1 + delim + part2 + delim + part3
-                : str
-        );
+        return pass(resolvedOptions.normalize ? normalized : str);
     }
 
     /**
@@ -1290,27 +1348,24 @@ class StringHandler extends ChainHandler {
 
         const resolvedOptions = Object.assign(
             {
-                normalizedDelim: '-'
+                acceptableDelims: ' -_./',
+                normalizedDelim: '-',
             },
             this._matchingDefaults,
             options
         );
 
-        const matchData = Utils.regexMatch(
+        const [normalized, suggestion] = Utils.regexMatch(
             str,
             ['((?!000|666|9\\d{2})\\d{3})', '((?!00)\\d{2})', '((?!0000)\\d{4})'],
             resolvedOptions
         );
 
-        if (!matchData) {
-            return fail(str, 'string/ssn', resolvedOptions);
+        if (normalized === null) {
+            return fail(str, 'string/ssn', Object.assign({ suggestion }, resolvedOptions));
         }
 
-        return pass(
-            resolvedOptions.normalize
-                ? matchData[0]
-                : str
-        );
+        return pass(resolvedOptions.normalize ? normalized : str);
     }
 
 
@@ -1377,17 +1432,17 @@ class StringHandler extends ChainHandler {
             normalize,
             rootRelative = false,
             allowedProtocols = ['http', 'https'],
-            protocols = optional,
-            domain = optional,
-            ip = optional,
-            label = forbidden,
-            port = forbidden,
-            query = optional,
-            fragment = optional
+            protocols = 'optional',
+            domain = 'optional',
+            ip = 'optional',
+            label = 'forbidden',
+            port = 'forbidden',
+            query = 'optional',
+            fragment = 'optional'
         } = options;
 
         if (rootRelative) {
-            domain = ip = label = protocols = port = forbidden; // force root relative option
+            domain = ip = label = protocols = port = 'forbidden'; // force root relative option
         }
 
         const fullRegex = [
@@ -1443,37 +1498,62 @@ class StringHandler extends ChainHandler {
             ((!goodAddress && rootRelative) || goodAddress) &&
 
             // Check for ip, domain, label and whether result matches what is needed
-            (ip === forbidden && !isIp || ip === required && isIp || ip === optional) &&
-            (domain === forbidden && !isDomain || domain === required && isDomain || domain === optional) &&
-            (label === forbidden && !isLabel || label === required && isLabel || label === optional) &&
+            (ip === 'forbidden' && !isIp || ip === 'required' && isIp || ip === 'optional') &&
+            (domain === 'forbidden' && !isDomain || domain === 'required' && isDomain || domain === 'optional') &&
+            (label === 'forbidden' && !isLabel || label === 'required' && isLabel || label === 'optional') &&
 
             // Check protocol and port portions
-            (protocols === forbidden && !hasProto || protocols === required && goodProto || protocols === optional &&
+            (protocols === 'forbidden' && !hasProto || protocols === 'required' && goodProto || protocols === 'optional' &&
                 (!hasProto || goodProto)) &&
-            (port === forbidden && !hasPort || port === required && goodPort || port === optional && (!hasPort || goodPort)) &&
+            (port === 'forbidden' && !hasPort || port === 'required' && goodPort || port === 'optional' && (!hasPort || goodPort)) &&
 
             // Check query and fragment portions
-            (query === forbidden && !hasQuery || query === required && hasQuery || query === optional) &&
-            (fragment === forbidden && !hasFrag || fragment === required && hasFrag || fragment === optional)
+            (query === 'forbidden' && !hasQuery || query === 'required' && hasQuery || query === 'optional') &&
+            (fragment === 'forbidden' && !hasFrag || fragment === 'required' && hasFrag || fragment === 'optional')
         )
             ? pass(normalize ? str.toLowerCase() : str)
             : fail(str, 'string/url', options);
     }
 
-    /**
-     * Executes the uuid handler step.
-     * @param {any} str
-     * @param {any} version
-     * @returns {ChainHandlerResult}
-     */
-    public uuid(str: string, version: string | number): StringHandlerResult {
-        return RegexCache.get([
-            '^(?=([a-f\\d]{8}-[a-f\\d]{4}-[',
-            !version ? '12345' : version,
-            '][a-f\\d]{3}-[89AB][a-f\\d]{3}-[a-f\\d]{12}))\\1$'
-        ].join(''), 'i').test(str)
-            ? pass(str)
-            : fail(str, 'string/uuid', { version });
+    public uuid(str: string, options: Partial<UuidOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {
+                version: null,
+                acceptableDelims: ' -_./',
+                normalizedDelim: '-',
+            },
+            this._matchingDefaults,
+            options
+        );
+
+        const {
+            mode,
+            normalize,
+            version,
+        } = resolvedOptions;
+
+        let workingStr = mode === 'strict'
+            ? str
+            : str.trim().replace(/^urn:uuid:/i, '').replace(/^\{(.+)\}$/, '$1');
+
+        let [normalized, suggestion] = Utils.regexMatch(
+            workingStr,
+            [
+                '([a-fA-F\\d]{8})',
+                '([a-fA-F\\d]{4})',
+                `([${!version ? '12345' : version}][a-fA-F\\d]{3})`,
+                '([89ab][a-fA-F\\d]{3})',
+                '([a-fA-F\\d]{12})'
+            ],
+            resolvedOptions
+        );
+
+        if (normalized === null) {
+            return fail(str, 'string/uuid', Object.assign({ suggestion }, resolvedOptions));
+        }
+
+        return pass(normalize ? normalized.toLowerCase() : str);
+
     }
 
     /**
@@ -1481,71 +1561,58 @@ class StringHandler extends ChainHandler {
      * @param {any} str
      * @param {any} min
      * @param {any} max
-     * @param {any} sweepDelims
+     * @param {any} stripDelims
      * @returns {ChainHandlerResult}
      */
-    public wordCount(str: string, min: number, max: number, sweepDelims: string = StringHandler.matchingDefaults.sweepDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, sweepDelims).length;
+    public wordCount(str: string, min: number, max: number, stripDelims: string = StringHandler.matchingDefaults.stripDelims): StringHandlerResult {
+        const count = Utils.splitOnDelims(str, stripDelims).length;
         return count <= max && count >= min
             ? pass(str)
             : fail(str, 'string/wordCount', {
                 count,
                 min,
                 max,
-                sweepDelims
+                stripDelims
             });
     }
 
-    /**
-     * Executes the zip handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
-     */
-    public zip(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const resolvedOptions = Object.assign({
-            delim: '',
-            zip4: optional
-        }, options);
+    public zip(str: string, options: Partial<ZipOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {
+                acceptableDelims: ' -_./',
+                normalizedDelim: '-',
+                zip4: 'optional'
+            },
+            this._matchingDefaults,
+            options
+        );
 
         const {
-            allowLooseFormat,
-            sweepDelims,
-            delim,
             normalize,
-            zip4
-        } = Object.assign({}, StringHandler.matchingDefaults, resolvedOptions);
-
+            normalizedDelim,
+            zip4,
+        } = resolvedOptions;
 
         // 00 through 12, 21 through 32, 61 through 72, or 80
-        const matchData = Utils.regexMatch(
+        const [normalized, suggestion] = Utils.regexMatch(
             str,
-            ['(?!0{5})\\d{5}', '(?!0{4})(?:\\d{4})?'],
-            {
-                normalizedDelim: delim,
-                sweepDelims,
-                allowLooseFormat
-            }
+            ['(?!0{5})(\\d{5})', '(?!0{4})(\\d{4})?'],
+            resolvedOptions
         );
 
-        if (!matchData) {
-            return fail(str, 'string/zip/base', resolvedOptions);
+        if (normalized === null) {
+            return fail(str, 'string/zip/base', Object.assign({ suggestion }, resolvedOptions));
         }
 
-        const [, zip, zip4Str = ''] = matchData;
-
-        if (zip4 === required && !zip4Str) {
-            return fail(str, 'string/zip/required4', options);
+        const len = (normalized.replace(new RegExp(Utils.escapeForRegex(normalizedDelim), 'g'), '')).length;
+        if (zip4 === 'required' && len !== 9) {
+            return fail(str, 'string/zip/required4', Object.assign({ suggestion }, resolvedOptions));
         }
-        if (zip4 === forbidden && zip4Str) {
-            return fail(str, 'string/zip/forbidden4', options);
+        if (zip4 === 'forbidden' && len === 9) {
+            return fail(str, 'string/zip/forbidden4', Object.assign({ suggestion }, resolvedOptions));
         }
 
-        return pass(
-            normalize
-                ? zip + delim + zip4Str
-                : str
-        );
+        return pass(normalize ? normalized : str);
     }
 
 
@@ -1655,14 +1722,6 @@ class StringHandler extends ChainHandler {
     }
 
     /**
-     * Removes all whitespace characters from the string.
-     * @param str The input string.
-     */
-    public removeSpacing(str: string): StringHandlerResult {
-        return pass(str.replace(/\s/g, ''));
-    }
-
-    /**
      * Returns a substring between `startIndex` and `endIndex`.
      * @param str The input string.
      * @param startIndex Inclusive start index.
@@ -1690,12 +1749,20 @@ class StringHandler extends ChainHandler {
         return pass(str.slice(-count));
     }
 
+    public stripChars(str: string, chars: string): StringHandlerResult {
+        return pass(str.replace(RegexCache.get('[' + Utils.escapeForRegex(chars) + ']', 'g'), ''));
+    }
+
     /**
      * Removes simple HTML tags from the string.
      * @param str The input string.
      */
     public stripHtml(str: string): StringHandlerResult {
         return pass(str.replace(/<[^>]*>/g, ''));
+    }
+
+    public stripWhitespace(str: string): StringHandlerResult {
+        return pass(str.replace(/\s/g, ''));
     }
 
     /**

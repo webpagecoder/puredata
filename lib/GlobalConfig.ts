@@ -51,9 +51,10 @@ const GlobalConfig = Object.seal({
         stripUnknownKeys: true
     },
     string: {
-        sweepDelims: '-',
         ignoreCase: false,
+        mode: 'strict',
         normalize: true,
+        stripDelims: '-',
         
         maxLength: 2000,    // max length allowed for a string being validated todo: THIS PART
         trim: true,

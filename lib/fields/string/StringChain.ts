@@ -3,6 +3,7 @@
 import { StringHandler } from './StringHandler.ts';
 import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
 import { GlobalConfig } from '../../GlobalConfig.ts';
+import {MatchOptions} from './StringHandler.ts';
 
 export type StringChainProps = ChainProps<StringHandler> & {
     // General options
@@ -12,8 +13,9 @@ export type StringChainProps = ChainProps<StringHandler> & {
 
     // Matching options
     ignoreCase: boolean;
-    sweepDelims: string;
+    mode: 'strict' | 'loose';
     normalize: boolean;
+    stripDelims: string;
 };
 
 export type StringChainCtorParams = ChainCtorParams<StringChainProps>;
@@ -28,8 +30,9 @@ class StringChain extends Chain<StringChainProps> {
             truncate = false,
 
             ignoreCase = false,
-            sweepDelims = '',
-            normalize = false
+            mode = 'strict',
+            normalize = false,
+            stripDelims = ''
         } = args;
 
         const { props } = this;
@@ -38,13 +41,14 @@ class StringChain extends Chain<StringChainProps> {
         props.truncate = truncate;
 
         props.ignoreCase = ignoreCase;
-        props.sweepDelims = sweepDelims;
+        props.stripDelims = stripDelims;
         props.normalize = normalize;
 
         this._props.chainHandler.configMatchingDefaults({
             ignoreCase,
-            sweepDelims,
-            normalize
+            mode,
+            normalize,
+            stripDelims,
         });
     }
 

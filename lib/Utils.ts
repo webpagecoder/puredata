@@ -10,26 +10,22 @@ export type NestedStringRecord = {
 
 /**
  * @typedef RegexMatchOptions
- * @property {boolean} strictMode - If true, the regex will be run in strict mode, meaning that the string must 
- * match the regex exactly. If false, the string will be massaged to remove sweep delims, normalize acceptable delims,
- * and replace acceptable delims with the normalized delim before running the regex.
+ * @property {('loose' | 'strict')} mode - The mode in which the regex will be run.
  * @property {string} acceptableDelims - A string of characters that are considered acceptable delimiters in the string. 
  * These will be normalized to the normalizedDelim character if a match is made.
  * @property {string} normalizedDelim - The character that acceptable delimiters will be normalized to.
- * @property {string} sweepDelims - Characters to clean up. Recommended to set this to any characters that are 
- * common delims - any {@link acceptableDelims}/{@link normalizedDelim} delimiters that appear in sweepDelims will 
+ * @property {string} stripDelims - Characters to clean up. Recommended to set this to any characters that are 
+ * common delims - any {@link acceptableDelims}/{@link normalizedDelim} delimiters that appear in stripDelims will 
  * be ignored.
- * @property {boolean} ignoreCase - If true, the regex match will be case-insensitive.
  */
 export type RegexMatchOptions = {
-    strictMode: boolean;
     acceptableDelims: string;
-    ignoreCase: boolean;
+    mode?: 'loose' | 'strict';
     normalizedDelim: string;
-    sweepDelims: string;
+    stripDelims?: string;
 };
 
-export type RegexMatchResult = [string | null, string | null, string | null];
+export type RegexMatchResult = [string | null, string | null];
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -418,41 +414,38 @@ class Utils {
     ): RegexMatchResult {
 
         let {
-            strictMode,
-            acceptableDelims,
-            ignoreCase,
-            normalizedDelim,
-            sweepDelims,
+            mode = 'strict',
+            acceptableDelims = '',
+            normalizedDelim = '',
+            stripDelims = ' ',
         } = options;
 
         const normalizedDelimEscaped = Utils.escapeForRegex(normalizedDelim);
-        if (strictMode) {
+        if (mode === 'strict') {
             const match = str.match(
-                new RegExp('^' + regexParts.join(normalizedDelimEscaped) + '$', ignoreCase ? 'i' : '')
+                new RegExp('^' + regexParts.join(normalizedDelimEscaped) + '$')
             );
             if (match) {
                 // Glue matched parts together
-                const normalizedStr = match.slice(1).join('');
+                const normalizedStr = match.slice(1).join(normalizedDelim);
                 return [
                     normalizedStr,
-                    normalizedStr.replace(new RegExp(normalizedDelimEscaped, 'g'), ''),
                     null
                 ];
             }
-            return [null, null, str];
+            return [null, str];
         }
-
 
         // Non-strict matching
         let massagedStr = str;
         let matchResult;
-        const allDelims = sweepDelims + acceptableDelims + normalizedDelim;
+        const allDelims = stripDelims + acceptableDelims + normalizedDelim;
         const allDelimsEscaped = Utils.escapeForRegex(allDelims);
 
         if (!isStrictlyDelimited) {
 
             // Need to track where the user indicates delims should be placed
-            const delimsToDelete = new Set(sweepDelims.split(''));
+            const delimsToDelete = new Set(stripDelims.split(''));
             const delimsToSave = new Set([...acceptableDelims.split(''), normalizedDelim]);
 
             // Need to do some extra work to respect user delim placement...
@@ -489,7 +482,7 @@ class Utils {
                 );
             }
 
-            const regex = new RegExp('^' + regexParts.join(normalizedDelimEscaped) + '$', ignoreCase ? 'i' : '');
+            const regex = new RegExp('^' + regexParts.join(normalizedDelimEscaped) + '$');
             matchResult = massagedStr.match(regex);
         }
         else {
@@ -499,7 +492,7 @@ class Utils {
                 RegexCache.get('[' + allDelimsEscaped + ']+', 'g'),
                 ''
             );
-            const regex = new RegExp('^' + regexParts.join('') + '$', ignoreCase ? 'i' : '');
+            const regex = new RegExp('^' + regexParts.join('') + '$');
             matchResult = massagedStr.match(regex);
         }
 
@@ -509,12 +502,11 @@ class Utils {
             const normalizedStr = matchResult.slice(1).join(normalizedDelim);
             return [
                 normalizedStr,
-                normalizedStr.replace(new RegExp('[' + normalizedDelim + ']', 'g'), ''),
                 null
             ];
         }
 
-        return [null, null, massagedStr];
+        return [null, massagedStr];
     }
 
     static replaceChars(str: string, delims: string, replacement: string = ''): string {

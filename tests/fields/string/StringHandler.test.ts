@@ -148,7 +148,7 @@ describe('StringHandler validators (up to line 330)', () => {
         
         handler.configMatchingDefaults({
             normalizedDelim: '',
-            sweepDelims: ' -',
+            stripDelims: ' -',
             normalize: false,
             ignoreCase: false,
         });
@@ -166,7 +166,7 @@ describe('StringHandler validators (up to line 330)', () => {
         expect(result4.fail).toBe(true);
 
         const result5 = handler.creditCard('4111 1111 1111 1111', {
-            sweepDelims: ' -',
+            stripDelims: ' -',
             normalize: true
         });
         expect(result5.pass).toBe(true);
@@ -179,7 +179,7 @@ describe('StringHandler validators (up to line 330)', () => {
         expect(result7.fail).toBe(true);
 
         const result8 = handler.creditCard('4111-1111-1111-1112', {
-            sweepDelims: ' -',
+            stripDelims: ' -',
             normalize: true
         });
         expect(result8.fail).toBe(true);
@@ -191,7 +191,7 @@ describe('StringHandler validators (up to line 330)', () => {
         expect(result10.fail).toBe(true);
 
         const result11 = handler.creditCard('4111x1111x1111x1111', {
-            sweepDelims: ' -',
+            stripDelims: ' -',
             normalize: true
         });
         expect(result11.fail).toBe(true);
