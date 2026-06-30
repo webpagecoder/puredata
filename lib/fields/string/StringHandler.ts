@@ -2,119 +2,241 @@
 
 import { Presence } from '../../Presence.ts';
 import { RegexCache } from '../../RegexCache.ts';
-import { RegexMatchOptions, Utils } from '../../Utils.ts';
+import { Utils } from '../../Utils.ts';
 import { ChainHandler } from '../ChainHandler.ts';
 import { ChainHandlerResult } from '../ChainHandlerResult.ts';
 import { NumberHandler } from '../number/NumberHandler.ts';
+import type {
+    ComplexOptions,
+    ContainsOptions,
+    CreditCardOptions,
+    CurrencyCodeOptions,
+    DataUrlOptions,
+    DomainOptions,
+    E123Options,
+    EmailOptions,
+    EndsWithOptions,
+    ExcludesCharsOptions,
+    GenericMatchOptions,
+    GtinOptions,
+    HexOptions,
+    IgnoreCaseOption,
+    ImeiOptions,
+    IpOptions,
+    LabelOptions,
+    MacOptions,
+    MeasurementOptions,
+    MoneyOptions,
+    NumericOptions,
+    OnlyCharsOptions,
+    PathOptions,
+    PhoneOptions,
+    RepeatOptions,
+    SsnOptions,
+    StartsWithOptions,
+    StateOptions,
+    ToDelimitedOptions,
+    UrlOptions,
+    UuidOptions,
+    ZipOptions
+} from './StringHandlerTypes.d.ts';
 
 export type StringHandlerResult = ChainHandlerResult<string>;
 
-export type ToDelimitedOptions = {
-    fromDelims: string | null;
-    toDelim: string;
-    transformer1: (x: string) => string;
-    transformer2: (x: string) => string;
-    transformerSwitchIndex: number;
-};
+// ====================================
+// DEFAULT ARGUMENTS FOR STRING METHODS
+// ====================================
 
-export type ComplexOptions = {
-    minLength: number;
-    maxLength: number;
-    minLowercase: number;
-    minUppercase: number;
-    minDigits: number;
-    minSpecialChars: number;
-    maxRepeats: number;
-};
+export const COMPLEX_DEFAULTS = {
+    minLength: 8,
+    maxLength: 100,
+    minLowercase: 1,
+    minUppercase: 1,
+    minDigits: 1,
+    minSpecialChars: 1,
+    maxRepeats: 2
+} satisfies ComplexOptions;
 
-export type IgnoreCaseOption = {
-    ignoreCase: boolean;
-}
-export type NormalizeOption = {
-    normalize: boolean;
-}
-export type GenericMatchOptions = NormalizeOption & RegexMatchOptions;
+export const CONTAINS_DEFAULTS = {
+    ignoreCase: false
+} satisfies ContainsOptions;
 
-export type ContainsOptions = IgnoreCaseOption;
+export const CREDIT_CARD_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '',
+    types: []
+} satisfies CreditCardOptions;
 
-export type CreditCardOptions = GenericMatchOptions & {
-    types: string[] | null;
-};
+export const CURRENCY_CODE_DEFAULTS = {
+    ignoreCase: false,
+    normalize: true,
+} satisfies CurrencyCodeOptions;
 
-export type CurrencyCodeOptions = NormalizeOption & IgnoreCaseOption;
+export const DATA_URL_DEFAULTS = {
+    allowedTypes: ['image', 'video', 'audio', 'text']
+} satisfies DataUrlOptions;
 
-export type DataUrlOptions = {
-    allowedTypes: ('image' | 'video' | 'audio' | 'text')[];
-}
+export const DOMAIN_DEFAULTS = {
+    normalize: true,
+    subdomains: 'optional' as Presence,
+    wildcards: 'forbidden' as Presence,
+} satisfies DomainOptions;
 
-export type DomainOptions = NormalizeOption & {
-    wildcards: Presence;
-    subdomains: Presence;
-}
+export const E123_DEFAULTS = {
+    acceptableDelims: ' -./',
+    normalize: true,
+    normalizedDelim: ' ',
+} satisfies E123Options;
 
-export type E123Options = GenericMatchOptions
+export const E164_DEFAULTS = {
+    acceptableDelims: ' -./',
+    normalizedDelim: '',
+} satisfies Partial<E123Options>;
 
-export type EmailOptions = NormalizeOption;
+export const EMAIL_DEFAULTS = {
+    normalize: true
+} satisfies EmailOptions;
 
-export type EndsWithOptions = IgnoreCaseOption;
+export const ENDS_WITH_DEFAULTS = {
+    ignoreCase: false
+} satisfies EndsWithOptions;
 
-export type ExcludesCharsOptions = IgnoreCaseOption;
+export const EXCLUDES_CHARS_DEFAULTS = {
+    ignoreCase: false
+} satisfies ExcludesCharsOptions;
 
-export type GtinOptions = GenericMatchOptions & {
-    lengths: number[];
-};
+export const GTIN_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '',
+    lengths: [8, 12, 13, 14]
+} satisfies GtinOptions;
 
-export type HexOptions = NormalizeOption;
+export const HEX_DEFAULTS = {
+    normalize: true
+} satisfies HexOptions;
 
-export type ImeiOptions = GenericMatchOptions;
+export const IMEI_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '',
+} satisfies ImeiOptions;
 
-export type IpOptions = NormalizeOption;
+export const IP_DEFAULTS = {
+    normalize: true
+} satisfies IpOptions;
 
-export type LabelOptions = NormalizeOption;
+export const LABEL_DEFAULTS = {
+    normalize: true
+} satisfies LabelOptions;
 
-export type MacOptions = GenericMatchOptions;
+export const MAC_DEFAULTS = {
+    acceptableDelims: ': -_./',
+    normalize: true,
+    normalizedDelim: ':',
+} satisfies MacOptions;
 
-export type MeasurementOptions = NumericOptions & {
-    units: string;
-}
+export const MEASUREMENT_DEFAULTS = {
+    units: ['cm']
+} satisfies Partial<MeasurementOptions>;
 
-export type MoneyOptions = {
-    parens: Presence;
-    leadingSymbols: string[];
-    trailingSymbols: string[];
-};
+export const MONEY_DEFAULTS = {
+    parens: 'forbidden' as Presence,
+    leadingSymbols: ['$'],
+    trailingSymbols: [],
+} satisfies MoneyOptions;
 
-export type NumericOptions = {
-    plus: Presence;
-    minus: Presence;
-    alignment: 'left' | 'right';
-    min: number,
-    max: number,
-    decimal: Presence;
-    thousandsDelim: string;
-    decimalDelim: string;
-    minPrecision: number;
-    maxPrecision: number;
-    leadingZero: Presence;
-    trailingZero: Presence;
-    leadingSymbols: string[];
-    trailingSymbols: string[];
-    looseSpacing: boolean;
-};
+export const NUMERIC_DEFAULTS = {
+    plus: 'optional',
+    minus: 'optional',
+    alignment: 'left',
+    min: null,
+    max: null,
+    decimal: 'optional',
+    thousandsDelim: ',',
+    decimalDelim: '.',
+    minPrecision: null,
+    maxPrecision: null,
+    leadingZero: 'optional',
+    trailingZero: 'optional',
+    leadingSymbols: [''],
+    trailingSymbols: [''],
+    looseSpacing: false,
+} satisfies NumericOptions;
 
-export type PhoneOptions = GenericMatchOptions;
+export const ONLY_CHARS_DEFAULTS = {
+    ignoreCase: false,
+} satisfies OnlyCharsOptions;
 
-export type StartsWithOptions = IgnoreCaseOption;
+export const PATH_DEFAULTS = {
+    absolute: 'required' as Presence,
+    extensions: [],
+    normalize: true,
+    segmentMaxLen: 100,
+    style: 'unix',
+} satisfies PathOptions;
 
-export type SsnOptions = GenericMatchOptions
+export const PHONE_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '-',
+} satisfies PhoneOptions;
 
-export type UuidOptions = GenericMatchOptions & {
-    version: string | number | null;
-};
+export const REPEAT_DEFAULTS = {
+    ignoreCase: false,
+    otherText: true,
+} satisfies RepeatOptions;
 
-export type ZipOptions = NormalizeOption & {
-    zip4: Presence;
-}
+export const SSN_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '-',
+} satisfies SsnOptions;
+
+export const STARTS_WITH_DEFAULTS = {
+    ignoreCase: false
+} satisfies StartsWithOptions;
+
+export const STATE_DEFAULTS = {
+    ignoreCase: false,
+    normalize: true,
+} satisfies StateOptions;
+
+export const URL_DEFAULTS = {
+    allowedProtocols: ['http', 'https'],
+    domain: 'optional' as Presence,
+    fragment: 'optional' as Presence,
+    ip: 'optional' as Presence,
+    label: 'forbidden' as Presence,
+    normalize: true,
+    port: 'forbidden' as Presence,
+    protocols: 'optional' as Presence,
+    query: 'optional' as Presence,
+    rootRelative: false
+} satisfies UrlOptions;
+
+export const UUID_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '-',
+    version: null
+} satisfies UuidOptions;
+
+export const ZIP_DEFAULTS = {
+    acceptableDelims: ' -_./',
+    normalize: true,
+    normalizedDelim: '-',
+    zip4: 'optional' as Presence
+} satisfies ZipOptions;
+
+export const TO_DELIMITED_DEFAULTS = {
+    fromDelims: null,
+    toDelim: '',
+    transformer1: (x: string): string => x,
+    transformer2: (x: string): string => x,
+    transformerSwitchIndex: null
+} satisfies ToDelimitedOptions;
 
 const { pass, fail } = ChainHandlerResult;
 
@@ -137,26 +259,42 @@ class StringHandler extends ChainHandler {
     // ====================================
 
 
+    /**
+     * Validates that the string contains only alphabetic letters.
+     * @param str The input string.
+     */
     public alpha(str: string): StringHandlerResult {
         return /^[A-Z]+$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alpha');
     }
 
-
+    /**
+     * Validates that the string contains only letters and digits.
+     * @param str The input string.
+     */
     public alphanumeric(str: string): StringHandlerResult {
         return /^[A-Z0-9]+$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alphanumeric');
     }
 
+    /**
+     * Validates that the string contains only ASCII characters.
+     * @param str The input string.
+     */
     public ascii(str: string): StringHandlerResult {
         return /^[\x00-\x7F]*$/.test(str)
             ? pass(str)
             : fail(str, 'string/ascii');
     }
 
-
+    /**
+     * Validates that opening and closing characters are balanced in the string.
+     * @param str The input string.
+     * @param openChar The opening character to track.
+     * @param closeChar The closing character to track.
+     */
     public balanced(str: string, openChar: string = '(', closeChar: string = ')'): StringHandlerResult {
         let openCount = 0;
         for (let index = 0, max = str.length; index < max; ++index) {
@@ -184,7 +322,10 @@ class StringHandler extends ChainHandler {
             });
     }
 
-
+    /**
+     * Validates that the string is a properly padded Base64 sequence.
+     * @param str The input string.
+     */
     public base64(str: string): StringHandlerResult {
         return /^[A-Za-z0-9+/]+={0,2}$/.test(str) && str.length % 4 === 0
             ? pass(str)
@@ -192,59 +333,33 @@ class StringHandler extends ChainHandler {
     }
 
 
-    public base64Decode(str: string): StringHandlerResult {
-        if (typeof Buffer !== 'undefined') {
-            return pass(Buffer.from(str, 'base64').toString('utf8'));
-        }
-        else if (typeof atob !== 'undefined') {
-            const binary = atob(str);
-            const percentEncoded = binary.replace(/./g, (char: string): string => {
-                const hex = char.charCodeAt(0).toString(16).toUpperCase();
-                return '%' + (hex.length === 1 ? '0' + hex : hex);
-            });
-            return pass(decodeURIComponent(percentEncoded));
-        }
-        return fail(str, 'string/base64Decode');
-    }
-
-
-    public base64Encode(str: string): StringHandlerResult {
-        if (typeof Buffer !== 'undefined') {
-            return pass(Buffer.from(str, 'utf8').toString('base64'));
-        }
-        else if (typeof btoa !== 'undefined') {
-            const utf8Binary = encodeURIComponent(str).replace(
-                /%([0-9A-F]{2})/g,
-                (_match: string, hex: string): string => String.fromCharCode(parseInt(hex, 16))
-            );
-            return pass(btoa(utf8Binary));
-        }
-        return fail(str, 'string/base64Encode');
-    }
-
+    /**
+     * Validates that the string contains only binary digits.
+     * @param str The input string.
+     */
     public binary(str: string): StringHandlerResult {
         return /^[01]+$/.test(str)
             ? pass(str)
             : fail(str, 'string/binary');
     }
 
+    /**
+     * Validates that all characters are within the Basic Multilingual Plane.
+     * @param str The input string.
+     */
     public bmp(str: string): StringHandlerResult {
         return /^[\u0000-\uFFFF]*$/u.test(str)
             ? pass(str)
             : fail(str, 'string/bmp');
     }
 
-
+    /**
+     * Validates password-style complexity requirements.
+     * @param str The input string.
+     * @param options Complexity thresholds and limits. Defaults are provided by {@link COMPLEX_DEFAULTS}.
+     */
     public complex(str: string, options: Partial<ComplexOptions> = {}): StringHandlerResult {
-        const resolvedOptions: ComplexOptions = Object.assign({
-            minLength: 8,
-            maxLength: 100,
-            minLowercase: 1,
-            minUppercase: 1,
-            minDigits: 1,
-            minSpecialChars: 1,
-            maxRepeats: 2
-        }, options);
+        const resolvedOptions: ComplexOptions = Object.assign({}, COMPLEX_DEFAULTS, options);
 
         const {
             minLength,
@@ -258,36 +373,43 @@ class StringHandler extends ChainHandler {
 
         let length = str.length, numLowerCase = 0, numUppercase = 0, numDigits = 0, numSpecials = 0;
         if (length < minLength || length > maxLength) {
-            return fail(str, 'string/complex/length', { length, minLength, maxLength });
+            return fail(str, 'string/complex/length', resolvedOptions);
         }
 
         (str.match(/[A-Z]/g) || []).forEach((_: string): void => { ++numUppercase; }); // count uppercase letters
         if (numUppercase < minUppercase) {
-            return fail(str, 'string/complex/uppercase', { minUppercase, numUppercase });
+            return fail(str, 'string/complex/uppercase', resolvedOptions);
         }
         (str.match(/[a-z]/g) || []).forEach((_: string): void => { ++numLowerCase; }); // count lowercase letters
         if (numLowerCase < minLowercase) {
-            return fail(str, 'string/complex/lowercase', { minLowercase, numLowerCase });
+            return fail(str, 'string/complex/lowercase', resolvedOptions);
         }
         (str.match(/\d/g) || []).forEach((_: string): void => { ++numDigits; });   // count digits
         if (numDigits < minDigits) {
-            return fail(str, 'string/complex/digits', { minDigits, numDigits });
+            return fail(str, 'string/complex/digits', resolvedOptions);
         }
         (str.match(/[^a-z0-9]/ig) || []).forEach((_: string): void => { ++numSpecials; }); // count specials
         if (numSpecials < minSpecialChars) {
-            return fail(str, 'string/complex/specialChars', { minSpecialChars, numSpecials });
+            return fail(str, 'string/complex/specialChars', resolvedOptions);
         }
-        const failsRepeat = RegexCache.get('(.)\\1{' + maxRepeats + '}', 'g').test(str); // check repetition
+        const failsRepeat = RegexCache.get('(.)\\1{' + maxRepeats + '}', 'g').test(str); // check repeats
         if (failsRepeat) {
-            return fail(str, 'string/complex/repeats', { maxRepeats });
+            return fail(str, 'string/complex/repeats', resolvedOptions);
         }
 
         return pass(str);
     }
 
+    /**
+     * Validates that the input contains a target substring.
+     * @param str The input string.
+     * @param substring The substring that must appear.
+     * @param options Matching options. Defaults are provided by {@link CONTAINS_DEFAULTS}.
+     */
     public contains(str: string, substring: string, options: Partial<ContainsOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            CONTAINS_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -302,14 +424,16 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/contains', Object.assign({ substring }, resolvedOptions));
     }
 
+    /**
+     * Validates and normalizes supported credit card numbers.
+     * @param str The input string.
+     * @param options Card matching and normalization options. Defaults are provided by {@link CREDIT_CARD_DEFAULTS}.
+     */
     public creditCard(str: string, options: Partial<CreditCardOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -_./',
-                normalizedDelim: '',
-                types: null as string[] | null
-            },
+            {},
+            CREDIT_CARD_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -384,7 +508,7 @@ class StringHandler extends ChainHandler {
         } = resolvedOptions;
 
         for (const [type, regexParts, checkLuhn] of allTypes) {
-            if (types && types.indexOf(type) === -1) {
+            if (types.length > 0 && types.indexOf(type) === -1) {
                 continue;
             }
             const [normalized, suggestion] = Utils.regexMatch(str, regexParts, resolvedOptions);
@@ -399,10 +523,16 @@ class StringHandler extends ChainHandler {
         return fail(str, 'string/creditCard', resolvedOptions);
     }
 
+    /**
+     * Validates that the input is a supported ISO currency code.
+     * @param str The input string.
+        * @param options Case and normalization options. Defaults are provided by {@link CURRENCY_CODE_DEFAULTS}.
+     */
     public currencyCode(str: string, options: Partial<CurrencyCodeOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
             {},
+            CURRENCY_CODE_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -424,38 +554,52 @@ class StringHandler extends ChainHandler {
 
         const uppercase = resolvedOptions.ignoreCase ? str.toUpperCase() : str;
         return codes.indexOf(uppercase) > -1
-            ? pass(resolvedOptions.normalize ? uppercase : str)
+            ? pass(resolvedOptions.normalize ? str.toUpperCase() : str)
             : fail(str, 'string/currencyCode', resolvedOptions);
     }
 
+    /**
+     * Validates that the input is a base64 data URL of an allowed media type.
+     * @param str The input string.
+        * @param options Allowed data URL media types. Defaults are provided by {@link DATA_URL_DEFAULTS}.
+     */
     public dataUrl(str: string, options: Partial<DataUrlOptions> = {}): StringHandlerResult {
-        const {
-            allowedTypes = ['image', 'video', 'audio', 'text'],
-        } = options || {};
+        const resolvedOptions = Object.assign({}, DATA_URL_DEFAULTS, options);
 
         return RegexCache.get([
             '^data:',
-            `(${allowedTypes.join('|')})/([a-z0-9+.-]+)`,
+            `(${resolvedOptions.allowedTypes.join('|')})/([a-z0-9+.-]+)`,
             ';base64,',
             '([A-Za-z0-9+/=]+)',
             '$'
         ].join(''), 'i').test(str)
             ? pass(str)
-            : fail(str, 'string/dataUrl', options);
+            : fail(str, 'string/dataUrl', resolvedOptions);
     }
 
+    /**
+     * Validates that the string contains digits only.
+     * @param str The input string.
+     */
     public digits(str: string): StringHandlerResult {
         return /^\d+$/.test(str)
             ? pass(str)
             : fail(str, 'string/digits');
     }
 
+    /**
+     * Validates a domain name with optional wildcard and subdomain rules.
+     * @param str The input string.
+        * @param options Domain validation options. Defaults are provided by {@link DOMAIN_DEFAULTS}.
+     */
     public domain(str: string, options: Partial<DomainOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign({}, DOMAIN_DEFAULTS, options);
+
         const {
-            wildcards = 'forbidden',
-            subdomains = 'optional',
-            normalize = false,
-        } = options;
+            normalize,
+            subdomains,
+            wildcards
+        } = resolvedOptions;
 
         const regexResult = RegexCache.get([
             `^`, (
@@ -478,17 +622,20 @@ class StringHandler extends ChainHandler {
 
         return regexResult
             ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/domain', options);
+            : fail(str, 'string/domain', resolvedOptions);
     }
 
 
+    /**
+     * Validates and normalizes an E.123-style international phone number.
+     * @param str The input string.
+        * @param options Matching and normalization options. Defaults are provided by {@link E123_DEFAULTS}.
+     */
     public e123(str: string, options: Partial<E123Options> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -./',
-                normalizedDelim: ' ',
-            },
+            {},
+            E123_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -522,13 +669,16 @@ class StringHandler extends ChainHandler {
         return pass(normalize ? normalized : str);
     }
 
+    /**
+     * Validates and normalizes an E.164 phone number.
+     * @param str The input string.
+        * @param options Matching and normalization options. Defaults are provided by {@link E164_DEFAULTS}.
+     */
     public e164(str: string, options: Partial<E123Options> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -./',
-                normalizedDelim: '',
-            },
+            {},
+            E164_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -564,10 +714,16 @@ class StringHandler extends ChainHandler {
 
 
     // ------------------START NEW TESTS HERE
+    /**
+     * Validates an email address and optionally normalizes casing.
+     * @param str The input string.
+        * @param options Email validation options. Defaults are provided by {@link EMAIL_DEFAULTS}.
+     */
     public email(str: string, options: Partial<EmailOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
             {},
+            EMAIL_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -587,13 +743,24 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/email', resolvedOptions);
     }
 
+    /**
+     * Validates that the input string is empty.
+     * @param str The input string.
+     */
     public empty(str: string): StringHandlerResult {
         return str.length === 0 ? pass(str) : fail(str, 'string/empty');
     }
 
+    /**
+     * Validates that the input ends with a suffix.
+     * @param str The input string.
+     * @param suffix The suffix that must appear at the end.
+     * @param options Matching options. Defaults are provided by {@link ENDS_WITH_DEFAULTS}.
+     */
     public endsWith(str: string, suffix: string, options: Partial<EndsWithOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            ENDS_WITH_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -607,9 +774,16 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/endsWith', Object.assign({ suffix }, resolvedOptions));
     }
 
+    /**
+     * Validates that none of the provided characters appear in the input.
+     * @param str The input string.
+     * @param chars Characters that must be excluded.
+     * @param options Matching options. Defaults are provided by {@link EXCLUDES_CHARS_DEFAULTS}.
+     */
     public excludesChars(str: string, chars: string, options: Partial<ExcludesCharsOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            EXCLUDES_CHARS_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -626,13 +800,15 @@ class StringHandler extends ChainHandler {
     }
 
 
+    /**
+     * Validates and normalizes GTIN values.
+     * @param str The input string.
+     * @param options GTIN matching options. Defaults are provided by {@link GTIN_DEFAULTS}.
+     */
     public gtin(str: string, options: Partial<GtinOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -_./',
-                normalizedDelim: '',
-                lengths: [8, 12, 13, 14]
-            },
+            {},
+            GTIN_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -699,9 +875,15 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/hash', { algorithm });
     }
 
+    /**
+     * Validates hexadecimal text.
+     * @param str The input string.
+     * @param options Normalization options. Defaults are provided by {@link HEX_DEFAULTS}.
+     */
     public hex(str: string, options: Partial<HexOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            HEX_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -711,9 +893,15 @@ class StringHandler extends ChainHandler {
     }
 
 
+    /**
+     * Validates hex color text (#RGB or #RRGGBB).
+     * @param str The input string.
+     * @param options Normalization options. Defaults are provided by {@link HEX_DEFAULTS}.
+     */
     public hexColor(str: string, options: Partial<HexOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            HEX_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -722,13 +910,16 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/hexColor', resolvedOptions);
     }
 
+    /**
+     * Validates and normalizes IMEI values.
+     * @param str The input string.
+     * @param options IMEI matching options. Defaults are provided by {@link IMEI_DEFAULTS}.
+     */
     public imei(str: string, options: Partial<ImeiOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -_./',
-                normalizedDelim: '',
-            },
+            {},
+            IMEI_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -751,9 +942,15 @@ class StringHandler extends ChainHandler {
         return fail(str, 'string/imei', Object.assign({ suggestion }, resolvedOptions));
     }
 
+    /**
+     * Validates IPv4 or IPv6 input.
+     * @param str The input string.
+     * @param options Normalization options. Defaults are provided by {@link IP_DEFAULTS}.
+     */
     public ip(str: string, options: Partial<IpOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            IP_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -799,9 +996,15 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/ipCidrV6');
     }
 
+    /**
+     * Validates IPv4 input.
+     * @param str The input string.
+     * @param options Normalization options. Defaults are provided by {@link IP_DEFAULTS}.
+     */
     public ipV4(str: string, options: Partial<IpOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            IP_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -812,9 +1015,15 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/ipV4', resolvedOptions);
     }
 
+    /**
+     * Validates IPv6 input.
+     * @param str The input string.
+     * @param options Normalization options. Defaults are provided by {@link IP_DEFAULTS}.
+     */
     public ipV6(str: string, options: Partial<IpOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            IP_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -845,9 +1054,15 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/jwt');
     }
 
+    /**
+     * Validates DNS label-like input.
+     * @param str The input string.
+     * @param options Normalization options. Defaults are provided by {@link LABEL_DEFAULTS}.
+     */
     public label(str: string, options: Partial<LabelOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            LABEL_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -895,14 +1110,16 @@ class StringHandler extends ChainHandler {
             : fail(str, 'string/luhn');
     }
 
+    /**
+     * Validates and normalizes MAC addresses.
+     * @param str The input string.
+     * @param options Matching options. Defaults are provided by {@link MAC_DEFAULTS}.
+     */
     public mac(str: string, options: Partial<MacOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {
-                version: null,
-                acceptableDelims: ': -_./',
-                normalizedDelim: ':',
-            },
+            {},
+            MAC_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -947,9 +1164,15 @@ class StringHandler extends ChainHandler {
             });
     }
 
+    /**
+     * Validates measurement-like numeric strings.
+     * @param str The input string.
+     * @param options Measurement options. Defaults are provided by {@link MEASUREMENT_DEFAULTS}.
+     */
     public measurement(str: string, options: Partial<MeasurementOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            { units: 'cm' },
+            {},
+            MEASUREMENT_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -959,7 +1182,7 @@ class StringHandler extends ChainHandler {
         } = resolvedOptions;
 
         const mergedOptions = Object.assign({
-            trailingSymbol: units
+            trailingSymbols: units
         }, resolvedOptions);
 
         const result = this.numeric(str, mergedOptions);
@@ -986,13 +1209,15 @@ class StringHandler extends ChainHandler {
             });
     }
 
+    /**
+     * Validates money-formatted strings.
+     * @param str The input string.
+     * @param options Money format options. Defaults are provided by {@link MONEY_DEFAULTS}.
+     */
     public money(str: string, options: Partial<MoneyOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            {
-                parens: 'forbidden',
-                leadingSymbols: ['$'],
-                trailingSymbols: [],
-            },
+            {},
+            MONEY_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -1013,9 +1238,16 @@ class StringHandler extends ChainHandler {
             }
         }
 
+        // We need to append/prepend the parens to each leading/trailing symbol...
+        // If they are blank, need to add in a blank string to the list so that we can still match the parens
+
         const result = this.numeric(str, Object.assign({}, resolvedOptions, {
-            leadingSymbols: leadingSymbols.map(str => '(' + str),
-            trailingSymbols: trailingSymbols.map(str => str + ')'),
+            leadingSymbols: leadingSymbols.length > 0
+                ? leadingSymbols.map(str => '(' + str)
+                : ['('],
+            trailingSymbols: trailingSymbols.length > 0
+                ? trailingSymbols.map(str => str + ')')
+                : [')'],
         }));
 
         return result.pass
@@ -1029,25 +1261,15 @@ class StringHandler extends ChainHandler {
     }
 
 
+    /**
+     * Validates numeric-format strings with configurable rules.
+     * @param str The input string.
+     * @param options Numeric format options. Defaults are provided by {@link NUMERIC_DEFAULTS}.
+     */
     public numeric(str: string, options: Partial<NumericOptions> = {}): StringHandlerResult {
         const resolvedOptions: NumericOptions = Object.assign(
-            {
-                plus: 'optional',
-                minus: 'optional',
-                alignment: 'left',
-                min: null,
-                max: null,
-                decimal: 'optional',
-                thousandsDelim: ',',
-                decimalDelim: '.',
-                minPrecision: 0,
-                maxPrecision: null,
-                leadingZero: 'optional',
-                trailingZero: 'optional',
-                leadingSymbols: [''],
-                trailingSymbols: [''],
-                looseSpacing: false,
-            },
+            {},
+            NUMERIC_DEFAULTS,
             this._matchingDefaults || {},
             options
         );
@@ -1128,7 +1350,7 @@ class StringHandler extends ChainHandler {
             integral = '',
             fractional = ''
         ] = number.split(decimalDelim, 2);
-        
+
         if (decimal === 'forbidden' && fractional !== '') {
             return fail(str, 'string/numeric/forbiddenDecimal', resolvedOptions);
         }
@@ -1155,7 +1377,7 @@ class StringHandler extends ChainHandler {
 
         // Fractional check
         const fractionalMatch = RegexCache.get(
-            `^(\\d{${minPrecision || 0},${maxPrecision !== null ? maxPrecision : ''}})$`
+            `^(\\d{${minPrecision !== null ? minPrecision : 0},${maxPrecision !== null ? maxPrecision : ''}})$`
         ).exec(fractional);
 
         if (!fractionalMatch) {
@@ -1188,11 +1410,6 @@ class StringHandler extends ChainHandler {
         return pass(leftPlus + leftMinus + leadingSymbol + number + trailingSymbol + rightPlus + rightMinus);
     }
 
-    /**
-     * Executes the octal handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public octal(str: string): StringHandlerResult {
         return /^[0-7]+$/.test(str)
             ? pass(str)
@@ -1200,88 +1417,122 @@ class StringHandler extends ChainHandler {
     }
 
     /**
-     * Executes the onlyChars handler step.
-     * @param {any} str
-     * @param {any} chars
-     * @param {any} options
-     * @returns {ChainHandlerResult}
+     * Validates that all characters are from an allowed set.
+     * @param str The input string.
+     * @param chars Allowed characters.
+     * @param options Matching options. Defaults are provided by {@link ONLY_CHARS_DEFAULTS}.
      */
-    public onlyChars(str: string, chars: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const {
-            ignoreCase,
-        } = options;
+    public onlyChars(str: string, chars: string, options: Partial<OnlyCharsOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            ONLY_CHARS_DEFAULTS,
+            this._matchingDefaults,
+            options
+        );
 
         return str.replace(
             RegexCache.get(
                 `[${Utils.escapeForRegex(chars)}]`,
-                'g' + (ignoreCase ? 'i' : '')
+                'g' + (resolvedOptions.ignoreCase ? 'i' : '')
             ),
             ''
         ).length === 0
             ? pass(str)
-            : fail(str, 'string/onlyChars', Object.assign({ chars }, options));
+            : fail(str, 'string/onlyChars', Object.assign({ chars }, resolvedOptions));
+    }
+
+
+    /**
+     * Validates path-like strings.
+     * @param str The input string.
+     * @param options Path validation options. Defaults are provided by {@link PATH_DEFAULTS}.
+     */
+    public path(str: string, options: Partial<PathOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            PATH_DEFAULTS,
+            this._matchingDefaults,
+            options
+        );
+
+        const {
+            absolute,
+            extensions,
+            normalize,
+            segmentMaxLen,
+            style,
+        } = resolvedOptions;
+
+        let startRegex, forbidden, separator;
+
+        if (style === 'unix') {
+            forbidden = '/\\x00';
+            separator = '\\/';
+
+            if (absolute === 'required') {
+                startRegex = separator;
+            }
+            else if (absolute === 'optional') {
+                startRegex = `(?:${separator})?`;
+            }
+            else {
+                startRegex = '';
+            }
+        }
+        else {
+            separator = '\\\\';
+            forbidden = '\\x00-\\x1F\\\\/:*?"<>|';
+            if (style === 'win-unc') {
+                startRegex = `\\\\\\\\[a-z0-9 %._~-]{1,63}\\\\[a-z0-9 $%._~-]{1,80}${separator}`;
+            }
+            else if (style === 'win') {
+                startRegex = `[a-z]:${separator}`;
+            }
+
+            if (absolute === 'optional') {
+                startRegex = `(?:${startRegex})?`;
+            }
+            else if (absolute === 'forbidden') {
+                startRegex = '';
+            }
+        }
+
+        const fileNameRegex = `[^\\.${forbidden}]{1,${segmentMaxLen}}`;
+        const folderRegex = `(?:[^${forbidden}]{1,${segmentMaxLen}}${separator})*`;
+        let fileRegex;
+        if (extensions.indexOf('.*') !== -1) {
+            fileRegex = `${fileNameRegex}\\.[a-z0-9]+`;
+        }
+        else if (extensions.length > 0) {
+            fileRegex = `${fileNameRegex}(?:${extensions.map(ext => Utils.escapeForRegex(ext)).join('|')})`;
+        }
+        else {
+            fileRegex = `(?:${fileNameRegex}\\.[a-z0-9]+)?`;
+        }
+
+        const fullRegex =
+            '^(' +
+            '?=(' +
+            startRegex +
+            folderRegex +
+            fileRegex +
+            '))\\1' +
+            '$';
+        console.log(fullRegex);
+        return RegexCache.get(fullRegex, 'i').test(str)
+            ? pass(normalize ? str.toLowerCase() : str)
+            : fail(str, 'string/path', resolvedOptions)
     }
 
     /**
-     * Executes the path handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
+     * Validates and normalizes phone numbers.
+     * @param str The input string.
+     * @param options Matching options. Defaults are provided by {@link PHONE_DEFAULTS}.
      */
-    public path(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
-        const {
-            style = 'unix',
-            fileExtensions = '',
-            maxLabelLength = 100,
-            normalize
-        } = options;
-
-        let startRegex = '', forbidden, dir;
-        const fileExtensionsArray = [].concat(fileExtensions);
-
-        if (style === 'unix') {
-            dir = '\\/';
-            forbidden = '/\\x00';
-        }
-        else {
-            dir = '\\\\';
-            forbidden = '\\x00-\\x1F\\\\/:*?"<>|';
-            if (style === 'win-unc') {
-                startRegex = '\\\\\\\\[a-z0-9 %._~-]{1,63}\\\\[a-z0-9 $%._~-]{1,80}';
-            }
-            else if (style === 'win-drive') {
-                startRegex = '[a-z]:';
-            }
-        }
-
-        const fullRegex = [
-            '^(',
-            '?=(',
-            startRegex,
-            `(?:${dir}[^/${'forbidden'}]{0,${maxLabelLength}}[^${'forbidden'}\\s.])*`,
-            (
-                // Force any file
-                fileExtensionsArray[0] === '.*' && '\\.[a-z]{1,15}' ||
-                // Any file/directory
-                (fileExtensionsArray[0] === '' || fileExtensionsArray.length === 0) && `${dir}?` ||
-                // Force specific file ext
-                '\\.(' + fileExtensionsArray.map((ext: string): string => Utils.escapeForRegex(ext)).join('|') + ')'
-            ),
-            '))\\1',
-            '$',
-        ].join('');
-
-        return RegexCache.get(fullRegex, 'i').test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/path', options)
-    }
-
     public phone(str: string, options: Partial<PhoneOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -_./',
-                normalizedDelim: '-',
-            },
+            {},
+            PHONE_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -1299,29 +1550,41 @@ class StringHandler extends ChainHandler {
         return pass(resolvedOptions.normalize ? normalized : str);
     }
 
+
     /**
-     * Executes the repetition handler step.
-     * @param {any} str
-     * @param {any} fragment
-     * @param {any} options
-     * @returns {ChainHandlerResult}
+     * Validates repeated fragment usage.
+     * @param str The input string.
+     * @param fragment The fragment to count.
+     * @param min Minimum repeats required.
+     * @param max Maximum repeats allowed.
+     * @param options Repeat options. Defaults are provided by {@link REPEAT_DEFAULTS}.
      */
-    public repetition(str: string, fragment: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
+    public repeats(
+        str: string,
+        fragment: string,
+        min: number = 1,
+        max: number | null = null,
+        options: Partial<RepeatOptions> = {}
+    ): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            REPEAT_DEFAULTS,
+            options
+        );
+
         const {
-            min = 1,
-            max = null,
-            otherText = true,
             ignoreCase,
-        } = options;
+            otherText,
+        } = resolvedOptions;
 
         if (!otherText) {
             const fullRegex = `^(?=((${Utils.escapeForRegex(fragment)}){${min},${max === null ? '' : max}}))\\1$`;
             return RegexCache.get(fullRegex, (ignoreCase ? 'i' : '')).test(str) && str
                 ? pass(str)
-                : fail(str, 'string/repetition', Object.assign({ fragment, min, max }, options));
+                : fail(str, 'string/repeats', Object.assign({ fragment, min, max }, resolvedOptions));
         }
 
-        // Use some math to calculate if within repetition min/max
+        // Use some math to calculate if within repeats min/max
         const minChars = fragment.length * min;
         const maxChars = max !== null ? fragment.length * max : null;
         const difference =
@@ -1330,27 +1593,26 @@ class StringHandler extends ChainHandler {
 
         return difference >= minChars && (maxChars === null || difference <= maxChars)
             ? pass(str)
-            : fail(str, 'string/repetition', Object.assign({ fragment, min, max }, options));
+            : fail(str, 'string/repeats', Object.assign({ fragment, min, max }, resolvedOptions));
     }
 
-    /**
-     * Executes the slug handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
+
     public slug(str: string): StringHandlerResult {
         return /^(?=([a-z\d]+(-[a-z\d]+)*))\1$/.test(str)
             ? pass(str)
             : fail(str, 'string/slug');
     }
 
+    /**
+     * Validates and normalizes U.S. SSN values.
+     * @param str The input string.
+     * @param options Matching options. Defaults are provided by {@link SSN_DEFAULTS}.
+     */
     public ssn(str: string, options: Partial<SsnOptions> = {}): StringHandlerResult {
 
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -_./',
-                normalizedDelim: '-',
-            },
+            {},
+            SSN_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -1369,9 +1631,16 @@ class StringHandler extends ChainHandler {
     }
 
 
+    /**
+     * Validates that the input starts with a prefix.
+     * @param str The input string.
+     * @param prefix The prefix that must appear at the start.
+     * @param options Matching options. Defaults are provided by {@link STARTS_WITH_DEFAULTS}.
+     */
     public startsWith(str: string, prefix: string, options: Partial<StartsWithOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
             {},
+            STARTS_WITH_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -1386,15 +1655,18 @@ class StringHandler extends ChainHandler {
     }
 
     /**
-     * Executes the state handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
+     * Validates U.S. state abbreviations.
+     * @param str The input string.
+     * @param options Matching options. Defaults are provided by {@link STATE_DEFAULTS}.
      */
-    public state(str: string, options: Record<string, unknown> = {}): StringHandlerResult {
-        const {
-            allowLooseFormat,
-        } = Object.assign({}, StringHandler.matchingDefaults, options);
+    public state(str: string, options: Partial<StateOptions> = {}): StringHandlerResult {
+
+        const resolvedOptions = Object.assign(
+            {},
+            STATE_DEFAULTS,
+            this._matchingDefaults,
+            options
+        );
 
         const states = [
             'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL',
@@ -1404,17 +1676,12 @@ class StringHandler extends ChainHandler {
             'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
         ];
 
-        const search = allowLooseFormat ? str.toUpperCase() : str;
+        const search = resolvedOptions.ignoreCase ? str.toUpperCase() : str;
         return states.indexOf(search) > -1
-            ? pass(search)
-            : fail(str, 'string/state', options);
+            ? pass(resolvedOptions.normalize ? str.toUpperCase() : str)
+            : fail(str, 'string/state', resolvedOptions);
     }
 
-    /**
-     * Executes the upperCase handler step.
-     * @param {any} str
-     * @returns {ChainHandlerResult}
-     */
     public upperCase(str: string): StringHandlerResult {
         return str === str.toUpperCase()
             ? pass(str)
@@ -1422,24 +1689,30 @@ class StringHandler extends ChainHandler {
     }
 
     /**
-     * Executes the url handler step.
-     * @param {any} str
-     * @param {any} options
-     * @returns {ChainHandlerResult}
+     * Validates URLs.
+     * @param str The input string.
+     * @param options URL validation options. Defaults are provided by {@link URL_DEFAULTS}.
      */
-    public url(str: string, options: Record<string, unknown> = StringHandler.matchingDefaults): StringHandlerResult {
+    public url(str: string, options: Partial<UrlOptions> = {}): StringHandlerResult {
+        const resolvedOptions = Object.assign(
+            {},
+            URL_DEFAULTS,
+            this._matchingDefaults,
+            options
+        );
+
         let {
+            allowedProtocols,
+            domain,
+            fragment,
+            ip,
+            label,
             normalize,
-            rootRelative = false,
-            allowedProtocols = ['http', 'https'],
-            protocols = 'optional',
-            domain = 'optional',
-            ip = 'optional',
-            label = 'forbidden',
-            port = 'forbidden',
-            query = 'optional',
-            fragment = 'optional'
-        } = options;
+            port,
+            protocols,
+            query,
+            rootRelative
+        } = resolvedOptions;
 
         if (rootRelative) {
             domain = ip = label = protocols = port = 'forbidden'; // force root relative option
@@ -1463,7 +1736,7 @@ class StringHandler extends ChainHandler {
         const matchResult = RegexCache.get(fullRegex, 'i').exec(str);
 
         if (!matchResult) {
-            return fail(str, 'string/url', options);
+            return fail(str, 'string/url', resolvedOptions);
         }
 
         // Pull matches from regex
@@ -1512,16 +1785,18 @@ class StringHandler extends ChainHandler {
             (fragment === 'forbidden' && !hasFrag || fragment === 'required' && hasFrag || fragment === 'optional')
         )
             ? pass(normalize ? str.toLowerCase() : str)
-            : fail(str, 'string/url', options);
+            : fail(str, 'string/url', resolvedOptions);
     }
 
+    /**
+     * Validates and normalizes UUID values.
+     * @param str The input string.
+     * @param options UUID matching options. Defaults are provided by {@link UUID_DEFAULTS}.
+     */
     public uuid(str: string, options: Partial<UuidOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            {
-                version: null,
-                acceptableDelims: ' -_./',
-                normalizedDelim: '-',
-            },
+            {},
+            UUID_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -1556,33 +1831,26 @@ class StringHandler extends ChainHandler {
 
     }
 
-    /**
-     * Executes the wordCount handler step.
-     * @param {any} str
-     * @param {any} min
-     * @param {any} max
-     * @param {any} stripDelims
-     * @returns {ChainHandlerResult}
-     */
-    public wordCount(str: string, min: number, max: number, stripDelims: string = StringHandler.matchingDefaults.stripDelims): StringHandlerResult {
-        const count = Utils.splitOnDelims(str, stripDelims).length;
-        return count <= max && count >= min
+    public wordCount(str: string, min: number = 1, max: number | null = null): StringHandlerResult {
+        const count = str.split(/\s+/).filter(Boolean).length;
+        return count >= min && (max === null || count <= max)
             ? pass(str)
             : fail(str, 'string/wordCount', {
                 count,
                 min,
-                max,
-                stripDelims
+                max
             });
     }
 
+    /**
+     * Validates and normalizes ZIP/postal values.
+     * @param str The input string.
+     * @param options ZIP matching options. Defaults are provided by {@link ZIP_DEFAULTS}.
+     */
     public zip(str: string, options: Partial<ZipOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign(
-            {
-                acceptableDelims: ' -_./',
-                normalizedDelim: '-',
-                zip4: 'optional'
-            },
+            {},
+            ZIP_DEFAULTS,
             this._matchingDefaults,
             options
         );
@@ -1625,6 +1893,42 @@ class StringHandler extends ChainHandler {
     // MUTATORS
     // ====================================
 
+    /**
+       * Decodes a Base64-encoded string into UTF-8 text.
+       * @param str The Base64 input string.
+       */
+    public base64Decode(str: string): StringHandlerResult {
+        if (typeof Buffer !== 'undefined') {
+            return pass(Buffer.from(str, 'base64').toString('utf8'));
+        }
+        else if (typeof atob !== 'undefined') {
+            const binary = atob(str);
+            const percentEncoded = binary.replace(/./g, (char: string): string => {
+                const hex = char.charCodeAt(0).toString(16).toUpperCase();
+                return '%' + (hex.length === 1 ? '0' + hex : hex);
+            });
+            return pass(decodeURIComponent(percentEncoded));
+        }
+        return fail(str, 'string/base64Decode');
+    }
+
+    /**
+     * Encodes a UTF-8 string as Base64.
+     * @param str The input string.
+     */
+    public base64Encode(str: string): StringHandlerResult {
+        if (typeof Buffer !== 'undefined') {
+            return pass(Buffer.from(str, 'utf8').toString('base64'));
+        }
+        else if (typeof btoa !== 'undefined') {
+            const utf8Binary = encodeURIComponent(str).replace(
+                /%([0-9A-F]{2})/g,
+                (_match: string, hex: string): string => String.fromCharCode(parseInt(hex, 16))
+            );
+            return pass(btoa(utf8Binary));
+        }
+        return fail(str, 'string/base64Encode');
+    }
 
     /**
      * Collapses repeated occurrences of a character into a single character.
@@ -1768,12 +2072,12 @@ class StringHandler extends ChainHandler {
     /**
      * Converts text to camelCase.
      * @param str The input string.
-     * @param fromDelims Delimiters used to split input text.
+     * @param delims Delimiters used to split input text.
      * @param toDelim Delimiter used to join output segments.
      */
-    public toCamelCase(str: string, fromDelims?: string): StringHandlerResult {
+    public toCamelCase(str: string, delims: string = ' '): StringHandlerResult {
         return this.toDelimited(str, {
-            fromDelims,
+            fromDelims: delims,
             toDelim: '',
             transformer1: (word: string): string => word.toLowerCase(),
             transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
@@ -1785,16 +2089,10 @@ class StringHandler extends ChainHandler {
      * Splits a string on delimiters, transforms each segment, and joins it with a new delimiter.
      * `transformer1` is applied before `transformerSwitchIndex` and `transformer2` after.
      * @param str The input string.
-     * @param options Delimiter and transformation options.
+        * @param options Delimiter and transformation options. Defaults are provided by {@link TO_DELIMITED_DEFAULTS}.
      */
     public toDelimited(str: string, options: Partial<ToDelimitedOptions> = {}): StringHandlerResult {
-        const resolvedOptions: ToDelimitedOptions = Object.assign({
-            fromDelims: null,
-            toDelim: '',
-            transformer1: (x: string): string => x,
-            transformer2: (x: string): string => x,
-            transformerSwitchIndex: null
-        }, options);
+        const resolvedOptions: ToDelimitedOptions = Object.assign({}, TO_DELIMITED_DEFAULTS, options);
 
         const {
             fromDelims,
@@ -1810,7 +2108,7 @@ class StringHandler extends ChainHandler {
                     acc.push(
                         transformerSwitchIndex == null || index < transformerSwitchIndex
                             ? transformer1(current)
-                            : transformer2(current)
+                            : transformer2!(current)
                     );
                     return acc;
                 }, [] as string[])
@@ -1823,7 +2121,7 @@ class StringHandler extends ChainHandler {
      * @param str The input string.
      * @param fromDelims Delimiters used to split input text.
      */
-    public toKebabCase(str: string, fromDelims?: string): StringHandlerResult {
+    public toKebabCase(str: string, fromDelims: string = ' '): StringHandlerResult {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: '-',
@@ -1844,7 +2142,7 @@ class StringHandler extends ChainHandler {
      * @param str The input string.
      * @param fromDelims Delimiters used to split input text.
      */
-    public toPascalCase(str: string, fromDelims?: string): StringHandlerResult {
+    public toPascalCase(str: string, fromDelims: string = ' '): StringHandlerResult {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: '',
@@ -1859,7 +2157,7 @@ class StringHandler extends ChainHandler {
      * @param str The input string.
      * @param fromDelims Delimiters used to split input text.
      */
-    public toSentenceCase(str: string, fromDelims?: string): StringHandlerResult {
+    public toSentenceCase(str: string, fromDelims: string = ' '): StringHandlerResult {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: ' ',
@@ -1874,7 +2172,7 @@ class StringHandler extends ChainHandler {
      * @param str The input string.
      * @param fromDelims Delimiters used to split input text.
      */
-    public toSnakeCase(str: string, fromDelims?: string): StringHandlerResult {
+    public toSnakeCase(str: string, fromDelims: string = ' '): StringHandlerResult {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: '_',
@@ -1887,7 +2185,7 @@ class StringHandler extends ChainHandler {
      * @param str The input string.
      * @param fromDelims Delimiters used to split input text.
      */
-    public toTitleCase(str: string, fromDelims?: string): StringHandlerResult {
+    public toTitleCase(str: string, fromDelims: string = ' '): StringHandlerResult {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: ' ',

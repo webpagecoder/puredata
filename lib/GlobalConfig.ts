@@ -54,7 +54,7 @@ const GlobalConfig = Object.seal({
         ignoreCase: false,
         mode: 'strict',
         normalize: true,
-        stripDelims: '-',
+        stripDelims: ' ',
         
         maxLength: 2000,    // max length allowed for a string being validated todo: THIS PART
         trim: true,

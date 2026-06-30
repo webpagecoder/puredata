@@ -197,7 +197,7 @@ const DefaultErrorText: Record<string, string> = {
     'string/onlyChars': 'Must contain only these characters: {chars}',
     'string/path': 'Must be a valid path',
     'string/phone': 'Must be a valid phone number',
-    'string/repetition': 'Must contain fragment {fragment} between {min} and {max} times',
+    'string/repeats': 'Must contain fragment {fragment} between {min} and {max} times',
     'string/slug': 'Must be a valid slug',
     'string/ssn': 'Must be a valid SSN',
     'string/startsWith': 'Must start with {prefix}',
