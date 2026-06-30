@@ -2065,6 +2065,10 @@ class StringHandler extends ChainHandler {
         return pass(str.replace(/<[^>]*>/g, ''));
     }
 
+    /**
+     * Removes all whitespace from the string.
+     * @param str The input string.
+     */
     public stripWhitespace(str: string): StringHandlerResult {
         return pass(str.replace(/\s/g, ''));
     }
