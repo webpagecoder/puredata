@@ -1,33 +1,31 @@
 'use strict';
 
-import { DefaultErrorText } from './text/DefaultErrorText.ts';
-import { DefaultCalendarText } from './text/DefaultCalendarText.ts';
-import { GlobalConfig } from './GlobalConfig.ts';
-import { AnyChain } from './fields/any/AnyChain.ts';
+import { AnyChain, AnyChainCtorParams } from './fields/any/AnyChain.ts';
+import { AnyHandler } from './fields/any/AnyHandler.ts';
 import { ArrayChain } from './fields/array/ArrayChain.ts';
+import { ArrayHandler } from './fields/array/ArrayHandler.ts';
 import { BooleanChain } from './fields/boolean/BooleanChain.ts';
-import { ChainCtorParams } from './fields/Chain.ts';
+import { BooleanHandler } from './fields/boolean/BooleanHandler.ts';
 import { DateChain } from './fields/date/DateChain.ts';
+import { DateHandler } from './fields/date/DateHandler.ts';
 import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
 import { Field, FieldCtorParams } from './fields/Field.ts';
+import { FieldProcessorMap } from './fields/FieldProcessorMap.ts';
 import { NumberChain } from './fields/number/NumberChain.ts';
+import { NumberHandler } from './fields/number/NumberHandler.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
-import { PathValueField } from './fields/schema/pathValue/PathValueField.ts';
-import { SchemaChain, SchemaObject } from './fields/schema/SchemaChain.ts';
+import { ObjectHandler } from './fields/object/ObjectHandler.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
 import { FieldPointerField } from './fields/schema/fieldPointer/FieldPointerField.ts';
+import { PathValueField } from './fields/schema/pathValue/PathValueField.ts';
+import { SchemaChain, SchemaObject } from './fields/schema/SchemaChain.ts';
 import { StringChain } from './fields/string/StringChain.ts';
-import { ValueField } from './fields/value/ValueField.ts';
-import { AnyHandler } from './fields/any/AnyHandler.ts';
-import { ArrayHandler } from './fields/array/ArrayHandler.ts';
-import { BooleanHandler } from './fields/boolean/BooleanHandler.ts';
-import { ChainHandler } from './fields/ChainHandler.ts';
-import { DateHandler } from './fields/date/DateHandler.ts';
-import { NumberHandler } from './fields/number/NumberHandler.ts';
-import { ObjectHandler } from './fields/object/ObjectHandler.ts';
 import { StringHandler } from './fields/string/StringHandler.ts';
+import { ValueField } from './fields/value/ValueField.ts';
+import { GlobalConfig } from './GlobalConfig.ts';
 import { Path, PathDelimTypes } from './Path.ts';
-import { FieldProcessorMap } from './fields/FieldProcessorMap.ts';
+import { DefaultCalendarText } from './text/DefaultCalendarText.ts';
+import { DefaultErrorText } from './text/DefaultErrorText.ts';
 import { Translation } from './Translation.ts';
 import { Utils } from './Utils.ts';
 
@@ -57,10 +55,10 @@ class PureData {
         return PureData;
     }
 
-    protected _composeChainProps<T extends ChainCtorParams>(
+    protected _composeChainProps<T extends AnyChainCtorParams>(
         props: Record<string, unknown> = {},
         chainType: string,
-        chainHandlerCtor: typeof ChainHandler
+        chainHandlerCtor: typeof AnyHandler
     ) {
         return Object.assign(
             {},

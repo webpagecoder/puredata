@@ -1,11 +1,9 @@
 'use strict';
 
 import { StringHandler } from './StringHandler.ts';
-import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
-import { GlobalConfig } from '../../GlobalConfig.ts';
-import {MatchOptions} from './StringHandler.ts';
+import { AnyChain, AnyChainCtorParams, AnyChainProps } from '../any/AnyChain.ts';
 
-export type StringChainProps = ChainProps<StringHandler> & {
+export type StringChainProps = AnyChainProps<StringHandler> & {
     // General options
     maxLength: number | null;
     trim: boolean;
@@ -18,9 +16,9 @@ export type StringChainProps = ChainProps<StringHandler> & {
     stripDelims: string;
 };
 
-export type StringChainCtorParams = ChainCtorParams<StringChainProps>;
+export type StringChainCtorParams = AnyChainCtorParams<StringChainProps>;
 
-class StringChain extends Chain<StringChainProps> {
+class StringChain extends AnyChain<StringChainProps> {
     constructor(args: StringChainCtorParams) {
         super(args);
 

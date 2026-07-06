@@ -2,7 +2,7 @@
 
 import { ValueField } from './ValueField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { Processor, State } from '../Processor.ts';
+import { Processor } from '../Processor.ts';
 
 class ValueFieldProcessor extends Processor<ValueField> {
 

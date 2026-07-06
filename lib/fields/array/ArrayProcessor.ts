@@ -2,9 +2,9 @@
 
 import { ArrayChain } from '../array/ArrayChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { ChainProcessor } from '../ChainProcessor.ts';
+import { AnyProcessor } from '../any/AnyProcessor.ts';
 
-class ArrayProcessor<C extends ArrayChain = ArrayChain> extends ChainProcessor<C> {
+class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { autoConvert, label, props } = this.field;

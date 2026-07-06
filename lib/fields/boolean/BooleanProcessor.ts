@@ -2,9 +2,9 @@
 
 import { BooleanChain } from './BooleanChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { ChainProcessor } from '../ChainProcessor.ts';
+import { AnyProcessor } from '../any/AnyProcessor.ts';
 
-class BooleanProcessor extends ChainProcessor<BooleanChain> {
+class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { field } = this;

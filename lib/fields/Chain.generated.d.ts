@@ -99,11 +99,11 @@ interface ChainGeneratedMethods {
 }
 
 declare module './Chain.ts' {
-    interface Chain extends ChainGeneratedMethods {}
+    interface Chain extends AnyChainGeneratedMethods {}
 }
 
 declare module './Chain.js' {
-    interface Chain extends ChainGeneratedMethods {}
+    interface Chain extends AnyChainGeneratedMethods {}
 }
 
 export { };

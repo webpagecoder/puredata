@@ -5,7 +5,7 @@ import { SchemaChain } from './SchemaChain.ts';
 import { Path } from '../../Path.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { ChainProcessorCtorParams } from '../ChainProcessor.ts';
+import { AnyProcessorCtorParams } from '../any/AnyProcessor.ts';
 import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
 import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
@@ -14,7 +14,7 @@ import { Utils } from '../../Utils.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
-export type SchemaProcessorCtorParams = ChainProcessorCtorParams<SchemaChain>;
+export type SchemaProcessorCtorParams = AnyProcessorCtorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
     ancestors?: SchemaProcessor[] | null;
@@ -180,7 +180,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         // Do any required key renaming
         if (renameKeysArgs) {
-            tracker.setValue(renameKeys(...renameKeysArgs)._value);
+            tracker.setValue(renameKeys(...renameKeysArgs).value);
         }
 
         // Strip unknown keys if needed
@@ -188,7 +188,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             tracker.setValue(stripKeys(
                 tracker.getValue(),
                 Array.from(_field.props.schemaMap.keys())
-            )._value);
+            ).value);
         }
 
         this.executePipeline(tracker);

@@ -2,9 +2,9 @@
 
 import { StringChain } from '../string/StringChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { ChainProcessor } from '../ChainProcessor.ts';
+import { AnyProcessor } from '../any/AnyProcessor.ts';
 
-class StringProcessor extends ChainProcessor<StringChain> {
+class StringProcessor extends AnyProcessor<StringChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const {

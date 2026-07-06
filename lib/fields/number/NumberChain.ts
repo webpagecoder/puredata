@@ -1,18 +1,18 @@
 'use strict';
 
 import { NumberHandler } from './NumberHandler.ts';
-import { Chain, ChainProps, ChainCtorParams } from '../Chain.ts';
+import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
 
-export type NumberChainProps = ChainProps<NumberHandler> & {
+export type NumberChainProps = AnyChainProps<NumberHandler> & {
         autoConvert: boolean;
         ensureSafe: boolean;
         ensureFinite: boolean;
         preservePrecision: boolean;
 };
 
-export type NumberChainCtorParams = ChainCtorParams<NumberChainProps>;
+export type NumberChainCtorParams = AnyChainCtorParams<NumberChainProps>;
 
-class NumberChain extends Chain<NumberChainProps> {
+class NumberChain extends AnyChain<NumberChainProps> {
 
     public constructor(args: NumberChainCtorParams) {
         super(args);

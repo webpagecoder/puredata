@@ -1,9 +1,9 @@
 'use strict';
 
 import { ObjectHandler } from './ObjectHandler.ts';
-import { Chain, ChainProps, ChainCtorParams, ChainCloneParams } from '../Chain.ts';
+import { AnyChain, AnyChainProps, AnyChainCtorParams, AnyChainCloneParams } from '../any/AnyChain.ts';
 
-export type ObjectChainProps = ChainProps<ObjectHandler> & {
+export type ObjectChainProps = AnyChainProps<ObjectHandler> & {
     cloneObject: boolean;
     ensurePlain: boolean;
     maxDepth: number | null;
@@ -11,9 +11,9 @@ export type ObjectChainProps = ChainProps<ObjectHandler> & {
 };
 
 export type ObjectChainCtorParams<C extends ObjectChainProps =
-    ObjectChainProps> = ChainCtorParams<C>;
+    ObjectChainProps> = AnyChainCtorParams<C>;
 
-class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C> {
+class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends AnyChain<C> {
 
     constructor(args: ObjectChainCtorParams<C>) {
         super(args);
@@ -40,7 +40,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
      * object.removeEmpties() // Removes keys with falsy or empty values
      */
     public removeEmpties(): this {
-        return this.clone({ cloneObject: true } as ChainCloneParams<C>).addStep('removeEmpties', function (this: ObjectChain): unknown[] {
+        return this.clone({ cloneObject: true } as AnyChainCloneParams<C>).addStep('removeEmpties', () => {
             return [this.props.emptyValues];
         });
     }
@@ -52,7 +52,7 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends Chain<C
      * object.removeEmptiesRecursive() // Deep clean of empty values in nested objects
      */
     public removeEmptiesRecursive(): this {
-        return this.clone({ cloneObject: true } as ChainCloneParams<C>).addStep('removeEmptiesRecursive', function (this: ObjectChain): unknown[] {
+        return this.clone({ cloneObject: true } as AnyChainCloneParams<C>).addStep('removeEmptiesRecursive', () => {
             return [this.props.emptyValues];
         });
     }

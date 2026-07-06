@@ -1,16 +1,14 @@
 'use strict';
 
 import { Utils } from '../../Utils.ts';
-import { ChainHandlerResult } from '../ChainHandlerResult.ts';
-const { pass, fail } = ChainHandlerResult;
+import { HandlerResult } from '../HandlerResult.ts';
+const { pass, fail } = HandlerResult;
 
 export type PrimitiveTypeName = 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint';
 export type CtorLike = abstract new (...args: never[]) => object;
-export type CustomHandlerFn = (value: unknown) => ChainHandlerResult | unknown;
+export type CustomHandlerFn = (value: unknown) => HandlerResult | unknown;
 
-import { ChainHandler } from "../ChainHandler.ts";
-
-class AnyHandler extends ChainHandler {
+class AnyHandler {
 
     // ====================================
     // VALIDATORS
@@ -22,7 +20,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result when the value is defined; otherwise a failing result.
      */
-    public defined(value: unknown): ChainHandlerResult {
+    public defined(value: unknown): HandlerResult {
         return value !== undefined ? pass(value) : fail(value, 'generic/defined');
     }
 
@@ -32,7 +30,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result when the value is undefined; otherwise a failing result.
      */
-    public undefined(value: unknown): ChainHandlerResult {
+    public undefined(value: unknown): HandlerResult {
         return value === undefined ? pass(value) : fail(value, 'generic/undefined');
     }
 
@@ -43,7 +41,7 @@ class AnyHandler extends ChainHandler {
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is considered empty; otherwise a failing result.
      */
-    public empty(value: unknown, empties: unknown[] = [null, undefined]): ChainHandlerResult {
+    public empty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
         return this.anyOf(value, empties)._pass
             ? pass(value)
             : fail(value, 'generic/empty');
@@ -56,7 +54,7 @@ class AnyHandler extends ChainHandler {
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is not considered empty; otherwise a failing result.
      */
-    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): ChainHandlerResult {
+    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
         return this.anyOf(value, empties)._fail
             ? pass(value)
             : fail(value, 'generic/notEmpty');
@@ -69,7 +67,7 @@ class AnyHandler extends ChainHandler {
      * @param comparison Value to compare against.
      * @returns A passing result when values are equal; otherwise a failing result.
      */
-    public equals(value: unknown, comparison: unknown): ChainHandlerResult {
+    public equals(value: unknown, comparison: unknown): HandlerResult {
         return Utils.areEqual(value, comparison)
             ? pass(value)
             : fail(value, 'generic/equals', { comparison });
@@ -82,7 +80,7 @@ class AnyHandler extends ChainHandler {
      * @param comparison Value to compare against.
      * @returns A passing result when values differ; otherwise a failing result.
      */
-    public notEquals(value: unknown, comparison: unknown): ChainHandlerResult {
+    public notEquals(value: unknown, comparison: unknown): HandlerResult {
         return !Utils.areEqual(value, comparison)
             ? pass(value)
             : fail(value, 'generic/notEquals', { comparison });
@@ -94,7 +92,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result for truthy values; otherwise a failing result.
      */
-    public truthy(value: unknown): ChainHandlerResult {
+    public truthy(value: unknown): HandlerResult {
         return value ? pass(value) : fail(value, 'generic/truthy');
     }
 
@@ -104,7 +102,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result for falsy values; otherwise a failing result.
      */
-    public falsy(value: unknown): ChainHandlerResult {
+    public falsy(value: unknown): HandlerResult {
         return value ? fail(value, 'generic/falsy') : pass(value);
     }
 
@@ -114,7 +112,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result when the value is null; otherwise a failing result.
      */
-    public null(value: unknown): ChainHandlerResult {
+    public null(value: unknown): HandlerResult {
         return value === null ? pass(value) : fail(value, 'generic/null');
     }
 
@@ -124,7 +122,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result when the value is not null; otherwise a failing result.
      */
-    public notNull(value: unknown): ChainHandlerResult {
+    public notNull(value: unknown): HandlerResult {
         return value !== null ? pass(value) : fail(value, 'generic/notNull');
     }
 
@@ -134,7 +132,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result when the value is nullish; otherwise a failing result.
      */
-    public nullish(value: unknown): ChainHandlerResult {
+    public nullish(value: unknown): HandlerResult {
         return value === null || value === undefined
             ? pass(value)
             : fail(value, 'generic/nullish');
@@ -146,7 +144,7 @@ class AnyHandler extends ChainHandler {
      * @param value Value being validated.
      * @returns A passing result when the value is nullish; otherwise a failing result.
      */
-    public notNullish(value: unknown): ChainHandlerResult {
+    public notNullish(value: unknown): HandlerResult {
         return value !== null && value !== undefined
             ? pass(value)
             : fail(value, 'generic/notNullish');
@@ -159,7 +157,7 @@ class AnyHandler extends ChainHandler {
      * @param allowedValues Values that are accepted.
      * @returns A passing result when a match is found; otherwise a failing result.
      */
-    public anyOf(value: unknown, allowedValues: unknown[] = []): ChainHandlerResult {
+    public anyOf(value: unknown, allowedValues: unknown[] = []): HandlerResult {
         for (const allowed of allowedValues) {
             if (Utils.areEqual(value, allowed)) {
                 return pass(value);
@@ -175,7 +173,7 @@ class AnyHandler extends ChainHandler {
      * @param forbiddenValues Values that are not allowed.
      * @returns A passing result when the value is not found; otherwise a failing result.
      */
-    public noneOf(value: unknown, forbiddenValues: unknown[] = []): ChainHandlerResult {
+    public noneOf(value: unknown, forbiddenValues: unknown[] = []): HandlerResult {
         for (const forbidden of forbiddenValues) {
             if (Utils.areEqual(value, forbidden)) {
                 return fail(value, 'generic/noneOf', { forbiddenValues });
@@ -191,7 +189,7 @@ class AnyHandler extends ChainHandler {
      * @param constructor Constructor function the value must be an instance of.
      * @returns A passing result when the instance check succeeds; otherwise a failing result.
      */
-    public instanceOf(value: unknown, constructor: CtorLike): ChainHandlerResult {
+    public instanceOf(value: unknown, constructor: CtorLike): HandlerResult {
         return value instanceof constructor
             ? pass(value)
             : fail(value, 'generic/instanceOf', { constructor });
@@ -207,7 +205,7 @@ class AnyHandler extends ChainHandler {
      * @param type Optional primitive type to enforce.
      * @returns A passing result when type constraints are met; otherwise a failing result.
      */
-    public primitive(value: unknown, type: PrimitiveTypeName | null = null): ChainHandlerResult {
+    public primitive(value: unknown, type: PrimitiveTypeName | null = null): HandlerResult {
         const actualType = typeof value;
         const primitives: PrimitiveTypeName[] = ['string', 'number', 'boolean', 'undefined', 'symbol', 'bigint'];
         if (type) {
@@ -227,16 +225,16 @@ class AnyHandler extends ChainHandler {
     /**
      * Executes a user-provided handler for custom validation or transformation.
      *
-     * If the callback returns a ChainHandlerResult, that result is used directly.
+     * If the callback returns a HandlerResult, that result is used directly.
      * Otherwise, the returned value is wrapped in a passing result.
      *
      * @param value Value being processed.
      * @param filterFn Callback that validates and/or transforms the value.
-     * @returns The callback result as-is when it is a ChainHandlerResult; otherwise a passing result.
+     * @returns The callback result as-is when it is a HandlerResult; otherwise a passing result.
      */
-    public custom(value: unknown, filterFn: CustomHandlerFn): ChainHandlerResult {
+    public custom(value: unknown, filterFn: CustomHandlerFn): HandlerResult {
         const result = filterFn(value);
-        if (result instanceof ChainHandlerResult) {
+        if (result instanceof HandlerResult) {
             return result;
         }
         return pass(result);

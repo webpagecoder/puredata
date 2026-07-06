@@ -2,14 +2,14 @@
 
 import { Path } from '../../Path.ts';
 import { Translation, TranslationStringRecord } from '../../Translation.ts';
-import { Chain, ChainCtorParams, ChainProps } from '../Chain.ts';
+import { AnyChain, AnyChainCtorParams, AnyChainProps } from '../any/AnyChain.ts';
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-export type DateChainProps = ChainProps<DateHandler> & {
+export type DateChainProps = AnyChainProps<DateHandler> & {
     calendarText: Translation;
     dateOrder: DateOrder;
     outputStringFormat: OutputFormat | null;
@@ -18,11 +18,11 @@ export type DateChainProps = ChainProps<DateHandler> & {
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
 };
-export type DateChainCtorParams = ChainCtorParams<DateChainProps> & {
+export type DateChainCtorParams = AnyChainCtorParams<DateChainProps> & {
     calendarText: Translation;
 };
 
-class DateChain extends Chain<DateChainProps> {
+class DateChain extends AnyChain<DateChainProps> {
 
     constructor(args: DateChainCtorParams) {
         super(args);

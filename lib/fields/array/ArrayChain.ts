@@ -2,18 +2,18 @@
 
 import { ArrayHandler } from './ArrayHandler.ts';
 import { Path } from '../../Path.ts';
-import { Chain, ChainProps, ChainCtorParams } from '../Chain.ts';
+import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainProps = ChainProps<ArrayHandler> & {
+export type ArrayChainProps = AnyChainProps<ArrayHandler> & {
     castSingle: boolean;
     maxLength: number;
     removeEmpties: boolean;
 };
-export type ArrayChainCtorParams = ChainCtorParams<ArrayChainProps>;
+export type ArrayChainCtorParams = AnyChainCtorParams<ArrayChainProps>;
 
-class ArrayChain extends Chain<ArrayChainProps> {
+class ArrayChain extends AnyChain<ArrayChainProps> {
 
     public constructor(args: ArrayChainCtorParams) {
         super(args);
@@ -78,7 +78,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
     public unique(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             //todo: check this out...create
-            ? Path.create(pathStringOrComparator)
+            ? new Path(pathStringOrComparator, this._pathDelims)
             : pathStringOrComparator;
         return this.addStep('unique', [pathOrComparator]);
     }
@@ -94,7 +94,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
      */
     public group(pathString: string | null): this {
         const path = typeof pathString === 'string'
-            ? Path.create(pathString)
+            ? new Path(pathString, this._pathDelims)
             : null;
         return this.addStep('group', [path]);
     }
@@ -109,7 +109,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
      */
     public removeDuplicates(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
-            ? Path.create(pathStringOrComparator)
+            ? new Path(pathStringOrComparator, this._pathDelims)
             : pathStringOrComparator;
         return this.addStep('removeDuplicates', [pathOrComparator]);
     }
@@ -121,7 +121,7 @@ class ArrayChain extends Chain<ArrayChainProps> {
      * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
      */
     public removeEmpties(): this {
-        return this.addStep('removeEmpties', function (this: ArrayChain): unknown[] {
+        return this.addStep('removeEmpties', () => {
             return [this.props.emptyValues];
         });
     }

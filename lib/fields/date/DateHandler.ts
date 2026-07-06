@@ -1,16 +1,16 @@
 'use strict';
 
+import { Translation } from '../../Translation.ts';
+import { HandlerResult } from '../HandlerResult.ts';
+import { AnyHandler } from '../any/AnyHandler.ts';
 import { DateConverter, DayOfWeek, GenericDateInput, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimeMode, TimestampOptions } from './DateConverter.ts';
 import { UtcDate } from './UtcDate.ts';
-import { Translation } from '../../Translation.ts';
-import { ChainHandler } from '../ChainHandler.ts';
-import { ChainHandlerResult } from '../ChainHandlerResult.ts';
-const { pass, fail } = ChainHandlerResult;
+const { pass, fail } = HandlerResult;
 
 /**
  * Handles date parsing, validation, comparison, and mutation operations.
  */
-class DateHandler extends ChainHandler {
+class DateHandler extends AnyHandler {
     protected _dateConverter: DateConverter | undefined;
 
     
@@ -27,7 +27,7 @@ class DateHandler extends ChainHandler {
      * Parses a generic date input using automatic format detection.
      * @param input Date input to parse.
      */
-    public date(input: unknown): ChainHandlerResult {
+    public date(input: unknown): HandlerResult {
         const parsedDate = this._dateConverter!.parseAuto(input);
         return !parsedDate
             ? fail(input, 'date/base')
@@ -39,7 +39,7 @@ class DateHandler extends ChainHandler {
      * @param input Human-readable date text to parse.
      * @param options Parsing and token validation options.
      */
-    public human(input: unknown, options: HumanParseOptions = {}): ChainHandlerResult {
+    public human(input: unknown, options: HumanParseOptions = {}): HandlerResult {
         const parsedDate = this._dateConverter!.parseHuman(input, options);
         return !parsedDate
             ? fail(input, 'date/human', { options })
@@ -51,7 +51,7 @@ class DateHandler extends ChainHandler {
      * @param input ISO date text to parse.
      * @param options ISO parsing and validation options.
      */
-    public iso(input: unknown, options: IsoParseOptions): ChainHandlerResult {
+    public iso(input: unknown, options: IsoParseOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseIso(input, options);
         return !parsedDate
             ? fail(input, 'date/iso', { options })
@@ -63,7 +63,7 @@ class DateHandler extends ChainHandler {
      * @param input ISO ordinal date text to parse.
      * @param options ISO ordinal parsing and validation options.
      */
-    public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions): ChainHandlerResult {
+    public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseIsoOrdinal(input, options);
         return !parsedDate
             ? fail(input, 'date/isoOrdinal', { options })
@@ -75,7 +75,7 @@ class DateHandler extends ChainHandler {
      * @param input ISO week date text to parse.
      * @param options ISO week parsing and validation options.
      */
-    public isoWeek(input: unknown, options: IsoWeekParseOptions): ChainHandlerResult {
+    public isoWeek(input: unknown, options: IsoWeekParseOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseIsoWeek(input, options);
         return !parsedDate
             ? fail(input, 'date/isoWeek', { options })
@@ -87,7 +87,7 @@ class DateHandler extends ChainHandler {
      * @param input Timestamp input value to parse.
      * @param options Timestamp parsing options.
      */
-    public timestamp(input: unknown, options: TimestampOptions): ChainHandlerResult {
+    public timestamp(input: unknown, options: TimestampOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseTimestamp(input, options);
         return !parsedDate
             ? fail(input, 'date/timestamp', { options })
@@ -105,7 +105,7 @@ class DateHandler extends ChainHandler {
      * @param formatString Target output format, or null to preserve raw input.
      * @param timeMode Time mode for the output date, either 'utc' or 'local'.
      */
-    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): ChainHandlerResult {
+    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): HandlerResult {
         let finalForm: unknown;
         if (formatString === null) {
             // A raw date will only exist if the metadate was never modified
@@ -132,7 +132,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Lower-bound date that the input must be after.
      */
-    public after(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public after(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -147,7 +147,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Upper-bound date that the input must be before.
      */
-    public before(inputDate: UtcDate, referenceDate: unknown): ChainHandlerResult {
+    public before(inputDate: UtcDate, referenceDate: unknown): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -163,7 +163,7 @@ class DateHandler extends ChainHandler {
      * @param minDate Inclusive lower-bound date.
      * @param maxDate Inclusive upper-bound date.
      */
-    public between(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): ChainHandlerResult {
+    public between(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const parsedMinDate = this._dateConverter!.parseAuto(minDate);
         const parsedMaxDate = this._dateConverter!.parseAuto(maxDate);
         if (!parsedMinDate) {
@@ -182,7 +182,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param dayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
      */
-    public dayOfWeek(inputDate: UtcDate, dayOfWeek: number): ChainHandlerResult {
+    public dayOfWeek(inputDate: UtcDate, dayOfWeek: number): HandlerResult {
         const dayIndex = inputDate.date.getUTCDay();
         return dayIndex === dayOfWeek
             ? pass(inputDate)
@@ -194,7 +194,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
      */
-    public override equals(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public override equals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -209,7 +209,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Reference date used as the "now" boundary.
      */
-    public future(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): ChainHandlerResult {
+    public future(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -223,7 +223,7 @@ class DateHandler extends ChainHandler {
      * Validates that the input date falls within a leap year.
      * @param inputDate Date value being validated.
      */
-    public leapYear(inputDate: UtcDate): ChainHandlerResult {
+    public leapYear(inputDate: UtcDate): HandlerResult {
         const year = inputDate.date.getUTCFullYear();
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)
             ? pass(inputDate)
@@ -235,7 +235,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Maximum allowed date.
      */
-    public max(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public max(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -250,7 +250,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Minimum allowed date.
      */
-    public min(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public min(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -266,7 +266,7 @@ class DateHandler extends ChainHandler {
      * @param minAge Minimum required age in years.
      * @param referenceDate Reference date used to calculate current age.
      */
-    public minAge(birthDate: UtcDate, minAge: number, referenceDate: GenericDateInput = new Date()): ChainHandlerResult {
+    public minAge(birthDate: UtcDate, minAge: number, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -288,7 +288,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Reference date used as the "now" boundary.
      */
-    public past(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): ChainHandlerResult {
+    public past(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -304,7 +304,7 @@ class DateHandler extends ChainHandler {
      * @param days Maximum number of elapsed days allowed.
      * @param referenceDate Reference date used to compute elapsed days.
      */
-    public recent(inputDate: UtcDate, days: number = 30, referenceDate: GenericDateInput = new Date()): ChainHandlerResult {
+    public recent(inputDate: UtcDate, days: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -320,7 +320,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
      */
-    public sameDay(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public sameDay(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -339,7 +339,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
      */
-    public sameMonth(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public sameMonth(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -361,7 +361,7 @@ class DateHandler extends ChainHandler {
      * @param referenceDate Date value to compare against.
      * @param firstDayOfWeek First weekday used to calculate week boundaries.
      */
-    public sameWeek(inputDate: UtcDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): ChainHandlerResult {
+    public sameWeek(inputDate: UtcDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -384,7 +384,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
      */
-    public sameYear(inputDate: UtcDate, referenceDate: GenericDateInput): ChainHandlerResult {
+    public sameYear(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -405,7 +405,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Reference date representing "today".
      */
-    public today(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): ChainHandlerResult {
+    public today(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
@@ -423,7 +423,7 @@ class DateHandler extends ChainHandler {
      * Validates that the input date falls on a weekday (Monday through Friday, UTC).
      * @param inputDate Date value being validated.
      */
-    public weekday(inputDate: UtcDate): ChainHandlerResult {
+    public weekday(inputDate: UtcDate): HandlerResult {
         const dayOfWeek = inputDate.date.getUTCDay();
         return dayOfWeek >= 1 && dayOfWeek <= 5
             ? pass(inputDate)
@@ -434,7 +434,7 @@ class DateHandler extends ChainHandler {
      * Validates that the input date falls on a weekend day (Saturday or Sunday, UTC).
      * @param inputDate Date value being validated.
      */
-    public weekend(inputDate: UtcDate): ChainHandlerResult {
+    public weekend(inputDate: UtcDate): HandlerResult {
         const dayOfWeek = inputDate.date.getUTCDay();
         return dayOfWeek === 0 || dayOfWeek === 6
             ? pass(inputDate)
@@ -451,7 +451,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Base date to adjust.
      * @param numDays Whole number of days to add (or subtract if negative).
      */
-    public addDays(inputDate: UtcDate, numDays: number): ChainHandlerResult {
+    public addDays(inputDate: UtcDate, numDays: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCDate(utcDate.getUTCDate() + numDays);
         return pass(inputDate.setDate(utcDate));
@@ -462,7 +462,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Base date to adjust.
      * @param numHours Whole number of hours to add (or subtract if negative).
      */
-    public addHours(inputDate: UtcDate, numHours: number): ChainHandlerResult {
+    public addHours(inputDate: UtcDate, numHours: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCHours(utcDate.getUTCHours() + numHours);
         return pass(inputDate.setDate(utcDate));
@@ -473,7 +473,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Base date to adjust.
      * @param numMinutes Whole number of minutes to add (or subtract if negative).
      */
-    public addMinutes(inputDate: UtcDate, numMinutes: number): ChainHandlerResult {
+    public addMinutes(inputDate: UtcDate, numMinutes: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCMinutes(utcDate.getUTCMinutes() + numMinutes);
         return pass(inputDate.setDate(utcDate));
@@ -484,7 +484,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Base date to adjust.
      * @param numMonths Whole number of months to add (or subtract if negative).
      */
-    public addMonths(inputDate: UtcDate, numMonths: number): ChainHandlerResult {
+    public addMonths(inputDate: UtcDate, numMonths: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCMonth(utcDate.getUTCMonth() + numMonths);
         return pass(inputDate.setDate(utcDate));
@@ -495,7 +495,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Base date to adjust.
      * @param numYears Whole number of years to add (or subtract if negative).
      */
-    public addYears(inputDate: UtcDate, numYears: number): ChainHandlerResult {
+    public addYears(inputDate: UtcDate, numYears: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCFullYear(utcDate.getUTCFullYear() + numYears);
         return pass(inputDate.setDate(utcDate));
@@ -507,7 +507,7 @@ class DateHandler extends ChainHandler {
      * @param minDate Inclusive lower-bound date.
      * @param maxDate Inclusive upper-bound date.
      */
-    public clamp(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): ChainHandlerResult {
+    public clamp(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const minDateParsed = this._dateConverter!.parseAuto(minDate);
         const maxDateParsed = this._dateConverter!.parseAuto(maxDate);
         if (!minDateParsed) {
@@ -529,7 +529,7 @@ class DateHandler extends ChainHandler {
      * Normalizes a date to the final millisecond of its UTC day.
      * @param inputDate Base date to normalize.
      */
-    public toEndOfDay(inputDate: UtcDate): ChainHandlerResult {
+    public toEndOfDay(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCHours(23, 59, 59, 999);
         return pass(inputDate.setDate(utcDate));
@@ -539,7 +539,7 @@ class DateHandler extends ChainHandler {
      * Normalizes a date to the final millisecond of its UTC month.
      * @param inputDate Base date to normalize.
      */
-    public toEndOfMonth(inputDate: UtcDate): ChainHandlerResult {
+    public toEndOfMonth(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCMonth(utcDate.getUTCMonth() + 1, 0);
         utcDate.setUTCHours(23, 59, 59, 999);
@@ -550,7 +550,7 @@ class DateHandler extends ChainHandler {
      * Normalizes a date to the final millisecond of its UTC year.
      * @param inputDate Base date to normalize.
      */
-    public toEndOfYear(inputDate: UtcDate): ChainHandlerResult {
+    public toEndOfYear(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCFullYear(utcDate.getUTCFullYear() + 1, 0, 0);
         utcDate.setUTCHours(23, 59, 59, 999);
@@ -562,7 +562,7 @@ class DateHandler extends ChainHandler {
      * @param inputDate Base date to adjust.
      * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
      */
-    public toNextDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): ChainHandlerResult {
+    public toNextDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): HandlerResult {
         const utcDate = new Date(inputDate.date);
         let daysToAdd = targetDayOfWeek - utcDate.getUTCDay();
         if (daysToAdd <= 0) {
@@ -576,7 +576,7 @@ class DateHandler extends ChainHandler {
      * Moves a date forward to the next weekday, skipping Saturday and Sunday.
      * @param inputDate Base date to adjust.
      */
-    public toNextWeekday(inputDate: UtcDate): ChainHandlerResult {
+    public toNextWeekday(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         do {
             utcDate.setUTCDate(utcDate.getUTCDate() + 1);
@@ -589,7 +589,7 @@ class DateHandler extends ChainHandler {
      * Moves a date backward to the previous weekday, skipping Saturday and Sunday.
      * @param inputDate Base date to adjust.
      */
-    public toPreviousWeekday(inputDate: UtcDate): ChainHandlerResult {
+    public toPreviousWeekday(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         do {
             utcDate.setUTCDate(utcDate.getUTCDate() - 1);
@@ -602,7 +602,7 @@ class DateHandler extends ChainHandler {
      * Normalizes a date to the first millisecond of its UTC day.
      * @param inputDate Base date to normalize.
      */
-    public toStartOfDay(inputDate: UtcDate): ChainHandlerResult {
+    public toStartOfDay(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCHours(0, 0, 0, 0);
         return pass(inputDate.setDate(utcDate));
@@ -612,7 +612,7 @@ class DateHandler extends ChainHandler {
      * Normalizes a date to the first millisecond of the first day of its UTC month.
      * @param inputDate Base date to normalize.
      */
-    public toStartOfMonth(inputDate: UtcDate): ChainHandlerResult {
+    public toStartOfMonth(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCDate(1);
         utcDate.setUTCHours(0, 0, 0, 0);
@@ -623,7 +623,7 @@ class DateHandler extends ChainHandler {
      * Normalizes a date to the first millisecond of January 1st in its UTC year.
      * @param inputDate Base date to normalize.
      */
-    public toStartOfYear(inputDate: UtcDate): ChainHandlerResult {
+    public toStartOfYear(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
         utcDate.setUTCMonth(0, 1);
         utcDate.setUTCHours(0, 0, 0, 0);

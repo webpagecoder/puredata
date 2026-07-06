@@ -1,6 +1,6 @@
 'use strict';
 
-class ChainHandlerResult<T = unknown> {
+class HandlerResult<T = unknown> {
 
     protected _value: T;
     protected _pass: boolean;
@@ -31,12 +31,12 @@ class ChainHandlerResult<T = unknown> {
         this._errors[errorKey] = args;
     }
 
-    public static pass<T = unknown>(value: T): ChainHandlerResult<T> {
-        return new ChainHandlerResult({ value, pass: true });
+    public static pass<T = unknown>(value: T): HandlerResult<T> {
+        return new HandlerResult({ value, pass: true });
     }
 
-    public static fail<T = unknown>(value: T, errorKey: string, args: Record<string, unknown> = {}): ChainHandlerResult<T> {
-        return new ChainHandlerResult({ value, pass: false, errorKey, args });
+    public static fail<T = unknown>(value: T, errorKey: string, args: Record<string, unknown> = {}): HandlerResult<T> {
+        return new HandlerResult({ value, pass: false, errorKey, args });
     }
 
     public get value(): T {
@@ -57,4 +57,4 @@ class ChainHandlerResult<T = unknown> {
 
 }
 
-export { ChainHandlerResult };
+export { HandlerResult };

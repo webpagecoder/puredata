@@ -3,11 +3,11 @@
 import { UtcDate } from './UtcDate.ts';
 import { DateChain } from './DateChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { ChainProcessor, ChainProcessorCtorParams } from '../ChainProcessor.ts';
+import { AnyProcessor, AnyProcessorCtorParams } from '../any/AnyProcessor.ts';
 
-export type DateProcessorCtorParams = ChainProcessorCtorParams<DateChain>;
+export type DateProcessorCtorParams = AnyProcessorCtorParams<DateChain>;
 
-class DateProcessor extends ChainProcessor<DateChain> {
+class DateProcessor extends AnyProcessor<DateChain> {
 
     public constructor(args: DateProcessorCtorParams) {
         super(args);

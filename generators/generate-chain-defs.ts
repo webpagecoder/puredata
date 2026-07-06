@@ -121,8 +121,8 @@ function rewriteJsDocReturns(jsdoc: string | null, fullChainName: string): strin
 
     // Keep generated declaration docs aligned with fluent-chain return signatures.
     return jsdoc
-        .replace(/(@returns?\s*\{)\s*ChainHandlerResult\s*(\})/g, `$1${fullChainName}$2`)
-        .replace(/(@returns?\s+)ChainHandlerResult\b/g, `$1${fullChainName}`);
+        .replace(/(@returns?\s*\{)\s*HandlerResult\s*(\})/g, `$1${fullChainName}$2`)
+        .replace(/(@returns?\s+)HandlerResult\b/g, `$1${fullChainName}`);
 }
 
 function getImmediateJsDocBefore(source: string, startIndex: number): string | null {

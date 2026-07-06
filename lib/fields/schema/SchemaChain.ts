@@ -1,11 +1,11 @@
 'use strict';
 
-import { ArrayHandler } from '../array/ArrayHandler.ts';
-import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { Utils } from '../../Utils.ts';
 import { ArrayChain } from '../array/ArrayChain.ts';
+import { ArrayHandler } from '../array/ArrayHandler.ts';
 import { Field } from '../Field.ts';
-import { ObjectChain, ObjectChainProps, ObjectChainCtorParams } from '../object/ObjectChain.ts';
+import { ObjectChain, ObjectChainCtorParams, ObjectChainProps } from '../object/ObjectChain.ts';
+import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { ValueField } from '../value/ValueField.ts';
 
 export type SchemaObject = {
@@ -27,7 +27,7 @@ export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainProps> & {
 };
 
 export type SchemaChainCloneParams = Partial<SchemaChainCtorParams>;
-    
+
 class SchemaChain extends ObjectChain<SchemaChainProps> {
 
     constructor(args: SchemaChainCtorParams) {
@@ -35,9 +35,10 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
 
         const {
             arrayChain = new ArrayChain({
-                chainHandler: new ArrayHandler(),
+                chainHandlerCtor: ArrayHandler,
                 errorMessages: this._errorMessages,
                 fieldProcessorMap: this._fieldProcessorMap,
+                pathDelims: this._pathDelims,
             }),
             failOnFirstError = false,
             renameKeysArgs = null,
@@ -87,6 +88,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
                 field = new ValueField({
                     errorMessages: this._errorMessages,
                     fieldProcessorMap: this._fieldProcessorMap,
+                    pathDelims: this._pathDelims,
                     value
                 });
             }

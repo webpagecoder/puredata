@@ -3,9 +3,9 @@
 import { NumberChain } from '../number/NumberChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
-import { ChainProcessor } from '../ChainProcessor.ts';
+import { AnyProcessor } from '../any/AnyProcessor.ts';
 
-class NumberProcessor extends ChainProcessor<NumberChain> {
+class NumberProcessor extends AnyProcessor<NumberChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.props;
