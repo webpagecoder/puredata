@@ -10,13 +10,12 @@ export type CustomHandlerFn = (value: unknown) => HandlerResult | unknown;
 
 class AnyHandler {
 
-    // ====================================
-    // VALIDATORS
-    // ====================================
+    // *****************************************
+    //                VALIDATORS
+    // *****************************************
 
     /**
      * Validates that a value is not undefined.
-     *
      * @param value Value being validated.
      * @returns A passing result when the value is defined; otherwise a failing result.
      */
@@ -26,7 +25,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is undefined.
-     *
      * @param value Value being validated.
      * @returns A passing result when the value is undefined; otherwise a failing result.
      */
@@ -36,7 +34,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is one of the configured empty values.
-     *
      * @param value Value being validated.
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is considered empty; otherwise a failing result.
@@ -49,7 +46,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is not one of the configured empty values.
-     *
      * @param value Value being validated.
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is not considered empty; otherwise a failing result.
@@ -62,7 +58,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is deeply equal to the provided comparison value.
-     *
      * @param value Value being validated.
      * @param comparison Value to compare against.
      * @returns A passing result when values are equal; otherwise a failing result.
@@ -75,7 +70,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is not deeply equal to the provided comparison value.
-     *
      * @param value Value being validated.
      * @param comparison Value to compare against.
      * @returns A passing result when values differ; otherwise a failing result.
@@ -88,7 +82,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is truthy.
-     *
      * @param value Value being validated.
      * @returns A passing result for truthy values; otherwise a failing result.
      */
@@ -98,7 +91,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is falsy.
-     *
      * @param value Value being validated.
      * @returns A passing result for falsy values; otherwise a failing result.
      */
@@ -108,7 +100,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is null.
-     *
      * @param value Value being validated.
      * @returns A passing result when the value is null; otherwise a failing result.
      */
@@ -118,7 +109,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is not null.
-     *
      * @param value Value being validated.
      * @returns A passing result when the value is not null; otherwise a failing result.
      */
@@ -128,7 +118,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is null or undefined.
-     *
      * @param value Value being validated.
      * @returns A passing result when the value is nullish; otherwise a failing result.
      */
@@ -140,7 +129,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is null or undefined.
-     *
      * @param value Value being validated.
      * @returns A passing result when the value is nullish; otherwise a failing result.
      */
@@ -152,7 +140,6 @@ class AnyHandler {
 
     /**
      * Validates that a value matches one of the allowed values.
-     *
      * @param value Value being validated.
      * @param allowedValues Values that are accepted.
      * @returns A passing result when a match is found; otherwise a failing result.
@@ -168,7 +155,6 @@ class AnyHandler {
 
     /**
      * Validates that a value does not match any of the forbidden values.
-     *
      * @param value Value being validated.
      * @param forbiddenValues Values that are not allowed.
      * @returns A passing result when the value is not found; otherwise a failing result.
@@ -184,7 +170,6 @@ class AnyHandler {
 
     /**
      * Validates that a value is an instance of the supplied constructor.
-     *
      * @param value Value being validated.
      * @param constructor Constructor function the value must be an instance of.
      * @returns A passing result when the instance check succeeds; otherwise a failing result.
@@ -197,10 +182,8 @@ class AnyHandler {
 
     /**
      * Validates primitive type expectations for a value.
-     *
      * When type is provided, the value must match that primitive type exactly.
      * When type is omitted, any primitive type is accepted.
-     *
      * @param value Value being validated.
      * @param type Optional primitive type to enforce.
      * @returns A passing result when type constraints are met; otherwise a failing result.
@@ -218,16 +201,18 @@ class AnyHandler {
             : fail(value, 'generic/primitive', { actualType });
     }
 
-    // ====================================
-    // MUTATORS
-    // ====================================
+
+
+
+    
+    // *****************************************
+    //                MUTATORS
+    // *****************************************
 
     /**
      * Executes a user-provided handler for custom validation or transformation.
-     *
      * If the callback returns a HandlerResult, that result is used directly.
      * Otherwise, the returned value is wrapped in a passing result.
-     *
      * @param value Value being processed.
      * @param filterFn Callback that validates and/or transforms the value.
      * @returns The callback result as-is when it is a HandlerResult; otherwise a passing result.

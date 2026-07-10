@@ -13,19 +13,20 @@ const { pass, fail } = HandlerResult;
 class DateHandler extends AnyHandler {
     protected _dateConverter: DateConverter | undefined;
 
-    
     public configDateConverter(calendarText: Translation, utcOffsetMinutes: number = 0) {
         this._dateConverter = new DateConverter(calendarText, utcOffsetMinutes);
     }
 
-    // =============================================
-    // DATE CATEGORY VALIDATORS 
-    // =============================================
 
-    //todo: fix the puedata class to allow passing in of options
+
+    // ***********************************************
+    //              DATE CATEGORY VALIDATORS 
+    // ***********************************************
+
     /**
      * Parses a generic date input using automatic format detection.
      * @param input Date input to parse.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public date(input: unknown): HandlerResult {
         const parsedDate = this._dateConverter!.parseAuto(input);
@@ -38,6 +39,7 @@ class DateHandler extends AnyHandler {
      * Parses human-readable date text and validates required and forbidden date components.
      * @param input Human-readable date text to parse.
      * @param options Parsing and token validation options.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public human(input: unknown, options: HumanParseOptions = {}): HandlerResult {
         const parsedDate = this._dateConverter!.parseHuman(input, options);
@@ -50,6 +52,7 @@ class DateHandler extends AnyHandler {
      * Parses an ISO date string and validates component requirements and format strictness.
      * @param input ISO date text to parse.
      * @param options ISO parsing and validation options.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public iso(input: unknown, options: IsoParseOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseIso(input, options);
@@ -62,6 +65,7 @@ class DateHandler extends AnyHandler {
      * Parses an ISO ordinal date string and optionally enforces extended format only.
      * @param input ISO ordinal date text to parse.
      * @param options ISO ordinal parsing and validation options.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseIsoOrdinal(input, options);
@@ -74,6 +78,7 @@ class DateHandler extends AnyHandler {
      * Parses an ISO week date string and optionally enforces extended format only.
      * @param input ISO week date text to parse.
      * @param options ISO week parsing and validation options.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public isoWeek(input: unknown, options: IsoWeekParseOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseIsoWeek(input, options);
@@ -86,6 +91,7 @@ class DateHandler extends AnyHandler {
      * Parses a timestamp input into a valid Date instance.
      * @param input Timestamp input value to parse.
      * @param options Timestamp parsing options.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public timestamp(input: unknown, options: TimestampOptions): HandlerResult {
         const parsedDate = this._dateConverter!.parseTimestamp(input, options);
@@ -94,43 +100,17 @@ class DateHandler extends AnyHandler {
             : pass(parsedDate);
     }
 
-    // =============================================
-    // DATE STRING FORMATTER 
-    // Last chain item to run since it returns a string
-    // =============================================
 
-    /**
-     * Formats a parsed date into the requested output representation.
-     * @param inputDate Parsed date to format.
-     * @param formatString Target output format, or null to preserve raw input.
-     * @param timeMode Time mode for the output date, either 'utc' or 'local'.
-     */
-    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): HandlerResult {
-        let finalForm: unknown;
-        if (formatString === null) {
-            // A raw date will only exist if the metadate was never modified
-            finalForm = inputDate.raw || inputDate.date;
-        }
-        else if (formatString === 'timestamp') {
-            finalForm = inputDate.date.getTime();
-        }
-        else if (formatString === 'object') {
-            finalForm = new Date(inputDate.date);
-        }
-        else {
-            finalForm = this._dateConverter!.format(inputDate, formatString, timeMode);
-        }
-        return pass(finalForm);
-    }
 
-    // =============================================
-    // GLOBAL VALIDATORS 
-    // =============================================
+    // ***********************************************
+    //              GLOBAL VALIDATORS 
+    // ***********************************************
 
     /**
      * Validates that the input date occurs strictly after the provided comparison date.
      * @param inputDate Date value being validated.
      * @param referenceDate Lower-bound date that the input must be after.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public after(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -146,6 +126,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date occurs strictly before the provided comparison date.
      * @param inputDate Date value being validated.
      * @param referenceDate Upper-bound date that the input must be before.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public before(inputDate: UtcDate, referenceDate: unknown): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -162,6 +143,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value being validated.
      * @param minDate Inclusive lower-bound date.
      * @param maxDate Inclusive upper-bound date.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public between(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const parsedMinDate = this._dateConverter!.parseAuto(minDate);
@@ -181,6 +163,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date resolves to a specific UTC day-of-week index.
      * @param inputDate Date value being validated.
      * @param dayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public dayOfWeek(inputDate: UtcDate, dayOfWeek: number): HandlerResult {
         const dayIndex = inputDate.date.getUTCDay();
@@ -193,6 +176,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date has the same exact timestamp as the comparison date.
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public override equals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -208,6 +192,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date is in the future relative to the comparison date.
      * @param inputDate Date value being validated.
      * @param referenceDate Reference date used as the "now" boundary.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public future(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -222,6 +207,7 @@ class DateHandler extends AnyHandler {
     /**
      * Validates that the input date falls within a leap year.
      * @param inputDate Date value being validated.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public leapYear(inputDate: UtcDate): HandlerResult {
         const year = inputDate.date.getUTCFullYear();
@@ -234,6 +220,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date is not later than the provided maximum date.
      * @param inputDate Date value being validated.
      * @param referenceDate Maximum allowed date.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public max(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -249,6 +236,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date is not earlier than the provided minimum date.
      * @param inputDate Date value being validated.
      * @param referenceDate Minimum allowed date.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public min(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -265,6 +253,7 @@ class DateHandler extends AnyHandler {
      * @param birthDate Birth date used to calculate age.
      * @param minAge Minimum required age in years.
      * @param referenceDate Reference date used to calculate current age.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public minAge(birthDate: UtcDate, minAge: number, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -287,6 +276,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date is in the past relative to the comparison date.
      * @param inputDate Date value being validated.
      * @param referenceDate Reference date used as the "now" boundary.
+     * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
     public past(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -303,6 +293,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value being validated.
      * @param days Maximum number of elapsed days allowed.
      * @param referenceDate Reference date used to compute elapsed days.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public recent(inputDate: UtcDate, days: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -319,6 +310,7 @@ class DateHandler extends AnyHandler {
      * Validates that two dates fall on the same UTC calendar day.
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public sameDay(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -338,6 +330,7 @@ class DateHandler extends AnyHandler {
      * Validates that two dates fall within the same UTC calendar month.
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public sameMonth(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -360,6 +353,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
      * @param firstDayOfWeek First weekday used to calculate week boundaries.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public sameWeek(inputDate: UtcDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -383,6 +377,7 @@ class DateHandler extends AnyHandler {
      * Validates that two dates fall within the same UTC calendar year.
      * @param inputDate Date value being validated.
      * @param referenceDate Date value to compare against.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public sameYear(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -404,6 +399,7 @@ class DateHandler extends AnyHandler {
      * Validates that the input date matches the same UTC calendar day as today.
      * @param inputDate Date value being validated.
      * @param referenceDate Reference date representing "today".
+     * @returns Returns the date moved forward to the next weekday.
      */
     public today(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
@@ -422,6 +418,7 @@ class DateHandler extends AnyHandler {
     /**
      * Validates that the input date falls on a weekday (Monday through Friday, UTC).
      * @param inputDate Date value being validated.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public weekday(inputDate: UtcDate): HandlerResult {
         const dayOfWeek = inputDate.date.getUTCDay();
@@ -433,6 +430,7 @@ class DateHandler extends AnyHandler {
     /**
      * Validates that the input date falls on a weekend day (Saturday or Sunday, UTC).
      * @param inputDate Date value being validated.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public weekend(inputDate: UtcDate): HandlerResult {
         const dayOfWeek = inputDate.date.getUTCDay();
@@ -442,14 +440,50 @@ class DateHandler extends AnyHandler {
     }
 
 
-    // =============================================
-    // MUTATORS 
-    // =============================================
+
+
+    // *******************************************************
+    //               DATE STRING FORMATTER 
+    //     Last chain item to run since it returns a string
+    // *******************************************************
+
+    /**
+     * Formats a parsed date into the requested output representation.
+     * @param inputDate Parsed date to format.
+     * @param formatString Target output format, or null to preserve raw input.
+     * @param timeMode Time mode for the output date, either 'utc' or 'local'.
+     * @returns Returns the date moved forward to the next weekday.
+     */
+    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): HandlerResult {
+        let finalForm: unknown;
+        if (formatString === null) {
+            // A raw date will only exist if the metadate was never modified
+            finalForm = inputDate.raw || inputDate.date;
+        }
+        else if (formatString === 'timestamp') {
+            finalForm = inputDate.date.getTime();
+        }
+        else if (formatString === 'object') {
+            finalForm = new Date(inputDate.date);
+        }
+        else {
+            finalForm = this._dateConverter!.format(inputDate, formatString, timeMode);
+        }
+        return pass(finalForm);
+    }
+
+
+
+    
+    // *****************************************
+    //               MUTATORS
+    // *****************************************
 
     /**
      * Returns a new date shifted forward or backward by a whole number of days.
      * @param inputDate Base date to adjust.
      * @param numDays Whole number of days to add (or subtract if negative).
+     * @returns Returns the date moved forward to the next weekday.
      */
     public addDays(inputDate: UtcDate, numDays: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -461,6 +495,7 @@ class DateHandler extends AnyHandler {
      * Returns a new date shifted forward or backward by a whole number of hours.
      * @param inputDate Base date to adjust.
      * @param numHours Whole number of hours to add (or subtract if negative).
+     * @returns Returns the date moved forward to the next weekday.
      */
     public addHours(inputDate: UtcDate, numHours: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -472,6 +507,7 @@ class DateHandler extends AnyHandler {
      * Returns a new date shifted forward or backward by a whole number of minutes.
      * @param inputDate Base date to adjust.
      * @param numMinutes Whole number of minutes to add (or subtract if negative).
+     * @returns Returns the date moved forward to the next weekday.
      */
     public addMinutes(inputDate: UtcDate, numMinutes: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -483,6 +519,7 @@ class DateHandler extends AnyHandler {
      * Returns a new date shifted forward or backward by a whole number of months.
      * @param inputDate Base date to adjust.
      * @param numMonths Whole number of months to add (or subtract if negative).
+     * @returns Returns the date moved forward to the next weekday.
      */
     public addMonths(inputDate: UtcDate, numMonths: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -494,6 +531,7 @@ class DateHandler extends AnyHandler {
      * Returns a new date shifted forward or backward by a whole number of years.
      * @param inputDate Base date to adjust.
      * @param numYears Whole number of years to add (or subtract if negative).
+     * @returns Returns the date moved forward to the next weekday.
      */
     public addYears(inputDate: UtcDate, numYears: number): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -506,6 +544,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value to clamp.
      * @param minDate Inclusive lower-bound date.
      * @param maxDate Inclusive upper-bound date.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public clamp(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const minDateParsed = this._dateConverter!.parseAuto(minDate);
@@ -528,6 +567,7 @@ class DateHandler extends AnyHandler {
     /**
      * Normalizes a date to the final millisecond of its UTC day.
      * @param inputDate Base date to normalize.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public toEndOfDay(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -538,6 +578,7 @@ class DateHandler extends AnyHandler {
     /**
      * Normalizes a date to the final millisecond of its UTC month.
      * @param inputDate Base date to normalize.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public toEndOfMonth(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -549,6 +590,7 @@ class DateHandler extends AnyHandler {
     /**
      * Normalizes a date to the final millisecond of its UTC year.
      * @param inputDate Base date to normalize.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public toEndOfYear(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -561,6 +603,7 @@ class DateHandler extends AnyHandler {
      * Moves a date forward to the next occurrence of the target UTC day of week.
      * @param inputDate Base date to adjust.
      * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public toNextDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -575,6 +618,7 @@ class DateHandler extends AnyHandler {
     /**
      * Moves a date forward to the next weekday, skipping Saturday and Sunday.
      * @param inputDate Base date to adjust.
+     * @returns Returns the date moved forward to the next weekday.
      */
     public toNextWeekday(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -588,6 +632,7 @@ class DateHandler extends AnyHandler {
     /**
      * Moves a date backward to the previous weekday, skipping Saturday and Sunday.
      * @param inputDate Base date to adjust.
+     * @returns Returns the date moved backward to the previous weekday.
      */
     public toPreviousWeekday(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -601,6 +646,7 @@ class DateHandler extends AnyHandler {
     /**
      * Normalizes a date to the first millisecond of its UTC day.
      * @param inputDate Base date to normalize.
+     * @returns Returns the date moved to the first millisecond of its UTC day.
      */
     public toStartOfDay(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -611,6 +657,7 @@ class DateHandler extends AnyHandler {
     /**
      * Normalizes a date to the first millisecond of the first day of its UTC month.
      * @param inputDate Base date to normalize.
+     * @returns Returns the date moved to the first millisecond of its UTC year.
      */
     public toStartOfMonth(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);
@@ -622,6 +669,7 @@ class DateHandler extends AnyHandler {
     /**
      * Normalizes a date to the first millisecond of January 1st in its UTC year.
      * @param inputDate Base date to normalize.
+     * @returns Returns the date moved to the first millisecond of its UTC year.
      */
     public toStartOfYear(inputDate: UtcDate): HandlerResult {
         const utcDate = new Date(inputDate.date);

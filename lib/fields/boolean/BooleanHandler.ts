@@ -8,18 +8,17 @@ type BoolishPair = [truthy: unknown, falsy: unknown];
 
 class BooleanHandler extends AnyHandler {
 
-    // ====================================
-    // VALIDATORS 
-    // ====================================
+    // ***************************************
+    //               VALIDATORS 
+    // ***************************************
 
     /**
      * Passes when the value is `false` or matches one of the provided falsy equivalents.
-     *
      * @param bool - Value to validate as falsy.
      * @param falsyValues - Additional values treated as falsy.
-     * @returns A pass result for valid falsy values, otherwise a fail result.
+     * @returns A passing result with the original value when it is falsy; otherwise a failing result with `boolean/falsy`.
      */
-    public falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
+    public override falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
         return bool === false || falsyValues.indexOf(bool) > -1
             ? pass(bool)
             : fail(bool, 'boolean/falsy', { falsyValues });
@@ -27,30 +26,27 @@ class BooleanHandler extends AnyHandler {
 
     /**
      * Passes when the value is `true` or matches one of the provided truthy equivalents.
-     *
      * @param bool - Value to validate as truthy.
      * @param truthyValues - Additional values treated as truthy.
-     * @returns A pass result for valid truthy values, otherwise a fail result.
+     * @returns A passing result with the original value when it is truthy; otherwise a failing result with `boolean/truthy`.
      */
-    public truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
+    public override truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
         return bool === true || truthyValues.indexOf(bool) > -1
             ? pass(bool)
             : fail(bool, 'boolean/truthy', { truthyValues });
     }
 
-    // ====================================
-    // MUTATORS 
-    // ====================================
+    // *****************************************
+    //               MUTATORS
+    // *****************************************
 
     /**
      * Inverts a boolean-like value using configured truthy/falsy pairs.
-     *
      * Adds the default pair `[true, false]` to the provided pair list, then swaps
      * a matching truthy value to its falsy pair (or vice versa).
-     *
      * @param bool - Value to invert.
      * @param boolishPairs - Custom truthy/falsy tuple pairs.
-     * @returns A pass result with the inverted value, otherwise a fail result.
+     * @returns A passing result containing the paired opposite value when a match is found; otherwise a failing result with `boolean/invert`.
      */
     public invert(bool: unknown, boolishPairs: BoolishPair[] = []): HandlerResult {
         boolishPairs.push([true, false]);
