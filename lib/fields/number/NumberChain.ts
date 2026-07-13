@@ -4,17 +4,19 @@ import { NumberHandler } from './NumberHandler.ts';
 import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
 
 export type NumberChainProps = AnyChainProps<NumberHandler> & {
-        autoConvert: boolean;
-        ensureSafe: boolean;
-        ensureFinite: boolean;
-        preservePrecision: boolean;
+    autoConvert: boolean;
+    ensureSafe: boolean;
+    ensureFinite: boolean;
+    preservePrecision: boolean;
 };
 
 export type NumberChainCtorParams = AnyChainCtorParams<NumberChainProps>;
 
 class NumberChain extends AnyChain<NumberChainProps> {
 
-    public constructor(args: NumberChainCtorParams) {
+    public constructor(args: NumberChainCtorParams = {
+        chainHandlerCtor: NumberHandler,
+    }) {
         super(args);
         const {
             autoConvert = true,

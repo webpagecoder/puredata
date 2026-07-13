@@ -2,13 +2,16 @@
 
 import { Path } from '../../../lib/Path.ts';
 import { ArrayHandler } from '../../../lib/fields/array/ArrayHandler.ts';
+import { NumberChain } from '../../../lib/fields/number/NumberChain.ts';
 import { runCases, type ValidationResult } from '../../helpers/runCases.ts';
 
 describe('ArrayHandler validators', () => {
 	let handler: ArrayHandler;
+	let numChain: NumberChain;
 
 	beforeEach(() => {
 		handler = new ArrayHandler();
+		numChain = new NumberChain();
 	});
 
 	it('allOf', () => {
@@ -112,13 +115,6 @@ describe('ArrayHandler validators', () => {
 		]);
 	});
 
-	it('type', () => {
-		runCases(handler.type.bind(handler), [
-			{ input: ['a', 'b'], options: ['a', 'b', 'c'], pass: true, value: ['a', 'b'] },
-			{ input: ['a', 'd'], options: ['a', 'b', 'c'], pass: false, errorKey: 'array/only' }
-		]);
-	});
-
 	it('otherThan', () => {
 		runCases(handler.otherThan.bind(handler), [
 			{ input: [1, 2], options: [1], pass: false, errorKey: 'array/otherThan' },
@@ -165,6 +161,18 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 'a'], options: [1, 'a', true], pass: false, errorKey: 'array/tuple' },
 			{ input: [1, 'b', true], options: [1, 'a', true], pass: false, errorKey: 'array/tuple' }
 		]);
+	});
+
+	it('type', () => {
+		runCases(handler.type.bind(handler), [
+			{ input: ['a', 'b'], options: ['a', 'b', 'c'], pass: true, value: ['a', 'b'] },
+			{ input: ['a', 'd'], options: ['a', 'b', 'c'], pass: false, errorKey: 'array/only' }
+		]);
+
+		// numChain.between(1, 10);
+		// runCases(handler.type.bind(handler), [
+		// 	{ input: [3,5,7], options: [numChain], pass: true },
+		// ]);
 	});
 
 	it('unique', () => {

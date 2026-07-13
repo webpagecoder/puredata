@@ -1,21 +1,21 @@
 'use strict';
 
-export type ValidationResult<TValue = unknown> = {
+export type ValidationResult<T = unknown> = {
 	pass?: boolean;
 	fail?: boolean;
-	value?: TValue;
+	value?: T;
 	errors?: Record<string, unknown>;
 };
 
-export type TestCase<TInput = unknown, TOptions = unknown, TValue = unknown> = {
-	input: TInput;
-	options?: TOptions;
+export type TestCase<I = unknown, O = unknown, V = unknown> = {
+	input: I;
+	options?: O;
 	pass: boolean;
-	value?: TValue;
+	value?: V;
 	errorKey?: string;
 };
 
-export const expectPass = <TValue = unknown>(result: ValidationResult<TValue>, value?: TValue): void => {
+export const expectPass = <V = unknown>(result: ValidationResult<V>, value?: V): void => {
 	expect(result.pass).toBe(true);
 	if (value !== undefined) {
 		expect(result.value).toEqual(value);
@@ -27,9 +27,9 @@ export const expectFail = (result: ValidationResult, errorKey: string): void => 
 	expect(result.errors).toHaveProperty(errorKey);
 };
 
-export const runCases = <TInput, TOptions = unknown, TValue = unknown>(
-	run: (input: TInput, options?: TOptions) => ValidationResult<TValue>,
-	cases: Array<TestCase<TInput, TOptions, TValue>>,
+export const runCases = <I, O = unknown, V = unknown>(
+	run: (input: I, options?: O) => ValidationResult<V>,
+	cases: Array<TestCase<I, O, V>>,
 	defaultErrorKey = 'unknown'
 ): void => {
 	for (const c of cases) {

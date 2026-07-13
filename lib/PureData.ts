@@ -1,26 +1,19 @@
 'use strict';
 
 import { AnyChain, AnyChainCtorParams } from './fields/any/AnyChain.ts';
-import { AnyHandler } from './fields/any/AnyHandler.ts';
 import { ArrayChain } from './fields/array/ArrayChain.ts';
-import { ArrayHandler } from './fields/array/ArrayHandler.ts';
 import { BooleanChain } from './fields/boolean/BooleanChain.ts';
-import { BooleanHandler } from './fields/boolean/BooleanHandler.ts';
 import { DateChain } from './fields/date/DateChain.ts';
-import { DateHandler } from './fields/date/DateHandler.ts';
 import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
 import { Field, FieldCtorParams } from './fields/Field.ts';
 import { FieldProcessorMap } from './fields/FieldProcessorMap.ts';
 import { NumberChain } from './fields/number/NumberChain.ts';
-import { NumberHandler } from './fields/number/NumberHandler.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
-import { ObjectHandler } from './fields/object/ObjectHandler.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
 import { FieldPointerField } from './fields/schema/fieldPointer/FieldPointerField.ts';
 import { PathValueField } from './fields/schema/pathValue/PathValueField.ts';
 import { SchemaChain, SchemaObject } from './fields/schema/SchemaChain.ts';
 import { StringChain } from './fields/string/StringChain.ts';
-import { StringHandler } from './fields/string/StringHandler.ts';
 import { ValueField } from './fields/value/ValueField.ts';
 import { GlobalConfig } from './GlobalConfig.ts';
 import { Path, PathDelimTypes } from './Path.ts';
@@ -56,15 +49,13 @@ class PureData {
     }
 
     protected _composeChainProps<T extends AnyChainCtorParams>(
-        props: Record<string, unknown> = {},
         chainType: string,
-        chainHandlerCtor: typeof AnyHandler
+        props: Record<string, unknown> = {}
     ) {
         return Object.assign(
             {},
             this._config['general'],
             {
-                chainHandlerCtor,
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
                 fieldProcessorMap: this._fieldProcessorMap,
@@ -90,63 +81,38 @@ class PureData {
     // Chains
 
     public any() {
-        return new AnyChain(this._composeChainProps({}, 'any', AnyHandler));
+        return new AnyChain(this._composeChainProps('any', {}));
     }
 
     public array(props: Record<string, unknown> = {}) {
-        return new ArrayChain(
-            this._composeChainProps(props, 'array', ArrayHandler)
-        );
+        return new ArrayChain(this._composeChainProps('array', props));
     }
 
     public boolean(props: Record<string, unknown> = {}) {
-        return new BooleanChain(
-            this._composeChainProps(props, 'boolean', BooleanHandler)
-        );
+        return new BooleanChain(this._composeChainProps('boolean', props));
     }
 
     public date(props: Record<string, unknown> = {}) {
-        const finalProps = Object.assign({ 
-            calendarText: this._calendarText 
-        }, props);
         return new DateChain(this._composeChainProps(
-            finalProps,
             'date',
-            DateHandler
+            Object.assign({ calendarText: this._calendarText }, props)
         ));
     }
 
     public number(props: Record<string, unknown> = {}) {
-        return new NumberChain(this._composeChainProps(
-            props,
-            'number',
-            NumberHandler
-        ));
+        return new NumberChain(this._composeChainProps('number', props));
     }
 
     public object(props: Record<string, unknown> = {}) {
-        return new ObjectChain(this._composeChainProps<ObjectChainCtorParams>(
-            props,
-            'object',
-            ObjectHandler
-        ));
+        return new ObjectChain(this._composeChainProps<ObjectChainCtorParams>('object', props));
     }
 
     public schema(schema: SchemaObject = {}, props: Record<string, unknown> = {}) {
-        const finalProps = Object.assign({ schema }, props);
-        return new SchemaChain(this._composeChainProps(
-            finalProps,
-            'object',
-            ObjectHandler
-        ));
+        return new SchemaChain(this._composeChainProps('object', Object.assign({ schema }, props)));
     }
 
     public string(props: Record<string, unknown> = {}) {
-        return new StringChain(this._composeChainProps(
-            props,
-            'string',
-            StringHandler
-        ));
+        return new StringChain(this._composeChainProps('string', props));
     }
 
     // Fields

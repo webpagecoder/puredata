@@ -7,16 +7,17 @@ import type { Processor } from './Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Path } from '../Path.ts';
 import { PathDelimTypes } from '../Path.ts';
+import { DefaultErrorText } from '../text/DefaultErrorText.ts';
 
 export type FieldProps = {};
 
 export type FieldCtorParams = {
     autoConvert?: boolean;
     defaultValue?: unknown;
-    errorMessages: Translation;
-    fieldProcessorMap: FieldProcessorMap;
+    errorMessages?: Translation;
+    fieldProcessorMap?: FieldProcessorMap;
     label?: string;
-    pathDelims: PathDelimTypes;
+    pathDelims?: PathDelimTypes;
     presence?: Presence;
     strip?: boolean;
 };
@@ -27,9 +28,9 @@ abstract class Field<P extends FieldProps = FieldProps> {
 
     protected _autoConvert: boolean;
     protected _defaultValue: unknown;
+    protected _errorMessages: Translation;
     protected _fieldProcessorMap: FieldProcessorMap;
     protected _label: string
-    protected _errorMessages: Translation;
     protected _pathDelims: PathDelimTypes;
     protected _presence: Presence;
     protected _strip: boolean;
@@ -37,25 +38,25 @@ abstract class Field<P extends FieldProps = FieldProps> {
     protected _cachedProcessor: Processor | null;
     protected _props: P;
 
-    public constructor(args: FieldCtorParams) {
+    public constructor(args: FieldCtorParams = {}) {
         const {
             autoConvert = true,
             defaultValue = undefined,
+            errorMessages = new Translation(DefaultErrorText),
+            fieldProcessorMap = new FieldProcessorMap(),
             label = 'Field',
-            errorMessages,
-            fieldProcessorMap,
-            pathDelims,
+            pathDelims = { self: '.', separator: '/', up: '..' },
             presence = 'required',
             strip = false
         } = args;
 
         this._autoConvert = autoConvert;
         this._defaultValue = defaultValue;
-        this._label = label;
         this._errorMessages = errorMessages.override();
+        this._fieldProcessorMap = fieldProcessorMap;
+        this._label = label;
         this._pathDelims = pathDelims;
         this._presence = presence;
-        this._fieldProcessorMap = fieldProcessorMap;
         this._strip = strip;
 
         this._cachedProcessor = null;
@@ -151,9 +152,12 @@ abstract class Field<P extends FieldProps = FieldProps> {
         return this._label;
     }
 
-    // Declarative API
-    public config(config: P): this {
+    
+    // *****************************************************
+    //               Declarative API Methods
+    // *****************************************************
 
+    public config(config: P): this {
         return this.clone(config);
     }
 
