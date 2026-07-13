@@ -2,6 +2,7 @@
 
 import { NumberHandler } from './NumberHandler.ts';
 import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { NumberProcessor } from './NumberProcessor.ts';
 
 export type NumberChainProps = AnyChainProps<NumberHandler> & {
     autoConvert: boolean;
@@ -14,10 +15,8 @@ export type NumberChainCtorParams = AnyChainCtorParams<NumberChainProps>;
 
 class NumberChain extends AnyChain<NumberChainProps> {
 
-    public constructor(args: NumberChainCtorParams = {
-        chainHandlerCtor: NumberHandler,
-    }) {
-        super(args);
+    public constructor(args: NumberChainCtorParams = {}) {
+        super(Object.assign({ chainHandlerCtor: NumberHandler }, args));
         const {
             autoConvert = true,
             ensureSafe = false,
@@ -30,6 +29,12 @@ class NumberChain extends AnyChain<NumberChainProps> {
         props.ensureSafe = ensureSafe;
         props.ensureFinite = ensureFinite;
         props.preservePrecision = preservePrecision;
+    }
+
+    public override createProcessor(): NumberProcessor {
+        return new NumberProcessor({
+            field: this,
+        });
     }
 
     // Configurators

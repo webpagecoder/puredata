@@ -1,6 +1,5 @@
 'use strict';
 
-import { FieldProcessorMap } from './FieldProcessorMap.ts';
 import { Translation, TranslationStringRecord } from '../Translation.ts';
 import { Presence } from '../Presence.ts';
 import type { Processor } from './Processor.ts';
@@ -15,7 +14,6 @@ export type FieldCtorParams = {
     autoConvert?: boolean;
     defaultValue?: unknown;
     errorMessages?: Translation;
-    fieldProcessorMap?: FieldProcessorMap;
     label?: string;
     pathDelims?: PathDelimTypes;
     presence?: Presence;
@@ -29,7 +27,6 @@ abstract class Field<P extends FieldProps = FieldProps> {
     protected _autoConvert: boolean;
     protected _defaultValue: unknown;
     protected _errorMessages: Translation;
-    protected _fieldProcessorMap: FieldProcessorMap;
     protected _label: string
     protected _pathDelims: PathDelimTypes;
     protected _presence: Presence;
@@ -43,7 +40,6 @@ abstract class Field<P extends FieldProps = FieldProps> {
             autoConvert = true,
             defaultValue = undefined,
             errorMessages = new Translation(DefaultErrorText),
-            fieldProcessorMap = new FieldProcessorMap(),
             label = 'Field',
             pathDelims = { self: '.', separator: '/', up: '..' },
             presence = 'required',
@@ -53,7 +49,6 @@ abstract class Field<P extends FieldProps = FieldProps> {
         this._autoConvert = autoConvert;
         this._defaultValue = defaultValue;
         this._errorMessages = errorMessages.override();
-        this._fieldProcessorMap = fieldProcessorMap;
         this._label = label;
         this._pathDelims = pathDelims;
         this._presence = presence;
@@ -81,16 +76,9 @@ abstract class Field<P extends FieldProps = FieldProps> {
 
     public get processor(): Processor {
         if (!this._cachedProcessor) {
-            if (!this._fieldProcessorMap) {
-                throw new Error('Field/Processor compilation mapper is not configured');
-            }
-            this._cachedProcessor = this._fieldProcessorMap.resolve(this).compile();
+            this._cachedProcessor = this.createProcessor().compile();
         }
         return this._cachedProcessor;
-    }
-
-    public get fieldProcessorMap(): FieldProcessorMap {
-        return this._fieldProcessorMap;
     }
 
     public get autoConvert(): boolean {
@@ -109,8 +97,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
             label = this._label,
             errorMessages = this._errorMessages.override(),
             pathDelims = this._pathDelims,
-            presence = this._presence,
-            fieldProcessorMap = this._fieldProcessorMap,
+            presence = this._presence
         } = args;
 
         const allProps = Object.assign(
@@ -120,14 +107,17 @@ abstract class Field<P extends FieldProps = FieldProps> {
                 label,
                 errorMessages,
                 pathDelims,
-                presence,
-                fieldProcessorMap,
+                presence
             },
             this._props,
             args as Partial<P>
         );
 
         return new (this.constructor as new (props?: FieldCtorParams) => this)(allProps);
+    }
+
+    public createProcessor(): Processor {
+        throw new Error('createProcessor() must be implemented in subclass');
     }
 
     public process(value?: unknown): ValueTracker {

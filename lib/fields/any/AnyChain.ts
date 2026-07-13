@@ -20,7 +20,7 @@ export type AnyChainProps<H extends AnyHandler = AnyHandler> =
 
 export type AnyChainCtorParams<P extends AnyChainProps = AnyChainProps> =
     FieldCtorParams & Partial<Omit<P, 'chainHandler'>> & {
-        chainHandlerCtor: new () => P['chainHandler'];
+        chainHandlerCtor?: new () => P['chainHandler'];
     };
 
 export type AnyChainCloneParams<P extends AnyChainProps = AnyChainProps> =
@@ -33,7 +33,7 @@ class AnyChain<
     C extends AnyChainCloneParams<P> = AnyChainCloneParams<P>
 > extends Field<P> {
 
-    public constructor(args: AnyChainCtorParams<P>) {
+    public constructor(args: AnyChainCtorParams<P> = {}) {
         super(args);
 
         const {

@@ -26,7 +26,6 @@ class PureData {
 
     protected _calendarText: Translation;
     protected _errorMessages: Translation;
-    protected _fieldProcessorMap: FieldProcessorMap;
     protected _config: GlobalConfig;
     protected _pathDelims: PathDelimTypes;
 
