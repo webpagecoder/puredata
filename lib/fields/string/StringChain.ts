@@ -2,6 +2,7 @@
 
 import { StringHandler } from './StringHandler.ts';
 import { AnyChain, AnyChainCtorParams, AnyChainProps } from '../any/AnyChain.ts';
+import { StringProcessor } from './StringProcessor.ts';
 
 export type StringChainProps = AnyChainProps<StringHandler> & {
     // General options
@@ -20,7 +21,7 @@ export type StringChainCtorParams = AnyChainCtorParams<StringChainProps>;
 
 class StringChain extends AnyChain<StringChainProps> {
     constructor(args: StringChainCtorParams) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: StringHandler }, args));
 
         const {
             maxLength = null,
@@ -50,7 +51,11 @@ class StringChain extends AnyChain<StringChainProps> {
         });
     }
 
-
+    public override createProcessor(): StringProcessor {
+        return new StringProcessor({
+            field: this,
+        });
+    }
 }
 
 export { StringChain };

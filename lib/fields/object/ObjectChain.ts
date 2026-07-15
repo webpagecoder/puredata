@@ -2,6 +2,7 @@
 
 import { ObjectHandler } from './ObjectHandler.ts';
 import { AnyChain, AnyChainProps, AnyChainCtorParams, AnyChainCloneParams } from '../any/AnyChain.ts';
+import { ObjectProcessor } from './ObjectProcessor.ts';
 
 export type ObjectChainProps = AnyChainProps<ObjectHandler> & {
     cloneObject: boolean;
@@ -16,7 +17,8 @@ export type ObjectChainCtorParams<C extends ObjectChainProps =
 class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends AnyChain<C> {
 
     constructor(args: ObjectChainCtorParams<C>) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: ObjectHandler }, args));
+
         const {
             cloneObject = false,
             ensurePlain = false,
@@ -29,6 +31,12 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends AnyChai
         props.ensurePlain = ensurePlain;
         props.maxDepth = maxDepth;
         props.maxKeyCount = maxKeyCount;
+    }
+
+    public override createProcessor(): ObjectProcessor {
+        return new ObjectProcessor({
+            field: this,
+        });
     }
 
     // Transformers

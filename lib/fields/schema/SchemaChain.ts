@@ -7,6 +7,7 @@ import { Field } from '../Field.ts';
 import { ObjectChain, ObjectChainCtorParams, ObjectChainProps } from '../object/ObjectChain.ts';
 import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { ValueField } from '../value/ValueField.ts';
+import { SchemaProcessor } from './SchemaProcessor.ts';
 
 export type SchemaObject = {
     [key: string]: SchemaObject | unknown;
@@ -64,6 +65,13 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             clone.props.schemaMap = this._createSchemaMap(schema);
         }
         return clone;
+    }
+
+
+    public override createProcessor(): SchemaProcessor {
+        return new SchemaProcessor({
+            field: this,
+        });
     }
 
     protected _createSchemaMap(schema: SchemaObject): SchemaMap {
