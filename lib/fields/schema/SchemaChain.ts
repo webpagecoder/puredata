@@ -37,7 +37,6 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             arrayChain = new ArrayChain({
                 chainHandlerCtor: ArrayHandler,
                 errorMessages: this._errorMessages,
-                fieldProcessorMap: this._fieldProcessorMap,
                 pathDelims: this._pathDelims,
             }),
             failOnFirstError = false,
@@ -87,7 +86,6 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
             else {
                 field = new ValueField({
                     errorMessages: this._errorMessages,
-                    fieldProcessorMap: this._fieldProcessorMap,
                     pathDelims: this._pathDelims,
                     value
                 });
