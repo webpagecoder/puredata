@@ -21,24 +21,23 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     constructor(args: ConditionalProcessorCtorParams) {
         super(args);
 
-        const { fieldProcessorMap } = args;
         const { _field } = this;
         const { comparisonField, conditionalChain, otherwiseField, thenField } = _field.props;
 
-        this._comparisonProcessor = fieldProcessorMap.resolve(comparisonField).compile() as Processor;
+        this._comparisonProcessor = comparisonField.createProcessor().compile() as Processor;
         this._isNested = false;
         this._otherwiseProcessor = otherwiseField
-            ? fieldProcessorMap.resolve(otherwiseField).compile() as Processor
+            ? otherwiseField.createProcessor().compile() as Processor
             : null;
         this._thenProcessor = thenField
-            ? fieldProcessorMap.resolve(thenField).compile() as Processor
+            ? thenField.createProcessor().compile() as Processor
             : null;
 
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
                 type,
-                (fieldProcessorMap.resolve(conditionalField) as ConditionalProcessor)
+                (conditionalField.createProcessor() as ConditionalProcessor)
                     .compile({ isNested: true }) as ConditionalProcessor
             ]);
         }

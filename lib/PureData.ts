@@ -6,7 +6,6 @@ import { BooleanChain } from './fields/boolean/BooleanChain.ts';
 import { DateChain } from './fields/date/DateChain.ts';
 import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
 import { Field, FieldCtorParams } from './fields/Field.ts';
-import { FieldProcessorMap } from './fields/FieldProcessorMap.ts';
 import { NumberChain } from './fields/number/NumberChain.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
@@ -32,12 +31,10 @@ class PureData {
     constructor({
         calendarText = new Translation(DefaultCalendarText),
         errorMessages = new Translation(DefaultErrorText),
-        fieldProcessorMap = new FieldProcessorMap(),
         globalConfig = GlobalConfig,
     } = {}) {
         this._calendarText = calendarText;
         this._errorMessages = errorMessages;
-        this._fieldProcessorMap = fieldProcessorMap;
         this._config = Utils.clone(globalConfig);
         this._pathDelims = this._config.general.pathDelims;
 
@@ -57,7 +54,6 @@ class PureData {
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
-                fieldProcessorMap: this._fieldProcessorMap,
             },
             this._config[chainType as keyof GlobalConfig],
             props
@@ -71,7 +67,6 @@ class PureData {
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
-                fieldProcessorMap: this._fieldProcessorMap,
             },
             props
         ) as T;

@@ -51,7 +51,6 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
             return this;
         }
         else {
-            // return _fieldProcessorMap.resolve(referencedProcessor.field).compile(context);
             return referencedProcessor.field.createProcessor().compile(context);
         }
     }

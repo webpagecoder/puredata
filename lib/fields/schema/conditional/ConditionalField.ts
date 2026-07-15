@@ -92,7 +92,6 @@ class ConditionalField extends Field<ConditionalFieldProps> {
                 ? thenResult
                 : new ValueField({ 
                     errorMessages: this._errorMessages, 
-                    fieldProcessorMap: this._fieldProcessorMap, 
                     value: thenResult 
                 }),
             buildStage: 1
@@ -108,7 +107,6 @@ class ConditionalField extends Field<ConditionalFieldProps> {
                 ? otherwiseResult
                 : new ValueField({ 
                     errorMessages: this._errorMessages, 
-                    fieldProcessorMap: this._fieldProcessorMap, 
                     value: otherwiseResult 
                 }),
             buildStage: 2
