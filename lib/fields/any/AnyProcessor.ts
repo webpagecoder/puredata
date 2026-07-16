@@ -1,11 +1,12 @@
 'use strict';
 
-import { Processor, ProcessorCtorParams } from '../Processor.ts';
+import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
 import { PathValueField } from '../schema/pathValue/PathValueField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Field } from '../Field.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { AnyChain } from './AnyChain.ts';
+import { PathValueProcessor } from '../schema/pathValue/PathValueProcessor.ts';
 
 type PipelineError = {
     key: string;
@@ -33,6 +34,14 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
     constructor(args: AnyProcessorCtorParams<C>) {
         super(args);
+    }
+
+    public override compile(context?: ProcessorCompilationContext): Processor {
+        const { defaultValue } = this._field;
+        if (defaultValue instanceof PathValueField) {
+            this._defaultValuePathValueProcessor = defaultValue.createProcessor().compile(context) as PathValueProcessor;
+        }
+        return this;
     }
 
     public override process(tracker: ValueTracker): void {

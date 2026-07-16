@@ -2,6 +2,7 @@
 
 import { Path } from '../../../Path.ts';
 import { Field, FieldCloneParams, FieldProps, FieldCtorParams } from '../../Field.ts';
+import { PathValueProcessor } from './PathValueProcessor.ts';
 
 export type PathValueFieldProps = FieldProps & {
     path: Path;
@@ -42,6 +43,12 @@ class PathValueField extends Field<PathValueFieldProps> {
             clone.props.path = new Path(args.pathStr, this._pathDelims);
         }
         return clone;
+    }
+
+    public override createProcessor(): PathValueProcessor {
+        return new PathValueProcessor({
+            field: this,
+        });
     }
 
 }

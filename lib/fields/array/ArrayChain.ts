@@ -3,6 +3,7 @@
 import { ArrayHandler } from './ArrayHandler.ts';
 import { Path } from '../../Path.ts';
 import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { ArrayProcessor } from './ArrayProcessor.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
@@ -27,6 +28,12 @@ class ArrayChain extends AnyChain<ArrayChainProps> {
         props.castSingle = castSingle;
         props.maxLength = maxLength;
         props.removeEmpties = removeEmpties;
+    }
+
+    public override createProcessor(): ArrayProcessor {
+        return new ArrayProcessor({
+            field: this,
+        });
     }
 
     // Configurators

@@ -5,6 +5,7 @@ import { Translation, TranslationStringRecord } from '../../Translation.ts';
 import { AnyChain, AnyChainCtorParams, AnyChainProps } from '../any/AnyChain.ts';
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
+import { DateProcessor } from './DateProcessor.ts';
 
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
@@ -47,6 +48,12 @@ class DateChain extends AnyChain<DateChainProps> {
         props.skipGenericParse = skipGenericParse;
 
         this._props.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
+    }
+
+    public override createProcessor(): DateProcessor {
+        return new DateProcessor({
+            field: this,
+        });
     }
 
     public assertEmptyPipeline(dateSubType: string): void {

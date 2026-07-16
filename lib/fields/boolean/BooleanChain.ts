@@ -2,6 +2,7 @@
 
 import { BooleanHandler } from './BooleanHandler.ts';
 import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { BooleanProcessor } from './BooleanProcessor.ts';
 
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
@@ -27,6 +28,12 @@ class BooleanChain extends AnyChain<BooleanChainProps> {
         props.allowBoolish = allowBoolish;
         props.boolishPairs = boolishPairs;
         props.transformer = transformer;
+    }
+
+    public override createProcessor(): BooleanProcessor {
+        return new BooleanProcessor({
+            field: this,
+        });
     }
 
     // Configurators

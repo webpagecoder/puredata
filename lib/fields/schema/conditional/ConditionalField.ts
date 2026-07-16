@@ -4,6 +4,7 @@
 import { Path } from '../../../Path.ts';
 import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from '../../Field.ts';
 import { ValueField } from '../../value/ValueField.ts';
+import { ConditionalProcessor } from './ConditionalProcessor.ts';
 
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 
@@ -61,6 +62,12 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             clone.props.targetPath = new Path(args.targetPathStr);
         }
         return clone;
+    }
+
+    public override createProcessor(): ConditionalProcessor {
+        return new ConditionalProcessor({
+            field: this,
+        });
     }
 
     or(conditionalField: ConditionalField) {

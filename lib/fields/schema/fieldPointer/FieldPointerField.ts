@@ -2,6 +2,7 @@
 
 import { Path } from '../../../Path.ts';
 import { Field, FieldCtorParams, FieldProps } from '../../Field.ts';
+import { FieldPointerProcessor } from './FieldPointerProcessor.ts';
 
 export type FieldPointerFieldProps = FieldProps & {
     fieldPath: Path;
@@ -26,6 +27,12 @@ class FieldPointerField extends Field<FieldPointerFieldProps> {
         props.fieldPath = fieldPath;
         props.minDepth = minDepth;
         props.maxDepth = maxDepth;
+    }
+
+    public override createProcessor(): FieldPointerProcessor {
+        return new FieldPointerProcessor({
+            field: this,
+        });
     }
 
 }

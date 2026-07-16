@@ -1,6 +1,7 @@
 'use strict';
 
 import { Field, FieldProps, FieldCtorParams } from '../Field.ts';
+import { ValueProcessor } from './ValueProcessor.ts';
 
 export type ValueFieldProps = FieldProps & {
     mutable: boolean;
@@ -22,6 +23,12 @@ class ValueField extends Field<ValueFieldProps> {
         const { props } = this;
         props.mutable = mutable;
         props.value = value;
+    }
+
+    public override createProcessor(): ValueProcessor {
+        return new ValueProcessor({
+            field: this,
+        });
     }
 
 }

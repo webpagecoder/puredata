@@ -1,6 +1,7 @@
 'use strict';
 
 import { Field, FieldCloneParams, FieldProps, FieldCtorParams } from '../Field.ts';
+import { EnumProcessor } from './EnumProcessor.ts';
 
 export type EnumStructure = unknown[] | Record<string, unknown>;
 
@@ -32,6 +33,12 @@ class EnumField extends Field<EnumFieldProps> {
         const clone = super.clone(args);
         clone.props.isArray = Array.isArray(clone.props.structure);
         return clone;
+    }
+
+    public override createProcessor(): EnumProcessor {
+        return new EnumProcessor({
+            field: this,
+        });
     }
 }
 

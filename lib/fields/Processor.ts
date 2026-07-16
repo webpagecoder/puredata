@@ -1,7 +1,7 @@
 'use strict';
 
 import { Field } from './Field.ts';
-import { PathValueField } from './schema/pathValue/PathValueField.ts';
+// import { PathValueField } from './schema/pathValue/PathValueField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { PathValueProcessor } from './schema/pathValue/PathValueProcessor.ts';
 
@@ -32,11 +32,6 @@ abstract class Processor<F extends Field = Field> {
     }
 
     public compile(context?: ProcessorCompilationContext): Processor {
-        const { _field } = this;
-        const { defaultValue } = _field;
-        if (defaultValue instanceof PathValueField) {
-            this._defaultValuePathValueProcessor = defaultValue.createProcessor().compile(context) as PathValueProcessor;
-        }
         return this;
     }
 
