@@ -4,12 +4,15 @@ import { SchemaChain } from './SchemaChain.ts';
 import { Path } from '../../Path.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { AnyProcessorCtorParams } from '../any/AnyProcessor.ts';
+import { AnyProcessor, AnyProcessorCtorParams } from '../any/AnyProcessor.ts';
 import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
 import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
 import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
 import { Utils } from '../../Utils.ts';
+import { PathValueField } from './pathValue/PathValueField.ts';
+import { Field } from '../Field.ts';
+import { AnyChainProps } from '../any/AnyChain.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
@@ -93,13 +96,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 referenceResolver
             });
 
+            let references = this.getReferencesWithinProcessor(resolvedChildProcessor);
             if (resolvedChildProcessor instanceof ConditionalProcessor) {
                 _localConditionalProcessors.set(key, resolvedChildProcessor);
             }
             else if (resolvedChildProcessor instanceof FieldPointerProcessor) {
                 _localNestProcessors.set(key, resolvedChildProcessor); // guaranteed nest
             }
-            else if (resolvedChildProcessor.hasReferences()) {
+            else if (references.size > 0) {
                 _localFieldPointerProcessors.set(key, resolvedChildProcessor);
 
                 const subNodeId = absoluteSubPath.toString();
@@ -122,7 +126,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                     return true;
                 });
 
-                for (const reference of resolvedChildProcessor.getReferences()) {
+                for (const reference of references) {
                     const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.props.path).toString();
                     const pubNode = referenceResolver.getNode(absolutePublisherPathStr) ||
                         referenceResolver.createNode(absolutePublisherPathStr);
@@ -136,6 +140,29 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         this._localBasicProcessors = localBasicProcessors;
         return this;
+    }
+
+    public getReferencesWithinProcessor(processor: Processor): Set<PathValueField> {
+        const { field } = processor;
+        if (field instanceof PathValueField) {
+            return new Set([field]);
+        }
+        const references = new Set<PathValueField>();
+        const { defaultValue } = field;
+        if (defaultValue instanceof PathValueField) {
+            references.add(defaultValue);
+        }
+
+        if(processor instanceof AnyProcessor) {
+            for (const step of (field.props as AnyChainProps).pipeline || []) {
+                for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsOrCallback)) {
+                    if (arg instanceof PathValueField) {
+                        references.add(arg);
+                    }
+                }
+            }
+        }
+        return references;
     }
 
     public override process(tracker: ValueTracker, state: State = {}): void {
@@ -262,7 +289,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             processor = this;
             let upCount = path.upCount - 1; // -1 because we are already on the parent processor
             while (upCount > 0) {
-                if(ancestors.length === 0) {
+                if (ancestors.length === 0) {
                     return null;
                 }
                 processor = ancestors.pop() as Processor;

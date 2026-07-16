@@ -1,7 +1,6 @@
 'use strict';
 
 import { Field } from './Field.ts';
-// import { PathValueField } from './schema/pathValue/PathValueField.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { PathValueProcessor } from './schema/pathValue/PathValueProcessor.ts';
 
@@ -57,29 +56,6 @@ abstract class Processor<F extends Field = Field> {
                 tracker.setValue(_field.defaultValue);
             }
         }
-    }
-
-    public hasReferences(): boolean {
-        return this.getReferences().size > 0;
-    }
-
-    public getReferences(): Set<PathValueField> {
-        if (this._cachedReferences) {
-            return this._cachedReferences;
-        }
-
-        const { _field } = this;
-        const references = new Set<PathValueField>();
-        if (_field instanceof PathValueField) {
-            references.add(_field);
-        }
-        else {
-            const { defaultValue } = _field;
-            if (defaultValue instanceof PathValueField) {
-                references.add(defaultValue);
-            }
-        }
-        return this._cachedReferences = references;
     }
 
     public get field(): F {

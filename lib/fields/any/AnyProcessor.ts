@@ -52,7 +52,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
         this.executePipeline(tracker);
     }
 
-    private resolveStepArgs(args: PipelineStep['args']): unknown[] {
+    public resolveStepArgs(args: PipelineStep['args']): unknown[] {
         if (typeof args === 'function') {
             return args.call(this._field);
         }
@@ -101,18 +101,6 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
         }
     }
 
-    public override getReferences(): Set<PathValueField> {
-        const references = super.getReferences();
-        const { pipeline } = this._field.props;
-        for (const { argsOrCallback: args } of pipeline) {
-            for (const arg of this.resolveStepArgs(args)) {
-                if (arg instanceof PathValueField) {
-                    references.add(arg);
-                }
-            }
-        }
-        return references;
-    }
 }
 
 export { AnyProcessor };
