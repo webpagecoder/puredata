@@ -17,6 +17,7 @@ class NumberChain extends AnyChain<NumberChainProps> {
 
     public constructor(args: NumberChainCtorParams = {}) {
         super(Object.assign({ chainHandlerCtor: NumberHandler }, args));
+        
         const {
             autoConvert = true,
             ensureSafe = false,

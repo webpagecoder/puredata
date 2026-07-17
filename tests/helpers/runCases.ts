@@ -1,44 +1,46 @@
 'use strict';
 
-export type ValidationResult<T = unknown> = {
-	pass?: boolean;
-	fail?: boolean;
-	value?: T;
-	errors?: Record<string, unknown>;
+import { HandlerResult } from "../../lib/fields/HandlerResult.ts";
+
+export type PassTestCase<TData = unknown, TArgs extends any[] = any[]> = { 
+	input: TData; 
+	output?: TData; 
+	args?: TArgs;
 };
 
-export type TestCase<I = unknown, O = unknown, V = unknown> = {
-	input: I;
-	options?: O;
-	pass: boolean;
-	value?: V;
-	errorKey?: string;
-};
-
-export const expectPass = <V = unknown>(result: ValidationResult<V>, value?: V): void => {
-	expect(result.pass).toBe(true);
-	if (value !== undefined) {
-		expect(result.value).toEqual(value);
+export const runPassTests = <THandler extends (first: any, ...args: any[]) => any>(
+	handlerMethod: THandler,
+	testCases: Array<
+		Parameters<THandler> extends [infer TInput, ...infer TArgs]
+			? PassTestCase<TInput, TArgs>
+			: never
+	>,
+): void => {
+	for (const testCase of testCases) {
+		const { input, output = input, args = [] } = testCase;
+		const result = handlerMethod(input, ...(args as any[]));
+		expect(result.pass).toBe(true);
+		expect(result.value).toEqual(output);
 	}
 };
 
-export const expectFail = (result: ValidationResult, errorKey: string): void => {
-	expect(result.fail).toBe(true);
-	expect(result.errors).toHaveProperty(errorKey);
+export type FailTestCase<TData = unknown, TArgs extends any[] = any[]> = PassTestCase<TData, TArgs> & {
+	 errorKey: string 
 };
 
-export const runCases = <I, O = unknown, V = unknown>(
-	run: (input: I, options?: O) => ValidationResult<V>,
-	cases: Array<TestCase<I, O, V>>,
-	defaultErrorKey = 'unknown'
+export const runFailTests = <THandler extends (first: any, ...args: any[]) => any>(
+	handlerMethod: THandler,
+	testCases: Array<
+		Parameters<THandler> extends [infer TInput, ...infer TArgs]
+			? FailTestCase<TInput, TArgs>
+			: never
+	>,
 ): void => {
-	for (const c of cases) {
-		const result = run(c.input, c.options);
-		if (c.pass) {
-			expectPass(result, c.value);
-			continue;
-		}
-
-		expectFail(result, c.errorKey ?? defaultErrorKey);
+	for (const testCase of testCases) {
+		const { input, output = input, args = [], errorKey } = testCase;
+		const result = handlerMethod(input, ...(args as any[]));
+		expect(result.pass).toBe(false);
+		expect(result.value).toEqual(output);
+		expect(result.errors).toHaveProperty(errorKey);
 	}
 };

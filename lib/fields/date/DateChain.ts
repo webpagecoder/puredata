@@ -26,7 +26,7 @@ export type DateChainCtorParams = AnyChainCtorParams<DateChainProps> & {
 class DateChain extends AnyChain<DateChainProps> {
 
     constructor(args: DateChainCtorParams) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: DateHandler }, args));
 
         const {
             calendarText,

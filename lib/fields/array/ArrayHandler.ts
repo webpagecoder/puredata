@@ -39,13 +39,15 @@ function compareValues(a: any, b: any): number {
  * @returns Comparator function for two values.
  */
 function getSorter(order: number = 1, pathOrSortComparator: PathOrSortComparator = null): SortComparator {
-    if (typeof pathOrSortComparator === 'function') {
-        return pathOrSortComparator;
+    const sorterType = typeof pathOrSortComparator;
+    if (sorterType === 'function') {
+        return pathOrSortComparator as SortComparator;
     }
-    else if (pathOrSortComparator instanceof Path) {
+    else if (pathOrSortComparator instanceof Path || sorterType === 'string') {
+        const finalPath = new Path(pathOrSortComparator as Path | string);
         return (a, b): number => {
-            const aValue = Utils.getPathValue(a, pathOrSortComparator);
-            const bValue = Utils.getPathValue(b, pathOrSortComparator);
+            const aValue = Utils.getPathValue(a as Record<string, unknown>, finalPath);
+            const bValue = Utils.getPathValue(b as Record<string, unknown>, finalPath);
             return order * compareValues(aValue, bValue);
         };
     }

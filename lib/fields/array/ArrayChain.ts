@@ -17,7 +17,8 @@ export type ArrayChainCtorParams = AnyChainCtorParams<ArrayChainProps>;
 class ArrayChain extends AnyChain<ArrayChainProps> {
 
     public constructor(args: ArrayChainCtorParams) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: ArrayHandler }, args));
+        
         const {
             castSingle = true,
             maxLength = -1,

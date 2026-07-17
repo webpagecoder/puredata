@@ -17,7 +17,8 @@ export type BooleanChainCtorParams = AnyChainCtorParams<BooleanChainProps>;
 class BooleanChain extends AnyChain<BooleanChainProps> {
 
     public constructor(args: BooleanChainCtorParams) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));
+
         const {
             allowBoolish = false,
             boolishPairs = [],

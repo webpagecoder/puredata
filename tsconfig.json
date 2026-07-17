@@ -27,7 +27,7 @@
     "lib/**/*.d.ts",
     "_misc/**/*.ts",
     "tests/**/*.ts"
-  ],
+, "tests/fields/array/ArrayHandler.bak"  ],
   "exclude": [
     "node_modules",
     "coverage"
