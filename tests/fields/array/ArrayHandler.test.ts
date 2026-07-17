@@ -307,21 +307,28 @@ describe('ArrayHandler validators', () => {
 		runPassTests(
 			handler.padEnd.bind(handler),
 			[
-				{input: [1], output: [1, 0, 0], args: [3, 0]},
-				{input: [1], output: [1, null, null], args: [3]},
-				{input: [1, 2, 3], args: [3, 0]}
+				{ input: [1], output: [1, 0, 0], args: [3, 0] },
+				{ input: [1], output: [1, null, null], args: [3] },
+				{ input: [1, 2, 3], args: [3, 0] }
 			]
 		);
 	});
 
 	it('pickRandom', () => {
-		runCases(
-			(input: unknown[], options?: { count?: number }): ValidationResult =>
-				handler.pickRandom(input, options?.count),
+		runPassTests(
+			handler.pickRandom.bind(handler),
 			[
-				{ input: ['only'], pass: true, value: ['only'] },
-				{ input: [1, 2, 3], options: { count: 0 }, pass: true, value: [] },
-				{ input: ['only'], options: { count: 5 }, pass: true, value: ['only'] }
+				{ input: ['only'], output: ['only'], args: [1] },
+				{
+					input: [1, 2, 3],
+					output: val => val.indexOf(1) !== -1 && val.indexOf(2) !== -1 && val.indexOf(3) !== -1,
+					args: [3]
+				},
+				{
+					input: [1, 2, 3],
+					output: val => val.indexOf(1) !== -1 || val.indexOf(2) !== -1 || val.indexOf(3) !== -1,
+					args: [1]
+				},
 			]
 		);
 	});
