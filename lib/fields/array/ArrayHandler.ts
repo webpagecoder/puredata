@@ -70,7 +70,7 @@ function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number
     ++index;
     if (index < dimensions.length) {
         for (const item of arr) {
-            if (!Array.isArray(item) || dimensionsRecursive(item, dimensions, index)._fail) {
+            if (!Array.isArray(item) || dimensionsRecursive(item, dimensions, index).fail) {
                 return fail(arr, "array/dimensions", { dimensions });
             }
         }
@@ -121,7 +121,7 @@ class ArrayHandler extends AnyHandler {
      * @param arr Array being validated.
      * @returns Returns the original array when the array has no items.
      */
-    public empty(arr: unknown[]): HandlerResult {
+    public override empty(arr: unknown[]): HandlerResult {
         return arr.length === 0
             ? pass(arr)
             : fail(arr, 'array/empty', {
@@ -227,7 +227,7 @@ class ArrayHandler extends AnyHandler {
      * @param arr Array being validated.
      * @returns Returns the original array when the array is not empty.
      */
-    public notEmpty(arr: unknown[]): HandlerResult {
+    public override notEmpty(arr: unknown[]): HandlerResult {
         return arr.length > 0
             ? pass(arr)
             : fail(arr, 'array/notEmpty');
@@ -239,7 +239,7 @@ class ArrayHandler extends AnyHandler {
      * @param forbiddenValues Values that must not appear in the array.
      * @returns Returns the original array when no forbidden values are found.
      */
-    public noneOf(arr: unknown[], forbiddenValues: unknown[] = []): HandlerResult {
+    public override noneOf(arr: unknown[], forbiddenValues: unknown[] = []): HandlerResult {
         for (const forbiddenValue of forbiddenValues) {
             for (let i = 0, len = arr.length; i < len; i++) {
                 const value = arr[i];
