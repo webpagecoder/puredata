@@ -6,12 +6,11 @@ import { AnyHandler } from '../any/AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
-type SortComparator = (a: unknown, b: unknown) => number;
-type EqualityComparator = (a: unknown, b: unknown) => boolean;
-type PathOrSortComparator = Path | SortComparator | null;
-type PathOrEqualityComparator = Path | EqualityComparator | null;
-type ArrayFilter = (value: unknown, index: number, array: unknown[]) => boolean;
-type ArrayMapper = (value: unknown, index: number, array: unknown[]) => unknown;
+type Predicate = (a: unknown) => unknown;
+type PathOrPredicate = Path | Predicate | null;
+
+type ComparePredicate = (a: unknown, b: unknown) => number;
+type PathOrComparePredicate = Path | ComparePredicate | null;
 
 /**
  * Compares two values using natural ordering semantics.
@@ -32,27 +31,27 @@ function compareValues(a: any, b: any): number {
 /**
  * Builds a comparator for array sorting and uniqueness operations.
  * @param order Sort direction where 1 is ascending and -1 is descending.
- * @param pathOrSortComparator Optional path extractor or custom comparator.
+ * @param pathOrComparePredicate Optional path extractor or custom comparator.
  * If a path is provided, values at that path will be compared. 
  * If a comparator is provided, it will be used directly, ignoring the order parameter. 
  * If neither is provided, natural ordering will be used.
  * @returns Comparator function for two values.
  */
-function getSorter(order: number = 1, pathOrSortComparator: PathOrSortComparator = null): SortComparator {
-    const sorterType = typeof pathOrSortComparator;
+function getComparator(pathOrComparePredicate: PathOrComparePredicate = null, inverse = false): ComparePredicate {
+    const sorterType = typeof pathOrComparePredicate;
     if (sorterType === 'function') {
-        return pathOrSortComparator as SortComparator;
+        return pathOrComparePredicate as ComparePredicate;
     }
-    else if (pathOrSortComparator instanceof Path || sorterType === 'string') {
-        const finalPath = new Path(pathOrSortComparator as Path | string);
+    else if (pathOrComparePredicate instanceof Path || sorterType === 'string') {
+        const finalPath = new Path(pathOrComparePredicate as Path | string);
         return (a, b): number => {
             const aValue = Utils.getPathValue(a as Record<string, unknown>, finalPath);
             const bValue = Utils.getPathValue(b as Record<string, unknown>, finalPath);
-            return order * compareValues(aValue, bValue);
+            return (inverse ? -1 : 1) * compareValues(aValue, bValue);
         };
     }
     else {
-        return (a, b): number => order * compareValues(a, b);
+        return (a, b): number => (inverse ? -1 : 1) * compareValues(a, b);
     }
 }
 
@@ -223,17 +222,6 @@ class ArrayHandler extends AnyHandler {
     }
 
     /**
-     * Validates that the array contains at least one item.
-     * @param arr Array being validated.
-     * @returns Returns the original array when the array is not empty.
-     */
-    public override notEmpty(arr: unknown[]): HandlerResult {
-        return arr.length > 0
-            ? pass(arr)
-            : fail(arr, 'array/notEmpty');
-    }
-
-    /**
      * Validates that the array contains none of the forbidden values.
      * @param arr Array being validated.
      * @param forbiddenValues Values that must not appear in the array.
@@ -253,6 +241,17 @@ class ArrayHandler extends AnyHandler {
             }
         }
         return pass(arr);
+    }
+
+    /**
+     * Validates that the array contains at least one item.
+     * @param arr Array being validated.
+     * @returns Returns the original array when the array is not empty.
+     */
+    public override notEmpty(arr: unknown[]): HandlerResult {
+        return arr.length > 0
+            ? pass(arr)
+            : fail(arr, 'array/notEmpty');
     }
 
     /**
@@ -328,16 +327,16 @@ class ArrayHandler extends AnyHandler {
     /**
      * Validates that the array is sorted in ascending order.
      * @param arr Array being validated.
-     * @param pathOrSortComparator Optional path or comparator to determine ordering.
+     * @param pathOrComparePredicate Optional path or comparator to determine ordering.
      * If a path is provided, values at that path will be compared. 
      * If a comparator is provided, it will be used directly, ignoring the order parameter. 
      * If neither is provided, natural ordering will be used.
      * @returns Returns the original array when the array is sorted.
      */
-    public sorted(arr: unknown[], pathOrSortComparator: PathOrSortComparator = null): HandlerResult {
-        const sorter = getSorter(1, pathOrSortComparator);
+    public sorted(arr: unknown[], pathOrComparePredicate: PathOrComparePredicate = null): HandlerResult {
+        const comparator = getComparator(pathOrComparePredicate);
         for (let i = 1, len = arr.length; i < len; i++) {
-            if (sorter(arr[i - 1], arr[i]) > 0) {
+            if (comparator(arr[i - 1], arr[i]) > 0) {
                 return fail(arr, 'array/sorted', {
                     index: i,
                     invalidValue: arr[i]
@@ -385,35 +384,33 @@ class ArrayHandler extends AnyHandler {
     /**
      * Validates that the array contains no duplicate values.
      * @param arr Array being validated.
-     * @param pathOrEqualityComparator Optional path or comparator used to compare entries.
+     * @param pathOrComparePredicate Optional path or comparator used to compare entries.
      * @returns Returns the original array when all values are unique.
      */
-    public unique(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator = null): HandlerResult {
-        const comparator: EqualityComparator = typeof pathOrEqualityComparator === 'function'
-            ? pathOrEqualityComparator
-            : (a, b): boolean => !Utils.areEqual(a, b);
+    public unique(arr: unknown[], pathOrComparePredicate: PathOrComparePredicate = null): HandlerResult {
+        const comparator = getComparator(pathOrComparePredicate);
+        const { isObject } = Utils;
 
-        const path: Path | null = pathOrEqualityComparator instanceof Path
-            ? pathOrEqualityComparator
-            : null;
+        for (let x = 0, xMax = arr.length - 1; x < xMax; x++) {
+            const a = arr[x];
+            const aIsObject = isObject(a);
 
-        for (let y = 0; y < arr.length - 1; y++) {
-            const a = path
-                ? Utils.getPathValue(arr[y] as Record<string, unknown>, path)
-                : arr[y];
+            for (let y = x + 1, yMax = arr.length; y < yMax; y++) {
+                const b = arr[y];
+                const bIsObject = isObject(b);
 
-            for (let z = y + 1; z < arr.length; z++) {
-                const b = path
-                    ? Utils.getPathValue(arr[z] as Record<string, unknown>, path)
-                    : arr[z];
-
-                if (!comparator(a, b)) {
-                    return fail(arr, 'array/unique', {
-                        index1: y,
-                        index2: z,
-                        duplicateValue: a
-                    });
+                if (
+                    comparator(a, b) !== 0 ||
+                    (isObject(a) && isObject(b) && a !== b)
+                ) {
+                    continue;
                 }
+
+                return fail(arr, 'array/unique', {
+                    index1: x,
+                    index2: y,
+                    duplicateValue: a
+                });
             }
         }
         return pass(arr);
@@ -467,7 +464,7 @@ class ArrayHandler extends AnyHandler {
      * @param filter Predicate function used by Array.prototype.filter.
      * @returns Returns the filtered array.
      */
-    public filter(arr: unknown[], filter: ArrayFilter): HandlerResult {
+    public filter(arr: unknown[], filter: Predicate): HandlerResult {
         return pass(arr.filter(filter));
     }
 
@@ -480,7 +477,7 @@ class ArrayHandler extends AnyHandler {
         const flattened: unknown[] = [];
         for (const item of arr) {
             if (Array.isArray(item)) {
-                const innerFlatten = this.flatten(item as unknown[])._value as unknown[];
+                const innerFlatten = this.flatten(item as unknown[]).value as unknown[];
                 flattened.push(...innerFlatten);
             } else {
                 flattened.push(item);
@@ -495,10 +492,21 @@ class ArrayHandler extends AnyHandler {
      * @param path Optional path used to compute each group key.
      * @returns Returns grouped entries.
      */
-    public group(arr: unknown[], path: Path | null = null): HandlerResult {
+    public group(arr: unknown[], pathOrPredicate: PathOrPredicate = null): HandlerResult {
         const groups = new Map<unknown, unknown[]>();
+
         for (const value of arr) {
-            const mapKey = path ? Utils.getPathValue(value, path) : value;
+            let mapKey;
+            if (pathOrPredicate instanceof Path) {
+                mapKey = Utils.getPathValue(value as Record<string, unknown>, pathOrPredicate);
+            }
+            else if (typeof pathOrPredicate === 'function') {
+                mapKey = pathOrPredicate(value);
+            }
+            else {
+                mapKey = value;
+            }
+
             if (!groups.has(mapKey)) {
                 groups.set(mapKey, []);
             }
@@ -536,7 +544,7 @@ class ArrayHandler extends AnyHandler {
      * @param map Mapping function used by Array.prototype.map.
      * @returns Returns the mapped array.
      */
-    public map(arr: unknown[], map: ArrayMapper): HandlerResult {
+    public map(arr: unknown[], map: Predicate): HandlerResult {
         return pass(arr.map(map));
     }
 
@@ -608,37 +616,25 @@ class ArrayHandler extends AnyHandler {
     /**
      * Removes duplicate array entries, optionally by path or custom comparator.
      * @param arr Source array.
-     * @param pathOrSortComparator Optional path or comparator used to compare entries.
+     * @param pathOrComparePredicate Optional path or comparator used to compare entries.
      * @returns Returns the deduplicated array.
      */
-    public removeDuplicates(arr: unknown[], pathOrSortComparator: PathOrEqualityComparator = null): HandlerResult {
-        const comparator: EqualityComparator = typeof pathOrSortComparator === 'function'
-            ? pathOrSortComparator
-            : (a, b): boolean => !Utils.areEqual(a, b);
-        const path: Path | null = pathOrSortComparator instanceof Path
-            ? pathOrSortComparator
-            : null;
+    public removeDuplicates(arr: unknown[], pathOrComparePredicate: PathOrComparePredicate = null): HandlerResult {
+        const comparator = getComparator(pathOrComparePredicate);
+        const uniqueArr = [];
 
-        const filteredArr: unknown[] = [...arr];
+        for (let x = 0, xMax = arr.length - 1; x < xMax; x++) {
+            const a = arr[x];
 
-        for (let y = 0; y < filteredArr.length - 1; y++) {
-            const a = path
-                ? Utils.getPathValue(filteredArr[y] as Record<string, unknown>, path)
-                : filteredArr[y];
+            for (let y = x + 1, yMax = arr.length; y < yMax; y++) {
+                const b = arr[y];
 
-            for (let z = y + 1; z < filteredArr.length; z++) {
-                const b = path
-                    ? Utils.getPathValue(filteredArr[z] as Record<string, unknown>, path)
-                    : filteredArr[z];
-
-                if (!comparator(a, b)) {
-                    filteredArr.splice(z, 1);
-                    z--;
+                if (comparator(a, b) !== 0) {
+                    uniqueArr.push(a);
                 }
             }
         }
-
-        return pass(filteredArr);
+        return pass(uniqueArr);
     }
 
     /**
@@ -722,27 +718,27 @@ class ArrayHandler extends AnyHandler {
     /**
      * Sorts the array in ascending order.
      * @param arr Source array.
-     * @param pathOrSortComparator Optional path or comparator used for sorting.
+     * @param pathOrComparePredicate Optional path or comparator used for sorting.
      * If a path is provided, values at that path will be compared. 
      * If a comparator is provided, it will be used directly, ignoring the order parameter. 
      * If neither is provided, natural ordering will be used.
      * @returns Returns the sorted array.
      */
-    public sortAsc(arr: unknown[], pathOrSortComparator: PathOrSortComparator = null): HandlerResult {
-        return pass([...arr].sort(getSorter(1, pathOrSortComparator)));
+    public sortAsc(arr: unknown[], pathOrComparePredicate: PathOrComparePredicate = null): HandlerResult {
+        return pass([...arr].sort(getComparator(pathOrComparePredicate)));
     }
 
     /**
      * Sorts the array in descending order.
      * @param arr Source array.
-     * @param pathOrSortComparator Optional path or comparator used for sorting.
+     * @param pathOrComparePredicate Optional path or comparator used for sorting.
      * If a path is provided, values at that path will be compared. 
      * If a comparator is provided, it will be used directly, ignoring the order parameter. 
      * If neither is provided, natural ordering will be used.
      * @returns Returns the sorted array.
      */
-    public sortDesc(arr: unknown[], pathOrSortComparator: PathOrSortComparator = null): HandlerResult {
-        return pass([...arr].sort(getSorter(-1, pathOrSortComparator)));
+    public sortDesc(arr: unknown[], pathOrComparePredicate: PathOrComparePredicate = null): HandlerResult {
+        return pass([...arr].sort(getComparator(pathOrComparePredicate, true)));
     }
 
     /**

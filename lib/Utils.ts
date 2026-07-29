@@ -305,11 +305,11 @@ class Utils {
 
     static getPathValue(obj: Record<string, unknown>, path: Path): unknown {
         const { keys } = path;
+        const { isObject } = Utils;
         let pointer: Record<string, unknown> = obj;
         if (keys.length === 0) {
             return obj;
         }
-        const { isObject } = Utils;
         for (const key of keys) {
             if (isObject(pointer)) {
                 pointer = pointer[key] as Record<string, unknown>;
