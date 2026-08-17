@@ -195,7 +195,7 @@ describe('ArrayHandler validators', () => {
 			{ input: [2, 1, 3], errorKey: 'array/sorted' },
 			{
 				input: ['aa', 'b', 'ccc'],
-				args: [(a: unknown, b: unknown): number => String(a).length - String(b).length],
+				args: [(a: unknown, b: unknown): number => String(a).length - String(b).length as number],
 				errorKey: 'array/sorted'
 			},
 			{
@@ -232,16 +232,16 @@ describe('ArrayHandler validators', () => {
 		runFailTests(handler.unique.bind(handler), [
 			{ input: [1, 2, 1], errorKey: 'array/unique' },
 			{ input: [[2, 3], [2, 3]], errorKey: 'array/unique' },
-			// {
-			// 	input: [{ id: 1 }, { id: 2 }, { id: 1 }],
-			// 	args: [new Path('id')],
-			// 	errorKey: 'array/unique'
-			// },
-			// {
-			// 	input: ['A', 'a'],
-			// 	args: [(a: unknown, b: unknown): boolean => String(a).toLowerCase() !== String(b).toLowerCase()],
-			// 	errorKey: 'array/unique'
-			// }
+			{
+				input: [{ id: 1 }, { id: 2 }, { id: 1 }],
+				args: [new Path('id')],
+				errorKey: 'array/unique'
+			},
+			{
+				input: ['A', 'a'],
+				args: [(a, b) => String(a).toLowerCase() === String(b).toLowerCase()],
+				errorKey: 'array/unique'
+			}
 		]);
 	});
 });
@@ -274,7 +274,7 @@ describe('ArrayHandler mutators', () => {
 		runPassTests(handler.filter.bind(handler), [
 			{
 				input: [10, 11, 12, 13],
-				args: [(_, index): boolean => index % 2 === 0],
+				args: [((_: unknown, index?: number): boolean => (index || 0) % 2 === 0)],
 				output: [10, 12]
 			}
 		]
@@ -377,7 +377,7 @@ describe('ArrayHandler mutators', () => {
 			},
 			{
 				input: ['A', 'a', 'B'],
-				args: [(a, b) => String(a).toLowerCase() !== String(b).toLowerCase()],
+				args: [(a, b) => String(a).toLowerCase() === String(b).toLowerCase()],
 				output: ['A', 'B']
 			}
 		]
