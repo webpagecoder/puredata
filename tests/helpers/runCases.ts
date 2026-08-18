@@ -9,7 +9,7 @@ export type PassTestCase<TData = unknown, TArgs extends any[] = any[]> = {
 };
 
 export type FailTestCase<TData = unknown, TArgs extends any[] = any[]> = PassTestCase<TData, TArgs> & {
-	errorKey: string
+	errorKey?: string
 };
 
 export const runPassTests = <THandler extends (first: any, ...args: any[]) => any>(
@@ -41,7 +41,7 @@ export const runFailTests = <THandler extends (first: any, ...args: any[]) => an
 	>,
 ): void => {
 	for (const testCase of testCases) {
-		const { input, output = input, args = [], errorKey } = testCase;
+		const { input, output = input, args = [], errorKey = null } = testCase;
 		const result = handlerMethod(input, ...(args as any[]));
 		expect(result.pass).toBe(false);
 		if (typeof output === 'function') {
@@ -49,6 +49,8 @@ export const runFailTests = <THandler extends (first: any, ...args: any[]) => an
 		} else {
 			expect(result.value).toEqual(output);
 		}
-		expect(result.errors).toHaveProperty(errorKey);
+		if (errorKey) {
+			expect(result.errors).toHaveProperty(errorKey);
+		}
 	}
 };

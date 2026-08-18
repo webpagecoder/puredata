@@ -141,6 +141,26 @@ class ArrayHandler extends AnyHandler {
     }
 
     /**
+     * Validates that the array contains at least one of the possible values.
+     * @param arr Array being validated.
+     * @param possibleValues Candidate values to look for.
+     * @returns Returns the original array when any candidate value is present.
+     */
+    public override anyOf(arr: unknown[], possibleValues: unknown[] = []): HandlerResult {
+        if (possibleValues.length === 0) {
+            return pass(arr);
+        }
+        for (const value of possibleValues) {
+            for (const entry of arr) {
+                if (Utils.areEqual(entry, value)) {
+                    return pass(arr);
+                }
+            }
+        }
+        return fail(arr, 'array/someOf', { possibleValues });
+    }
+
+    /**
      * Validates that a nested array matches the provided dimensions.
      * @param arr Array being validated.
      * @param dimensions Expected dimensions for each array depth.
@@ -337,26 +357,6 @@ class ArrayHandler extends AnyHandler {
         return fail(arr, 'array/otherThan', {
             forbiddenValues,
         });
-    }
-
-    /**
-     * Validates that the array contains at least one of the possible values.
-     * @param arr Array being validated.
-     * @param possibleValues Candidate values to look for.
-     * @returns Returns the original array when any candidate value is present.
-     */
-    public someOf(arr: unknown[], possibleValues: unknown[] = []): HandlerResult {
-        if (possibleValues.length === 0) {
-            return pass(arr);
-        }
-        for (const value of possibleValues) {
-            for (const entry of arr) {
-                if (Utils.areEqual(entry, value)) {
-                    return pass(arr);
-                }
-            }
-        }
-        return fail(arr, 'array/someOf', { possibleValues });
     }
 
     /**

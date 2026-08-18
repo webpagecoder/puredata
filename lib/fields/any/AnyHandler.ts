@@ -14,6 +14,22 @@ class AnyHandler {
     //                VALIDATORS
     // *****************************************
 
+
+    /**
+     * Validates that a value matches one of the allowed values.
+     * @param value Value being validated.
+     * @param allowedValues Values that are accepted.
+     * @returns A passing result when a match is found; otherwise a failing result.
+     */
+    public anyOf(value: unknown, allowedValues: unknown[] = []): HandlerResult {
+        for (const allowed of allowedValues) {
+            if (Utils.areEqual(value, allowed)) {
+                return pass(value);
+            }
+        }
+        return fail(value, 'generic/anyOf', { allowedValues });
+    }
+
     /**
      * Validates that a value is not undefined.
      * @param value Value being validated.
@@ -24,36 +40,15 @@ class AnyHandler {
     }
 
     /**
-     * Validates that a value is undefined.
-     * @param value Value being validated.
-     * @returns A passing result when the value is undefined; otherwise a failing result.
-     */
-    public undefined(value: unknown): HandlerResult {
-        return value === undefined ? pass(value) : fail(value, 'generic/undefined');
-    }
-
-    /**
      * Validates that a value is one of the configured empty values.
      * @param value Value being validated.
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is considered empty; otherwise a failing result.
      */
     public empty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
-        return this.anyOf(value, empties)._pass
+        return this.anyOf(value, empties).pass
             ? pass(value)
             : fail(value, 'generic/empty');
-    }
-
-    /**
-     * Validates that a value is not one of the configured empty values.
-     * @param value Value being validated.
-     * @param empties Values treated as empty. Defaults to null and undefined.
-     * @returns A passing result when the value is not considered empty; otherwise a failing result.
-     */
-    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
-        return this.anyOf(value, empties)._fail
-            ? pass(value)
-            : fail(value, 'generic/notEmpty');
     }
 
     /**
@@ -69,27 +64,6 @@ class AnyHandler {
     }
 
     /**
-     * Validates that a value is not deeply equal to the provided comparison value.
-     * @param value Value being validated.
-     * @param comparison Value to compare against.
-     * @returns A passing result when values differ; otherwise a failing result.
-     */
-    public notEquals(value: unknown, comparison: unknown): HandlerResult {
-        return !Utils.areEqual(value, comparison)
-            ? pass(value)
-            : fail(value, 'generic/notEquals', { comparison });
-    }
-
-    /**
-     * Validates that a value is truthy.
-     * @param value Value being validated.
-     * @returns A passing result for truthy values; otherwise a failing result.
-     */
-    public truthy(value: unknown): HandlerResult {
-        return value ? pass(value) : fail(value, 'generic/truthy');
-    }
-
-    /**
      * Validates that a value is falsy.
      * @param value Value being validated.
      * @returns A passing result for falsy values; otherwise a failing result.
@@ -99,58 +73,15 @@ class AnyHandler {
     }
 
     /**
-     * Validates that a value is null.
+     * Validates that a value is an instance of the supplied constructor.
      * @param value Value being validated.
-     * @returns A passing result when the value is null; otherwise a failing result.
+     * @param constructor Constructor function the value must be an instance of.
+     * @returns A passing result when the instance check succeeds; otherwise a failing result.
      */
-    public null(value: unknown): HandlerResult {
-        return value === null ? pass(value) : fail(value, 'generic/null');
-    }
-
-    /**
-     * Validates that a value is not null.
-     * @param value Value being validated.
-     * @returns A passing result when the value is not null; otherwise a failing result.
-     */
-    public notNull(value: unknown): HandlerResult {
-        return value !== null ? pass(value) : fail(value, 'generic/notNull');
-    }
-
-    /**
-     * Validates that a value is null or undefined.
-     * @param value Value being validated.
-     * @returns A passing result when the value is nullish; otherwise a failing result.
-     */
-    public nullish(value: unknown): HandlerResult {
-        return value === null || value === undefined
+    public instanceOf(value: unknown, constructor: CtorLike): HandlerResult {
+        return value instanceof constructor
             ? pass(value)
-            : fail(value, 'generic/nullish');
-    }
-
-    /**
-     * Validates that a value is null or undefined.
-     * @param value Value being validated.
-     * @returns A passing result when the value is nullish; otherwise a failing result.
-     */
-    public notNullish(value: unknown): HandlerResult {
-        return value !== null && value !== undefined
-            ? pass(value)
-            : fail(value, 'generic/notNullish');
-    }
-
-    /**
-     * Validates that a value matches one of the allowed values.
-     * @param value Value being validated.
-     * @param allowedValues Values that are accepted.
-     * @returns A passing result when a match is found; otherwise a failing result.
-     */
-    public anyOf(value: unknown, allowedValues: unknown[] = []): HandlerResult {
-        for (const allowed of allowedValues) {
-            if (Utils.areEqual(value, allowed)) {
-                return pass(value);
-            }
-        }
-        return fail(value, 'generic/anyOf', { allowedValues });
+            : fail(value, 'generic/instanceOf', { constructor });
     }
 
     /**
@@ -169,15 +100,67 @@ class AnyHandler {
     }
 
     /**
-     * Validates that a value is an instance of the supplied constructor.
+     * Validates that a value is not one of the configured empty values.
      * @param value Value being validated.
-     * @param constructor Constructor function the value must be an instance of.
-     * @returns A passing result when the instance check succeeds; otherwise a failing result.
+     * @param empties Values treated as empty. Defaults to null and undefined.
+     * @returns A passing result when the value is not considered empty; otherwise a failing result.
      */
-    public instanceOf(value: unknown, constructor: CtorLike): HandlerResult {
-        return value instanceof constructor
+    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
+        return this.anyOf(value, empties).fail
             ? pass(value)
-            : fail(value, 'generic/instanceOf', { constructor });
+            : fail(value, 'generic/notEmpty');
+    }
+
+    /**
+     * Validates that a value is not deeply equal to the provided comparison value.
+     * @param value Value being validated.
+     * @param comparison Value to compare against.
+     * @returns A passing result when values differ; otherwise a failing result.
+     */
+    public notEquals(value: unknown, comparison: unknown): HandlerResult {
+        return !Utils.areEqual(value, comparison)
+            ? pass(value)
+            : fail(value, 'generic/notEquals', { comparison });
+    }
+
+    /**
+     * Validates that a value is not null.
+     * @param value Value being validated.
+     * @returns A passing result when the value is not null; otherwise a failing result.
+     */
+    public notNull(value: unknown): HandlerResult {
+        return value !== null ? pass(value) : fail(value, 'generic/notNull');
+    }
+
+    /**
+     * Validates that a value is null or undefined.
+     * @param value Value being validated.
+     * @returns A passing result when the value is nullish; otherwise a failing result.
+     */
+    public notNullish(value: unknown): HandlerResult {
+        return value !== null && value !== undefined
+            ? pass(value)
+            : fail(value, 'generic/notNullish');
+    }
+
+    /**
+     * Validates that a value is null.
+     * @param value Value being validated.
+     * @returns A passing result when the value is null; otherwise a failing result.
+     */
+    public null(value: unknown): HandlerResult {
+        return value === null ? pass(value) : fail(value, 'generic/null');
+    }
+
+    /**
+     * Validates that a value is null or undefined.
+     * @param value Value being validated.
+     * @returns A passing result when the value is nullish; otherwise a failing result.
+     */
+    public nullish(value: unknown): HandlerResult {
+        return value === null || value === undefined
+            ? pass(value)
+            : fail(value, 'generic/nullish');
     }
 
     /**
@@ -201,10 +184,27 @@ class AnyHandler {
             : fail(value, 'generic/primitive', { actualType });
     }
 
+    /**
+     * Validates that a value is truthy.
+     * @param value Value being validated.
+     * @returns A passing result for truthy values; otherwise a failing result.
+     */
+    public truthy(value: unknown): HandlerResult {
+        return value ? pass(value) : fail(value, 'generic/truthy');
+    }
+
+    /**
+     * Validates that a value is undefined.
+     * @param value Value being validated.
+     * @returns A passing result when the value is undefined; otherwise a failing result.
+     */
+    public undefined(value: unknown): HandlerResult {
+        return value === undefined ? pass(value) : fail(value, 'generic/undefined');
+    }
 
 
 
-    
+
     // *****************************************
     //                MUTATORS
     // *****************************************

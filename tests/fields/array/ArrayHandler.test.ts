@@ -28,6 +28,21 @@ describe('ArrayHandler validators', () => {
 		]);
 	});
 
+	it('anyOf', () => {
+		runPassTests(handler.anyOf.bind(handler), [
+			{ input: [1, 2, 4, 3], args: [[77, 8, 4]] },
+			{ input: [1, { a: 1 }, 3], args: [[{ a: 1 }]] },
+			{ input: [1, 2, 3, 4], args: [[numChain.between(1, 4)]] },
+		]);
+
+		runFailTests(handler.anyOf.bind(handler), [
+			{ input: [1, { a: 2 }], args: [[{ a: 1 }]], errorKey: 'array/anyOf' },
+			{ input: [1, { a: 1 }], args: [[22]], errorKey: 'array/anyOf' },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]], errorKey: 'array/anyOf' },
+			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]], errorKey: 'array/anyOf' },
+		]);
+	});
+
 	it('dimensions', () => {
 		runPassTests(handler.dimensions.bind(handler), [
 			{ input: [[1, 2], [3, 4]], args: [[2, 2]] },
@@ -163,22 +178,6 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/otherThan' },
 			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]], errorKey: 'array/otherThan' },
 			{ input: [1, 3, 5], args: [[numChain.odd()]], errorKey: 'array/otherThan' },
-		]);
-	});
-
-
-	it('someOf', () => {
-		runPassTests(handler.someOf.bind(handler), [
-			{ input: [1, 2, 4, 3], args: [[77, 8, 4]] },
-			{ input: [1, { a: 1 }, 3], args: [[{ a: 1 }]] },
-			{ input: [1, 2, 3, 4], args: [[numChain.between(1, 4)]] },
-		]);
-
-		runFailTests(handler.someOf.bind(handler), [
-			{ input: [1, { a: 2 }], args: [[{ a: 1 }]], errorKey: 'array/someOf' },
-			{ input: [1, { a: 1 }], args: [[22]], errorKey: 'array/someOf' },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]], errorKey: 'array/someOf' },
-			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]], errorKey: 'array/someOf' },
 		]);
 	});
 

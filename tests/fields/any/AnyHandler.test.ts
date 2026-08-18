@@ -1,7 +1,9 @@
 'use strict';
 
 import { AnyHandler } from '../../../lib/fields/any/AnyHandler.ts';
-import { runCases, type ValidationResult } from '../../helpers/runCases.ts';
+import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
+import { HandlerResult } from '../../../lib/fields/HandlerResult.ts';
+const { pass, fail } = HandlerResult;
 
 describe('AnyHandler validators', () => {
 	let handler: AnyHandler;
@@ -10,79 +12,253 @@ describe('AnyHandler validators', () => {
 		handler = new AnyHandler();
 	});
 
-	describe('primitive (type)', () => {
-		it('passes for all primitive values when no type is provided', () => {
-			runCases<unknown, undefined, unknown>(
-				(input: unknown): ValidationResult => handler.primitive(input),
-				[
-					{ input: 'hello', pass: true, value: 'hello' },
-					{ input: 42, pass: true, value: 42 },
-					{ input: true, pass: true, value: true },
-					{ input: undefined, pass: true, value: undefined },
-					{ input: Symbol.for('s'), pass: true, value: Symbol.for('s') },
-					{ input: 12n, pass: true, value: 12n }
-				],
-				'generic/primitive'
-			);
-		});
 
-		it('fails for non-primitive values when no type is provided', () => {
-			runCases<unknown, undefined, unknown>(
-				(input: unknown): ValidationResult => handler.primitive(input),
-				[
-					{ input: null, pass: false, errorKey: 'generic/primitive' },
-					{ input: { a: 1 }, pass: false, errorKey: 'generic/primitive' },
-					{ input: [1, 2], pass: false, errorKey: 'generic/primitive' },
-					{ input: (): number => 1, pass: false, errorKey: 'generic/primitive' },
-					{ input: new Date(), pass: false, errorKey: 'generic/primitive' }
-				],
-				'generic/primitive'
-			);
-		});
+	it('anyOf', () => {
+		runPassTests(handler.anyOf.bind(handler), [
+			{ input: 1, args: [[3, 2, 1]] },
+			{ input: false, args: [[true, false]] },
+			{ input: false, args: [[true, false]] },
+			{ input: [3, 4, 5], args: [[[3, 4, 5], [1, 2, 3]]] },
+			{ input: { a: 1 }, args: [[{ a: 1 }]] },
+		]);
 
-		it('supports all explicit type options', () => {
-			runCases(
-				(input: unknown, options?: { type: 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint' }): ValidationResult =>
-					handler.primitive(input, options?.type),
-				[
-					{ input: 'x', options: { type: 'string' }, pass: true, value: 'x' },
-					{ input: 7, options: { type: 'number' }, pass: true, value: 7 },
-					{ input: false, options: { type: 'boolean' }, pass: true, value: false },
-					{ input: undefined, options: { type: 'undefined' }, pass: true, value: undefined },
-					{ input: Symbol.for('type-symbol'), options: { type: 'symbol' }, pass: true, value: Symbol.for('type-symbol') },
-					{ input: 9n, options: { type: 'bigint' }, pass: true, value: 9n }
-				],
-				'generic/primitive'
-			);
-		});
-
-		it('fails when explicit type does not match value type', () => {
-			runCases(
-				(input: unknown, options?: { type: 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint' }): ValidationResult =>
-					handler.primitive(input, options?.type),
-				[
-					{ input: 1, options: { type: 'string' }, pass: false, errorKey: 'generic/primitive' },
-					{ input: '1', options: { type: 'number' }, pass: false, errorKey: 'generic/primitive' },
-					{ input: 0, options: { type: 'boolean' }, pass: false, errorKey: 'generic/primitive' },
-					{ input: null, options: { type: 'undefined' }, pass: false, errorKey: 'generic/primitive' },
-					{ input: 'sym', options: { type: 'symbol' }, pass: false, errorKey: 'generic/primitive' },
-					{ input: 10, options: { type: 'bigint' }, pass: false, errorKey: 'generic/primitive' }
-				],
-				'generic/primitive'
-			);
-		});
-
-		it('treats null type as no-type mode', () => {
-			runCases(
-				(input: unknown, options?: { type: null }): ValidationResult =>
-					handler.primitive(input, options?.type ?? null),
-				[
-					{ input: 'abc', options: { type: null }, pass: true, value: 'abc' },
-					{ input: 5n, options: { type: null }, pass: true, value: 5n },
-					{ input: { x: 1 }, options: { type: null }, pass: false, errorKey: 'generic/primitive' }
-				],
-				'generic/primitive'
-			);
-		});
+		runFailTests(handler.anyOf.bind(handler), [
+			{ input: 1, args: [[4, 3, 2]] },
+			{ input: false, args: [[true, true]] },
+			{ input: [3, 4, 5], args: [[[3, 4], [1, 2, 3]]] },
+			{ input: { a: 1 }, args: [[{ a: 21 }]] },
+		]);
 	});
+
+
+	it('defined', () => {
+		runPassTests(handler.defined.bind(handler), [
+			{ input: 1 },
+			{ input: null }
+		]);
+
+		runFailTests(handler.defined.bind(handler), [
+			{ input: undefined }
+		]);
+	});
+
+	it('empty', () => {
+		runPassTests(handler.empty.bind(handler), [
+			{ input: null },
+			{ input: undefined },
+			{ input: [2], args: [[1, [2], 3]] }
+		]);
+
+		runFailTests(handler.empty.bind(handler), [
+			{ input: 1 },
+			{ input: [] },
+			{ input: 7, args: [[1, 2]] }
+		]);
+	});
+
+
+	it('equals', () => {
+		runPassTests(handler.equals.bind(handler), [
+			{ input: null, args: [null] },
+			{ input: undefined, args: [undefined] },
+			{ input: [1, 2, 3], args: [[1, 2, 3]] },
+			{ input: { a: [1, 2, 3] }, args: [{ a: [1, 2, 3] }] }
+		]);
+
+		runFailTests(handler.equals.bind(handler), [
+			{ input: 1, args: [[2]] },
+			{ input: [], args: [[1, 2, 3]] },
+		]);
+	});
+
+	it('falsy', () => {
+		runPassTests(handler.falsy.bind(handler), [
+			{ input: null },
+			{ input: undefined },
+			{ input: 0 },
+			{ input: '' },
+			{ input: false },
+		]);
+
+		runFailTests(handler.falsy.bind(handler), [
+			{ input: 1 },
+			{ input: ' ' },
+			{ input: [] },
+		]);
+	});
+
+	it('instanceOf', () => {
+		class A { }
+
+		runPassTests(handler.instanceOf.bind(handler), [
+			{ input: new Date(), args: [Date] },
+			{ input: [], args: [Array] },
+			{ input: new A(), args: [A] },
+		]);
+
+		runFailTests(handler.instanceOf.bind(handler), [
+			{ input: new Date(), args: [Array] },
+			{ input: [], args: [Date] },
+			{ input: new A(), args: [Date] },
+		]);
+	});
+
+	it('noneOf', () => {
+		class A { }
+
+		runPassTests(handler.noneOf.bind(handler), [
+			{ input: 1, args: [[2, 3, 4]] },
+			{ input: false, args: [[true, null]] },
+			{ input: [1, 2, 3], args: [[[4, 5, 6], [7, 8, 9]]] },
+		]);
+
+		runFailTests(handler.noneOf.bind(handler), [
+			{ input: 1, args: [[1, 2, 3]] },
+			{ input: false, args: [[false, true]] },
+			{ input: [1, 2, 3], args: [[[1, 2, 3], [4, 5, 6]]] },
+		]);
+	});
+
+	it('notEmpty', () => {
+		runPassTests(handler.notEmpty.bind(handler), [
+			{ input: 'hello' },
+			{ input: [1, 2, 3] },
+			{ input: 7, args: [[1, 2]] }
+		]);
+
+		runFailTests(handler.notEmpty.bind(handler), [
+			{ input: null },
+			{ input: undefined },
+			{ input: [2], args: [[1, [2], 3]] }
+		]);
+	});
+
+
+	it('notEquals', () => {
+		runPassTests(handler.notEquals.bind(handler), [
+			{ input: 1, args: [[2]] },
+			{ input: [], args: [[1, 2, 3]] },
+			{ input: false, args: [[true]] }
+		]);
+
+		runFailTests(handler.notEquals.bind(handler), [
+			{ input: null, args: [null] },
+			{ input: undefined, args: [undefined] },
+			{ input: [1, 2, 3], args: [[1, 2, 3]] },
+			{ input: { a: [1, 2, 3] }, args: [{ a: [1, 2, 3] }] }
+		]);
+	});
+
+
+	it('notNull', () => {
+		runPassTests(handler.notNull.bind(handler), [
+			{ input: 1 },
+			{ input: undefined },
+		]);
+
+		runFailTests(handler.notNull.bind(handler), [
+			{ input: null }
+		]);
+	});
+
+	it('notNullish', () => {
+		runPassTests(handler.notNullish.bind(handler), [
+			{ input: 1 },
+			{ input: [] },
+		]);
+
+		runFailTests(handler.notNullish.bind(handler), [
+			{ input: null },
+			{ input: undefined }
+		]);
+	});
+
+
+	it('null', () => {
+		runPassTests(handler.null.bind(handler), [
+			{ input: null },
+		]);
+
+		runFailTests(handler.null.bind(handler), [
+			{ input: undefined }
+		]);
+	});
+
+	it('nullish', () => {
+		runPassTests(handler.nullish.bind(handler), [
+			{ input: null },
+			{ input: undefined }
+		]);
+
+		runFailTests(handler.nullish.bind(handler), [
+			{ input: 1 },
+			{ input: [] },
+		]);
+	});
+
+	it('primitive', () => {
+		runPassTests(handler.primitive.bind(handler), [
+			{ input: 'string' },
+			{ input: 1 },
+			{ input: true },
+			{ input: true, args: ['boolean'] },
+			{ input: 1, args: ['number'] },
+			{ input: 'hello', args: ['string'] },
+		]);
+
+		runFailTests(handler.primitive.bind(handler), [
+			{ input: 1, args: ['string'] },
+			{ input: 'hello', args: ['number'] },
+			{ input: { a: 1 } },
+		]);
+	});
+
+	it('truthy', () => {
+		runPassTests(handler.truthy.bind(handler), [
+			{ input: 'string' },
+			{ input: 1 },
+			{ input: true },
+			{ input: [1] },
+			{ input: { a: 1 } },
+		]);
+
+		runFailTests(handler.truthy.bind(handler), [
+			{ input: 0 },
+			{ input: false },
+			{ input: '' },
+			{ input: null },
+			{ input: undefined },
+		]);
+	});
+
+	it('undefined', () => {
+		runPassTests(handler.undefined.bind(handler), [
+			{ input: undefined },
+		]);
+
+		runFailTests(handler.undefined.bind(handler), [
+			{ input: 0 },
+		]);
+	});
+
 });
+
+
+
+
+describe('AnyHandler mutators', () => {
+	let handler: AnyHandler;
+
+	beforeEach(() => {
+		handler = new AnyHandler();
+	});
+
+	it('custom', () => {
+		runPassTests(handler.custom.bind(handler), [
+			{ input: [1, 2], args: [(x) => (x as number[]).concat([3, 4])], output: [1, 2, 3, 4] },
+		]);
+	});
+
+});
+
+
