@@ -2,8 +2,6 @@
 
 import { AnyHandler } from '../../../lib/fields/any/AnyHandler.ts';
 import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
-import { HandlerResult } from '../../../lib/fields/HandlerResult.ts';
-const { pass, fail } = HandlerResult;
 
 describe('AnyHandler validators', () => {
 	let handler: AnyHandler;

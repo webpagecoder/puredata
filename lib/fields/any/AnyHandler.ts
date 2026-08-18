@@ -6,7 +6,7 @@ const { pass, fail } = HandlerResult;
 
 export type PrimitiveTypeName = 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint';
 export type CtorLike = abstract new (...args: never[]) => object;
-export type CustomHandlerFn = (value: unknown) => HandlerResult | unknown;
+export type CustomHandler = (value: unknown) => HandlerResult | unknown;
 
 class AnyHandler {
 
@@ -217,7 +217,7 @@ class AnyHandler {
      * @param filterFn Callback that validates and/or transforms the value.
      * @returns The callback result as-is when it is a HandlerResult; otherwise a passing result.
      */
-    public custom(value: unknown, filterFn: CustomHandlerFn): HandlerResult {
+    public custom(value: unknown, filterFn: CustomHandler): HandlerResult {
         const result = filterFn(value);
         if (result instanceof HandlerResult) {
             return result;

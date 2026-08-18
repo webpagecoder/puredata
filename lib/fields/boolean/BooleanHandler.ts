@@ -1,5 +1,6 @@
 'use strict';
 
+import { Utils } from '../../Utils.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { AnyHandler } from '../any/AnyHandler.ts';
 const { pass, fail } = HandlerResult;
@@ -19,9 +20,15 @@ class BooleanHandler extends AnyHandler {
      * @returns A passing result with the original value when it is falsy; otherwise a failing result with `boolean/falsy`.
      */
     public override falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
-        return bool === false || falsyValues.indexOf(bool) > -1
-            ? pass(bool)
-            : fail(bool, 'boolean/falsy', { falsyValues });
+        if (bool === false) {
+            return pass(bool);
+        }
+        for (const falsy of falsyValues) {
+            if (Utils.areEqual(bool, falsy)) {
+                return pass(bool);
+            }
+        }
+        return fail(bool, 'boolean/falsy', { falsyValues });
     }
 
     /**
@@ -31,10 +38,18 @@ class BooleanHandler extends AnyHandler {
      * @returns A passing result with the original value when it is truthy; otherwise a failing result with `boolean/truthy`.
      */
     public override truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
-        return bool === true || truthyValues.indexOf(bool) > -1
-            ? pass(bool)
-            : fail(bool, 'boolean/truthy', { truthyValues });
+        if (bool === true) {
+            return pass(bool);
+        }
+        for (const truthy of truthyValues) {
+            if (Utils.areEqual(bool, truthy)) {
+                return pass(bool);
+            }
+        }
+        return fail(bool, 'boolean/truthy', { truthyValues });
     }
+
+    
 
     // *****************************************
     //               MUTATORS
