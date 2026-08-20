@@ -26,17 +26,14 @@ const ss = '0[0-9]|[1-5][0-9]';
 const SSS = '\\d{3}';
 const a = '[ap]m';
 
-// Timezone building blocks/keys
-const Z = `[+-]${HH}${mm}`;
-const ZZ = `[+-]${HH}:${mm}`;
-const z = 'Z';
 
 //todo: support UTC and GMT
 //todo: rfc2822
 
 // ISO time + TZ
-const ISO_TZ = `(${Z}|${ZZ}|${z})?`;
+const ISO_TZ = `(Z)|([+-]${HH})(:?)(${mm})`;
 const ISO_TIME_TZ = `(${HH})(:?)(?:(${mm})(?:(:?)(${ss})(?:\\.(${SSS}))?)?)?(?:${ISO_TZ})?`;
+
 
 // ISO date + time + TZ
 const ISO = `^(${YYYY})(?:(-?)(${MM})(?:(-?)(${DD})(?:T${ISO_TIME_TZ})?)?)?$`;
@@ -82,7 +79,7 @@ type HumanDateCache = null | {
     allDayNamesLower: string[];
 }
 
-export type DateType = 'human' | 'iso' | 'isoWeek' | 'isoOrdinal' | 'object' | 'timestamp';
+export type DateType = 'human' | 'iso' | 'isoWeek' | 'isoOrdinal' | 'instance' | 'timestamp';
 export type DateOrder = 'MDY' | 'DMY' | 'YMD';
 export type GenericDateInput = Date | string | number;
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -97,7 +94,6 @@ export type HumanParseOptions = {
     dateOrder?: DateOrder;
     minPrecision?: HumanPrecision;
     maxPrecision?: HumanPrecision;
-    clean?: boolean;
 };
 export type IsoParseOptions = {
     minPrecision?: IsoPrecision;
@@ -167,9 +163,9 @@ class DateConverter {
     public parseAuto(value: unknown, parseTypes: DateType[] = []): UtcDate | null {
         const anyType = parseTypes.length === 0;
 
-        if (anyType || parseTypes.indexOf('object') !== -1) {
+        if (anyType || parseTypes.indexOf('instance') !== -1) {
             if (value instanceof Date && !isNaN(value.getTime())) {
-                return new UtcDate({ localDate: value });
+                return new UtcDate(value, this._defaultUtcOffsetMinutes);
             }
         }
         if (anyType || parseTypes.indexOf('timestamp') !== -1) {
@@ -305,25 +301,18 @@ class DateConverter {
             return null;
         }
 
-        if (options.clean === undefined || options.clean) {
-            dateString = dateString
-                .replace(/\s+/g, ' ')
-                .replace(/\s*,\s*/g, ', ')
-                .replace(/\s*([:/.-])\s*/g, '$1');
-        }
-        
         let totalOffsetMinutes;
-        if(offsetHours === null) {
+        if (offsetHours === null) {
             totalOffsetMinutes = this._defaultUtcOffsetMinutes;
-        } 
+        }
         else {
             const offsetHoursNum = Number(offsetHours);
             const offsetMinutesNum = Number(offsetMinutes);
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate({
-            localDate: new Date(Date.UTC(
+        return new UtcDate(
+            new Date(Date.UTC(
                 year,
                 month - 1,
                 day,
@@ -331,9 +320,8 @@ class DateConverter {
                 Number(minute),
                 Number(second)
             )),
-            offsetMinutes: totalOffsetMinutes,
-            raw: dateString as string
-        });
+            totalOffsetMinutes
+        );
     }
 
     public parseIso(dateString: unknown, options: IsoParseOptions = {}): UtcDate | null {
@@ -472,17 +460,17 @@ class DateConverter {
         }
 
         let totalOffsetMinutes;
-        if(offsetHours === null && zulu === null) {
+        if (offsetHours === null && zulu === null) {
             totalOffsetMinutes = this._defaultUtcOffsetMinutes;
-        } 
+        }
         else {
             const offsetHoursNum = Number(offsetHours);
             const offsetMinutesNum = Number(offsetMinutes);
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate({
-            localDate: new Date(Date.UTC(
+        return new UtcDate(
+            new Date(Date.UTC(
                 yearNum,
                 monthNum - 1,
                 dayNum,
@@ -491,9 +479,8 @@ class DateConverter {
                 Number(second),
                 Number(millisecond)
             )),
-            offsetMinutes: totalOffsetMinutes,
-            raw: dateString,
-        });
+            totalOffsetMinutes
+        );
     }
 
     public parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): UtcDate | null {
@@ -606,17 +593,17 @@ class DateConverter {
         }
 
         let totalOffsetMinutes;
-        if(offsetHours === null && zulu === null) {
+        if (offsetHours === null && zulu === null) {
             totalOffsetMinutes = this._defaultUtcOffsetMinutes;
-        } 
+        }
         else {
             const offsetHoursNum = Number(offsetHours);
             const offsetMinutesNum = Number(offsetMinutes);
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate({
-            localDate: new Date(Date.UTC(
+        return new UtcDate(
+            new Date(Date.UTC(
                 yearNum,
                 0,
                 dayOfYearNum,
@@ -625,9 +612,8 @@ class DateConverter {
                 Number(second),
                 Number(millisecond)
             )),
-            offsetMinutes: totalOffsetMinutes,
-            raw: dateString
-        });
+            totalOffsetMinutes
+        );
     }
 
     public parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): UtcDate | null {
@@ -753,21 +739,16 @@ class DateConverter {
         const date = DateHelpers.isoWeekToDate(yearNum, weekNum, dayNum);
 
         let totalOffsetMinutes;
-        if(offsetHours === null && zulu === null) {
+        if (offsetHours === null && zulu === null) {
             totalOffsetMinutes = this._defaultUtcOffsetMinutes;
-        } 
+        }
         else {
             const offsetHoursNum = Number(offsetHours);
             const offsetMinutesNum = Number(offsetMinutes);
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate({
-            localDate: date,
-            offsetMinutes: totalOffsetMinutes,
-            raw: dateString,
-        });
-
+        return new UtcDate(date, totalOffsetMinutes);
     }
 
     public parseTimestamp(value: unknown, options: TimestampOptions = {}): UtcDate | null {
@@ -785,9 +766,7 @@ class DateConverter {
             return null;
         }
 
-        return new UtcDate({
-            localDate: date
-        });
+        return new UtcDate(date, this._defaultUtcOffsetMinutes);
     }
 
     public format(utcDate: UtcDate, formatString: string, mode: TimeMode = 'utc'): string {

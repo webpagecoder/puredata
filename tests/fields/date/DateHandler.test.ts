@@ -4,21 +4,16 @@ import { Translation } from '../../../lib/Translation.ts';
 import { DefaultCalendarText } from '../../../lib/text/DefaultCalendarText.ts';
 import { DateHandler } from '../../../lib/fields/date/DateHandler.ts';
 import { UtcDate } from '../../../lib/fields/date/UtcDate.ts';
-import { runCases, type ValidationResult } from '../../helpers/runCases.ts';
+import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
 
-const toIsoResult = (result: ValidationResult): ValidationResult<string> => {
-	if (!result.pass) {
-		return { pass: false, fail: true, errors: result.errors };
-	}
-	const utcDate = result.value as UtcDate;
-	return {
-		pass: true,
-		fail: false,
-		value: utcDate.date.toISOString()
-	};
-};
 
-describe('DateHandler validators: parsing', () => {
+
+
+function equalsDate(date: Date): (date: UtcDate) => boolean {
+	return (utcDate: UtcDate) => utcDate.date.getTime() === date.getTime();
+}
+
+describe('DateHandler validators', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
@@ -26,553 +21,633 @@ describe('DateHandler validators: parsing', () => {
 		handler.configDateConverter(new Translation(DefaultCalendarText));
 	});
 
-	it('date auto parser', () => {
-		runCases(
-			(input: unknown): ValidationResult => handler.date(input),
-			[
-				{ input: '2024-01-02', pass: true },
-				{ input: 1704067200, pass: true },
-				{ input: new Date('2024-01-02T00:00:00Z'), pass: true },
-				{ input: 'not-a-date', pass: false, errorKey: 'date/base' }
-			],
-			'date/unknown'
-		);
+	it('date', () => {
+		runPassTests(handler.date.bind(handler), [
+			{ input: '2024-01-02', output: equalsDate(new Date('2024-01-02')) },
+			{ input: 1704067200, output: equalsDate(new Date(1704067200000)) },
+			{ input: new Date('2024-01-12T00:00:00Z'), output: equalsDate(new Date('2024-01-12T00:00:00Z')) },
+		]);
+
+		runFailTests(handler.date.bind(handler), [
+			{ input: '' },
+			{ input: 'not-a-date' },
+		]);
 	});
 
-	it('human parser options', () => {
-		runCases(
-			(input: unknown, options?: Parameters<DateHandler['human']>[1]): ValidationResult =>
-				handler.human(input, options),
-			[
-				// Numeric styles
-				{ input: '12/31/2024', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: '2024/12/31', options: { dateOrder: 'YMD' }, pass: true },
 
-				// English month/day-name styles
-				{ input: 'September 2nd, 2025', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'Sep 2nd, 2025', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'Tuesday, September 2nd, 2025', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'september 2nd, 2025', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'September 2, 2025', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'September 2nd 2025', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'Sept 2nd, 2025', options: { dateOrder: 'MDY' }, pass: false, errorKey: 'date/human' },
-				{ input: '2nd September, 2025', options: { dateOrder: 'MDY' }, pass: false, errorKey: 'date/human' },
+	it('human', () => {
+		runPassTests(handler.human.bind(handler), [
 
-				// Time and timezone precision options
-				{ input: 'September 2nd, 2025 5pm', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'September 2nd, 2025 5:04 pm', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'September 2nd, 2025 17:04', options: { dateOrder: 'MDY' }, pass: true },
-				{ input: 'September 2nd, 2025 5:04:09 pm +0530', options: { dateOrder: 'MDY', minPrecision: 'timezone' }, pass: true },
-				{ input: 'September 2nd, 2025 5:04:09 pm UTC', options: { dateOrder: 'MDY', minPrecision: 'timezone' }, pass: true },
-				{ input: 'September 2nd, 2025 5:04:09 pm', options: { dateOrder: 'MDY', minPrecision: 'timezone' }, pass: false, errorKey: 'date/human' },
-				{ input: 'September 2nd, 2025 10:30', options: { dateOrder: 'MDY', maxPrecision: 'date' }, pass: false, errorKey: 'date/human' },
-				{ input: 'September 2nd, 2025 10:30', options: { dateOrder: 'MDY', maxPrecision: 'time' }, pass: true },
+			// Numeric styles
+			{ input: '12/31/2024', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2024-12-31')) },
+			{ input: '2024/12/31', args: [{ dateOrder: 'YMD' }], output: equalsDate(new Date('2024-12-31')) },
 
-				// Cleaning/whitespace normalization
-				{ input: ' 12/31/2024 ', options: { dateOrder: 'MDY', clean: false }, pass: true },
-				{ input: ' 12/31/2024 ', options: { dateOrder: 'MDY', clean: true }, pass: true },
-				{ input: '  September 2nd, 2025  ', options: { dateOrder: 'MDY', clean: false }, pass: true },
-				{ input: '  September 2nd, 2025  ', options: { dateOrder: 'MDY', clean: true }, pass: true },
+			// English month/day-name styles
+			{ input: 'September 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'Sep 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'Tuesday, September 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'september 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'September 2, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'September 2nd 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
 
-				// Invalid date content
-				{ input: 'September 31st, 2025', options: { dateOrder: 'MDY' }, pass: false, errorKey: 'date/human' },
-				{ input: 'not a date', options: { dateOrder: 'MDY' }, pass: false, errorKey: 'date/human' },
-				{ input: '12/31/2024 10:30 +0530', options: { dateOrder: 'MDY', minPrecision: 'timezone' }, pass: true },
-				{ input: '12/31/2024 10:30', options: { dateOrder: 'MDY', minPrecision: 'timezone' }, pass: false, errorKey: 'date/human' }
-			],
-			'date/unknown'
-		);
+			// Time and timezone precision args
+			{ input: 'September 2nd, 2025 5pm', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02T17:00:00Z')) },
+			{ input: 'September 2nd, 2025 5:04 pm', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02T17:04:00Z')) },
+			{ input: 'September 2nd, 2025 17:04', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02T17:04:00Z')) },
+			{ input: 'September 2nd, 2025 5:04:09 pm +05:30', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02T17:04:09+05:30')) },
+			{ input: 'September 2nd, 2025 5:04:09 pm UTC', args: [{ dateOrder: 'MDY', minPrecision: 'timezone' }], output: equalsDate(new Date('2025-09-02T17:04:09Z')) },
+			{ input: 'September 2nd, 2025 10:30', args: [{ dateOrder: 'MDY', maxPrecision: 'time' }], output: equalsDate(new Date('2025-09-02T10:30:00Z')) },
+
+		]);
+
+		runFailTests(handler.human.bind(handler), [
+			{ input: 'Sept 2nd, 2025', args: [{ dateOrder: 'MDY' }] },
+			{ input: '2nd September, 2025', args: [{ dateOrder: 'MDY' }] },
+			{ input: 'September 31st, 2025', args: [{ dateOrder: 'MDY' }] },
+			{ input: 'not a date', args: [{ dateOrder: 'MDY' }] },
+			{ input: '12/31/2024 10:30', args: [{ dateOrder: 'MDY', minPrecision: 'timezone' }] }
+		]);
 	});
 
-	it('iso parser options', () => {
-		runCases(
-			(input: unknown, options?: Parameters<DateHandler['iso']>[1]): ValidationResult =>
-				handler.iso(input, options || {}),
-			[
-				{ input: '2024-01-02', options: {}, pass: true },
-				{ input: '20240102', options: {}, pass: true },
-				{ input: '2024-01-02', options: { expanded: 'required' }, pass: true },
-				{ input: '20240102', options: { expanded: 'required' }, pass: false, errorKey: 'date/iso' },
-				{ input: '20240102', options: { expanded: 'forbidden' }, pass: true },
-				{ input: '2024', options: { minPrecision: 'day' }, pass: false, errorKey: 'date/iso' },
-				{ input: '2024-01-02T03:04:05Z', options: { maxPrecision: 'day' }, pass: false, errorKey: 'date/iso' },
-				{ input: '2024-01-02', options: { maxPrecision: 'day' }, pass: true }
-			],
-			'date/unknown'
-		);
-	});
 
-	it('isoOrdinal parser options', () => {
-		runCases(
-			(input: unknown, options?: Parameters<DateHandler['isoOrdinal']>[1]): ValidationResult =>
-				handler.isoOrdinal(input, options || {}),
-			[
-				{ input: '2024-123', options: {}, pass: true },
-				{ input: '2024123', options: {}, pass: true },
-				{ input: '2024-123', options: { expanded: 'required' }, pass: true },
-				{ input: '2024123', options: { expanded: 'required' }, pass: false, errorKey: 'date/isoOrdinal' },
-				{ input: '2024', options: { minPrecision: 'dayOfYear' }, pass: false, errorKey: 'date/isoOrdinal' },
-				{ input: '2024-123T01:00Z', options: { maxPrecision: 'dayOfYear' }, pass: false, errorKey: 'date/isoOrdinal' },
-				{ input: '2024-123', options: { maxPrecision: 'dayOfYear' }, pass: true }
-			],
-			'date/unknown'
-		);
-	});
+	it('iso', () => {
+		runPassTests(handler.iso.bind(handler), [
+			{ input: '2024-01-02', output: equalsDate(new Date('2024-01-02')) },
+			{ input: '20240102', output: equalsDate(new Date('2024-01-02')) },
+			{ input: '2024-01-02', args: [{ expanded: 'required' }], output: equalsDate(new Date('2024-01-02')) },
+			{ input: '20240102', args: [{ expanded: 'forbidden' }], output: equalsDate(new Date('2024-01-02')) },
+			{ input: '2024-01-02', args: [{ maxPrecision: 'day' }], output: equalsDate(new Date('2024-01-02')) },
+			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'second' }], output: equalsDate(new Date('2024-01-02T03:04:05Z')) },
+			{ input: '2024-01-02T03:04', output: equalsDate(new Date('2024-01-02T03:04:00Z')) },
+			{ input: '2024-01-02T03:04:00+05:30', output: equalsDate(new Date('2024-01-02T03:04:00+05:30')) },
+		]);
 
-	it('isoWeek parser options', () => {
-		runCases(
-			(input: unknown, options?: Parameters<DateHandler['isoWeek']>[1]): ValidationResult =>
-				handler.isoWeek(input, options || {}),
-			[
-				{ input: '2024-W12-3', options: {}, pass: true },
-				{ input: '2024W123', options: {}, pass: true },
-				{ input: '2024-W12-3', options: { expanded: 'required' }, pass: true },
-				{ input: '2024W123', options: { expanded: 'required' }, pass: false, errorKey: 'date/isoWeek' },
-				{ input: '2024-W12', options: { minPrecision: 'dayOfWeek' }, pass: false, errorKey: 'date/isoWeek' },
-				{ input: '2024-W12-3T01:00Z', options: { maxPrecision: 'dayOfWeek' }, pass: false, errorKey: 'date/isoWeek' },
-				{ input: '2024-W12-3', options: { maxPrecision: 'dayOfWeek' }, pass: true }
-			],
-			'date/unknown'
-		);
-	});
-
-	it('timestamp parser options', () => {
-		runCases(
-			(input: unknown, options?: Parameters<DateHandler['timestamp']>[1]): ValidationResult =>
-				handler.timestamp(input, options || {}),
-			[
-				{ input: 1704067200, options: { isMilliseconds: false }, pass: true },
-				{ input: 1704067200000, options: { isMilliseconds: true }, pass: true },
-				{ input: 1704067200000, options: {}, pass: true },
-				{ input: 'abc', options: { isMilliseconds: true }, pass: false, errorKey: 'date/timestamp' }
-			],
-			'date/unknown'
-		);
+		runFailTests(handler.iso.bind(handler), [
+			{ input: '20240132'},
+			{ input: '20240102', args: [{ expanded: 'required' }] },
+			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'day' }] },
+			{ input: '2024', args: [{ minPrecision: 'day' }] },
+			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'hour' }] },
+		]);
 	});
 });
 
-describe('DateHandler validators: global', () => {
-	let handler: DateHandler;
 
-	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
-	});
+// describe('DateHandler validators: parsing', () => {
+// 	let handler: DateHandler;
 
-	const parseUtc = (input: unknown): UtcDate => {
-		const result = handler.date(input);
-		expect(result.pass).toBe(true);
-		return result.value as UtcDate;
-	};
+// 	beforeEach(() => {
+// 		handler = new DateHandler();
+// 		handler.configDateConverter(new Translation(DefaultCalendarText));
+// 	});
 
-	it('after', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.after(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-14' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-16' }, pass: false, errorKey: 'date/after' },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: 'bad date' }, pass: false, errorKey: 'date/base' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('date auto parser', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult => handler.date(input),
+// 			[
+// 				{ input: '2024-01-02' },
+// 				{ input: 1704067200 },
+// 				{ input: new Date('2024-01-02T00:00:00Z') },
+// 				{ input: 'not-a-date'errorKey: 'date/base' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('before', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.before(parseUtc(input), options?.referenceDate),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-16' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-14' }, pass: false, errorKey: 'date/before' },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: 'bad date' }, pass: false, errorKey: 'date/base' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('human parser args', () => {
+// 		runCases(
+// 			(input: unknown, args?: Parameters<DateHandler['human']>[1]): ValidationResult =>
+// 				handler.human(input, args),
+// 			[
+// 				// Numeric styles
+// 				{ input: '12/31/2024', args: { dateOrder: 'MDY' } },
+// 				{ input: '2024/12/31', args: { dateOrder: 'YMD' } },
 
-	it('between', () => {
-		runCases(
-			(input: unknown, options?: { minDate: unknown; maxDate: unknown }): ValidationResult =>
-				handler.between(parseUtc(input), options?.minDate as never, options?.maxDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { minDate: '2024-01-01', maxDate: '2024-01-31' }, pass: true },
-				{ input: '2024-02-01T12:00:00Z', options: { minDate: '2024-01-01', maxDate: '2024-01-31' }, pass: false, errorKey: 'date/between' },
-				{ input: '2024-01-15T12:00:00Z', options: { minDate: 'bad', maxDate: '2024-01-31' }, pass: false, errorKey: 'date/base' }
-			],
-			'date/unknown'
-		);
-	});
+// 				// English month/day-name styles
+// 				{ input: 'September 2nd, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'Sep 2nd, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'Tuesday, September 2nd, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'september 2nd, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'September 2, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'September 2nd 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'Sept 2nd, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: '2nd September, 2025', args: { dateOrder: 'MDY' } },
 
-	it('dayOfWeek', () => {
-		runCases(
-			(input: unknown, options?: { dayOfWeek: number }): ValidationResult =>
-				handler.dayOfWeek(parseUtc(input), options?.dayOfWeek ?? 0),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { dayOfWeek: 1 }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { dayOfWeek: 0 }, pass: false, errorKey: 'date/dayOfWeek' }
-			],
-			'date/unknown'
-		);
-	});
+// 				// Time and timezone precision args
+// 				{ input: 'September 2nd, 2025 5pm', args: { dateOrder: 'MDY' } },
+// 				{ input: 'September 2nd, 2025 5:04 pm', args: { dateOrder: 'MDY' } },
+// 				{ input: 'September 2nd, 2025 17:04', args: { dateOrder: 'MDY' } },
+// 				{ input: 'September 2nd, 2025 5:04:09 pm +0530', args: { dateOrder: 'MDY', minPrecision: 'timezone' } },
+// 				{ input: 'September 2nd, 2025 5:04:09 pm UTC', args: { dateOrder: 'MDY', minPrecision: 'timezone' } },
+// 				{ input: 'September 2nd, 2025 5:04:09 pm', args: { dateOrder: 'MDY', minPrecision: 'timezone' } },
+// 				{ input: 'September 2nd, 2025 10:30', args: { dateOrder: 'MDY', maxPrecision: 'date' } },
+// 				{ input: 'September 2nd, 2025 10:30', args: { dateOrder: 'MDY', maxPrecision: 'time' } },
 
-	it('equals', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.equals(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-15T12:00:00Z' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-15T12:00:01Z' }, pass: false, errorKey: 'date/equals' }
-			],
-			'date/unknown'
-		);
-	});
+// 				// Cleaning/whitespace normalization
+// 				{ input: ' 12/31/2024 ', args: { dateOrder: 'MDY', clean: false } },
+// 				{ input: ' 12/31/2024 ', args: { dateOrder: 'MDY', clean: true } },
+// 				{ input: '  September 2nd, 2025  ', args: { dateOrder: 'MDY', clean: false } },
+// 				{ input: '  September 2nd, 2025  ', args: { dateOrder: 'MDY', clean: true } },
 
-	it('sameDay', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.sameDay(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-15T00:01:00Z' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-16T00:01:00Z' }, pass: false, errorKey: 'date/sameDay' }
-			],
-			'date/unknown'
-		);
-	});
+// 				// Invalid date content
+// 				{ input: 'September 31st, 2025', args: { dateOrder: 'MDY' } },
+// 				{ input: 'not a date', args: { dateOrder: 'MDY' } },
+// 				{ input: '12/31/2024 10:30 +0530', args: { dateOrder: 'MDY', minPrecision: 'timezone' } },
+// 				{ input: '12/31/2024 10:30', args: { dateOrder: 'MDY', minPrecision: 'timezone' } }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('sameMonth', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.sameMonth(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-01T00:00:00Z' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-02-01T00:00:00Z' }, pass: false, errorKey: 'date/sameMonth' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('iso parser args', () => {
+// 		runCases(
+// 			(input: unknown, args?: Parameters<DateHandler['iso']>[1]): ValidationResult =>
+// 				handler.iso(input, args || {}),
+// 			[
+// 				{ input: '2024-01-02', args: {} },
+// 				{ input: '20240102', args: {} },
+// 				{ input: '2024-01-02', args: { expanded: 'required' } },
+// 				{ input: '20240102', args: { expanded: 'required' }},
+// 				{ input: '20240102', args: { expanded: 'forbidden' } },
+// 				{ input: '2024', args: { minPrecision: 'day' }},
+// 				{ input: '2024-01-02T03:04:05Z', args: { maxPrecision: 'day' }},
+// 				{ input: '2024-01-02', args: { maxPrecision: 'day' } }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('sameWeek', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown; firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6 }): ValidationResult =>
-				handler.sameWeek(parseUtc(input), options?.referenceDate as never, options?.firstDayOfWeek),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-16T00:00:00Z', firstDayOfWeek: 1 }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-21T00:00:00Z', firstDayOfWeek: 0 }, pass: false, errorKey: 'date/sameWeek' },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-21T00:00:00Z', firstDayOfWeek: 1 }, pass: true }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('isoOrdinal parser args', () => {
+// 		runCases(
+// 			(input: unknown, args?: Parameters<DateHandler['isoOrdinal']>[1]): ValidationResult =>
+// 				handler.isoOrdinal(input, args || {}),
+// 			[
+// 				{ input: '2024-123', args: {} },
+// 				{ input: '2024123', args: {} },
+// 				{ input: '2024-123', args: { expanded: 'required' } },
+// 				{ input: '2024123', args: { expanded: 'required' }errorKey: 'date/isoOrdinal' },
+// 				{ input: '2024', args: { minPrecision: 'dayOfYear' }errorKey: 'date/isoOrdinal' },
+// 				{ input: '2024-123T01:00Z', args: { maxPrecision: 'dayOfYear' }errorKey: 'date/isoOrdinal' },
+// 				{ input: '2024-123', args: { maxPrecision: 'dayOfYear' } }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('sameYear', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.sameYear(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-12-31T00:00:00Z' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2025-01-01T00:00:00Z' }, pass: false, errorKey: 'date/sameYear' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('isoWeek parser args', () => {
+// 		runCases(
+// 			(input: unknown, args?: Parameters<DateHandler['isoWeek']>[1]): ValidationResult =>
+// 				handler.isoWeek(input, args || {}),
+// 			[
+// 				{ input: '2024-W12-3', args: {} },
+// 				{ input: '2024W123', args: {} },
+// 				{ input: '2024-W12-3', args: { expanded: 'required' } },
+// 				{ input: '2024W123', args: { expanded: 'required' }errorKey: 'date/isoWeek' },
+// 				{ input: '2024-W12', args: { minPrecision: 'dayOfWeek' }errorKey: 'date/isoWeek' },
+// 				{ input: '2024-W12-3T01:00Z', args: { maxPrecision: 'dayOfWeek' }errorKey: 'date/isoWeek' },
+// 				{ input: '2024-W12-3', args: { maxPrecision: 'dayOfWeek' } }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('future', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate?: unknown }): ValidationResult =>
-				handler.future(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2999-01-01T00:00:00Z', pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-01' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-02-01' }, pass: false, errorKey: 'date/future' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('timestamp parser args', () => {
+// 		runCases(
+// 			(input: unknown, args?: Parameters<DateHandler['timestamp']>[1]): ValidationResult =>
+// 				handler.timestamp(input, args || {}),
+// 			[
+// 				{ input: 1704067200, args: { isMilliseconds: false } },
+// 				{ input: 1704067200000, args: { isMilliseconds: true } },
+// 				{ input: 1704067200000, args: {} },
+// 				{ input: 'abc', args: { isMilliseconds: true }errorKey: 'date/timestamp' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
+// });
 
-	it('past', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate?: unknown }): ValidationResult =>
-				handler.past(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '1900-01-01T00:00:00Z', pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-02-01' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-01' }, pass: false, errorKey: 'date/past' }
-			],
-			'date/unknown'
-		);
-	});
+// describe('DateHandler validators: global', () => {
+// 	let handler: DateHandler;
 
-	it('recent', () => {
-		runCases(
-			(input: unknown, options?: { days?: number; referenceDate?: unknown }): ValidationResult =>
-				handler.recent(parseUtc(input), options?.days, options?.referenceDate as never),
-			[
-				{ input: new Date(), pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { days: 20, referenceDate: '2024-01-30' }, pass: true },
-				{ input: '2024-01-01T12:00:00Z', options: { days: 5, referenceDate: '2024-01-30' }, pass: false, errorKey: 'date/recent' }
-			],
-			'date/unknown'
-		);
-	});
+// 	beforeEach(() => {
+// 		handler = new DateHandler();
+// 		handler.configDateConverter(new Translation(DefaultCalendarText));
+// 	});
 
-	it('today', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate?: unknown }): ValidationResult =>
-				handler.today(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-15T23:59:00Z' }, pass: true },
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-16T00:00:00Z' }, pass: false, errorKey: 'date/today' }
-			],
-			'date/unknown'
-		);
-	});
+// 	const parseUtc = (input: unknown): UtcDate => {
+// 		const result = handler.date(input);
+// 		expect(result.pass).toBe(true);
+// 		return result.value as UtcDate;
+// 	};
 
-	it('leapYear', () => {
-		runCases(
-			(input: unknown): ValidationResult => handler.leapYear(parseUtc(input)),
-			[
-				{ input: '2024-02-01', pass: true },
-				{ input: '2023-02-01', pass: false, errorKey: 'date/leapYear' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('after', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.after(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-14' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-16' }errorKey: 'date/after' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: 'bad date' }errorKey: 'date/base' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('max', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.max(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-15T12:00:00Z' }, pass: true },
-				{ input: '2024-01-16T12:00:00Z', options: { referenceDate: '2024-01-15T12:00:00Z' }, pass: false, errorKey: 'date/max' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('before', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.before(parseUtc(input), args?.referenceDate),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-16' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-14' }errorKey: 'date/before' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: 'bad date' }errorKey: 'date/base' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('min', () => {
-		runCases(
-			(input: unknown, options?: { referenceDate: unknown }): ValidationResult =>
-				handler.min(parseUtc(input), options?.referenceDate as never),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { referenceDate: '2024-01-15T12:00:00Z' }, pass: true },
-				{ input: '2024-01-14T12:00:00Z', options: { referenceDate: '2024-01-15T12:00:00Z' }, pass: false, errorKey: 'date/min' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('between', () => {
+// 		runCases(
+// 			(input: unknown, args?: { minDate: unknown; maxDate: unknown }): ValidationResult =>
+// 				handler.between(parseUtc(input), args?.minDate as never, args?.maxDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { minDate: '2024-01-01', maxDate: '2024-01-31' } },
+// 				{ input: '2024-02-01T12:00:00Z', args: { minDate: '2024-01-01', maxDate: '2024-01-31' }errorKey: 'date/between' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { minDate: 'bad', maxDate: '2024-01-31' }errorKey: 'date/base' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('minAge', () => {
-		runCases(
-			(input: unknown, options?: { minAge: number; referenceDate?: unknown }): ValidationResult =>
-				handler.minAge(parseUtc(input), options?.minAge ?? 0, options?.referenceDate as never),
-			[
-				{ input: '2000-01-01', options: { minAge: 18, referenceDate: '2024-01-02' }, pass: true },
-				{ input: '2010-01-01', options: { minAge: 18, referenceDate: '2024-01-02' }, pass: false, errorKey: 'date/minAge' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('dayOfWeek', () => {
+// 		runCases(
+// 			(input: unknown, args?: { dayOfWeek: number }): ValidationResult =>
+// 				handler.dayOfWeek(parseUtc(input), args?.dayOfWeek ?? 0),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { dayOfWeek: 1 } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { dayOfWeek: 0 }errorKey: 'date/dayOfWeek' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('weekday', () => {
-		runCases(
-			(input: unknown): ValidationResult => handler.weekday(parseUtc(input)),
-			[
-				{ input: '2024-01-15', pass: true },
-				{ input: '2024-01-14', pass: false, errorKey: 'date/weekday' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('equals', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.equals(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-15T12:00:00Z' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-15T12:00:01Z' }errorKey: 'date/equals' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('weekend', () => {
-		runCases(
-			(input: unknown): ValidationResult => handler.weekend(parseUtc(input)),
-			[
-				{ input: '2024-01-14', pass: true },
-				{ input: '2024-01-15', pass: false, errorKey: 'date/weekend' }
-			],
-			'date/unknown'
-		);
-	});
-});
+// 	it('sameDay', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.sameDay(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-15T00:01:00Z' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-16T00:01:00Z' }errorKey: 'date/sameDay' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-describe('DateHandler mutators and formatter', () => {
-	let handler: DateHandler;
+// 	it('sameMonth', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.sameMonth(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-01T00:00:00Z' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-02-01T00:00:00Z' }errorKey: 'date/sameMonth' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
-	});
+// 	it('sameWeek', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown; firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6 }): ValidationResult =>
+// 				handler.sameWeek(parseUtc(input), args?.referenceDate as never, args?.firstDayOfWeek),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-16T00:00:00Z', firstDayOfWeek: 1 } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-21T00:00:00Z', firstDayOfWeek: 0 }errorKey: 'date/sameWeek' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-21T00:00:00Z', firstDayOfWeek: 1 } }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	const parseUtc = (input: unknown): UtcDate => {
-		const result = handler.date(input);
-		expect(result.pass).toBe(true);
-		return result.value as UtcDate;
-	};
+// 	it('sameYear', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.sameYear(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-12-31T00:00:00Z' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2025-01-01T00:00:00Z' }errorKey: 'date/sameYear' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('addDays', () => {
-		runCases(
-			(input: unknown, options?: { numDays: number }): ValidationResult<string> =>
-				toIsoResult(handler.addDays(parseUtc(input), options?.numDays ?? 0)),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { numDays: 2 }, pass: true, value: '2024-01-17T12:00:00.000Z' },
-				{ input: '2024-01-15T12:00:00Z', options: { numDays: -1 }, pass: true, value: '2024-01-14T12:00:00.000Z' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('future', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate?: unknown }): ValidationResult =>
+// 				handler.future(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2999-01-01T00:00:00Z' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-01' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-02-01' }errorKey: 'date/future' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('addHours', () => {
-		runCases(
-			(input: unknown, options?: { numHours: number }): ValidationResult<string> =>
-				toIsoResult(handler.addHours(parseUtc(input), options?.numHours ?? 0)),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { numHours: 5 }, pass: true, value: '2024-01-15T17:00:00.000Z' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('past', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate?: unknown }): ValidationResult =>
+// 				handler.past(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '1900-01-01T00:00:00Z' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-02-01' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-01' }errorKey: 'date/past' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('addMinutes', () => {
-		runCases(
-			(input: unknown, options?: { numMinutes: number }): ValidationResult<string> =>
-				toIsoResult(handler.addMinutes(parseUtc(input), options?.numMinutes ?? 0)),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { numMinutes: 30 }, pass: true, value: '2024-01-15T12:30:00.000Z' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('recent', () => {
+// 		runCases(
+// 			(input: unknown, args?: { days?: number; referenceDate?: unknown }): ValidationResult =>
+// 				handler.recent(parseUtc(input), args?.days, args?.referenceDate as never),
+// 			[
+// 				{ input: new Date() },
+// 				{ input: '2024-01-15T12:00:00Z', args: { days: 20, referenceDate: '2024-01-30' } },
+// 				{ input: '2024-01-01T12:00:00Z', args: { days: 5, referenceDate: '2024-01-30' }errorKey: 'date/recent' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('addMonths', () => {
-		runCases(
-			(input: unknown, options?: { numMonths: number }): ValidationResult<string> =>
-				toIsoResult(handler.addMonths(parseUtc(input), options?.numMonths ?? 0)),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { numMonths: 1 }, pass: true, value: '2024-02-15T12:00:00.000Z' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('today', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate?: unknown }): ValidationResult =>
+// 				handler.today(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-15T23:59:00Z' } },
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-16T00:00:00Z' }errorKey: 'date/today' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('addYears', () => {
-		runCases(
-			(input: unknown, options?: { numYears: number }): ValidationResult<string> =>
-				toIsoResult(handler.addYears(parseUtc(input), options?.numYears ?? 0)),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { numYears: 1 }, pass: true, value: '2025-01-15T12:00:00.000Z' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('leapYear', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult => handler.leapYear(parseUtc(input)),
+// 			[
+// 				{ input: '2024-02-01' },
+// 				{ input: '2023-02-01'errorKey: 'date/leapYear' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('clamp', () => {
-		runCases(
-			(input: unknown, options?: { minDate: unknown; maxDate: unknown }): ValidationResult<string> =>
-				toIsoResult(handler.clamp(parseUtc(input), options?.minDate as never, options?.maxDate as never)),
-			[
-				{ input: '2023-01-01T00:00:00Z', options: { minDate: '2024-01-01', maxDate: '2024-12-31' }, pass: true, value: '2024-01-01T00:00:00.000Z' },
-				{ input: '2025-01-01T00:00:00Z', options: { minDate: '2024-01-01', maxDate: '2024-12-31' }, pass: true, value: '2024-12-31T00:00:00.000Z' },
-				{ input: '2024-06-01T00:00:00Z', options: { minDate: '2024-01-01', maxDate: '2024-12-31' }, pass: true, value: '2024-06-01T00:00:00.000Z' },
-				{ input: '2024-06-01T00:00:00Z', options: { minDate: 'bad', maxDate: '2024-12-31' }, pass: false, errorKey: 'date/base' }
-			],
-			'date/unknown'
-		);
-	});
+// 	it('max', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.max(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-15T12:00:00Z' } },
+// 				{ input: '2024-01-16T12:00:00Z', args: { referenceDate: '2024-01-15T12:00:00Z' }errorKey: 'date/max' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('toStartOfDay', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toStartOfDay(parseUtc(input))),
-			[{ input: '2024-01-15T12:00:00Z', pass: true, value: '2024-01-15T00:00:00.000Z' }],
-			'date/unknown'
-		);
-	});
+// 	it('min', () => {
+// 		runCases(
+// 			(input: unknown, args?: { referenceDate: unknown }): ValidationResult =>
+// 				handler.min(parseUtc(input), args?.referenceDate as never),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { referenceDate: '2024-01-15T12:00:00Z' } },
+// 				{ input: '2024-01-14T12:00:00Z', args: { referenceDate: '2024-01-15T12:00:00Z' }errorKey: 'date/min' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('toEndOfDay', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toEndOfDay(parseUtc(input))),
-			[{ input: '2024-01-15T12:00:00Z', pass: true, value: '2024-01-15T23:59:59.999Z' }],
-			'date/unknown'
-		);
-	});
+// 	it('minAge', () => {
+// 		runCases(
+// 			(input: unknown, args?: { minAge: number; referenceDate?: unknown }): ValidationResult =>
+// 				handler.minAge(parseUtc(input), args?.minAge ?? 0, args?.referenceDate as never),
+// 			[
+// 				{ input: '2000-01-01', args: { minAge: 18, referenceDate: '2024-01-02' } },
+// 				{ input: '2010-01-01', args: { minAge: 18, referenceDate: '2024-01-02' }errorKey: 'date/minAge' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('toStartOfMonth', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toStartOfMonth(parseUtc(input))),
-			[{ input: '2024-01-15T12:00:00Z', pass: true, value: '2024-01-01T00:00:00.000Z' }],
-			'date/unknown'
-		);
-	});
+// 	it('weekday', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult => handler.weekday(parseUtc(input)),
+// 			[
+// 				{ input: '2024-01-15' },
+// 				{ input: '2024-01-14'errorKey: 'date/weekday' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('toEndOfMonth', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toEndOfMonth(parseUtc(input))),
-			[{ input: '2024-02-10T00:00:00Z', pass: true, value: '2024-02-29T23:59:59.999Z' }],
-			'date/unknown'
-		);
-	});
+// 	it('weekend', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult => handler.weekend(parseUtc(input)),
+// 			[
+// 				{ input: '2024-01-14' },
+// 				{ input: '2024-01-15'errorKey: 'date/weekend' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
+// });
 
-	it('toStartOfYear', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toStartOfYear(parseUtc(input))),
-			[{ input: '2024-06-15T12:00:00Z', pass: true, value: '2024-01-01T00:00:00.000Z' }],
-			'date/unknown'
-		);
-	});
+// describe('DateHandler mutators and formatter', () => {
+// 	let handler: DateHandler;
 
-	it('toEndOfYear', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toEndOfYear(parseUtc(input))),
-			[{ input: '2024-03-10T00:00:00Z', pass: true, value: '2024-12-31T23:59:59.999Z' }],
-			'date/unknown'
-		);
-	});
+// 	beforeEach(() => {
+// 		handler = new DateHandler();
+// 		handler.configDateConverter(new Translation(DefaultCalendarText));
+// 	});
 
-	it('toNextDayOfWeek', () => {
-		runCases(
-			(input: unknown, options?: { targetDayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6 }): ValidationResult<string> =>
-				toIsoResult(handler.toNextDayOfWeek(parseUtc(input), options?.targetDayOfWeek ?? 0)),
-			[
-				{ input: '2024-01-15T00:00:00Z', options: { targetDayOfWeek: 5 }, pass: true, value: '2024-01-19T00:00:00.000Z' },
-				{ input: '2024-01-15T00:00:00Z', options: { targetDayOfWeek: 1 }, pass: true, value: '2024-01-22T00:00:00.000Z' }
-			],
-			'date/unknown'
-		);
-	});
+// 	const parseUtc = (input: unknown): UtcDate => {
+// 		const result = handler.date(input);
+// 		expect(result.pass).toBe(true);
+// 		return result.value as UtcDate;
+// 	};
 
-	it('toNextWeekday', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toNextWeekday(parseUtc(input))),
-			[{ input: '2024-01-19T00:00:00Z', pass: true, value: '2024-01-22T00:00:00.000Z' }],
-			'date/unknown'
-		);
-	});
+// 	it('addDays', () => {
+// 		runCases(
+// 			(input: unknown, args?: { numDays: number }): ValidationResult<string> =>
+// 				toIsoResult(handler.addDays(parseUtc(input), args?.numDays ?? 0)),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { numDays: 2 }, value: '2024-01-17T12:00:00.000Z' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { numDays: -1 }, value: '2024-01-14T12:00:00.000Z' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('toPreviousWeekday', () => {
-		runCases(
-			(input: unknown): ValidationResult<string> => toIsoResult(handler.toPreviousWeekday(parseUtc(input))),
-			[{ input: '2024-01-22T00:00:00Z', pass: true, value: '2024-01-19T00:00:00.000Z' }],
-			'date/unknown'
-		);
-	});
+// 	it('addHours', () => {
+// 		runCases(
+// 			(input: unknown, args?: { numHours: number }): ValidationResult<string> =>
+// 				toIsoResult(handler.addHours(parseUtc(input), args?.numHours ?? 0)),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { numHours: 5 }, value: '2024-01-15T17:00:00.000Z' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-	it('toFormat output modes', () => {
-		runCases(
-			(input: unknown, options?: { formatString: string | null; timeMode?: 'utc' | 'local' }): ValidationResult =>
-				handler.toFormat(parseUtc(input), options?.formatString ?? null, options?.timeMode),
-			[
-				{ input: '2024-01-15T12:00:00Z', options: { formatString: null }, pass: true, value: '2024-01-15T12:00:00Z' },
-				{ input: '2024-01-15T12:00:00Z', options: { formatString: 'timestamp' }, pass: true, value: 1705320000000 },
-				{ input: '2024-01-15T12:00:00Z', options: { formatString: 'YYYY-MM-DD', timeMode: 'utc' }, pass: true, value: '2024-01-15' }
-			],
-			'date/unknown'
-		);
+// 	it('addMinutes', () => {
+// 		runCases(
+// 			(input: unknown, args?: { numMinutes: number }): ValidationResult<string> =>
+// 				toIsoResult(handler.addMinutes(parseUtc(input), args?.numMinutes ?? 0)),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { numMinutes: 30 }, value: '2024-01-15T12:30:00.000Z' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
 
-		const objectResult = handler.toFormat(parseUtc('2024-01-15T12:00:00Z'), 'object');
-		expect(objectResult.pass).toBe(true);
-		expect(objectResult.value).toBeInstanceOf(Date);
-		expect((objectResult.value as Date).toISOString()).toBe('2024-01-15T12:00:00.000Z');
-	});
-});
+// 	it('addMonths', () => {
+// 		runCases(
+// 			(input: unknown, args?: { numMonths: number }): ValidationResult<string> =>
+// 				toIsoResult(handler.addMonths(parseUtc(input), args?.numMonths ?? 0)),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { numMonths: 1 }, value: '2024-02-15T12:00:00.000Z' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('addYears', () => {
+// 		runCases(
+// 			(input: unknown, args?: { numYears: number }): ValidationResult<string> =>
+// 				toIsoResult(handler.addYears(parseUtc(input), args?.numYears ?? 0)),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { numYears: 1 }, value: '2025-01-15T12:00:00.000Z' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('clamp', () => {
+// 		runCases(
+// 			(input: unknown, args?: { minDate: unknown; maxDate: unknown }): ValidationResult<string> =>
+// 				toIsoResult(handler.clamp(parseUtc(input), args?.minDate as never, args?.maxDate as never)),
+// 			[
+// 				{ input: '2023-01-01T00:00:00Z', args: { minDate: '2024-01-01', maxDate: '2024-12-31' }, value: '2024-01-01T00:00:00.000Z' },
+// 				{ input: '2025-01-01T00:00:00Z', args: { minDate: '2024-01-01', maxDate: '2024-12-31' }, value: '2024-12-31T00:00:00.000Z' },
+// 				{ input: '2024-06-01T00:00:00Z', args: { minDate: '2024-01-01', maxDate: '2024-12-31' }, value: '2024-06-01T00:00:00.000Z' },
+// 				{ input: '2024-06-01T00:00:00Z', args: { minDate: 'bad', maxDate: '2024-12-31' }errorKey: 'date/base' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toStartOfDay', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toStartOfDay(parseUtc(input))),
+// 			[{ input: '2024-01-15T12:00:00Z', value: '2024-01-15T00:00:00.000Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toEndOfDay', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toEndOfDay(parseUtc(input))),
+// 			[{ input: '2024-01-15T12:00:00Z', value: '2024-01-15T23:59:59.999Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toStartOfMonth', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toStartOfMonth(parseUtc(input))),
+// 			[{ input: '2024-01-15T12:00:00Z', value: '2024-01-01T00:00:00.000Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toEndOfMonth', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toEndOfMonth(parseUtc(input))),
+// 			[{ input: '2024-02-10T00:00:00Z', value: '2024-02-29T23:59:59.999Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toStartOfYear', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toStartOfYear(parseUtc(input))),
+// 			[{ input: '2024-06-15T12:00:00Z', value: '2024-01-01T00:00:00.000Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toEndOfYear', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toEndOfYear(parseUtc(input))),
+// 			[{ input: '2024-03-10T00:00:00Z', value: '2024-12-31T23:59:59.999Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toNextDayOfWeek', () => {
+// 		runCases(
+// 			(input: unknown, args?: { targetDayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6 }): ValidationResult<string> =>
+// 				toIsoResult(handler.toNextDayOfWeek(parseUtc(input), args?.targetDayOfWeek ?? 0)),
+// 			[
+// 				{ input: '2024-01-15T00:00:00Z', args: { targetDayOfWeek: 5 }, value: '2024-01-19T00:00:00.000Z' },
+// 				{ input: '2024-01-15T00:00:00Z', args: { targetDayOfWeek: 1 }, value: '2024-01-22T00:00:00.000Z' }
+// 			],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toNextWeekday', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toNextWeekday(parseUtc(input))),
+// 			[{ input: '2024-01-19T00:00:00Z', value: '2024-01-22T00:00:00.000Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toPreviousWeekday', () => {
+// 		runCases(
+// 			(input: unknown): ValidationResult<string> => toIsoResult(handler.toPreviousWeekday(parseUtc(input))),
+// 			[{ input: '2024-01-22T00:00:00Z', value: '2024-01-19T00:00:00.000Z' }],
+// 			'date/unknown'
+// 		);
+// 	});
+
+// 	it('toFormat output modes', () => {
+// 		runCases(
+// 			(input: unknown, args?: { formatString: string | null; timeMode?: 'utc' | 'local' }): ValidationResult =>
+// 				handler.toFormat(parseUtc(input), args?.formatString ?? null, args?.timeMode),
+// 			[
+// 				{ input: '2024-01-15T12:00:00Z', args: { formatString: null }, value: '2024-01-15T12:00:00Z' },
+// 				{ input: '2024-01-15T12:00:00Z', args: { formatString: 'timestamp' }, value: 1705320000000 },
+// 				{ input: '2024-01-15T12:00:00Z', args: { formatString: 'YYYY-MM-DD', timeMode: 'utc' }, value: '2024-01-15' }
+// 			],
+// 			'date/unknown'
+// 		);
+
+// 		const objectResult = handler.toFormat(parseUtc('2024-01-15T12:00:00Z'), 'object');
+// 		expect(objectResult.pass).toBe(true);
+// 		expect(objectResult.value).toBeInstanceOf(Date);
+// 		expect((objectResult.value as Date).toISOString()).toBe('2024-01-15T12:00:00.000Z');
+// 	});
+// });

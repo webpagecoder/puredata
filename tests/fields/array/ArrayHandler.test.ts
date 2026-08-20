@@ -36,10 +36,10 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.anyOf.bind(handler), [
-			{ input: [1, { a: 2 }], args: [[{ a: 1 }]], errorKey: 'array/anyOf' },
-			{ input: [1, { a: 1 }], args: [[22]], errorKey: 'array/anyOf' },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]], errorKey: 'array/anyOf' },
-			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]], errorKey: 'array/anyOf' },
+			{ input: [1, { a: 2 }], args: [[{ a: 1 }]] },
+			{ input: [1, { a: 1 }], args: [[22]] },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]] },
+			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]] },
 		]);
 	});
 

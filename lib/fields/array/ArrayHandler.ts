@@ -157,7 +157,7 @@ class ArrayHandler extends AnyHandler {
                 }
             }
         }
-        return fail(arr, 'array/someOf', { possibleValues });
+        return fail(arr, 'array/anyOf', { possibleValues });
     }
 
     /**

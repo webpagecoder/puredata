@@ -54,7 +54,7 @@ class DateHandler extends AnyHandler {
      * @param options ISO parsing and validation options.
      * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
-    public iso(input: unknown, options: IsoParseOptions): HandlerResult {
+    public iso(input: unknown, options: IsoParseOptions = {}): HandlerResult {
         const parsedDate = this._dateConverter!.parseIso(input, options);
         return !parsedDate
             ? fail(input, 'date/iso', { options })
@@ -67,7 +67,7 @@ class DateHandler extends AnyHandler {
      * @param options ISO ordinal parsing and validation options.
      * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
-    public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions): HandlerResult {
+    public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions = {}): HandlerResult {
         const parsedDate = this._dateConverter!.parseIsoOrdinal(input, options);
         return !parsedDate
             ? fail(input, 'date/isoOrdinal', { options })
@@ -80,7 +80,7 @@ class DateHandler extends AnyHandler {
      * @param options ISO week parsing and validation options.
      * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
-    public isoWeek(input: unknown, options: IsoWeekParseOptions): HandlerResult {
+    public isoWeek(input: unknown, options: IsoWeekParseOptions = {}): HandlerResult {
         const parsedDate = this._dateConverter!.parseIsoWeek(input, options);
         return !parsedDate
             ? fail(input, 'date/isoWeek', { options })
@@ -93,7 +93,7 @@ class DateHandler extends AnyHandler {
      * @param options Timestamp parsing options.
      * @returns Returns the input date when it is in the past relative to the reference date, otherwise reports that it is not in the past.
      */
-    public timestamp(input: unknown, options: TimestampOptions): HandlerResult {
+    public timestamp(input: unknown, options: TimestampOptions = {}): HandlerResult {
         const parsedDate = this._dateConverter!.parseTimestamp(input, options);
         return !parsedDate
             ? fail(input, 'date/timestamp', { options })
@@ -458,7 +458,7 @@ class DateHandler extends AnyHandler {
         let finalForm: unknown;
         if (formatString === null) {
             // A raw date will only exist if the metadate was never modified
-            finalForm = inputDate.raw || inputDate.date;
+            finalForm = inputDate.raw !== null ? inputDate.raw : inputDate.date;
         }
         else if (formatString === 'timestamp') {
             finalForm = inputDate.date.getTime();
@@ -474,7 +474,7 @@ class DateHandler extends AnyHandler {
 
 
 
-    
+
     // *****************************************
     //               MUTATORS
     // *****************************************

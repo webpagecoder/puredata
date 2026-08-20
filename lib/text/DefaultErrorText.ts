@@ -14,7 +14,7 @@ const DefaultErrorText: Record<string, string> = {
     'array/notEmpty': 'Must not be empty',
     'array/only': 'Can only contain values from: {allowedValues}. Invalid value {invalidValue} found at index {index}',
     'array/otherThan': 'Cannot contain any of these values: {forbiddenValues}, found {invalidValue} at index {index}',
-    'array/someOf': 'Must contain at least one of these values: {possibleValues}',
+    'array/anyOf': 'Must contain at least one of these values: {possibleValues}',
     'array/sorted': 'Must be sorted, first unsorted value {invalidValue} found at index {index}',
     'array/tuple': 'Must match the tuple values: {tupleValues}, expected {expectedValue} at index {index}, but found {invalidValue}',
     'array/unique': 'Must contain only unique values, duplicate value {duplicateValue} found at indices {index1} and {index2}',
