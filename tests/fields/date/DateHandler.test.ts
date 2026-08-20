@@ -83,11 +83,39 @@ describe('DateHandler validators', () => {
 		]);
 
 		runFailTests(handler.iso.bind(handler), [
-			{ input: '20240132'},
+			{ input: '20240132' },
 			{ input: '20240102', args: [{ expanded: 'required' }] },
 			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'day' }] },
 			{ input: '2024', args: [{ minPrecision: 'day' }] },
 			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'hour' }] },
+			{ input: '2024-01-02', args: [{ expanded: 'forbidden' }] },
+			{ input: 'not a date' },
+		]);
+	});
+
+	it('isoOrdinal', () => {
+		runPassTests(handler.isoOrdinal.bind(handler), [
+			{ input: '2024-123', output: equalsDate(new Date('2024-05-02')) },
+			{ input: '2024-366', output: equalsDate(new Date('2024-12-31')) },
+			{ input: '2024123', output: equalsDate(new Date('2024-05-02')) },
+			{ input: '2024-123', args: [{ expanded: 'required' }], output: equalsDate(new Date('2024-05-02')) },
+			{ input: '2024123', args: [{ expanded: 'forbidden' }], output: equalsDate(new Date('2024-05-02')) },
+			{ input: '2024-123', args: [{ minPrecision: 'dayOfYear' }], output: equalsDate(new Date('2024-05-02')) },
+			{ input: '2024-123', args: [{ maxPrecision: 'dayOfYear' }], output: equalsDate(new Date('2024-05-02')) },
+			{ input: '2024123T010023+0130', output: equalsDate(new Date('2024-05-02T01:00:23+01:30')) },
+		]);
+
+		runFailTests(handler.isoOrdinal.bind(handler), [
+			{ input: '2024', args: [{ minPrecision: 'dayOfYear' }] },
+			{ input: '2024-367' },
+			{ input: '2023-366', },
+			{ input: '2024-123T01:00Z', args: [{ maxPrecision: 'dayOfYear' }] },
+			{ input: 'not a date' },
+			{ input: '20240102', args: [{ expanded: 'required' }] },
+			{ input: '2024-123T03:04:05Z', args: [{ maxPrecision: 'dayOfYear' }] },
+			{ input: '2024', args: [{ minPrecision: 'dayOfYear' }] },
+			{ input: '2024-123T03:04:05Z', args: [{ maxPrecision: 'hour' }] },
+			{ input: '2024-123', args: [{ expanded: 'forbidden' }] },
 		]);
 	});
 });
@@ -185,9 +213,9 @@ describe('DateHandler validators', () => {
 // 				{ input: '2024-123', args: {} },
 // 				{ input: '2024123', args: {} },
 // 				{ input: '2024-123', args: { expanded: 'required' } },
-// 				{ input: '2024123', args: { expanded: 'required' }errorKey: 'date/isoOrdinal' },
-// 				{ input: '2024', args: { minPrecision: 'dayOfYear' }errorKey: 'date/isoOrdinal' },
-// 				{ input: '2024-123T01:00Z', args: { maxPrecision: 'dayOfYear' }errorKey: 'date/isoOrdinal' },
+// 				{ input: '2024123', args: { expanded: 'required' }},
+// 				{ input: '2024', args: { minPrecision: 'dayOfYear' }},
+// 				{ input: '2024-123T01:00Z', args: { maxPrecision: 'dayOfYear' }},
 // 				{ input: '2024-123', args: { maxPrecision: 'dayOfYear' } }
 // 			],
 // 			'date/unknown'
