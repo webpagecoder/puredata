@@ -84,6 +84,7 @@ describe('DateHandler validators', () => {
 
 		runFailTests(handler.iso.bind(handler), [
 			{ input: '20240132' },
+			{ input: '202401-30' },
 			{ input: '20240102', args: [{ expanded: 'required' }] },
 			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'day' }] },
 			{ input: '2024', args: [{ minPrecision: 'day' }] },
