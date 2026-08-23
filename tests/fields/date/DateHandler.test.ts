@@ -34,7 +34,6 @@ describe('DateHandler validators', () => {
 		]);
 	});
 
-
 	it('human', () => {
 		runPassTests(handler.human.bind(handler), [
 
@@ -117,6 +116,40 @@ describe('DateHandler validators', () => {
 			{ input: '2024', args: [{ minPrecision: 'dayOfYear' }] },
 			{ input: '2024-123T03:04:05Z', args: [{ maxPrecision: 'hour' }] },
 			{ input: '2024-123', args: [{ expanded: 'forbidden' }] },
+		]);
+	});
+
+	it('isoWeek', () => {
+		runPassTests(handler.isoWeek.bind(handler), [
+			{ input: '2024-W12-3', output: equalsDate(new Date('2024-03-20')) },
+			{ input: '2024W123', output: equalsDate(new Date('2024-03-20')) },
+			{ input: '2024-W12-3', args: [{ expanded: 'required' }], output: equalsDate(new Date('2024-03-20')) },
+			{ input: '2024-W12-1', args: [{ minPrecision: 'dayOfWeek' }], output: equalsDate(new Date('2024-03-18')) },
+			{ input: '2024-W12', args: [{ maxPrecision: 'dayOfWeek' }], output: equalsDate(new Date('2024-03-18')) },
+			{ input: '2024-W12-3T01:00Z', args: [{ maxPrecision: 'timezone' }], output: equalsDate(new Date('2024-03-20T01:00:00Z')) },
+		]);
+
+		runFailTests(handler.isoWeek.bind(handler), [
+			{ input: 'not a date' },
+			{ input: '2024W123', args: [{ expanded: 'required' }] },
+			{ input: '2024-W-123', args: [{ expanded: 'forbidden' }] },
+			{ input: '2024-W12', args: [{ minPrecision: 'dayOfWeek' }] },
+			{ input: '2024-W12-1', args: [{ maxPrecision: 'week' }] },
+			{ input: '2024-W12-3T01:00Z', args: [{ maxPrecision: 'dayOfWeek' }] },
+		]);
+	});
+
+	it('timestamp', () => {
+		runPassTests(handler.timestamp.bind(handler), [
+			{ input: 1704067201000, args:[{ isMilliseconds: true }], output: equalsDate(new Date('2024-01-01T00:00:01.000Z'))  },
+			{ input: 1704067201, args:[{ isMilliseconds: false }], output: equalsDate(new Date('2024-01-01T00:00:01.000Z'))  },
+			{ input: 0, output: equalsDate(new Date('1970-01-01'))  },
+
+		]);
+
+		runFailTests(handler.timestamp.bind(handler), [
+			{ input: 'not a date' },
+
 		]);
 	});
 });

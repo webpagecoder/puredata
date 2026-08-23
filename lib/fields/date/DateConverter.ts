@@ -730,7 +730,7 @@ class DateConverter {
 
         const yearNum = Number(year);
         const weekNum = Number(week);
-        const dayNum = Number(dayOfWeek);
+        const dayNum = Number(dayOfWeek) || 1;
 
         if (weekNum === 53 && !DateHelpers.has53IsoWeeks(yearNum)) {
             return null;
@@ -748,7 +748,18 @@ class DateConverter {
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate(date, totalOffsetMinutes);
+        return new UtcDate(
+            new Date(Date.UTC(
+                date.getUTCFullYear(),
+                date.getUTCMonth(),
+                date.getUTCDate(),
+                Number(hour),
+                Number(minute),
+                Number(second),
+                Number(millisecond)
+            )),
+            totalOffsetMinutes
+        );
     }
 
     public parseTimestamp(value: unknown, options: TimestampOptions = {}): UtcDate | null {
