@@ -43,7 +43,7 @@ const DefaultErrorText: Record<string, string> = {
     'date/min': 'Must be after or equal to {compareDate}',
     'date/minAge': 'Must be at least {minAge} years old',
     'date/past': 'Must be in the past',
-    'date/recent': 'Must be within the last {days} days',
+    'date/recent': 'Must be within the last {daysDiff} days, current difference: {actualDiff} days',
     'date/timestamp': 'Must be a valid timestamp',
     'date/today': 'Must be today',
     'date/toNextDayOfWeek': 'Target day must be between 0 and 6',

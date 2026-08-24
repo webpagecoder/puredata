@@ -45,7 +45,7 @@ const HUMAN = (allMonthNames: string, allDayNames: string, numberSuffixes: strin
     return {
         regexes: {
             MDY: `(?:${allDayNames}[., ]+)?(?:(?:(${M_OR_MM})[/. -]+(${D_OR_DD})[/. -]+)|(?:(${allMonthNames})[., ]+(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+))(${YYYY})(?:[, ]+(.*))?$`,
-            DMY: `(?:${allDayNames}[., ]+)?(?:(?:(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+)(?:(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[., ]+))(${YYYY})(?:[, ]+(.*))?$`,
+            DMY: `(?:${allDayNames}[., ]+)?(?:(?:(${D_OR_DD})[/. -]+(${M_OR_MM})[/. -]+)|(?:(${D_OR_DD})(?:\\s*${numberSuffixes})?[ ,]+(${allMonthNames})[., ]+))(${YYYY})(?:[, ]+(.*))?$`,
             YMD: `(?:${allDayNames}[., ]+)?(${YYYY})(?:(?:[/. -]+(${M_OR_MM})[/. -]+(${D_OR_DD}))|(?:[ ,]+(?:(${allMonthNames}))[., ]+(${D_OR_DD})(?:\\s*${numberSuffixes})?))(?:[, ]+(.*))?$`
         },
         indexes: {
@@ -113,6 +113,8 @@ export type IsoWeekParseOptions = {
 export type TimestampOptions = {
     isMilliseconds?: boolean;
 };
+export type AutoParseOptions = HumanParseOptions | IsoParseOptions | IsoOrdinalParseOptions | IsoWeekParseOptions | TimestampOptions;
+
 
 class DateConverter {
 
@@ -160,44 +162,37 @@ class DateConverter {
         };
     }
 
-    public parseAuto(value: unknown, parseTypes: DateType[] = []): UtcDate | null {
-        const anyType = parseTypes.length === 0;
+    public parseAuto(value: unknown, options: AutoParseOptions = {}): UtcDate | null {
 
-        if (anyType || parseTypes.indexOf('instance') !== -1) {
-            if (value instanceof Date && !isNaN(value.getTime())) {
-                return new UtcDate(value, this._defaultUtcOffsetMinutes);
-            }
+        if (value instanceof Date && !isNaN(value.getTime())) {
+            return new UtcDate(value, this._defaultUtcOffsetMinutes);
         }
-        if (anyType || parseTypes.indexOf('timestamp') !== -1) {
-            const normalizedDate = this.parseTimestamp(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
+
+        let normalizedDate = this.parseTimestamp(value, options as TimestampOptions);
+        if (normalizedDate) {
+            return normalizedDate;
         }
-        if (anyType || parseTypes.indexOf('iso') !== -1) {
-            const normalizedDate = this.parseIso(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
+
+        normalizedDate = this.parseIso(value, options as IsoParseOptions);
+        if (normalizedDate) {
+            return normalizedDate;
         }
-        if (anyType || parseTypes.indexOf('human') !== -1) {
-            const normalizedDate = this.parseHuman(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
+
+        normalizedDate = this.parseHuman(value, options as HumanParseOptions);
+        if (normalizedDate) {
+            return normalizedDate;
         }
-        if (anyType || parseTypes.indexOf('isoWeek') !== -1) {
-            const normalizedDate = this.parseIsoWeek(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
+
+        normalizedDate = this.parseIsoWeek(value, options as IsoWeekParseOptions);
+        if (normalizedDate) {
+            return normalizedDate;
         }
-        if (anyType || parseTypes.indexOf('isoOrdinal') !== -1) {
-            const normalizedDate = this.parseIsoOrdinal(value);
-            if (normalizedDate) {
-                return normalizedDate;
-            }
+
+        normalizedDate = this.parseIsoOrdinal(value, options as IsoOrdinalParseOptions);
+        if (normalizedDate) {
+            return normalizedDate;
         }
+
         return null;
     }
 

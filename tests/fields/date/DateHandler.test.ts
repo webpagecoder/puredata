@@ -13,7 +13,7 @@ function equalsDate(date: Date): (date: UtcDate) => boolean {
 	return (utcDate: UtcDate) => utcDate.date.getTime() === date.getTime();
 }
 
-describe('DateHandler validators', () => {
+describe('DateHandler parsers', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
@@ -26,11 +26,16 @@ describe('DateHandler validators', () => {
 			{ input: '2024-01-02', output: equalsDate(new Date('2024-01-02')) },
 			{ input: 1704067200, output: equalsDate(new Date(1704067200000)) },
 			{ input: new Date('2024-01-12T00:00:00Z'), output: equalsDate(new Date('2024-01-12T00:00:00Z')) },
+			{ input: 'Tuesday, September 2nd, 2025', output: equalsDate(new Date('2025-09-02')) },
+			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'second' }], output: equalsDate(new Date('2024-01-02T03:04:05Z')) },
+			{ input: '2024123T010023+0130', output: equalsDate(new Date('2024-05-02T01:00:23+01:30')) },
+			{ input: '2024-W12-3T01:00Z', args: [{ maxPrecision: 'timezone' }], output: equalsDate(new Date('2024-03-20T01:00:00Z')) },
 		]);
 
 		runFailTests(handler.date.bind(handler), [
 			{ input: '' },
 			{ input: 'not-a-date' },
+			{ input: '2024-01-02', args: [{ expanded: 'forbidden' }] },
 		]);
 	});
 
@@ -45,6 +50,8 @@ describe('DateHandler validators', () => {
 			{ input: 'September 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
 			{ input: 'Sep 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
 			{ input: 'Tuesday, September 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'Tues, 2025 September 2nd', args: [{ dateOrder: 'YMD' }], output: equalsDate(new Date('2025-09-02')) },
+			{ input: 'Tues. 2 September 2025', args: [{ dateOrder: 'DMY' }], output: equalsDate(new Date('2025-09-02')) },
 			{ input: 'september 2nd, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
 			{ input: 'September 2, 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
 			{ input: 'September 2nd 2025', args: [{ dateOrder: 'MDY' }], output: equalsDate(new Date('2025-09-02')) },
@@ -141,18 +148,271 @@ describe('DateHandler validators', () => {
 
 	it('timestamp', () => {
 		runPassTests(handler.timestamp.bind(handler), [
-			{ input: 1704067201000, args:[{ isMilliseconds: true }], output: equalsDate(new Date('2024-01-01T00:00:01.000Z'))  },
-			{ input: 1704067201, args:[{ isMilliseconds: false }], output: equalsDate(new Date('2024-01-01T00:00:01.000Z'))  },
-			{ input: 0, output: equalsDate(new Date('1970-01-01'))  },
-
+			{ input: 1704067201000, args: [{ isMilliseconds: true }], output: equalsDate(new Date('2024-01-01T00:00:01.000Z')) },
+			{ input: 1704067201, args: [{ isMilliseconds: false }], output: equalsDate(new Date('2024-01-01T00:00:01.000Z')) },
+			{ input: 0, output: equalsDate(new Date('1970-01-01')) },
 		]);
 
 		runFailTests(handler.timestamp.bind(handler), [
 			{ input: 'not a date' },
-
 		]);
 	});
 });
+
+
+
+
+
+function makeUtcDate(isoString: string) {
+	return new UtcDate(new Date(isoString));
+}
+
+
+describe('DateHandler validators', () => {
+	let handler: DateHandler;
+
+	beforeEach(() => {
+		handler = new DateHandler();
+		handler.configDateConverter(new Translation(DefaultCalendarText));
+	});
+
+	it('after', () => {
+		runPassTests(handler.after.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:00:00Z'), args: [new Date('2024-01-14T12:00:00Z')] },
+			{ input: makeUtcDate('2024-01-15T12:00:00.001Z'), args: [new Date('2024-01-15T12:00:00Z')] },
+		]);
+
+		runFailTests(handler.after.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:00:00Z'), args: [new Date('2024-01-16T12:00:00Z')] },
+			{ input: makeUtcDate('2024-01-15T12:00:00.001Z'), args: [new Date('2024-01-16T12:00:00Z')] },
+		]);
+	});
+
+	it('before', () => {
+		runPassTests(handler.before.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:00:00Z'), args: [new Date('2024-01-16T12:00:00Z')] },
+			{ input: makeUtcDate('2024-01-15T12:00:00.001Z'), args: [new Date('2024-01-16T12:00:00Z')] },
+		]);
+
+		runFailTests(handler.before.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:00:00Z'), args: [new Date('2024-01-14T12:00:00Z')] },
+			{ input: makeUtcDate('2024-01-15T12:00:00.001Z'), args: [new Date('2024-01-15T12:00:00Z')] },
+		]);
+	});
+
+	it('between', () => {
+		runPassTests(handler.between.bind(handler), [
+			{ input: makeUtcDate('2024-01-17T12:00:00Z'), args: [new Date('2024-01-16T12:00:00Z'), new Date('2024-01-17T12:00:00Z')] },
+			{ input: makeUtcDate('2024-01-16T12:28:00Z'), args: [new Date('2024-01-16T12:00:00Z'), new Date('2024-01-16T12:30:00Z')] },
+		]);
+
+		runFailTests(handler.between.bind(handler), [
+			{ input: makeUtcDate('2024-01-17T12:00:00Z'), args: [new Date('2024-01-16T12:00:00Z'), new Date('2024-01-16T12:01:00Z')] },
+			{ input: makeUtcDate('2024-01-16T12:28:00Z'), args: [new Date('2024-01-16T12:00:00Z'), new Date('2024-01-16T12:27:00Z')] },
+		]);
+	});
+
+	it('dayOfWeek', () => {
+		runPassTests(handler.dayOfWeek.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [1] },
+			{ input: makeUtcDate('2024-01-16'), args: [2] },
+		]);
+
+		runFailTests(handler.dayOfWeek.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [2] },
+			{ input: makeUtcDate('2024-01-16'), args: [3] },
+		]);
+	});
+
+	it('equals', () => {
+		runPassTests(handler.equals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-15')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-16')] },
+		]);
+
+		runFailTests(handler.equals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-17')] },
+		]);
+	});
+
+	it('leapYear', () => {
+		runPassTests(handler.leapYear.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [] },
+			{ input: makeUtcDate('2028-01-16'), args: [] },
+		]);
+
+		runFailTests(handler.leapYear.bind(handler), [
+			{ input: makeUtcDate('2023-01-15'), args: [] },
+			{ input: makeUtcDate('2021-01-16'), args: [] },
+		]);
+	});
+
+
+	it('max', () => {
+		runPassTests(handler.max.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
+			{ input: makeUtcDate('2024-01-17'), args: [new Date('2024-01-17T00:00:01Z')] },
+		]);
+
+		runFailTests(handler.max.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-14')] },
+			{ input: makeUtcDate('2024-01-17T00:00:02Z'), args: [new Date('2024-01-17T00:00:01Z')] },
+		]);
+	});
+
+	it('min', () => {
+		runPassTests(handler.min.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-14')] },
+			{ input: makeUtcDate('2024-01-17T00:00:02Z'), args: [new Date('2024-01-17T00:00:01Z')] },
+		]);
+
+		runFailTests(handler.min.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
+			{ input: makeUtcDate('2024-01-17'), args: [new Date('2024-01-17T00:00:01Z')] },
+		]);
+	});
+
+	it('minAge', () => {
+		runPassTests(handler.minAge.bind(handler), [
+			{ input: makeUtcDate('1982-01-15'), args: [44] },
+			{ input: makeUtcDate('2024-01-17T00:00:02Z'), args: [2] },
+		]);
+
+		runFailTests(handler.minAge.bind(handler), [
+			{ input: makeUtcDate('1982-01-15'), args: [54] },
+			{ input: makeUtcDate('2024-01-17T00:00:02Z'), args: [21] },
+		]);
+	});
+
+	it('sameDay', () => {
+		runPassTests(handler.sameDay.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-15T05:00:00Z')] },
+			{ input: makeUtcDate('2024-01-16T00:00:00Z'), args: [new Date('2024-01-16T05:00Z')] },
+		]);
+
+		runFailTests(handler.sameDay.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-16T05:00:00Z')] },
+			{ input: makeUtcDate('2024-01-16T00:00:00Z'), args: [new Date('2024-01-17T05:00Z')] },
+		]);
+	});
+
+	it('sameMonth', () => {
+		runPassTests(handler.sameMonth.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-22T05:00:00Z')] },
+			{ input: makeUtcDate('2024-12-16T00:00:00Z'), args: [new Date('2024-12-01T05:00Z')] },
+		]);
+
+		runFailTests(handler.sameMonth.bind(handler), [
+			{ input: makeUtcDate('2024-02-15T12:01:00Z'), args: [new Date('2024-01-16T05:00:00Z')] },
+			{ input: makeUtcDate('2024-11-16T00:00:00Z'), args: [new Date('2024-01-17T05:00Z')] },
+		]);
+	});
+
+	it('sameWeek', () => {
+		runPassTests(handler.sameWeek.bind(handler), [
+			{ input: makeUtcDate('2026-08-25'), args: [new Date('2026-08-24')] },
+			{ input: makeUtcDate('2026-08-23'), args: [new Date('2026-08-17')] },
+		]);
+
+		runFailTests(handler.sameWeek.bind(handler), [
+			{ input: makeUtcDate('2026-08-24'), args: [new Date('2026-08-31')] },
+			{ input: makeUtcDate('2027-08-23'), args: [new Date('2026-08-23')] },
+		]);
+	});
+
+	it('sameYear', () => {
+		runPassTests(handler.sameYear.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-11-15T05:00:00Z')] },
+			{ input: makeUtcDate('2022-01-16T00:00:00Z'), args: [new Date('2022-12-16T05:00Z')] },
+		]);
+
+		runFailTests(handler.sameYear.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2022-01-16T05:00:00Z')] },
+			{ input: makeUtcDate('2024-01-16T00:00:00Z'), args: [new Date('2027-01-17T05:00Z')] },
+		]);
+	});
+
+	it('today', () => {
+		runPassTests(handler.today.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-15T12:11:00Z')] },
+			{ input: makeUtcDate('2022-01-16T00:00:00Z'), args: [new Date('2022-01-16T05:00Z')] },
+		]);
+
+		runFailTests(handler.today.bind(handler), [
+			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-16T12:11:00Z')] },
+			{ input: makeUtcDate('2022-01-16T00:00:00Z'), args: [new Date('2022-01-17T05:00Z')] },
+		]);
+	});
+
+	it('weekday', () => {
+		runPassTests(handler.weekday.bind(handler), [
+			{ input: makeUtcDate('2026-08-24T12:01:00Z') },
+			{ input: makeUtcDate('2026-08-28T00:00:00Z') },
+		]);
+
+		runFailTests(handler.weekday.bind(handler), [
+			{ input: makeUtcDate('2026-08-23T12:01:00Z') },
+			{ input: makeUtcDate('2026-08-29T00:00:00Z') },
+		]);
+	});
+
+	it('weekend', () => {
+		runPassTests(handler.weekend.bind(handler), [
+			{ input: makeUtcDate('2026-08-23T12:01:00Z') },
+			{ input: makeUtcDate('2026-08-29T00:00:00Z') },
+		]);
+
+		runFailTests(handler.weekend.bind(handler), [
+			{ input: makeUtcDate('2026-08-24T12:01:00Z') },
+			{ input: makeUtcDate('2026-08-28T00:00:00Z') },
+		]);
+	});
+
+	it('within', () => {
+		runPassTests(handler.within.bind(handler), [
+			{ input: makeUtcDate('2024-01-19'), args: [2, new Date('2024-01-17')] },
+			{ input: makeUtcDate('2024-01-15'), args: [10, new Date('2024-01-25')] },
+		]);
+
+		runFailTests(handler.within.bind(handler), [
+			{ input: makeUtcDate('2024-01-19'), args: [1, new Date('2024-01-17')] },
+			{ input: makeUtcDate('2024-01-15'), args: [0, new Date('2024-01-25')] },
+		]);
+	});
+
+});
+
+
+
+
+
+
+
+
+// describe('DateHandler formatter', () => {
+// 	let handler: DateHandler;
+
+// 	beforeEach(() => {
+// 		handler = new DateHandler();
+// 		handler.configDateConverter(new Translation(DefaultCalendarText));
+// 	});
+
+// 	it('toFormat', () => {
+// 		runPassTests(handler.toFormat.bind(handler), [
+// 			{ input: makeUtcDate('2024-01-15T12:00:00Z'), args: ['MM/dd/yyyy'] },
+
+// 		]);
+
+// 		runFailTests(handler.toFormat.bind(handler), [
+// 			{ input: makeUtcDate('2024-01-15T12:00:00Z'), args: [new Date('2024-01-16T12:00:00Z')] },
+// 			{ input: makeUtcDate('2024-01-15T12:00:00.001Z'), args: [new Date('2024-01-16T12:00:00Z')] },
+// 		]);
+// 	});
+
+
+// });
+
 
 
 // describe('DateHandler validators: parsing', () => {
