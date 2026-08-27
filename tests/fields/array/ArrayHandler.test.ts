@@ -20,11 +20,15 @@ describe('ArrayHandler validators', () => {
 			{ input: [1], args: [] },
 			{ input: [1, 2, 3], args: [[numChain.between(1, 2)]] },
 			{ input: [1, 3, 5], args: [[numChain.between(1, 2), numChain.odd()]] },
+			{ input: [], args: [[]] },
+			{ input: [1, 1, 2], args: [[1, 1]] },
 		]);
 
 		runFailTests(handler.allOf.bind(handler), [
 			{ input: [1, 2, 3], args: [[4]], errorKey: 'array/allOf' },
 			{ input: [1, 3, 5], args: [[numChain.between(1, 2), numChain.even()]], errorKey: 'array/allOf' },
+			{ input: [], args: [[1]], errorKey: 'array/allOf' },
+			{ input: [0, 1], args: [[numChain.between(2, 3)]], errorKey: 'array/allOf' },
 		]);
 	});
 
@@ -33,6 +37,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 2, 4, 3], args: [[77, 8, 4]] },
 			{ input: [1, { a: 1 }, 3], args: [[{ a: 1 }]] },
 			{ input: [1, 2, 3, 4], args: [[numChain.between(1, 4)]] },
+			{ input: [], args: [[]] },
+			{ input: [[1, 2], 3], args: [[[1, 2]]] },
 		]);
 
 		runFailTests(handler.anyOf.bind(handler), [
@@ -40,6 +46,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, { a: 1 }], args: [[22]] },
 			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]] },
 			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]] },
+			{ input: [], args: [[1]] },
+			{ input: [1, 2], args: [[3, 4]] },
 		]);
 	});
 
@@ -47,22 +55,30 @@ describe('ArrayHandler validators', () => {
 		runPassTests(handler.dimensions.bind(handler), [
 			{ input: [[1, 2], [3, 4]], args: [[2, 2]] },
 			{ input: [[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [7, 8, 9]]], args: [[2, 2, 3]] },
+			{ input: [], args: [[0]] },
+			{ input: [[[[]]]], args: [[1, 1, 1, 0]] },
 		]
 		);
 
 		runFailTests(handler.dimensions.bind(handler), [
 			{ input: [[1], [2]], args: [[2, 2]], errorKey: 'array/dimensions' },
-			{ input: [1, 2], args: [[2, 2]], errorKey: 'array/dimensions' }
+			{ input: [1, 2], args: [[2, 2]], errorKey: 'array/dimensions' },
+			{ input: [], args: [[1]], errorKey: 'array/dimensions' },
+			{ input: [[1, 2], [3]], args: [[2, 2]], errorKey: 'array/dimensions' }
 		]);
 	});
 
 	it('empty', () => {
 		runPassTests(handler.empty.bind(handler), [
 			{ input: [], output: [] },
+			{ input: new Array(), output: [] },
+			{ input: Array.from([]), output: [] },
 		]);
 
 		runFailTests(handler.empty.bind(handler), [
-			{ input: [1], errorKey: 'array/empty' }
+			{ input: [1], errorKey: 'array/empty' },
+			{ input: [undefined], errorKey: 'array/empty' },
+			{ input: [null], errorKey: 'array/empty' }
 		]);
 	});
 
@@ -70,34 +86,46 @@ describe('ArrayHandler validators', () => {
 		runPassTests(handler.exactly.bind(handler), [
 			{ input: [1, 2, 2], args: [[2, 1, 2]] },
 			{ input: [1, 2, 2], args: [[numChain.odd(), numChain.even(), numChain.even()]] },
+			{ input: [], args: [[]] },
+			{ input: [2, 1, 2], args: [[1, 2, 2]] },
 		]);
 
 		runFailTests(handler.exactly.bind(handler), [
 			{ input: [1, 2, 2], args: [[2, 1, 3]], errorKey: 'array/exactly' },
 			{ input: [1, 2, 2], args: [[3, 1, 2]], errorKey: 'array/exactly' },
 			{ input: [1, 2, 2], args: [[2, 1]], errorKey: 'array/exactly' },
-			{ input: [4], args: [[numChain.odd()]], errorKey: 'array/exactly' }
+			{ input: [4], args: [[numChain.odd()]], errorKey: 'array/exactly' },
+			{ input: [], args: [[1]], errorKey: 'array/exactly' },
+			{ input: [1], args: [[]], errorKey: 'array/exactly' }
 		]);
 	});
 
 	it('length', () => {
 		runPassTests(handler.length.bind(handler), [
 			{ input: [1, 2], args: [2] },
+			{ input: [], args: [0] },
+			{ input: [null], args: [1] },
 		]);
 
 		runFailTests(handler.length.bind(handler), [
 			{ input: [1, 2], args: [3], errorKey: 'array/length' },
+			{ input: [], args: [1], errorKey: 'array/length' },
+			{ input: [1], args: [0], errorKey: 'array/length' },
 		]);
 	});
 
 	it('lengthBetween', () => {
 		runPassTests(handler.lengthBetween.bind(handler), [
 			{ input: [1, 2], args: [2, 3] },
+			{ input: [], args: [0, 0] },
+			{ input: [1, 2, 3], args: [0, 3] },
 		]);
 
 		runFailTests(handler.lengthBetween.bind(handler), [
 			{ input: [1, 2], args: [3, 4], errorKey: 'array/lengthBetween' },
 			{ input: [1, 2], args: [0, 1], errorKey: 'array/lengthBetween' },
+			{ input: [], args: [1, 2], errorKey: 'array/lengthBetween' },
+			{ input: [1, 2, 3], args: [0, 2], errorKey: 'array/lengthBetween' },
 		]);
 	});
 
@@ -105,11 +133,15 @@ describe('ArrayHandler validators', () => {
 		runPassTests(handler.maxLength.bind(handler), [
 			{ input: [1, 2], args: [2] },
 			{ input: [1], args: [2] },
+			{ input: [], args: [0] },
+			{ input: [1, 2, 3], args: [3] },
 		]);
 
 		runFailTests(handler.maxLength.bind(handler), [
 			{ input: [1, 2, 3], args: [2], errorKey: 'array/maxLength' },
-			{ input: [1, 2], args: [0], errorKey: 'array/maxLength' }
+			{ input: [1, 2], args: [0], errorKey: 'array/maxLength' },
+			{ input: [1], args: [0], errorKey: 'array/maxLength' },
+			{ input: [1, 2, 3, 4], args: [3], errorKey: 'array/maxLength' }
 		]);
 	});
 
@@ -117,11 +149,15 @@ describe('ArrayHandler validators', () => {
 		runPassTests(handler.minLength.bind(handler), [
 			{ input: [1, 2], args: [2] },
 			{ input: [1], args: [0] },
+			{ input: [], args: [0] },
+			{ input: [1, 2, 3], args: [1] },
 		]);
 
 		runFailTests(handler.minLength.bind(handler), [
 			{ input: [], args: [1], errorKey: 'array/minLength' },
-			{ input: [1, 2, 3], args: [4], errorKey: 'array/minLength' }
+			{ input: [1, 2, 3], args: [4], errorKey: 'array/minLength' },
+			{ input: [], args: [2], errorKey: 'array/minLength' },
+			{ input: [1], args: [2], errorKey: 'array/minLength' }
 		]);
 	});
 
@@ -130,6 +166,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 2, 3], args: [[4]] },
 			{ input: [1, 2, 3], args: [[0, 6]] },
 			{ input: [3, 4, 5], args: [[numChain.between(1, 2), numChain.between(6, 7)]] },
+			{ input: [], args: [[1]] },
+			{ input: [1, 2], args: [[]] },
 		]);
 
 		runFailTests(handler.noneOf.bind(handler), [
@@ -137,16 +175,22 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/noneOf' },
 			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]], errorKey: 'array/noneOf' },
 			{ input: [3, 4, 5], args: [[numChain.between(3, 3)]], errorKey: 'array/noneOf' },
+			{ input: [2], args: [[2]], errorKey: 'array/noneOf' },
+			{ input: [{ x: 1 }], args: [[{ x: 1 }]], errorKey: 'array/noneOf' },
 		]);
 	});
 
 	it('notEmpty', () => {
 		runPassTests(handler.notEmpty.bind(handler), [
 			{ input: [1], output: [1] },
+			{ input: [0], output: [0] },
+			{ input: [null], output: [null] },
 		]);
 
 		runFailTests(handler.notEmpty.bind(handler), [
-			{ input: [], errorKey: 'array/notEmpty' }
+			{ input: [], errorKey: 'array/notEmpty' },
+			{ input: Array.from([]), errorKey: 'array/notEmpty' },
+			{ input: new Array(), errorKey: 'array/notEmpty' }
 		]);
 	});
 
@@ -156,6 +200,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [6, 6, 6, 6], args: [[6]] },
 			{ input: [{ a: 1 }, { b: 2 }], args: [[{ a: 1 }, { b: 2 }]] },
 			{ input: [1, 3, 5], args: [[numChain.odd()]] },
+			{ input: [], args: [[]] },
+			{ input: [2, 2], args: [[2]] },
 		]);
 
 		runFailTests(handler.only.bind(handler), [
@@ -163,6 +209,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/only' },
 			{ input: [1, { a: 1 }, [2, 3]], args: [[1, [2, 3]]], errorKey: 'array/only' },
 			{ input: [2, 4, 5], args: [[numChain.even()]], errorKey: 'array/only' },
+			{ input: [1, 2], args: [[1]], errorKey: 'array/only' },
+			{ input: [{ a: 1 }], args: [[{ a: 2 }]], errorKey: 'array/only' },
 		]);
 	});
 
@@ -171,6 +219,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 2, 3], args: [[4]] },
 			{ input: [1, 2, 3], args: [[0, 6]] },
 			{ input: [1, 3, 5], args: [[numChain.even()]] },
+			{ input: [1, 2], args: [[]] },
+			{ input: [1, 2], args: [[1, 3]] },
 		]);
 
 		runFailTests(handler.otherThan.bind(handler), [
@@ -178,6 +228,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/otherThan' },
 			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]], errorKey: 'array/otherThan' },
 			{ input: [1, 3, 5], args: [[numChain.odd()]], errorKey: 'array/otherThan' },
+			{ input: [1, 1], args: [[1]], errorKey: 'array/otherThan' },
+			{ input: [1, 2], args: [[1, 2]], errorKey: 'array/otherThan' },
 		]);
 	});
 
@@ -188,6 +240,8 @@ describe('ArrayHandler validators', () => {
 				input: [{ id: 1 }, { id: 2 }],
 				args: [new Path('id')],
 			},
+			{ input: [] },
+			{ input: [1, 1, 2] },
 		]);
 
 		runFailTests(handler.sorted.bind(handler), [
@@ -202,6 +256,8 @@ describe('ArrayHandler validators', () => {
 				args: [new Path('id')],
 				errorKey: 'array/sorted'
 			},
+			{ input: [1, 3, 2], errorKey: 'array/sorted' },
+			{ input: [{ id: 2 }, { id: 2 }, { id: 1 }], args: [new Path('id')], errorKey: 'array/sorted' },
 		]);
 	});
 
@@ -211,6 +267,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [-1, 1], args: [[numChain.negative(), numChain.positive()]] },
 			{ input: [{ a: 1 }, { b: 2 }], args: [[{ a: 1 }, { b: 2 }]] },
 			{ input: [[1, 2], [3, 4]], args: [[[1, 2], [3, 4]]] },
+			{ input: [], args: [[]] },
+			{ input: [0], args: [[0]] },
 		]);
 
 		runFailTests(handler.tuple.bind(handler), [
@@ -218,6 +276,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [{ a: 1 }, { b: 2 }], args: [[{ a: 1 }, { b: 1 }]], errorKey: 'array/tuple' },
 			{ input: [[1, 2], [3, 4]], args: [[[1, 2], [3]]], errorKey: 'array/tuple' },
 			{ input: [-1, 1], args: [[numChain.positive(), numChain.negative()]], errorKey: 'array/tuple' },
+			{ input: [], args: [[0]], errorKey: 'array/tuple' },
+			{ input: [1, 2], args: [[1, 3]], errorKey: 'array/tuple' },
 		]);
 	});
 
@@ -226,6 +286,8 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 2, 3] },
 			{ input: [{ a: 1 }, { b: 2 }] },
 			{ input: [[1, 2], [3, 4]] },
+			{ input: [] },
+			{ input: [1, '1', true] },
 		]);
 
 		runFailTests(handler.unique.bind(handler), [
@@ -240,7 +302,9 @@ describe('ArrayHandler validators', () => {
 				input: ['A', 'a'],
 				args: [(a, b) => String(a).toLowerCase() === String(b).toLowerCase()],
 				errorKey: 'array/unique'
-			}
+			},
+			{ input: [null, null], errorKey: 'array/unique' },
+			{ input: [0, -0], errorKey: 'array/unique' }
 		]);
 	});
 });
@@ -261,7 +325,9 @@ describe('ArrayHandler mutators', () => {
 	it('add', () => {
 		runPassTests(handler.add.bind(handler), [
 			{ input: [1, 2], args: [[3, 4]], output: [1, 2, 3, 4] },
-			{ input: [1, 2], output: [1, 2] }
+			{ input: [1, 2], output: [1, 2] },
+			{ input: [], args: [[1]], output: [1] },
+			{ input: [1], args: [[1, 1]], output: [1, 1, 1] }
 		]);
 	});
 
@@ -269,7 +335,9 @@ describe('ArrayHandler mutators', () => {
 		runPassTests(handler.chunk.bind(handler), [
 			{ input: [1, 2, 3, 4, 5], args: [2], output: [[1, 2], [3, 4], [5]] },
 			{ input: [1, 2], args: [5], output: [[1, 2]] },
-			{ input: [], args: [5], output: [] }
+			{ input: [], args: [5], output: [] },
+			{ input: [1, 2, 3], args: [1], output: [[1], [2], [3]] },
+			{ input: [1, 2, 3, 4], args: [4], output: [[1, 2, 3, 4]] }
 		]);
 	});
 
@@ -279,7 +347,9 @@ describe('ArrayHandler mutators', () => {
 				input: [10, 11, 12, 13],
 				args: [((_: unknown, index?: number): boolean => (index || 0) % 2 === 0)],
 				output: [10, 12]
-			}
+			},
+			{ input: [1, 2, 3], args: [() => true], output: [1, 2, 3] },
+			{ input: [1, 2, 3], args: [() => false], output: [] }
 		]
 		);
 	});
@@ -287,7 +357,9 @@ describe('ArrayHandler mutators', () => {
 	it('flatten', () => {
 		runPassTests(handler.flatten.bind(handler), [
 			{ input: [1, [2, [3]], 4], output: [1, 2, 3, 4] },
-			{ input: [], output: [] }
+			{ input: [], output: [] },
+			{ input: [[[[1]]]], output: [1] },
+			{ input: [1, [], [2, []]], output: [1, 2] }
 		]);
 	});
 
@@ -306,19 +378,25 @@ describe('ArrayHandler mutators', () => {
 				input: [{ k: 'x', v: 1 }, { k: 'y', v: 2 }, { k: 'x', v: 3 }],
 				args: [new Path('z')],
 				output: [[{ k: 'x', v: 1 }, { k: 'y', v: 2 }, { k: 'x', v: 3 }]],
-			}
+			},
+			{ input: [], output: [] },
+			{ input: [1, '1', 1], output: [[1, 1], ['1']] }
 		]);
 	});
 
 	it('keep', () => {
 		runPassTests(handler.keep.bind(handler), [
 			{ input: [1, 2, 3, 2], args: [[2, 4]], output: [2, 2] },
-			{ input: [1, 2], output: [] }
+			{ input: [1, 2], output: [] },
+			{ input: [], args: [[1]], output: [] },
+			{ input: [1, 1, 2], args: [[1]], output: [1, 1] }
 		]);
 
 		runPassTests(handler.keep.bind(handler), [
 			{ input: [1, 2, 3, 2, 7], args: [[numChain.between(2, 4)]], output: [2, 3, 2] },
-			{ input: [1, 2], output: [] }
+			{ input: [1, 2], output: [] },
+			{ input: [2, 4, 6], args: [[numChain.even()]], output: [2, 4, 6] },
+			{ input: [1, 3, 5], args: [[numChain.even()]], output: [] }
 		]);
 	});
 
@@ -328,7 +406,9 @@ describe('ArrayHandler mutators', () => {
 				input: [1, 2, 3],
 				args: [(output) => Number(output) * 10],
 				output: [10, 20, 30]
-			}
+			},
+			{ input: [], args: [x => x], output: [] },
+			{ input: [1, 2], args: [(_, i) => i], output: [0, 1] }
 		]);
 	});
 
@@ -336,7 +416,9 @@ describe('ArrayHandler mutators', () => {
 		runPassTests(handler.padEnd.bind(handler), [
 			{ input: [1], output: [1, 0, 0], args: [3, 0] },
 			{ input: [1], output: [1, null, null], args: [3] },
-			{ input: [1, 2, 3], args: [3, 0] }
+			{ input: [1, 2, 3], args: [3, 0] },
+			{ input: [], args: [2, 'x'], output: ['x', 'x'] },
+			{ input: [1, 2], args: [1, 9], output: [1, 2] }
 		]
 		);
 	});
@@ -354,6 +436,8 @@ describe('ArrayHandler mutators', () => {
 				output: val => val.indexOf(1) !== -1 || val.indexOf(2) !== -1 || val.indexOf(3) !== -1,
 				args: [1]
 			},
+			{ input: [], args: [2], output: [] },
+			{ input: [1, 2], args: [5], output: val => Array.isArray(val) && val.length === 2 && val.includes(1) && val.includes(2) },
 		]
 		);
 	});
@@ -361,12 +445,16 @@ describe('ArrayHandler mutators', () => {
 	it('remove', () => {
 		runPassTests(handler.remove.bind(handler), [
 			{ input: [1, 2, 3, 2, 4], args: [[2, 4]], output: [1, 3] },
-			{ input: [1, 2], args: [], output: [1, 2] }
+			{ input: [1, 2], args: [], output: [1, 2] },
+			{ input: [1, 1, 2], args: [[1]], output: [2] },
+			{ input: [], args: [[1]], output: [] }
 		]);
 
 		runPassTests(handler.remove.bind(handler), [
 			{ input: [1, 2, 3, 2, 4], args: [[numChain.between(2, 3), numChain.between(4, 4)]], output: [1] },
-			{ input: [2, 4, 10], args: [[numChain.even()]], output: [] }
+			{ input: [2, 4, 10], args: [[numChain.even()]], output: [] },
+			{ input: [1, 3, 5], args: [[numChain.even()]], output: [1, 3, 5] },
+			{ input: [2, 3, 4], args: [[numChain.between(2, 3)]], output: [4] }
 		]);
 	});
 
@@ -382,7 +470,9 @@ describe('ArrayHandler mutators', () => {
 				input: ['A', 'a', 'B'],
 				args: [(a, b) => String(a).toLowerCase() === String(b).toLowerCase()],
 				output: ['A', 'B']
-			}
+			},
+			{ input: [], output: [] },
+			{ input: [1, 1, 1], output: [1] }
 		]
 		);
 	});
@@ -390,7 +480,9 @@ describe('ArrayHandler mutators', () => {
 	it('removeEmpties', () => {
 		runPassTests(handler.removeEmpties.bind(handler), [
 			{ input: [null, undefined, '', 0, false], output: [0, false] },
-			{ input: [0, '', false], args: [[0, '']], output: [false] }
+			{ input: [0, '', false], args: [[0, '']], output: [false] },
+			{ input: ['', '', null], output: [] },
+			{ input: [false, 0, 'x'], output: [false, 0, 'x'] }
 		]
 		);
 	});
@@ -398,7 +490,9 @@ describe('ArrayHandler mutators', () => {
 	it('removeUndefined', () => {
 		runPassTests(handler.removeUndefined.bind(handler), [
 			{ input: [1, undefined, 2], output: [1, 2] },
-			{ input: [undefined, undefined], output: [] }
+			{ input: [undefined, undefined], output: [] },
+			{ input: [], output: [] },
+			{ input: [null, 0, ''], output: [null, 0, ''] }
 		]
 		);
 	});
@@ -406,21 +500,27 @@ describe('ArrayHandler mutators', () => {
 	it('reverse', () => {
 		runPassTests(handler.reverse.bind(handler), [
 			{ input: [1, 2, 3], output: [3, 2, 1] },
-			{ input: [], output: [] }
+			{ input: [], output: [] },
+			{ input: [1], output: [1] },
+			{ input: [1, 1, 2], output: [2, 1, 1] }
 		]);
 	});
 
 	it('shuffle', () => {
 		runPassTests(handler.shuffle.bind(handler), [
 			{ input: [], output: [] },
-			{ input: ['only'], output: ['only'] }
+			{ input: ['only'], output: ['only'] },
+			{ input: [1, 2], output: val => Array.isArray(val) && val.length === 2 && val.includes(1) && val.includes(2) },
+			{ input: [1, 1, 2], output: val => Array.isArray(val) && val.length === 3 && val.filter(x => x === 1).length === 2 }
 		]);
 	});
 
 	it('slice', () => {
 		runPassTests(handler.slice.bind(handler), [
 			{ input: [1, 2, 3, 4], args: [1, 3], output: [2, 3] },
-			{ input: [1, 2, 3, 4], args: [2, 4], output: [3, 4] }
+			{ input: [1, 2, 3, 4], args: [2, 4], output: [3, 4] },
+			{ input: [1, 2, 3, 4], args: [-2], output: [3, 4] },
+			{ input: [1, 2, 3, 4], args: [0, 0], output: [] }
 		]
 		);
 	});
@@ -428,7 +528,9 @@ describe('ArrayHandler mutators', () => {
 	it('sliceFirst', () => {
 		runPassTests(handler.sliceFirst.bind(handler), [
 			{ input: [1, 2, 3], output: [1] },
-			{ input: [1, 2, 3], args: [2], output: [1, 2] }
+			{ input: [1, 2, 3], args: [2], output: [1, 2] },
+			{ input: [1, 2, 3], args: [0], output: [] },
+			{ input: [1, 2, 3], args: [10], output: [1, 2, 3] }
 		]
 		);
 	});
@@ -436,7 +538,9 @@ describe('ArrayHandler mutators', () => {
 	it('sliceLast', () => {
 		runPassTests(handler.sliceLast.bind(handler), [
 			{ input: [1, 2, 3], output: [3] },
-			{ input: [1, 2, 3], args: [2], output: [2, 3] }
+			{ input: [1, 2, 3], args: [2], output: [2, 3] },
+			{ input: [1, 2, 3], args: [0], output: [1, 2, 3] },
+			{ input: [1, 2, 3], args: [10], output: [1, 2, 3] }
 		]
 		);
 	});
@@ -453,7 +557,9 @@ describe('ArrayHandler mutators', () => {
 				input: ['aaa', 'b', 'cc'],
 				args: [(a, b): number => String(a).length - String(b).length],
 				output: ['b', 'cc', 'aaa']
-			}
+			},
+			{ input: [1, 1, 0], output: [0, 1, 1] },
+			{ input: [], output: [] }
 		]
 		);
 
@@ -471,14 +577,18 @@ describe('ArrayHandler mutators', () => {
 				input: ['aaa', 'b', 'cc'],
 				args: [(a, b): number => String(b).length - String(a).length],
 				output: ['aaa', 'cc', 'b']
-			}
+			},
+			{ input: [1, 1, 0], output: [1, 1, 0] },
+			{ input: [], output: [] }
 		]);
 	});
 
 	it('splice', () => {
 		runPassTests(handler.splice.bind(handler), [
 			{ input: [1, 2, 3], args: [1, 1, ['x', 'y']], output: [1, 'x', 'y', 3] },
-			{ input: [1, 2, 3], args: [2], output: [1, 2, 3] }
+			{ input: [1, 2, 3], args: [2], output: [1, 2, 3] },
+			{ input: [1, 2, 3], args: [0, 0, ['a']], output: ['a', 1, 2, 3] },
+			{ input: [1, 2, 3], args: [-1, 1, ['z']], output: [1, 2, 'z'] }
 		]);
 	});
 });
