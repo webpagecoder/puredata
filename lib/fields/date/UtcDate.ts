@@ -7,7 +7,7 @@ export type UtcDateCtorParams = {
 
 class UtcDate {
     private _localDate: Date;
-    private _date: Date;
+    private _globalDate: Date;
     private _offsetMinutes: number;
 
     public constructor(localDate = new Date(), offsetMinutes = 0) {
@@ -16,11 +16,11 @@ class UtcDate {
 
         const date = new Date(localDate);
         date.setUTCMinutes(date.getUTCMinutes() - this._offsetMinutes);
-        this._date = date;
+        this._globalDate = date;
     }
 
-    public get date(): Date {
-        return this._date;
+    public get globalDate(): Date {
+        return this._globalDate;
     }
 
     public get localDate(): Date {
@@ -31,14 +31,16 @@ class UtcDate {
         return this._offsetMinutes;
     }
 
-    public setDate(utcDate: Date): UtcDate {
-        const newLocalDate = new Date(utcDate);
-        newLocalDate.setUTCMinutes(newLocalDate.getUTCMinutes() + this._offsetMinutes);
-        return new UtcDate(newLocalDate, this._offsetMinutes);
-    }
-
     public clone(): UtcDate {
         return new UtcDate(this._localDate, this._offsetMinutes);
+    }
+
+    public equals(other: UtcDate): boolean {
+        return this._globalDate.getTime() === other.globalDate.getTime();
+    }
+
+    public setLocalDate(newLocalDate: Date): UtcDate {
+        return new UtcDate(newLocalDate, this._offsetMinutes);
     }
 
 }

@@ -7,6 +7,14 @@ class HandlerResult<T = unknown> {
     protected _fail: boolean;
     protected _errors: Record<string, Record<string, unknown>>;
 
+    public static pass<T = unknown>(value: T): HandlerResult<T> {
+        return new HandlerResult({ value, pass: true });
+    }
+
+    public static fail(value: unknown, errorKey: string, args: Record<string, unknown> = {}): HandlerResult<unknown> {
+        return new HandlerResult({ value, pass: false, errorKey, args });
+    }
+
     public constructor(args: {
         value: T;
         pass: boolean;
@@ -29,14 +37,6 @@ class HandlerResult<T = unknown> {
             throw new Error('Errors cannot be added to a Result that passed');
         }
         this._errors[errorKey] = args;
-    }
-
-    public static pass<T = unknown>(value: T): HandlerResult<T> {
-        return new HandlerResult({ value, pass: true });
-    }
-
-    public static fail<T = unknown>(value: T, errorKey: string, args: Record<string, unknown> = {}): HandlerResult<T> {
-        return new HandlerResult({ value, pass: false, errorKey, args });
     }
 
     public get value(): T {

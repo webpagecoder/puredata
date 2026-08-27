@@ -81,7 +81,7 @@ type HumanDateCache = null | {
 
 export type DateType = 'human' | 'iso' | 'isoWeek' | 'isoOrdinal' | 'instance' | 'timestamp';
 export type DateOrder = 'MDY' | 'DMY' | 'YMD';
-export type GenericDateInput = Date | string | number;
+export type GenericDateInput = UtcDate | Date | string | number;
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type TimeMode = 'utc' | 'local';
 
@@ -163,6 +163,10 @@ class DateConverter {
     }
 
     public parseAuto(value: unknown, options: AutoParseOptions = {}): UtcDate | null {
+
+        if(value instanceof UtcDate) {
+            return value.clone();
+        }
 
         if (value instanceof Date && !isNaN(value.getTime())) {
             return new UtcDate(value, this._defaultUtcOffsetMinutes);
@@ -780,7 +784,7 @@ class DateConverter {
         let offsetMinutes, date;
         if (mode === 'utc') {
             offsetMinutes = 0;
-            date = utcDate.date;
+            date = utcDate.globalDate;
         }
         else {
             offsetMinutes = utcDate.offsetMinutes;
@@ -837,12 +841,13 @@ class DateConverter {
         };
 
         // Replace all recognized tokens in one pass, while preserving bracket-wrapped literals like [YYYY].
-        return formatString.replace(/\[?(?:YYYY|YY|MMMM|MMM|MM|M|DDDD|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|Z|z)\]?/g, (token, offset, source) => {
+        const str = formatString.replace(/\[?(?:YYYY|YY|MMMM|MMM|MM|M|DDDD|DDD|DD|D|dddd|ddd|d|ww|w|E|HH|H|hh|h|mm|m|ss|s|SSS|A|a|Z|z)\]?/g, (token) => {
             if (token.slice(0, 1) === '[' && token.slice(-1) === ']') {
                 return token.slice(1, -1);
             }
             return tokens[token]();
         });
+        return str;
     }
 }
 

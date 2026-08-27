@@ -118,7 +118,7 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.date > parsedReferenceDate.date
+        return inputDate.globalDate > parsedReferenceDate.globalDate
             ? pass(inputDate)
             : fail(inputDate, 'date/after', { referenceDate });
     }
@@ -134,7 +134,7 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.date < parsedReferenceDate.date
+        return inputDate.globalDate < parsedReferenceDate.globalDate
             ? pass(inputDate)
             : fail(inputDate, 'date/before', { referenceDate });
     }
@@ -155,7 +155,7 @@ class DateHandler extends AnyHandler {
         if (!parsedMaxDate) {
             return fail(maxDate, 'date/base');
         }
-        return inputDate.date >= parsedMinDate.date && inputDate.date <= parsedMaxDate.date
+        return inputDate.globalDate >= parsedMinDate.globalDate && inputDate.globalDate <= parsedMaxDate.globalDate
             ? pass(inputDate)
             : fail(inputDate, 'date/between', { minDate, maxDate });
     }
@@ -167,7 +167,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public dayOfWeek(inputDate: UtcDate, dayOfWeek: number): HandlerResult {
-        const dayIndex = inputDate.date.getUTCDay();
+        const dayIndex = inputDate.globalDate.getUTCDay();
         return dayIndex === dayOfWeek
             ? pass(inputDate)
             : fail(inputDate, 'date/dayOfWeek', { dayOfWeek });
@@ -184,7 +184,7 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.date.getTime() === parsedReferenceDate.date.getTime()
+        return inputDate.globalDate.getTime() === parsedReferenceDate.globalDate.getTime()
             ? pass(inputDate)
             : fail(inputDate, 'date/equals', { referenceDate });
     }
@@ -196,7 +196,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public leapYear(inputDate: UtcDate): HandlerResult {
-        const year = inputDate.date.getUTCFullYear();
+        const year = inputDate.globalDate.getUTCFullYear();
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)
             ? pass(inputDate)
             : fail(inputDate, 'date/leapYear');
@@ -213,7 +213,7 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.date <= parsedReferenceDate.date
+        return inputDate.globalDate <= parsedReferenceDate.globalDate
             ? pass(inputDate)
             : fail(inputDate, 'date/max', { referenceDate });
     }
@@ -229,7 +229,7 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.date >= parsedReferenceDate.date
+        return inputDate.globalDate >= parsedReferenceDate.globalDate
             ? pass(inputDate)
             : fail(inputDate, 'date/min', { referenceDate });
     }
@@ -246,8 +246,8 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const date = birthDate.date;
-        const refDate = parsedReferenceDate.date;
+        const date = birthDate.globalDate;
+        const refDate = parsedReferenceDate.globalDate;
         let age = refDate.getUTCFullYear() - date.getUTCFullYear();
         const monthDiff = refDate.getUTCMonth() - date.getUTCMonth();
         if (monthDiff < 0 || (monthDiff === 0 && refDate.getUTCDate() < date.getUTCDate())) {
@@ -269,9 +269,9 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.date);
+        const inputNormalized = new Date(inputDate.globalDate);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.date);
+        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
         return inputNormalized.getTime() === referenceNormalized.getTime()
             ? pass(inputDate)
@@ -289,10 +289,10 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.date);
+        const inputNormalized = new Date(inputDate.globalDate);
         inputNormalized.setUTCDate(1);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.date);
+        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
         referenceNormalized.setUTCDate(1);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
         return inputNormalized.getTime() === referenceNormalized.getTime()
@@ -312,11 +312,11 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.date);
+        const inputNormalized = new Date(inputDate.globalDate);
         const inputOffset = (inputNormalized.getUTCDay() - firstDayOfWeek + 7) % 7;
         inputNormalized.setUTCDate(inputNormalized.getUTCDate() - inputOffset);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.date);
+        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
         const referenceOffset = (referenceNormalized.getUTCDay() - firstDayOfWeek + 7) % 7;
         referenceNormalized.setUTCDate(referenceNormalized.getUTCDate() - referenceOffset);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
@@ -336,10 +336,10 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.date);
+        const inputNormalized = new Date(inputDate.globalDate);
         inputNormalized.setUTCMonth(0, 1);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.date);
+        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
         referenceNormalized.setUTCMonth(0, 1);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
         return inputNormalized.getTime() === referenceNormalized.getTime()
@@ -350,21 +350,13 @@ class DateHandler extends AnyHandler {
     /**
      * Validates that the input date matches the same UTC calendar day as today.
      * @param inputDate Date value being validated.
-     * @param referenceDate Reference date representing "today".
+     * @param today Reference date representing "today".
      * @returns Input date or error.
      */
-    public today(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
-        if (!parsedReferenceDate) {
-            return fail(referenceDate, 'date/base');
-        }
-        const inputNormalized = new Date(inputDate.date);
-        inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.date);
-        referenceNormalized.setUTCHours(0, 0, 0, 0);
-        return inputNormalized.getTime() === referenceNormalized.getTime()
+    public today(inputDate: UtcDate, today: GenericDateInput = new Date()): HandlerResult {
+        return this.sameDay(inputDate, today).pass
             ? pass(inputDate)
-            : fail(inputDate, 'date/today', { referenceDate });
+            : fail(inputDate, 'date/today', { referenceDate: today });
     }
 
     /**
@@ -373,7 +365,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public weekday(inputDate: UtcDate): HandlerResult {
-        const dayOfWeek = inputDate.date.getUTCDay();
+        const dayOfWeek = inputDate.globalDate.getUTCDay();
         return dayOfWeek >= 1 && dayOfWeek <= 5
             ? pass(inputDate)
             : fail(inputDate, 'date/weekday', { dayOfWeek });
@@ -385,7 +377,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public weekend(inputDate: UtcDate): HandlerResult {
-        const dayOfWeek = inputDate.date.getUTCDay();
+        const dayOfWeek = inputDate.globalDate.getUTCDay();
         return dayOfWeek === 0 || dayOfWeek === 6
             ? pass(inputDate)
             : fail(inputDate, 'date/weekend', { dayOfWeek });
@@ -403,7 +395,7 @@ class DateHandler extends AnyHandler {
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const actualDiff = (inputDate.date.getTime() - parsedReferenceDate.date.getTime()) / (1000 * 60 * 60 * 24);
+        const actualDiff = (inputDate.globalDate.getTime() - parsedReferenceDate.globalDate.getTime()) / (1000 * 60 * 60 * 24);
         return Math.abs(actualDiff) <= Math.abs(daysDiff)
             ? pass(inputDate)
             : fail(inputDate, 'date/recent', { actualDiff, daysDiff });
@@ -424,17 +416,17 @@ class DateHandler extends AnyHandler {
      * @param timeMode Time mode for the output date, either 'utc' or 'local'.
      * @returns Date in requested format.
      */
-    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): HandlerResult {
+    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): HandlerResult<string> {
         let finalForm: unknown;
         if (formatString === null) {
             // A raw date will only exist if the metadate was never modified
-            finalForm = inputDate.raw !== null ? inputDate.raw : inputDate.date;
+            finalForm = inputDate.raw !== null ? inputDate.raw : inputDate.globalDate;
         }
         else if (formatString === 'timestamp') {
-            finalForm = inputDate.date.getTime();
+            finalForm = inputDate.globalDate.getTime();
         }
         else if (formatString === 'object') {
-            finalForm = new Date(inputDate.date);
+            finalForm = new Date(inputDate.globalDate);
         }
         else {
             finalForm = this._dateConverter!.format(inputDate, formatString, timeMode);
@@ -456,9 +448,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward the amount of days specified.
      */
     public addDays(inputDate: UtcDate, numDays: number): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCDate(utcDate.getUTCDate() + numDays);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCDate(localDate.getUTCDate() + numDays);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -468,9 +460,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward the amount of hours specified.
      */
     public addHours(inputDate: UtcDate, numHours: number): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCHours(utcDate.getUTCHours() + numHours);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCHours(localDate.getUTCHours() + numHours);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -480,9 +472,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward the amount of minutes specified.
      */
     public addMinutes(inputDate: UtcDate, numMinutes: number): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCMinutes(utcDate.getUTCMinutes() + numMinutes);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCMinutes(localDate.getUTCMinutes() + numMinutes);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -492,9 +484,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward the amount of months specified.
      */
     public addMonths(inputDate: UtcDate, numMonths: number): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCMonth(utcDate.getUTCMonth() + numMonths);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCMonth(localDate.getUTCMonth() + numMonths);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -504,9 +496,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward the amount of years specified.
      */
     public addYears(inputDate: UtcDate, numYears: number): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCFullYear(utcDate.getUTCFullYear() + numYears);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCFullYear(localDate.getUTCFullYear() + numYears);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -525,10 +517,10 @@ class DateHandler extends AnyHandler {
         if (!maxDateParsed) {
             return fail(maxDate, 'date/base');
         }
-        if (inputDate.date < minDateParsed.date) {
+        if (inputDate.globalDate < minDateParsed.globalDate) {
             return pass(minDateParsed);
         }
-        else if (inputDate.date > maxDateParsed.date) {
+        else if (inputDate.globalDate > maxDateParsed.globalDate) {
             return pass(maxDateParsed);
         }
         return pass(inputDate);
@@ -540,9 +532,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward to the end of day.
      */
     public toEndOfDay(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCHours(23, 59, 59, 999);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCHours(23, 59, 59, 999);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -551,10 +543,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward to the end of the month.
      */
     public toEndOfMonth(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCMonth(utcDate.getUTCMonth() + 1, 0);
-        utcDate.setUTCHours(23, 59, 59, 999);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCMonth(localDate.getUTCMonth() + 1, 0);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -563,10 +554,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward to the end of the year.
      */
     public toEndOfYear(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCFullYear(utcDate.getUTCFullYear() + 1, 0, 0);
-        utcDate.setUTCHours(23, 59, 59, 999);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCFullYear(localDate.getUTCFullYear() + 1, 0, 0);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -576,13 +566,13 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward to the next day of the week specified.
      */
     public toNextDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        let daysToAdd = targetDayOfWeek - utcDate.getUTCDay();
+        const localDate = new Date(inputDate.localDate);
+        let daysToAdd = targetDayOfWeek - localDate.getUTCDay();
         if (daysToAdd <= 0) {
             daysToAdd += 7;
         }
-        utcDate.setUTCDate(utcDate.getUTCDate() + daysToAdd);
-        return pass(inputDate.setDate(utcDate));
+        localDate.setUTCDate(localDate.getUTCDate() + daysToAdd);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -591,12 +581,28 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved forward to the next weekday.
      */
     public toNextWeekday(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
+        const localDate = new Date(inputDate.localDate);
         do {
-            utcDate.setUTCDate(utcDate.getUTCDate() + 1);
+            localDate.setUTCDate(localDate.getUTCDate() + 1);
         }
-        while (utcDate.getUTCDay() === 0 || utcDate.getUTCDay() === 6);
-        return pass(inputDate.setDate(utcDate));
+        while (localDate.getUTCDay() === 0 || localDate.getUTCDay() === 6);
+        return pass(inputDate.setLocalDate(localDate));
+    }
+
+    /**
+     * Moves a date backward to the previous occurrence of the target UTC day of week.
+     * @param inputDate Base date to adjust.
+     * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
+     * @returns Returns the date moved backward to the previous day of the week specified.
+     */
+    public toPreviousDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): HandlerResult {
+        const localDate = new Date(inputDate.localDate);
+        let daysToSubtract = localDate.getUTCDay() - targetDayOfWeek;
+        if (daysToSubtract <= 0) {
+            daysToSubtract += 7;
+        }
+        localDate.setUTCDate(localDate.getUTCDate() - daysToSubtract);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -605,12 +611,12 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved backward to the previous weekday.
      */
     public toPreviousWeekday(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
+        const localDate = new Date(inputDate.localDate);
         do {
-            utcDate.setUTCDate(utcDate.getUTCDate() - 1);
+            localDate.setUTCDate(localDate.getUTCDate() - 1);
         }
-        while (utcDate.getUTCDay() === 0 || utcDate.getUTCDay() === 6);
-        return pass(inputDate.setDate(utcDate));
+        while (localDate.getUTCDay() === 0 || localDate.getUTCDay() === 6);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -619,9 +625,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved to the first millisecond of its UTC day.
      */
     public toStartOfDay(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCHours(0, 0, 0, 0);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCHours(0, 0, 0, 0);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -630,10 +636,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved to the first millisecond of its UTC month.
      */
     public toStartOfMonth(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCDate(1);
-        utcDate.setUTCHours(0, 0, 0, 0);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCDate(1);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
     /**
@@ -642,10 +647,9 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date moved to the first millisecond of its UTC year.
      */
     public toStartOfYear(inputDate: UtcDate): HandlerResult {
-        const utcDate = new Date(inputDate.date);
-        utcDate.setUTCMonth(0, 1);
-        utcDate.setUTCHours(0, 0, 0, 0);
-        return pass(inputDate.setDate(utcDate));
+        const localDate = new Date(inputDate.localDate);
+        localDate.setUTCMonth(0, 1);
+        return pass(inputDate.setLocalDate(localDate));
     }
 
 }

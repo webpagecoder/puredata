@@ -1,10 +1,8 @@
 'use strict';
 
-import { HandlerResult } from "../../lib/fields/HandlerResult.ts";
-
 export type PassTestCase<TData = unknown, TArgs extends any[] = any[]> = {
 	input: TData;
-	output?: TData | ((value: TData) => boolean);
+	output?: TData | ((value: TData) => boolean) | ((value: unknown) => boolean);
 	args?: TArgs;
 };
 
