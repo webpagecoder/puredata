@@ -1,7 +1,8 @@
 'use strict';
 
 import { NumberHandler } from '../../../lib/fields/number/NumberHandler.ts';
-import { runCases, type ValidationResult } from '../../helpers/runCases.ts';
+import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
+
 
 describe('NumberHandler validators', () => {
 	let handler: NumberHandler;
@@ -10,252 +11,422 @@ describe('NumberHandler validators', () => {
 		handler = new NumberHandler();
 	});
 
-	it('number', () => {
-		runCases(handler.number.bind(handler), [
-			{ input: 123, pass: true, value: 123 },
-			{ input: 0, pass: true, value: 0 },
-			{ input: NaN, pass: false, errorKey: 'number/base' },
-			{ input: '123', pass: false, errorKey: 'number/base' }
-		]);
-	});
-
 	it('approx', () => {
-		runCases(
-			(input: unknown, options?: { comparison: number; tolerance?: number }): ValidationResult =>
-				handler.approx(input, options?.comparison, options?.tolerance),
-			[
-				{ input: 1 + Number.EPSILON / 2, options: { comparison: 1 }, pass: true, value: 1 + Number.EPSILON / 2 },
-				{ input: 1.1, options: { comparison: 1, tolerance: 0.2 }, pass: true, value: 1.1 },
-				{ input: 1.3, options: { comparison: 1, tolerance: 0.2 }, pass: false, errorKey: 'number/approx' }
-			]);
+		runPassTests(handler.approx.bind(handler), [
+			{ input: 1 + Number.EPSILON / 2, args: [1], output: 1 + Number.EPSILON / 2 },
+			{ input: 1.1, args: [1, 0.2], output: 1.1 },
+			{ input: 0.9999999999999999, args: [1, 1e-12], output: 0.9999999999999999 },
+			{ input: -10, args: [-10, Number.EPSILON * 2], output: -10 },
+		]);
+
+		runFailTests(handler.approx.bind(handler), [
+			{ input: 1.3, args: [1, 0.2] },
+			{ input: 1, args: [1, 0] },
+			{ input: 1.2000001, args: [1, 0.2] }
+		]);
 	});
 
 	it('between', () => {
-		runCases(
-			(input: unknown, options?: { min: number; max: number }): ValidationResult =>
-				handler.between(input, options?.min, options?.max),
-			[
-				{ input: 5, options: { min: 1, max: 5 }, pass: true, value: 5 },
-				{ input: 0, options: { min: 1, max: 5 }, pass: false, errorKey: 'number/between' }
-			]);
-	});
-
-	it('greaterThan', () => {
-		runCases(
-			(input: unknown, options?: { comparison: number }): ValidationResult =>
-				handler.greaterThan(input, options?.comparison),
-			[
-				{ input: 6, options: { comparison: 5 }, pass: true, value: 6 },
-				{ input: 5, options: { comparison: 5 }, pass: false, errorKey: 'number/greaterThan' }
-			]);
-	});
-
-	it('lessThan', () => {
-		runCases(
-			(input: unknown, options?: { comparison: number }): ValidationResult =>
-				handler.lessThan(input, options?.comparison),
-			[
-				{ input: 4, options: { comparison: 5 }, pass: true, value: 4 },
-				{ input: 5, options: { comparison: 5 }, pass: false, errorKey: 'number/lessThan' }
-			]);
-	});
-
-	it('max', () => {
-		runCases(
-			(input: unknown, options?: { comparison: number }): ValidationResult =>
-				handler.max(input, options?.comparison),
-			[
-				{ input: 5, options: { comparison: 5 }, pass: true, value: 5 },
-				{ input: 6, options: { comparison: 5 }, pass: false, errorKey: 'number/max' }
-			]);
-	});
-
-	it('min', () => {
-		runCases(
-			(input: unknown, options?: { comparison: number }): ValidationResult =>
-				handler.min(input, options?.comparison),
-			[
-				{ input: 5, options: { comparison: 5 }, pass: true, value: 5 },
-				{ input: 4, options: { comparison: 5 }, pass: false, errorKey: 'number/min' }
-			]);
-	});
-
-	it('equals', () => {
-		runCases(
-			(input: unknown, options?: { comparison: unknown }): ValidationResult =>
-				handler.equals(input, options?.comparison),
-			[
-				{ input: 5, options: { comparison: 5 }, pass: true, value: 5 },
-				{ input: 5, options: { comparison: '5' }, pass: false, errorKey: 'number/equals' }
-			]);
-	});
-
-	it('notEquals', () => {
-		runCases(
-			(input: unknown, options?: { comparison: unknown }): ValidationResult =>
-				handler.notEquals(input, options?.comparison),
-			[
-				{ input: 5, options: { comparison: 6 }, pass: true, value: 5 },
-				{ input: 5, options: { comparison: 5 }, pass: false, errorKey: 'number/notEquals' }
-			]);
-	});
-
-	it('even', () => {
-		runCases(handler.even.bind(handler), [
-			{ input: 4, pass: true, value: 4 },
-			{ input: 5, pass: false, errorKey: 'number/even' }
+		runPassTests(handler.between.bind(handler), [
+			{ input: 5, args: [1, 5], output: 5 },
+			{ input: 1, args: [1, 5], output: 1 },
+			{ input: 3, args: [1, 5], output: 3 },
 		]);
-	});
 
-	it('odd', () => {
-		runCases(handler.odd.bind(handler), [
-			{ input: 5, pass: true, value: 5 },
-			{ input: 4, pass: false, errorKey: 'number/odd' }
+		runFailTests(handler.between.bind(handler), [
+			{ input: 0, args: [1, 5] },
+			{ input: 0.9999, args: [1, 5] },
+			{ input: 5.0001, args: [1, 5] }
 		]);
-	});
-
-	it('multiple', () => {
-		runCases(
-			(input: unknown, options?: { factor: number }): ValidationResult =>
-				handler.multiple(input, options?.factor),
-			[
-				{ input: 12, options: { factor: 3 }, pass: true, value: 12 },
-				{ input: 10, options: { factor: 3 }, pass: false, errorKey: 'number/multiple' }
-			]);
-	});
-
-	it('factor', () => {
-		runCases(
-			(input: unknown, options?: { multiple: number }): ValidationResult =>
-				handler.factor(input, options?.multiple),
-			[
-				{ input: 3, options: { multiple: 12 }, pass: true, value: 3 },
-				{ input: 5, options: { multiple: 12 }, pass: false, errorKey: 'number/factor' }
-			]);
 	});
 
 	it('decimal', () => {
-		runCases(
-			(input: unknown, options?: { minDecimalPlaces?: number; maxDecimalPlaces?: number }): ValidationResult =>
-				handler.decimal(input, options),
-			[
-				{ input: 1.23, pass: true, value: 1.23 },
-				{ input: 5, pass: false, errorKey: 'number/decimal' },
-				{ input: 1.2, options: { minDecimalPlaces: 2 }, pass: false, errorKey: 'number/decimal' },
-				{ input: 1.23, options: { minDecimalPlaces: 2, maxDecimalPlaces: 2 }, pass: true, value: 1.23 },
-				{ input: 1.234, options: { maxDecimalPlaces: 2 }, pass: false, errorKey: 'number/decimal' }
-			]);
+		runPassTests(handler.decimal.bind(handler), [
+			{ input: 1.23, output: 1.23 },
+			{ input: 1.23, args: [{ minDecimalPlaces: 2, maxDecimalPlaces: 2 }], output: 1.23 },
+			{ input: 0.0001, args: [{ minDecimalPlaces: 1, maxDecimalPlaces: 4 }], output: 0.0001 },
+			{ input: -1.5, args: [{ minDecimalPlaces: 1, maxDecimalPlaces: 1 }], output: -1.5 },
+		]);
+
+		runFailTests(handler.decimal.bind(handler), [
+			{ input: 5 },
+			{ input: 1.2, args: [{ minDecimalPlaces: 2, maxDecimalPlaces: 2 }] },
+			{ input: 1.234, args: [{ minDecimalPlaces: undefined, maxDecimalPlaces: 2 }] },
+			{ input: 1.23, args: [{ minDecimalPlaces: 3, maxDecimalPlaces: 5 }] },
+			{ input: 1.23, args: [{ minDecimalPlaces: 0, maxDecimalPlaces: 1 }] }
+		]);
 	});
 
-	it('precision', () => {
-		runCases(
-			(input: unknown, options?: { precision: number }): ValidationResult =>
-				handler.precision(input, options?.precision),
-			[
-				{ input: 1.23, options: { precision: 2 }, pass: true, value: 1.23 },
-				{ input: 1.234, options: { precision: 2 }, pass: false, errorKey: 'number/precision' }
-			]);
+	it('equals', () => {
+		runPassTests(handler.equals.bind(handler), [
+			{ input: 5, args: [5], output: 5 },
+			{ input: 0, args: [-0], output: 0 },
+			{ input: Infinity, args: [Infinity], output: Infinity },
+		]);
+
+		runFailTests(handler.equals.bind(handler), [
+			{ input: 5, args: ['5' as any] },
+			{ input: NaN, args: [NaN] },
+			{ input: 0, args: [false as any] }
+		]);
+	});
+
+	it('even', () => {
+		runPassTests(handler.even.bind(handler), [
+			{ input: 4, output: 4 },
+			{ input: 0, output: 0 },
+			{ input: -2, output: -2 },
+		]);
+
+		runFailTests(handler.even.bind(handler), [
+			{ input: 5 },
+			{ input: -3 },
+			{ input: 2.5 }
+		]);
+	});
+
+	it('factor', () => {
+		runPassTests(handler.factor.bind(handler), [
+			{ input: 3, args: [12], output: 3 },
+			{ input: 4, args: [16], output: 4 },
+			{ input: -3, args: [12], output: -3 },
+		]);
+
+		runFailTests(handler.factor.bind(handler), [
+			{ input: 5, args: [12] },
+			{ input: 0, args: [12] },
+			{ input: 2.5, args: [9] }
+		]);
 	});
 
 	it('finite', () => {
-		runCases(handler.finite.bind(handler), [
-			{ input: 12, pass: true, value: 12 },
-			{ input: Infinity, pass: false, errorKey: 'number/finite' }
+		runPassTests(handler.finite.bind(handler), [
+			{ input: 12, output: 12 },
+			{ input: Number.MAX_VALUE, output: Number.MAX_VALUE },
+			{ input: Number.MIN_VALUE, output: Number.MIN_VALUE },
+		]);
+
+		runFailTests(handler.finite.bind(handler), [
+			{ input: Infinity },
+			{ input: -Infinity },
+			{ input: NaN }
+		]);
+	});
+
+	it('greaterThan', () => {
+		runPassTests(handler.greaterThan.bind(handler), [
+			{ input: 6, args: [5], output: 6 },
+			{ input: 5.0000001, args: [5], output: 5.0000001 },
+			{ input: -4, args: [-5], output: -4 },
+		]);
+
+		runFailTests(handler.greaterThan.bind(handler), [
+			{ input: 5, args: [5] },
+			{ input: -5, args: [-5] },
+			{ input: -6, args: [-5] }
 		]);
 	});
 
 	it('infinity', () => {
-		runCases(handler.infinity.bind(handler), [
-			{ input: Infinity, pass: true, value: Infinity },
-			{ input: -Infinity, pass: true, value: -Infinity },
-			{ input: 10, pass: false, errorKey: 'number/infinity' }
+		runPassTests(handler.infinity.bind(handler), [
+			{ input: Infinity, output: Infinity },
+			{ input: -Infinity, output: -Infinity },
+			{ input: 1 / 0, output: Infinity },
+			{ input: -1 / 0, output: -Infinity },
+		]);
+
+		runFailTests(handler.infinity.bind(handler), [
+			{ input: 10 },
+			{ input: Number.MAX_VALUE },
+			{ input: NaN }
 		]);
 	});
 
 	it('integer', () => {
-		runCases(handler.integer.bind(handler), [
-			{ input: 10, pass: true, value: 10 },
-			{ input: 10.5, pass: false, errorKey: 'number/integer' }
+		runPassTests(handler.integer.bind(handler), [
+			{ input: 10, output: 10 },
+			{ input: -10, output: -10 },
+			{ input: 0, output: 0 },
+		]);
+
+		runFailTests(handler.integer.bind(handler), [
+			{ input: 10.5 },
+			{ input: Infinity },
+			{ input: NaN }
 		]);
 	});
 
-	it('negative', () => {
-		runCases(handler.negative.bind(handler), [
-			{ input: -1, pass: true, value: -1 },
-			{ input: 0, pass: false, errorKey: 'number/negative' }
+	it('lessThan', () => {
+		runPassTests(handler.lessThan.bind(handler), [
+			{ input: 4, args: [5], output: 4 },
+			{ input: 4.9999, args: [5], output: 4.9999 },
+			{ input: -6, args: [-5], output: -6 },
+		]);
+
+		runFailTests(handler.lessThan.bind(handler), [
+			{ input: 5, args: [5] },
+			{ input: -5, args: [-5] },
+			{ input: -4, args: [-5] }
 		]);
 	});
 
-	it('positive', () => {
-		runCases(handler.positive.bind(handler), [
-			{ input: 1, pass: true, value: 1 },
-			{ input: 0, pass: false, errorKey: 'number/positive' }
+	it('max', () => {
+		runPassTests(handler.max.bind(handler), [
+			{ input: 5, args: [5], output: 5 },
+			{ input: -10, args: [-5], output: -10 },
+			{ input: -5, args: [-5], output: -5 },
+		]);
+
+		runFailTests(handler.max.bind(handler), [
+			{ input: 6, args: [5] },
+			{ input: 5.1, args: [5] },
+			{ input: 0, args: [-1] }
 		]);
 	});
 
-	it('zero', () => {
-		runCases(handler.zero.bind(handler), [
-			{ input: 0, pass: true, value: 0 },
-			{ input: -0, pass: true, value: -0 },
-			{ input: 1, pass: false, errorKey: 'number/zero' }
+	it('min', () => {
+		runPassTests(handler.min.bind(handler), [
+			{ input: 5, args: [5], output: 5 },
+			{ input: -1, args: [-5], output: -1 },
+			{ input: -5, args: [-5], output: -5 },
 		]);
-	});
 
-	it('prime', () => {
-		runCases(handler.prime.bind(handler), [
-			{ input: 2, pass: true, value: 2 },
-			{ input: 13, pass: true, value: 13 },
-			{ input: 1, pass: false, errorKey: 'number/prime' },
-			{ input: 12, pass: false, errorKey: 'number/prime' },
-			{ input: 2.5, pass: false, errorKey: 'number/prime' }
-		]);
-	});
-
-	it('safe', () => {
-		runCases(handler.safe.bind(handler), [
-			{ input: Number.MAX_SAFE_INTEGER, pass: true, value: Number.MAX_SAFE_INTEGER },
-			{ input: Number.MAX_SAFE_INTEGER + 1, pass: false, errorKey: 'number/safe' }
-		]);
-	});
-
-	it('safeInteger', () => {
-		runCases(handler.safeInteger.bind(handler), [
-			{ input: Number.MAX_SAFE_INTEGER, pass: true, value: Number.MAX_SAFE_INTEGER },
-			{ input: Number.MAX_SAFE_INTEGER + 1, pass: false, errorKey: 'number/safeInteger' },
-			{ input: 2.5, pass: false, errorKey: 'number/safeInteger' }
+		runFailTests(handler.min.bind(handler), [
+			{ input: 4, args: [5] },
+			{ input: 4.9, args: [5] },
+			{ input: -6, args: [-5] }
 		]);
 	});
 
 	it('minusSign', () => {
-		runCases(handler.minusSign.bind(handler), [
-			{ input: -5, pass: true, value: -5 },
-			{ input: 5, pass: false, errorKey: 'number/minusSign' }
+		runPassTests(handler.minusSign.bind(handler), [
+			{ input: -5, output: -5 },
+			{ input: -123, output: -123 },
+			{ input: -Infinity, output: -Infinity },
+		]);
+
+		runFailTests(handler.minusSign.bind(handler), [
+			{ input: 5 },
+			{ input: 0 },
+			{ input: '+5' as any }
+		]);
+	});
+
+	it('multiple', () => {
+		runPassTests(handler.multiple.bind(handler), [
+			{ input: 12, args: [3], output: 12 },
+			{ input: 0, args: [5], output: 0 },
+			{ input: -9, args: [3], output: -9 },
+		]);
+
+		runFailTests(handler.multiple.bind(handler), [
+			{ input: 10, args: [3] },
+			{ input: 10, args: [4] },
+			{ input: 1, args: [0] }
+		]);
+	});
+
+	it('negative', () => {
+		runPassTests(handler.negative.bind(handler), [
+			{ input: -1, output: -1 },
+			{ input: -100, output: -100 },
+			{ input: -Number.MIN_VALUE, output: -Number.MIN_VALUE },
+		]);
+
+		runFailTests(handler.negative.bind(handler), [
+			{ input: 0 },
+			{ input: 1 },
+			{ input: Number.MIN_VALUE }
+		]);
+	});
+
+	it('notEquals', () => {
+		runPassTests(handler.notEquals.bind(handler), [
+			{ input: 5, args: [6], output: 5 },
+			{ input: 5, args: ['5' as any], output: 5 },
+			{ input: NaN, args: [NaN], output: NaN },
+		]);
+
+		runFailTests(handler.notEquals.bind(handler), [
+			{ input: 5, args: [5] },
+			{ input: 6, args: [6] },
+			{ input: 0, args: [-0] }
+		]);
+	});
+
+	it('number', () => {
+		runPassTests(handler.number.bind(handler), [
+			{ input: 123, output: 123 },
+			{ input: 0, output: 0 },
+			{ input: -123, output: -123 },
+			{ input: Number.MIN_VALUE, output: Number.MIN_VALUE }
+		]);
+
+		runFailTests(handler.number.bind(handler), [
+			{ input: NaN },
+			{ input: '123e' as any },
+			{ input: null as any },
+			{ input: true as any },
+		]);
+	});
+
+	it('odd', () => {
+		runPassTests(handler.odd.bind(handler), [
+			{ input: 5, output: 5 },
+			{ input: -3, output: -3 },
+			{ input: 1, output: 1 },
+		]);
+
+		runFailTests(handler.odd.bind(handler), [
+			{ input: 4 },
+			{ input: 0 },
+			{ input: 8 }
 		]);
 	});
 
 	it('plusSign', () => {
-		runCases(handler.plusSign.bind(handler), [
-			{ input: '+5', pass: true, value: '+5' },
-			{ input: 5, pass: false, errorKey: 'number/plusSign' }
+		runPassTests(handler.plusSign.bind(handler), [
+			{ input: '+5', output: '+5' },
+			{ input: '+0' as any, output: '+0' as any },
+			{ input: '+Infinity' as any, output: '+Infinity' as any },
+		]);
+
+		runFailTests(handler.plusSign.bind(handler), [
+			{ input: 5 },
+			{ input: '-5' as any },
+			{ input: '5' as any }
+		]);
+	});
+
+	it('positive', () => {
+		runPassTests(handler.positive.bind(handler), [
+			{ input: 1, output: 1 },
+			{ input: Number.MIN_VALUE, output: Number.MIN_VALUE },
+			{ input: 10, output: 10 },
+		]);
+
+		runFailTests(handler.positive.bind(handler), [
+			{ input: 0 },
+			{ input: -1 },
+			{ input: -Number.MIN_VALUE }
+		]);
+	});
+
+
+	it('precision', () => {
+		runPassTests(handler.precision.bind(handler), [
+			{ input: 1.23, args: [2], output: 1.23 },
+			{ input: 1.2, args: [1], output: 1.2 },
+			{ input: -1.234, args: [3], output: -1.234 },
+		]);
+
+		runFailTests(handler.precision.bind(handler), [
+			{ input: 1.234, args: [2] },
+			{ input: 1.23, args: [1] },
+			{ input: -1.2345, args: [3] }
+		]);
+	});
+
+
+	it('prime', () => {
+		runPassTests(handler.prime.bind(handler), [
+			{ input: 2, output: 2 },
+			{ input: 13, output: 13 },
+			{ input: 17, output: 17 },
+			{ input: 7919, output: 7919 },
+		]);
+
+		runFailTests(handler.prime.bind(handler), [
+			{ input: 1 },
+			{ input: 12 },
+			{ input: 2.5 },
+			{ input: 0 },
+			{ input: -3 }
+		]);
+	});
+
+	it('safe', () => {
+		runPassTests(handler.safe.bind(handler), [
+			{ input: Number.MAX_SAFE_INTEGER, output: Number.MAX_SAFE_INTEGER },
+			{ input: Number.MIN_SAFE_INTEGER, output: Number.MIN_SAFE_INTEGER },
+			{ input: 1.5, output: 1.5 },
+		]);
+
+		runFailTests(handler.safe.bind(handler), [
+			{ input: Number.MAX_SAFE_INTEGER + 1 },
+			{ input: Number.MIN_SAFE_INTEGER - 1 },
+			{ input: Number.MAX_VALUE }
+		]);
+	});
+
+	it('safeInteger', () => {
+		runPassTests(handler.safeInteger.bind(handler), [
+			{ input: Number.MAX_SAFE_INTEGER, output: Number.MAX_SAFE_INTEGER },
+			{ input: Number.MIN_SAFE_INTEGER, output: Number.MIN_SAFE_INTEGER },
+			{ input: 0, output: 0 },
+		]);
+
+		runFailTests(handler.safeInteger.bind(handler), [
+			{ input: Number.MAX_SAFE_INTEGER + 1 },
+			{ input: 2.5 },
+			{ input: Number.MAX_SAFE_INTEGER + 0.5 },
+			{ input: Infinity }
 		]);
 	});
 
 	it('signed', () => {
-		runCases(handler.signed.bind(handler), [
-			{ input: -5, pass: true, value: -5 },
-			{ input: '+5', pass: true, value: '+5' },
-			{ input: 5, pass: false, errorKey: 'number/signed' }
+		runPassTests(handler.signed.bind(handler), [
+			{ input: -5, output: -5 },
+			{ input: '+5' as any, output: '+5' as any },
+			{ input: '-0' as any, output: '-0' as any },
+			{ input: '+0' as any, output: '+0' as any },
+		]);
+
+		runFailTests(handler.signed.bind(handler), [
+			{ input: 5 },
+			{ input: 0 },
+			{ input: '0' as any }
 		]);
 	});
 
 	it('unsigned', () => {
-		runCases(handler.unsigned.bind(handler), [
-			{ input: 5, pass: true, value: 5 },
-			{ input: -5, pass: false, errorKey: 'number/unsigned' },
-			{ input: '+5', pass: false, errorKey: 'number/unsigned' }
+		runPassTests(handler.unsigned.bind(handler), [
+			{ input: 5, output: 5 },
+			{ input: 0, output: 0 },
+			{ input: '5' as any, output: '5' as any },
+		]);
+
+		runFailTests(handler.unsigned.bind(handler), [
+			{ input: -5 },
+			{ input: '+5' as any },
+			{ input: '-0' as any },
+			{ input: '+0' as any }
 		]);
 	});
+
+	it('zero', () => {
+		runPassTests(handler.zero.bind(handler), [
+			{ input: 0, output: 0 },
+			{ input: -0, output: -0 },
+			{ input: 0.0, output: 0.0 },
+			{ input: -0.0, output: -0.0 },
+		]);
+
+		runFailTests(handler.zero.bind(handler), [
+			{ input: 1 },
+			{ input: Number.MIN_VALUE },
+			{ input: -Number.MIN_VALUE }
+		]);
+	});
+
 });
+
+
+
+
+
+
+
 
 describe('NumberHandler mutators', () => {
 	let handler: NumberHandler;
@@ -264,140 +435,151 @@ describe('NumberHandler mutators', () => {
 		handler = new NumberHandler();
 	});
 
-	it('clampBetween', () => {
-		runCases(
-			(input: unknown, options?: { min: number; max: number }): ValidationResult =>
-				handler.clampBetween(input, options?.min, options?.max),
-			[
-				{ input: 5, options: { min: 1, max: 10 }, pass: true, value: 5 },
-				{ input: -1, options: { min: 1, max: 10 }, pass: true, value: 1 },
-				{ input: 12, options: { min: 1, max: 10 }, pass: true, value: 10 }
-			]);
-	});
-
-	it('constrain', () => {
-		runCases(
-			(input: unknown, options?: { min: number; max: number }): ValidationResult =>
-				handler.constrain(input, options?.min, options?.max),
-			[
-				{ input: 5, options: { min: 1, max: 10 }, pass: true, value: 5 },
-				{ input: -1, options: { min: 1, max: 10 }, pass: true, value: 1 },
-				{ input: 12, options: { min: 1, max: 10 }, pass: true, value: 10 }
-			]);
-	});
-
-	it('clamp', () => {
-		runCases(
-			(input: unknown, options?: { min: number; max: number }): ValidationResult =>
-				handler.clamp(input, options?.min, options?.max),
-			[
-				{ input: -5, options: { min: 0, max: 2 }, pass: true, value: 0 },
-				{ input: 3, options: { min: 0, max: 2 }, pass: true, value: 2 }
-			]);
-	});
-
-	it('negate', () => {
-		runCases(handler.negate.bind(handler), [
-			{ input: 5, pass: true, value: -5 },
-			{ input: -5, pass: true, value: 5 }
-		]);
-	});
-
-	it('round', () => {
-		runCases(
-			(input: unknown, options?: { numDecimals?: number }): ValidationResult =>
-				handler.round(input, options?.numDecimals),
-			[
-				{ input: 1.234, pass: true, value: 1 },
-				{ input: 1.234, options: { numDecimals: 2 }, pass: true, value: 1.23 },
-				{ input: 1.235, options: { numDecimals: 2 }, pass: true, value: 1.24 }
-			]);
-	});
-
-	it('roundDown', () => {
-		runCases(handler.roundDown.bind(handler), [
-			{ input: 1.9, pass: true, value: 1 },
-			{ input: -1.1, pass: true, value: -2 }
-		]);
-	});
-
-	it('roundUp', () => {
-		runCases(handler.roundUp.bind(handler), [
-			{ input: 1.1, pass: true, value: 2 },
-			{ input: -1.9, pass: true, value: -1 }
-		]);
-	});
-
-	it('stripSign', () => {
-		runCases(handler.stripSign.bind(handler), [
-			{ input: -7, pass: true, value: 7 },
-			{ input: 7, pass: true, value: 7 }
-		]);
-	});
-
 	it('abs', () => {
-		runCases(handler.abs.bind(handler), [
-			{ input: -7, pass: true, value: 7 },
-			{ input: 7, pass: true, value: 7 }
+		runPassTests(handler.abs.bind(handler), [
+			{ input: -7, output: 7 },
+			{ input: 7, output: 7 },
+			{ input: -123.456, output: 123.456 },
+			{ input: Number.MIN_VALUE, output: Number.MIN_VALUE }
 		]);
 	});
 
 	it('ceil', () => {
-		runCases(handler.ceil.bind(handler), [
-			{ input: 1.1, pass: true, value: 2 },
-			{ input: -1.9, pass: true, value: -1 }
+		runPassTests(handler.ceil.bind(handler), [
+			{ input: 1.1, output: 2 },
+			{ input: -1.9, output: -1 },
+			{ input: 2, output: 2 },
+			{ input: 0.0001, output: 1 }
+		]);
+	});
+
+	it('clamp', () => {
+		runPassTests(handler.clamp.bind(handler), [
+			{ input: -5, args: [0, 2], output: 0 },
+			{ input: 3, args: [0, 2], output: 2 },
+			{ input: 1, args: [0, 2], output: 1 },
+			{ input: 0, args: [0, 2], output: 0 }
+		]);
+	});
+
+	it('clampBetween', () => {
+		runPassTests(handler.clampBetween.bind(handler), [
+			{ input: 5, args: [1, 10], output: 5 },
+			{ input: -1, args: [1, 10], output: 1 },
+			{ input: 12, args: [1, 10], output: 10 },
+			{ input: 1, args: [1, 10], output: 1 },
+			{ input: 10, args: [1, 10], output: 10 }
+		]);
+	});
+
+	it('constrain', () => {
+		runPassTests(handler.constrain.bind(handler), [
+			{ input: 5, args: [1, 10], output: 5 },
+			{ input: -1, args: [1, 10], output: 1 },
+			{ input: 12, args: [1, 10], output: 10 },
+			{ input: 1, args: [1, 10], output: 1 },
+			{ input: 10, args: [1, 10], output: 10 }
 		]);
 	});
 
 	it('floor', () => {
-		runCases(handler.floor.bind(handler), [
-			{ input: 1.9, pass: true, value: 1 },
-			{ input: -1.1, pass: true, value: -2 }
+		runPassTests(handler.floor.bind(handler), [
+			{ input: 1.9, output: 1 },
+			{ input: -1.1, output: -2 },
+			{ input: 0.1, output: 0 },
+			{ input: -0.1, output: -1 }
 		]);
 	});
 
-	it('truncate', () => {
-		runCases(handler.truncate.bind(handler), [
-			{ input: 1.9, pass: true, value: 1 },
-			{ input: -1.9, pass: true, value: -1 }
+	it('negate', () => {
+		runPassTests(handler.negate.bind(handler), [
+			{ input: 5, output: -5 },
+			{ input: -5, output: 5 },
+			{ input: 0, output: -0 },
+			{ input: Number.MIN_VALUE, output: -Number.MIN_VALUE }
+		]);
+	});
+
+	it('pow', () => {
+		runPassTests(handler.pow.bind(handler), [
+			{ input: 2, args: [3], output: 8 },
+			{ input: 9, args: [0.5], output: 3 },
+			{ input: -2, args: [3], output: -8 },
+			{ input: 4, args: [-1], output: 0.25 }
+		]);
+	});
+
+	it('round', () => {
+		runPassTests(handler.round.bind(handler), [
+			{ input: 1.234, output: 1 },
+			{ input: 1.234, args: [2], output: 1.23 },
+			{ input: 1.235, args: [2], output: 1.24 },
+			{ input: -1.235, args: [2], output: -1.24 },
+			{ input: 5.5, output: 6 }
+		]);
+	});
+
+	it('roundDown', () => {
+		runPassTests(handler.roundDown.bind(handler), [
+			{ input: 1.9, output: 1 },
+			{ input: -1.1, output: -2 },
+			{ input: 0.1, output: 0 },
+			{ input: -0.1, output: -1 }
+		]);
+	});
+
+	it('roundUp', () => {
+		runPassTests(handler.roundUp.bind(handler), [
+			{ input: 1.1, output: 2 },
+			{ input: -1.9, output: -1 },
+			{ input: 0.1, output: 1 },
+			{ input: -0.1, output: -0 }
+		]);
+	});
+
+	it('scale', () => {
+		runPassTests(handler.scale.bind(handler), [
+			{ input: 5, args: [0, 10, 0, 100], output: 50 },
+			{ input: 0, args: [0, 10, 0, 100], output: 0 },
+			{ input: 10, args: [0, 10, 0, 100], output: 100 },
+			{ input: 0.5, args: [0, 1, 10, 20], output: 15 }
+		]);
+	});
+
+	it('stripSign', () => {
+		runPassTests(handler.stripSign.bind(handler), [
+			{ input: -7, output: 7 },
+			{ input: 7, output: 7 },
+			{ input: -123.45, output: 123.45 },
+			{ input: Number.MIN_VALUE, output: Number.MIN_VALUE }
 		]);
 	});
 
 	it('toPower', () => {
-		runCases(
-			(input: unknown, options?: { exponent: number }): ValidationResult =>
-				handler.toPower(input, options?.exponent),
-			[
-				{ input: 2, options: { exponent: 3 }, pass: true, value: 8 },
-				{ input: 9, options: { exponent: 0.5 }, pass: true, value: 3 }
-			]);
-	});
-
-	it('pow', () => {
-		runCases(
-			(input: unknown, options?: { exponent: number }): ValidationResult =>
-				handler.pow(input, options?.exponent),
-			[
-				{ input: 2, options: { exponent: 3 }, pass: true, value: 8 }
-			]);
+		runPassTests(handler.toPower.bind(handler), [
+			{ input: 2, args: [3], output: 8 },
+			{ input: 9, args: [0.5], output: 3 },
+			{ input: -2, args: [2], output: 4 },
+			{ input: 4, args: [-1], output: 0.25 }
+		]);
 	});
 
 	it('toScale', () => {
-		runCases(
-			(input: unknown, options?: { fromMin: number; fromMax: number; toMin: number; toMax: number }): ValidationResult =>
-				handler.toScale(input, options?.fromMin, options?.fromMax, options?.toMin, options?.toMax),
-			[
-				{ input: 5, options: { fromMin: 0, fromMax: 10, toMin: 0, toMax: 100 }, pass: true, value: 50 },
-				{ input: 0.5, options: { fromMin: 0, fromMax: 1, toMin: 10, toMax: 20 }, pass: true, value: 15 }
-			]);
+		runPassTests(handler.toScale.bind(handler), [
+			{ input: 5, args: [0, 10, 0, 100], output: 50 },
+			{ input: 0.5, args: [0, 1, 10, 20], output: 15 },
+			{ input: 0, args: [0, 10, 0, 100], output: 0 },
+			{ input: 10, args: [0, 10, 0, 100], output: 100 }
+		]);
 	});
 
-	it('scale', () => {
-		runCases(
-			(input: unknown, options?: { fromMin: number; fromMax: number; toMin: number; toMax: number }): ValidationResult =>
-				handler.scale(input, options?.fromMin, options?.fromMax, options?.toMin, options?.toMax),
-			[
-				{ input: 5, options: { fromMin: 0, fromMax: 10, toMin: 0, toMax: 100 }, pass: true, value: 50 }
-			]);
+	it('truncate', () => {
+		runPassTests(handler.truncate.bind(handler), [
+			{ input: 1.9, output: 1 },
+			{ input: -1.9, output: -1 },
+			{ input: 0.9, output: 0 },
+			{ input: -0.9, output: -0 }
+		]);
 	});
+
 });

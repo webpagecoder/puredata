@@ -1,7 +1,7 @@
 'use strict';
 
 import { HandlerResult } from '../HandlerResult.ts';
-import { AnyHandler } from '../any/AnyHandler.ts'; 
+import { AnyHandler } from '../any/AnyHandler.ts';
 const { pass, fail } = HandlerResult;
 
 
@@ -18,21 +18,10 @@ class NumberHandler extends AnyHandler {
      * @param tolerance Maximum allowed absolute difference.
      * @returns Returns the original number if it is within tolerance; otherwise returns a validation error.
      */
-    public approx(num: any, comparison: any, tolerance: any= Number.EPSILON): HandlerResult {
+    public approx(num: number, comparison: number, tolerance: number = Number.EPSILON): HandlerResult {
         return Math.abs(num - comparison) < tolerance
             ? pass(num)
             : fail(num, 'number/approx', { comparison, tolerance });
-    }
-
-    /**
-     * Validates that a value is a number and not NaN.
-     * @param num Value being validated.
-     * @returns Returns the original value if it is a valid number; otherwise returns a validation error.
-     */
-    public number(num: any): HandlerResult {
-        return typeof num === 'number' && !Number.isNaN(num)
-            ? pass(num)
-            : fail(num, 'number/base');
     }
 
     /**
@@ -42,7 +31,7 @@ class NumberHandler extends AnyHandler {
      * @param max Inclusive maximum allowed value.
      * @returns Returns the original number if it is within the inclusive range; otherwise returns a validation error.
      */
-    public between(num: any, min: any, max: any): HandlerResult {
+    public between(num: number, min: number, max: number): HandlerResult {
         return (num >= min && num <= max)
             ? pass(num)
             : fail(num, 'number/between', { num, min, max });
@@ -56,10 +45,10 @@ class NumberHandler extends AnyHandler {
      * @param options.maxDecimalPlaces Maximum allowed digits after the decimal point.
      * @returns Returns the original number if it has a decimal part within the configured bounds; otherwise returns a validation error.
      */
-    public decimal(num: any, {
+    public decimal(num: number, {
         minDecimalPlaces = 0,
         maxDecimalPlaces = 20,
-    }: any= {}): HandlerResult {
+    } = {}): HandlerResult {
         if (Number.isInteger(num)) {
             return fail(num, 'number/decimal');
         }
@@ -88,7 +77,7 @@ class NumberHandler extends AnyHandler {
      * @param comparison Value num must strictly equal.
      * @returns Returns the original number if it strictly equals the comparison value; otherwise returns a validation error.
      */
-    public override equals(num: any, comparison: any): HandlerResult {
+    public override equals(num: number, comparison: number): HandlerResult {
         return (num === comparison)
             ? pass(num)
             : fail(num, 'number/equals', { comparison });
@@ -99,7 +88,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is even; otherwise returns a validation error.
      */
-    public even(num: any): HandlerResult {
+    public even(num: number): HandlerResult {
         return (num % 2 === 0)
             ? pass(num)
             : fail(num, 'number/even');
@@ -111,7 +100,7 @@ class NumberHandler extends AnyHandler {
      * @param multiple Value that must be divisible by num.
      * @returns Returns the original number if it is a factor of the provided multiple; otherwise returns a validation error.
      */
-    public factor(num: any, multiple: any): HandlerResult {
+    public factor(num: number, multiple: number): HandlerResult {
         return (multiple % num === 0)
             ? pass(num)
             : fail(num, 'number/factor', { num, multiple });
@@ -122,7 +111,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is finite; otherwise returns a validation error.
      */
-    public finite(num: any): HandlerResult {
+    public finite(num: number): HandlerResult {
         return Number.isFinite(num) ? pass(num) : fail(num, 'number/finite');
     }
 
@@ -132,7 +121,7 @@ class NumberHandler extends AnyHandler {
      * @param comparison Lower bound that num must exceed.
      * @returns Returns the original number if it is greater than the comparison value; otherwise returns a validation error.
      */
-    public greaterThan(num: any, comparison: any): HandlerResult {
+    public greaterThan(num: number, comparison: number): HandlerResult {
         return (num > comparison)
             ? pass(num)
             : fail(num, 'number/greaterThan', { comparison });
@@ -143,7 +132,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is Infinity or -Infinity; otherwise returns a validation error.
      */
-    public infinity(num: any): HandlerResult {
+    public infinity(num: number): HandlerResult {
         return (num === Infinity || num === -Infinity)
             ? pass(num)
             : fail(num, 'number/infinity');
@@ -154,7 +143,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is an integer; otherwise returns a validation error.
      */
-    public integer(num: any): HandlerResult {
+    public integer(num: number): HandlerResult {
         return Number.isInteger(num)
             ? pass(num)
             : fail(num, 'number/integer');
@@ -166,7 +155,7 @@ class NumberHandler extends AnyHandler {
     * @param comparison Upper bound that num must be below.
      * @returns Returns the original number if it is less than the comparison value; otherwise returns a validation error.
      */
-    public lessThan(num: any, comparison: any): HandlerResult {
+    public lessThan(num: number, comparison: number): HandlerResult {
         return (num < comparison)
             ? pass(num)
             : fail(num, 'number/lessThan', { comparison });
@@ -178,7 +167,7 @@ class NumberHandler extends AnyHandler {
      * @param comparison Inclusive maximum.
      * @returns Returns the original number if it is less than or equal to the maximum; otherwise returns a validation error.
      */
-    public max(num: any, comparison: any): HandlerResult {
+    public max(num: number, comparison: number): HandlerResult {
         return (num <= comparison)
             ? pass(num)
             : fail(num, 'number/max', { comparison });
@@ -190,7 +179,7 @@ class NumberHandler extends AnyHandler {
      * @param comparison Inclusive minimum.
      * @returns Returns the original number if it is greater than or equal to the minimum; otherwise returns a validation error.
      */
-    public min(num: any, comparison: any): HandlerResult {
+    public min(num: number, comparison: number): HandlerResult {
         return (num >= comparison)
             ? pass(num)
             : fail(num, 'number/min', { comparison });
@@ -201,7 +190,7 @@ class NumberHandler extends AnyHandler {
      * @param num Value being validated.
      * @returns Returns the original value if its string form starts with a minus sign; otherwise returns a validation error.
      */
-    public minusSign(num: any): HandlerResult {
+    public minusSign(num: number): HandlerResult {
         return String(num)[0] === '-'
             ? pass(num)
             : fail(num, 'number/minusSign');
@@ -213,7 +202,7 @@ class NumberHandler extends AnyHandler {
      * @param factor Divisor used to check multiplicity.
      * @returns Returns the original number if it is a multiple of the factor; otherwise returns a validation error.
      */
-    public multiple(num: any, factor: any): HandlerResult {
+    public multiple(num: number, factor: number): HandlerResult {
         return (num % factor === 0)
             ? pass(num)
             : fail(num, 'number/multiple', { num, factor });
@@ -224,7 +213,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is negative; otherwise returns a validation error.
      */
-    public negative(num: any): HandlerResult {
+    public negative(num: number): HandlerResult {
         return (num < 0)
             ? pass(num)
             : fail(num, 'number/negative');
@@ -236,18 +225,31 @@ class NumberHandler extends AnyHandler {
      * @param comparison Value num must not strictly equal.
      * @returns Returns the original number if it does not strictly equal the comparison value; otherwise returns a validation error.
      */
-    public override notEquals(num: any, comparison: any): HandlerResult {
+    public override notEquals(num: number, comparison: number): HandlerResult {
         return (num !== comparison)
             ? pass(num)
             : fail(num, 'number/notEquals', { comparison });
     }
 
     /**
+     * Validates that a value is a number and not NaN.
+     * @param num Value being validated.
+     * @returns Returns the original value if it is a valid number; otherwise returns a validation error.
+     */
+    //todo: should this be here??????
+    public number(num: number): HandlerResult {
+        return typeof num === 'number' && !Number.isNaN(num)
+            ? pass(num)
+            : fail(num, 'number/base');
+    }
+
+
+    /**
      * Validates that a number is odd.
      * @param num Number being validated.
      * @returns Returns the original number if it is odd; otherwise returns a validation error.
      */
-    public odd(num: any): HandlerResult {
+    public odd(num: number): HandlerResult {
         return (num % 2 !== 0)
             ? pass(num)
             : fail(num, 'number/odd');
@@ -258,7 +260,7 @@ class NumberHandler extends AnyHandler {
      * @param num Value being validated.
      * @returns Returns the original value if its string form starts with a plus sign; otherwise returns a validation error.
      */
-    public plusSign(num: any): HandlerResult {
+    public plusSign(num: number): HandlerResult {
         return String(num)[0] === '+'
             ? pass(num)
             : fail(num, 'number/plusSign');
@@ -269,7 +271,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is positive; otherwise returns a validation error.
      */
-    public positive(num: any): HandlerResult {
+    public positive(num: number): HandlerResult {
         return (num > 0)
             ? pass(num)
             : fail(num, 'number/positive');
@@ -281,7 +283,7 @@ class NumberHandler extends AnyHandler {
      * @param precision Maximum decimal places allowed.
      * @returns Returns the original number if it matches the requested precision; otherwise returns a validation error.
      */
-    public precision(num: any, precision: any): HandlerResult {
+    public precision(num: number, precision: number): HandlerResult {
         const multiplier = Math.pow(10, precision);
         return (Math.round(num * multiplier) === num * multiplier)
             ? pass(num)
@@ -293,7 +295,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is prime; otherwise returns a validation error.
      */
-    public prime(num: any): HandlerResult {
+    public prime(num: number): HandlerResult {
         if (!Number.isInteger(num) || num < 2) {
             return fail(num, 'number/prime');
         }
@@ -310,7 +312,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is within safe integer bounds; otherwise returns a validation error.
      */
-    public safe(num: any): HandlerResult {
+    public safe(num: number): HandlerResult {
         return num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER
             ? fail(num, 'number/safe')
             : pass(num);
@@ -321,7 +323,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is a safe integer; otherwise returns a validation error.
      */
-    public safeInteger(num: any): HandlerResult {
+    public safeInteger(num: number): HandlerResult {
         return Number.isSafeInteger(num)
             ? pass(num)
             : fail(num, 'number/safeInteger');
@@ -332,7 +334,7 @@ class NumberHandler extends AnyHandler {
      * @param num Value being validated.
      * @returns Returns the original value if its string form begins with a sign; otherwise returns a validation error.
      */
-    public signed(num: any): HandlerResult {
+    public signed(num: number): HandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? pass(num)
@@ -344,7 +346,7 @@ class NumberHandler extends AnyHandler {
      * @param num Value being validated.
      * @returns Returns the original value if its string form has no sign; otherwise returns a validation error.
      */
-    public unsigned(num: any): HandlerResult {
+    public unsigned(num: number): HandlerResult {
         const sign = String(num)[0];
         return sign === '-' || sign === '+'
             ? fail(num, 'number/unsigned', { sign })
@@ -356,26 +358,26 @@ class NumberHandler extends AnyHandler {
      * @param num Number being validated.
      * @returns Returns the original number if it is exactly zero; otherwise returns a validation error.
      */
-    public zero(num: any): HandlerResult {
+    public zero(num: number): HandlerResult {
         return (num === 0)
             ? pass(num)
             : fail(num, 'number/zero');
     }
 
 
-    
+
 
     // *****************************************
     //               MUTATORS
     // *****************************************
 
-    
+
     /**
      * Returns the absolute value of a number.
      * @param num Number to transform.
      * @returns Returns the absolute value of the input number.
      */
-    public abs(num: any): HandlerResult {
+    public abs(num: number): HandlerResult {
         return this.stripSign(num);
     }
 
@@ -384,7 +386,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the input number rounded up to the nearest integer.
      */
-    public ceil(num: any): HandlerResult {
+    public ceil(num: number): HandlerResult {
         return this.roundUp(num);
     }
 
@@ -395,7 +397,7 @@ class NumberHandler extends AnyHandler {
      * @param max Inclusive upper bound.
      * @returns Returns the input number clamped to the inclusive min and max bounds.
      */
-    public clamp(num: any, min: any, max: any): HandlerResult {
+    public clamp(num: number, min: number, max: number): HandlerResult {
         return this.clampBetween(num, min, max);
     }
 
@@ -406,11 +408,11 @@ class NumberHandler extends AnyHandler {
      * @param max Inclusive upper bound.
      * @returns Returns the input number clamped to the inclusive min and max bounds.
      */
-    public clampBetween(num: any, min: any, max: any): HandlerResult {
-        if(num > max) {
+    public clampBetween(num: number, min: number, max: number): HandlerResult {
+        if (num > max) {
             return pass(max);
         }
-        if(num < min) {
+        if (num < min) {
             return pass(min);
         }
         return pass(num);
@@ -423,7 +425,7 @@ class NumberHandler extends AnyHandler {
      * @param max Inclusive upper bound.
      * @returns Returns the input number constrained to the inclusive min and max bounds.
      */
-    public constrain(num: any, min: any, max: any): HandlerResult {
+    public constrain(num: number, min: number, max: number): HandlerResult {
         return pass(Math.min(Math.max(num, min), max));
     }
 
@@ -432,7 +434,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the input number rounded down to the nearest integer.
      */
-    public floor(num: any): HandlerResult {
+    public floor(num: number): HandlerResult {
         return this.roundDown(num);
     }
 
@@ -441,7 +443,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the negated value of the input number.
      */
-    public negate(num: any): HandlerResult {
+    public negate(num: number): HandlerResult {
         return pass(-num);
     }
 
@@ -451,7 +453,7 @@ class NumberHandler extends AnyHandler {
      * @param exponent Exponent to apply.
      * @returns Returns the base raised to the given exponent.
      */
-    public pow(num: any, exponent: any): HandlerResult {
+    public pow(num: number, exponent: number): HandlerResult {
         return this.toPower(num, exponent);
     }
 
@@ -461,7 +463,7 @@ class NumberHandler extends AnyHandler {
      * @param numDecimals Decimal places to keep.
      * @returns Returns the input number rounded to the requested decimal places.
      */
-    public round(num: any, numDecimals: any= 0): HandlerResult {
+    public round(num: number, numDecimals: number = 0): HandlerResult {
         const multiplier = Math.pow(10, numDecimals);
         return pass(Math.round(num * multiplier) / multiplier);
     }
@@ -471,7 +473,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the input number floored to the nearest integer.
      */
-    public roundDown(num: any): HandlerResult {
+    public roundDown(num: number): HandlerResult {
         return pass(Math.floor(num));
     }
 
@@ -480,7 +482,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the input number ceiled to the nearest integer.
      */
-    public roundUp(num: any): HandlerResult {
+    public roundUp(num: number): HandlerResult {
         return pass(Math.ceil(num));
     }
 
@@ -493,7 +495,7 @@ class NumberHandler extends AnyHandler {
      * @param toMax Output range maximum.
      * @returns Returns the input number mapped from the source range to the target range.
      */
-    public scale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
+    public scale(num: number, fromMin: number, fromMax: number, toMin: number, toMax: number): HandlerResult {
         return this.toScale(num, fromMin, fromMax, toMin, toMax);
     }
 
@@ -502,7 +504,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the absolute value of the input number.
      */
-    public stripSign(num: any): HandlerResult {
+    public stripSign(num: number): HandlerResult {
         return pass(Math.abs(num));
     }
 
@@ -512,7 +514,7 @@ class NumberHandler extends AnyHandler {
      * @param exponent Exponent to apply.
      * @returns Returns the base raised to the given exponent.
      */
-    public toPower(num: any, exponent: any): HandlerResult {
+    public toPower(num: number, exponent: number): HandlerResult {
         return pass(Math.pow(num, exponent));
     }
 
@@ -525,9 +527,9 @@ class NumberHandler extends AnyHandler {
      * @param toMax Output range maximum.
      * @returns Returns the input number mapped from the source range to the target range.
      */
-    public toScale(num: any, fromMin: any, fromMax: any, toMin: any, toMax: any): HandlerResult {
+    public toScale(num: number, fromMin: number, fromMax: number, toMin: number, toMax: number): HandlerResult {
         const scaled = ((num - fromMin) / (fromMax - fromMin))
-         * (toMax - toMin) + toMin;
+            * (toMax - toMin) + toMin;
         return pass(scaled);
     }
 
@@ -536,7 +538,7 @@ class NumberHandler extends AnyHandler {
      * @param num Number to transform.
      * @returns Returns the input number with its fractional part removed.
      */
-    public truncate(num: any): HandlerResult {
+    public truncate(num: number): HandlerResult {
         return pass(Math.trunc(num));
     }
 
