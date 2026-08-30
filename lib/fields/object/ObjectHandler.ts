@@ -14,7 +14,7 @@ class ObjectHandler extends AnyHandler {
      * @param paths Paths that must all exist.
      * @returns Returns the original object when all provided paths exist; otherwise returns a validation error.
      */
-    public allOfPaths(obj: object, paths: string[] = []): HandlerResult {
+    public allOfPaths(obj: object, paths: (string | Path)[] = []): HandlerResult {
         const finalPaths = [];
         for (const path of paths) {
             finalPaths.push(new Path(path));
@@ -38,7 +38,7 @@ class ObjectHandler extends AnyHandler {
      * @param paths Candidate paths to evaluate.
      * @returns Returns the original object when all but the allowed number of paths are present; otherwise returns a validation error.
      */
-    public allOfButXOfPaths(obj: object, count: any, paths: any = []): HandlerResult {
+    public allOfButXOfPaths(obj: object, count: number, paths: (string | Path)[] = []): HandlerResult {
         return this.xOfPaths(obj, paths.length - count, paths).pass
             ? pass(obj)
             : fail(obj, 'object/allOfButXOfPaths', { count, paths });
@@ -50,9 +50,9 @@ class ObjectHandler extends AnyHandler {
      * @param depth Required depth value.
      * @returns Returns the original object when its depth matches exactly; otherwise returns a validation error.
      */
-    public depth(obj: object, depth: any): HandlerResult {
-        const actualDepth = Utils.getDepth(obj);
-        return actualDepth !== depth
+    public depth(obj: object, depth: number): HandlerResult {
+        const actualDepth = Utils.getDepth(obj, depth - 1);
+        return actualDepth === false || actualDepth as number !== depth
             ? fail(obj, 'object/depth', { actualDepth, depth })
             : pass(obj);
     }
@@ -73,12 +73,12 @@ class ObjectHandler extends AnyHandler {
      * @param paths Paths that must exactly match object path count and membership.
      * @returns Returns the original object when its paths exactly match the provided set; otherwise returns a validation error.
      */
-    public exactlyPaths(obj: object, paths: any = []): HandlerResult {
+    public exactlyPaths(obj: object, paths: (string | Path)[] = []): HandlerResult {
         if (Utils.getPathCount(obj) !== paths.length) {
             return fail(obj, 'object/exactlyPaths', { paths });
         }
         for (const path of paths) {
-            if (!Utils.hasPath(obj, path)) {
+            if (!Utils.hasPath(obj, new Path(path))) {
                 return fail(obj, 'object/exactlyPaths', { paths });
             }
         }
@@ -91,7 +91,7 @@ class ObjectHandler extends AnyHandler {
      * @param keyCount Required top-level key count.
      * @returns Returns the original object when top-level key count matches exactly; otherwise returns a validation error.
      */
-    public keyCount(obj: object, keyCount: any): HandlerResult {
+    public keyCount(obj: object, keyCount: number): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount !== keyCount
             ? fail(obj, 'object/keyCount', { actualKeyCount, keyCount })
@@ -104,9 +104,9 @@ class ObjectHandler extends AnyHandler {
      * @param keyCount Required recursive key count.
      * @returns Returns the original object when recursive key count matches exactly; otherwise returns a validation error.
      */
-    public keyCountRecursive(obj: object, keyCount: any): HandlerResult {
-        const actualKeyCount = Utils.getRecursiveKeyCount(obj);
-        return actualKeyCount !== keyCount
+    public keyCountRecursive(obj: object, keyCount: number): HandlerResult {
+        const actualKeyCount = Utils.getRecursiveKeyCount(obj, keyCount - 1);
+        return actualKeyCount === false || actualKeyCount as number !== keyCount
             ? fail(obj, 'object/keyCountRecursive', { actualKeyCount, keyCount })
             : pass(obj);
     }
@@ -117,9 +117,9 @@ class ObjectHandler extends AnyHandler {
      * @param maxDepth Maximum allowed depth.
      * @returns Returns the original object when its depth is not greater than the maximum; otherwise returns a validation error.
      */
-    public maxDepth(obj: object, maxDepth: any): HandlerResult {
-        const actualDepth = Utils.getDepth(obj);
-        return actualDepth > maxDepth
+    public maxDepth(obj: object, maxDepth: number): HandlerResult {
+        const actualDepth = Utils.getDepth(obj, maxDepth + 1);
+        return actualDepth === false
             ? fail(obj, 'object/maxDepth', { actualDepth, maxDepth })
             : pass(obj);
     }
@@ -130,7 +130,7 @@ class ObjectHandler extends AnyHandler {
      * @param maxKeyCount Maximum allowed top-level key count.
      * @returns Returns the original object when top-level key count is within the maximum; otherwise returns a validation error.
      */
-    public maxKeyCount(obj: object, maxKeyCount: any): HandlerResult {
+    public maxKeyCount(obj: object, maxKeyCount: number): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount > maxKeyCount
             ? fail(obj, 'object/maxKeyCount', { actualKeyCount, maxKeyCount })
@@ -143,9 +143,9 @@ class ObjectHandler extends AnyHandler {
      * @param maxKeyCount Maximum allowed recursive key count.
      * @returns Returns the original object when recursive key count is within the maximum; otherwise returns a validation error.
      */
-    public maxKeyCountRecursive(obj: object, maxKeyCount: any): HandlerResult {
-        const actualKeyCount = Utils.getRecursiveKeyCount(obj);
-        return actualKeyCount > maxKeyCount
+    public maxKeyCountRecursive(obj: object, maxKeyCount: number): HandlerResult {
+        const actualKeyCount = Utils.getRecursiveKeyCount(obj, maxKeyCount + 1);
+        return actualKeyCount === false
             ? fail(obj, 'object/maxKeyCountRecursive', { actualKeyCount, maxKeyCount })
             : pass(obj);
     }
@@ -156,11 +156,11 @@ class ObjectHandler extends AnyHandler {
      * @param minDepth Minimum required depth.
      * @returns Returns the original object when its depth is at least the minimum; otherwise returns a validation error.
      */
-    public minDepth(obj: object, minDepth: any): HandlerResult {
-        const actualDepth = Utils.getDepth(obj);
-        return actualDepth < minDepth
-            ? fail(obj, 'object/minDepth', { actualDepth, minDepth })
-            : pass(obj);
+    public minDepth(obj: object, minDepth: number): HandlerResult {
+        const actualDepth = Utils.getDepth(obj, minDepth + 1);
+        return actualDepth === false
+            ? pass(obj)
+            : fail(obj, 'object/minDepth', { actualDepth, minDepth })
     }
 
     /**
@@ -169,7 +169,7 @@ class ObjectHandler extends AnyHandler {
      * @param minKeyCount Minimum required top-level key count.
      * @returns Returns the original object when top-level key count is at least the minimum; otherwise returns a validation error.
      */
-    public minKeyCount(obj: object, minKeyCount: any): HandlerResult {
+    public minKeyCount(obj: object, minKeyCount: number): HandlerResult {
         const actualKeyCount = Object.keys(obj).length;
         return actualKeyCount < minKeyCount
             ? fail(obj, 'object/minKeyCount', { actualKeyCount, minKeyCount })
@@ -182,11 +182,11 @@ class ObjectHandler extends AnyHandler {
      * @param minKeyCount Minimum required recursive key count.
      * @returns Returns the original object when recursive key count is at least the minimum; otherwise returns a validation error.
      */
-    public minKeyCountRecursive(obj: object, minKeyCount: any): HandlerResult {
-        const actualKeyCount = Utils.getRecursiveKeyCount(obj);
-        return actualKeyCount < minKeyCount
-            ? fail(obj, 'object/minKeyCountRecursive', { actualKeyCount, minKeyCount })
-            : pass(obj);
+    public minKeyCountRecursive(obj: object, minKeyCount: number): HandlerResult {
+        const actualKeyCount = Utils.getRecursiveKeyCount(obj, minKeyCount + 1);
+        return actualKeyCount === false
+            ? pass(obj)
+            : fail(obj, 'object/minKeyCountRecursive', { actualKeyCount, minKeyCount });
     }
 
     /**
@@ -195,7 +195,7 @@ class ObjectHandler extends AnyHandler {
      * @param paths Paths that must all be absent.
      * @returns Returns the original object when none of the provided paths exist; otherwise returns a validation error.
      */
-    public noneOfPaths(obj: object, paths: any = []): HandlerResult {
+    public noneOfPaths(obj: object, paths: (string | Path)[] = []): HandlerResult {
         return this.someOfPaths(obj, paths).pass
             ? fail(obj, 'object/noneOfPaths', { paths })
             : pass(obj);
@@ -217,10 +217,10 @@ class ObjectHandler extends AnyHandler {
      * @param paths Allowed paths.
      * @returns Returns the original object when existing paths stay within the allowed set; otherwise returns a validation error.
      */
-    public onlyPaths(obj: object, paths: any = []): HandlerResult {
+    public onlyPaths(obj: object, paths: (string | Path)[] = []): HandlerResult {
         let pathsFound = 0;
         for (const path of paths) {
-            if (Utils.hasPath(obj, path)) {
+            if (Utils.hasPath(obj, new Path(path))) {
                 ++pathsFound;
             }
         }
@@ -235,7 +235,7 @@ class ObjectHandler extends AnyHandler {
      * @param paths Paths that should not be the complete set of object paths.
      * @returns Returns the original object when at least one path exists outside the provided set; otherwise returns a validation error.
      */
-    public pathsOtherThan(obj: object, paths: any = []): HandlerResult {
+    public pathsOtherThan(obj: object, paths: (string | Path)[] = []): HandlerResult {
         return this.onlyPaths(obj, paths).pass
             ? fail(obj, 'object/pathsOtherThan', { paths })
             : pass(obj);
@@ -256,7 +256,7 @@ class ObjectHandler extends AnyHandler {
      * @param property Property name to check.
      * @returns Returns the original object when the property exists with a defined value; otherwise returns a validation error.
      */
-    public property(obj: object, property: any): HandlerResult {
+    public property(obj: object, property: PropertyKey): HandlerResult {
         if (obj == null) {
             return fail(obj, 'object/property', { property });
         }
@@ -271,9 +271,9 @@ class ObjectHandler extends AnyHandler {
      * @param paths Candidate paths where at least one must exist.
      * @returns Returns the original object when at least one provided path exists; otherwise returns a validation error.
      */
-    public someOfPaths(obj: object, paths: any = []): HandlerResult {
+    public someOfPaths(obj: object, paths: (string | Path)[] = []): HandlerResult {
         for (const path of paths) {
-            if (Utils.hasPath(obj, path)) {
+            if (Utils.hasPath(obj, new Path(path))) {
                 return pass(obj);
             }
         }
@@ -287,10 +287,10 @@ class ObjectHandler extends AnyHandler {
      * @param paths Candidate paths to count.
      * @returns Returns the original object when exactly the requested number of paths are present; otherwise returns a validation error.
      */
-    public xOfPaths(obj: object, count: any, paths: any = []): HandlerResult {
+    public xOfPaths(obj: object, count: number, paths: (string | Path)[] = []): HandlerResult {
         let found = 0;
         for (const path of paths) {
-            if (Utils.hasPath(obj, path)) {
+            if (Utils.hasPath(obj, new Path(path))) {
                 found++;
                 if (found > count) {
                     return fail(obj, 'object/xOfPaths', { paths, count });
@@ -317,17 +317,15 @@ class ObjectHandler extends AnyHandler {
      * @param count Number of keys to keep in the returned object.
      * @returns Returns a new object containing up to the requested number of randomly selected keys.
      */
-    public pickRandom(obj: object, count: any): HandlerResult {
+    public pickRandom(obj: object, count: number): HandlerResult {
         const keys = Object.keys(obj);
         if (count >= keys.length) {
             return pass(Object.assign({}, obj));
         }
-        const newObject: Record<string, any> = {};
+        const newObject: Record<PropertyKey, unknown> = {};
         while (count > 0) {
-            const randomKey = keys.splice(
-                Math.floor(Math.random() * keys.length), 1
-            )[0];
-            newObject[randomKey] = obj[randomKey];
+            const randomKey = keys.splice(Math.floor(Math.random() * keys.length), 1)[0];
+            newObject[randomKey] = (obj as Record<PropertyKey, unknown>)[randomKey];
             --count;
         }
         return pass(newObject);
@@ -339,15 +337,8 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with top-level keys removed when their values are considered empty.
      */
-    public removeEmpties(obj: object, emptyValues: any = [null, undefined]): any {
-        const newObj: Record<string, any> = {};
-        for (const key of Object.keys(obj)) {
-            const value = obj[key];
-            if (emptyValues.indexOf(value) === -1) {
-                newObj[key] = value;
-            }
-        }
-        return newObj;
+    public removeEmpties(obj: object, emptyValues: unknown[] = [null, undefined]): HandlerResult {
+        return this.removeValues(obj, emptyValues);
     }
 
     /**
@@ -356,21 +347,22 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with empty values removed recursively through nested plain objects.
      */
-    public removeEmptiesRecursive(obj: object, emptyValues: any = [null, undefined]): any {
-        const newObj: Record<string, any> = {};
-        for (const key of Object.keys(obj)) {
-            const value = obj[key];
-            if (Utils.isPlainObject(value)) {
-                const cleaned = this.removeEmptiesRecursive(value, emptyValues);
-                if (Object.keys(cleaned).length > 0) {
-                    newObj[key] = cleaned;
-                }
-            }
-            else if (emptyValues.indexOf(value) === -1) {
-                newObj[key] = value;
-            }
+    public removeEmptiesRecursive(obj: object, emptyValues: unknown[] = [null, undefined]): HandlerResult {
+        return this.removeValuesRecursive(obj, emptyValues);
+    }
+
+    /**
+     * Returns a new object containing only the specified keys.
+     * @param obj Source object.
+     * @param exceptFor Keys to keep.
+     * @returns Returns a new object containing only the keys listed in exceptFor.
+     */
+    public removeKeys(obj: object, exceptFor: PropertyKey[] = []): HandlerResult {
+        const newObj: Record<PropertyKey, unknown> = {};
+        for (const key of exceptFor) {
+            newObj[key] = (obj as Record<PropertyKey, unknown>)[key];
         }
-        return newObj;
+        return pass(newObj);
     }
 
     /**
@@ -379,11 +371,51 @@ class ObjectHandler extends AnyHandler {
      * @param paths Paths to remove.
      * @returns Returns the same object after attempting to remove each provided path.
      */
-    public removePaths(obj: object, paths: any = []): HandlerResult {
+    public removePaths(obj: object, paths: (string | Path)[] = []): HandlerResult {
         for (const path of paths) {
-            Utils.removePath(obj, path);
+            Utils.removePath(obj, new Path(path));
         }
         return pass(obj);
+    }
+
+    /**
+     * Removes top-level keys whose values are in the provided values list.
+     * @param obj Source object.
+     * @param values Values that should be removed.
+     * @returns Returns a new object with top-level keys removed when their values are in the provided list.
+     */
+    public removeValues(obj: object, values: unknown[] = [null, undefined]): HandlerResult {
+        const newObj: Record<PropertyKey, unknown> = {};
+        for (const key of Object.keys(obj)) {
+            const value = (obj as Record<PropertyKey, unknown>)[key];
+            if (values.indexOf(value) === -1) {
+                newObj[key] = value;
+            }
+        }
+        return pass(newObj);
+    }
+
+    /**
+     * Recursively removes keys whose values are in the provided values list.
+     * @param obj Source object.
+     * @param values Values that should be removed.
+     * @returns Returns a new object with empty values removed recursively through nested plain objects.
+     */
+    public removeValuesRecursive(obj: object, values: unknown[] = [null, undefined]): HandlerResult {
+        const newObj: Record<PropertyKey, unknown> = {};
+        for (const key of Object.keys(obj)) {
+            const value = (obj as Record<PropertyKey, unknown>)[key];
+            if (Utils.isPlainObject(value)) {
+                const cleaned = this.removeValuesRecursive(value as object, values);
+                if (Object.keys(cleaned).length > 0) {
+                    newObj[key] = cleaned;
+                }
+            }
+            else if (values.indexOf(value) === -1) {
+                newObj[key] = value;
+            }
+        }
+        return pass(newObj);
     }
 
     /**
@@ -394,10 +426,7 @@ class ObjectHandler extends AnyHandler {
      * @param options Rename behavior options.
      * @returns Returns a new object with keys renamed according to the provided pattern and options.
      */
-    public renameKeys(obj: Object, fromRegex: RegExp, toRegex: RegExp, {
-        deleteOriginalKey = true,
-        overrideExistingKey = true
-    } = {}): HandlerResult {
+    public renameKeys(obj: Object, fromRegex: RegExp, toRegex: RegExp, deleteOriginalKey = true, overrideExistingKey = true): HandlerResult {
         const objectCopy = Object.assign({}, obj);
         for (const originalKey of Object.keys(obj)) {
             let renamedKey = originalKey.replace(fromRegex, toRegex);
@@ -420,26 +449,14 @@ class ObjectHandler extends AnyHandler {
      * @param create Whether missing path segments may be created.
      * @returns Returns the same object after attempting to set each provided path/value pair.
      */
-    public setPaths(obj: object, pathValues: any = {}, overwrite: any = true, create: any = true): HandlerResult {
+    public setPaths(obj: object, pathValues: any = {}, overwrite = true, create = true): HandlerResult {
         for (const path of Object.keys(pathValues)) {
             Utils.setPathValue(obj, path as any, pathValues[path], create, overwrite);
         }
         return pass(obj);
     }
 
-    /**
-     * Returns a new object containing only the specified keys.
-     * @param obj Source object.
-     * @param exceptFor Keys to keep.
-     * @returns Returns a new object containing only the keys listed in exceptFor.
-     */
-    public stripKeys(obj: object, exceptFor: any = []): HandlerResult {
-        const copy: Record<string, any> = {};
-        for (const key of exceptFor) {
-            copy[key] = obj[key];
-        }
-        return pass(copy);
-    }
+
 }
 
 export { ObjectHandler };
