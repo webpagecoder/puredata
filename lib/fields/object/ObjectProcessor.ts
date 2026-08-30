@@ -10,20 +10,22 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
     public override preProcess(tracker: ValueTracker): void {
         super.preProcess(tracker);
 
-        if (!Utils.isObject(tracker.getValue())) {
+        const value = tracker.getValue();
+
+        if (!Utils.isObject(value)) {
             tracker.addError('object/base');
             return;
         }
 
         const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this._field.props;
 
-        if (ensurePlain && !Utils.isPlainObject(tracker.getValue())) {
+        if (ensurePlain && !Utils.isPlainObject(value)) {
             tracker.addError('object/plain');
             return;
         }
 
         if (maxDepth != null || maxKeyCount != null) {
-            const result = Utils.getDepthAndKeyCount(tracker.getValue(), {
+            const result = Utils.getDepthAndKeyCount(value as object, {
                 maxDepth,
                 maxKeyCount
             });
@@ -35,7 +37,7 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
 
         if (cloneObject) {
             // Clone object if transforms are to be performed
-            tracker.setValue(Utils.clone(tracker.getValue()));
+            tracker.setValue(Utils.clone(value));
         }
     }
 }

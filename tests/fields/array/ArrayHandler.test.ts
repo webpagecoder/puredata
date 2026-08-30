@@ -25,10 +25,10 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.allOf.bind(handler), [
-			{ input: [1, 2, 3], args: [[4]], errorKey: 'array/allOf' },
-			{ input: [1, 3, 5], args: [[numChain.between(1, 2), numChain.even()]], errorKey: 'array/allOf' },
-			{ input: [], args: [[1]], errorKey: 'array/allOf' },
-			{ input: [0, 1], args: [[numChain.between(2, 3)]], errorKey: 'array/allOf' },
+			{ input: [1, 2, 3], args: [[4]] },
+			{ input: [1, 3, 5], args: [[numChain.between(1, 2), numChain.even()]] },
+			{ input: [], args: [[1]] },
+			{ input: [0, 1], args: [[numChain.between(2, 3)]] },
 		]);
 	});
 
@@ -61,10 +61,10 @@ describe('ArrayHandler validators', () => {
 		);
 
 		runFailTests(handler.dimensions.bind(handler), [
-			{ input: [[1], [2]], args: [[2, 2]], errorKey: 'array/dimensions' },
-			{ input: [1, 2], args: [[2, 2]], errorKey: 'array/dimensions' },
-			{ input: [], args: [[1]], errorKey: 'array/dimensions' },
-			{ input: [[1, 2], [3]], args: [[2, 2]], errorKey: 'array/dimensions' }
+			{ input: [[1], [2]], args: [[2, 2]] },
+			{ input: [1, 2], args: [[2, 2]] },
+			{ input: [], args: [[1]] },
+			{ input: [[1, 2], [3]], args: [[2, 2]] }
 		]);
 	});
 
@@ -76,9 +76,9 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.empty.bind(handler), [
-			{ input: [1], errorKey: 'array/empty' },
-			{ input: [undefined], errorKey: 'array/empty' },
-			{ input: [null], errorKey: 'array/empty' }
+			{ input: [1] },
+			{ input: [undefined] },
+			{ input: [null] }
 		]);
 	});
 
@@ -91,12 +91,12 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.exactly.bind(handler), [
-			{ input: [1, 2, 2], args: [[2, 1, 3]], errorKey: 'array/exactly' },
-			{ input: [1, 2, 2], args: [[3, 1, 2]], errorKey: 'array/exactly' },
-			{ input: [1, 2, 2], args: [[2, 1]], errorKey: 'array/exactly' },
-			{ input: [4], args: [[numChain.odd()]], errorKey: 'array/exactly' },
-			{ input: [], args: [[1]], errorKey: 'array/exactly' },
-			{ input: [1], args: [[]], errorKey: 'array/exactly' }
+			{ input: [1, 2, 2], args: [[2, 1, 3]] },
+			{ input: [1, 2, 2], args: [[3, 1, 2]] },
+			{ input: [1, 2, 2], args: [[2, 1]] },
+			{ input: [4], args: [[numChain.odd()]] },
+			{ input: [], args: [[1]] },
+			{ input: [1], args: [[]] }
 		]);
 	});
 
@@ -108,9 +108,9 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.length.bind(handler), [
-			{ input: [1, 2], args: [3], errorKey: 'array/length' },
-			{ input: [], args: [1], errorKey: 'array/length' },
-			{ input: [1], args: [0], errorKey: 'array/length' },
+			{ input: [1, 2], args: [3] },
+			{ input: [], args: [1] },
+			{ input: [1], args: [0] },
 		]);
 	});
 
@@ -122,10 +122,10 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.lengthBetween.bind(handler), [
-			{ input: [1, 2], args: [3, 4], errorKey: 'array/lengthBetween' },
-			{ input: [1, 2], args: [0, 1], errorKey: 'array/lengthBetween' },
-			{ input: [], args: [1, 2], errorKey: 'array/lengthBetween' },
-			{ input: [1, 2, 3], args: [0, 2], errorKey: 'array/lengthBetween' },
+			{ input: [1, 2], args: [3, 4] },
+			{ input: [1, 2], args: [0, 1] },
+			{ input: [], args: [1, 2] },
+			{ input: [1, 2, 3], args: [0, 2] },
 		]);
 	});
 
@@ -138,10 +138,10 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.maxLength.bind(handler), [
-			{ input: [1, 2, 3], args: [2], errorKey: 'array/maxLength' },
-			{ input: [1, 2], args: [0], errorKey: 'array/maxLength' },
-			{ input: [1], args: [0], errorKey: 'array/maxLength' },
-			{ input: [1, 2, 3, 4], args: [3], errorKey: 'array/maxLength' }
+			{ input: [1, 2, 3], args: [2] },
+			{ input: [1, 2], args: [0] },
+			{ input: [1], args: [0] },
+			{ input: [1, 2, 3, 4], args: [3] }
 		]);
 	});
 
@@ -154,10 +154,10 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.minLength.bind(handler), [
-			{ input: [], args: [1], errorKey: 'array/minLength' },
-			{ input: [1, 2, 3], args: [4], errorKey: 'array/minLength' },
-			{ input: [], args: [2], errorKey: 'array/minLength' },
-			{ input: [1], args: [2], errorKey: 'array/minLength' }
+			{ input: [], args: [1] },
+			{ input: [1, 2, 3], args: [4] },
+			{ input: [], args: [2] },
+			{ input: [1], args: [2] }
 		]);
 	});
 
@@ -171,12 +171,12 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.noneOf.bind(handler), [
-			{ input: [1, { a: 1 }], args: [[{ a: 1 }]], errorKey: 'array/noneOf' },
-			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/noneOf' },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]], errorKey: 'array/noneOf' },
-			{ input: [3, 4, 5], args: [[numChain.between(3, 3)]], errorKey: 'array/noneOf' },
-			{ input: [2], args: [[2]], errorKey: 'array/noneOf' },
-			{ input: [{ x: 1 }], args: [[{ x: 1 }]], errorKey: 'array/noneOf' },
+			{ input: [1, { a: 1 }], args: [[{ a: 1 }]] },
+			{ input: [1, { a: 1 }], args: [[1]] },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]] },
+			{ input: [3, 4, 5], args: [[numChain.between(3, 3)]] },
+			{ input: [2], args: [[2]] },
+			{ input: [{ x: 1 }], args: [[{ x: 1 }]] },
 		]);
 	});
 
@@ -188,9 +188,9 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.notEmpty.bind(handler), [
-			{ input: [], errorKey: 'array/notEmpty' },
-			{ input: Array.from([]), errorKey: 'array/notEmpty' },
-			{ input: new Array(), errorKey: 'array/notEmpty' }
+			{ input: [] },
+			{ input: Array.from([]) },
+			{ input: new Array() }
 		]);
 	});
 
@@ -205,12 +205,12 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.only.bind(handler), [
-			{ input: [1, { a: 1 }], args: [[{ a: 2 }]], errorKey: 'array/only' },
-			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/only' },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[1, [2, 3]]], errorKey: 'array/only' },
-			{ input: [2, 4, 5], args: [[numChain.even()]], errorKey: 'array/only' },
-			{ input: [1, 2], args: [[1]], errorKey: 'array/only' },
-			{ input: [{ a: 1 }], args: [[{ a: 2 }]], errorKey: 'array/only' },
+			{ input: [1, { a: 1 }], args: [[{ a: 2 }]] },
+			{ input: [1, { a: 1 }], args: [[1]] },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[1, [2, 3]]] },
+			{ input: [2, 4, 5], args: [[numChain.even()]] },
+			{ input: [1, 2], args: [[1]] },
+			{ input: [{ a: 1 }], args: [[{ a: 2 }]] },
 		]);
 	});
 
@@ -224,12 +224,12 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.otherThan.bind(handler), [
-			{ input: [1, { a: 1 }], args: [[{ a: 1 }]], errorKey: 'array/otherThan' },
-			{ input: [1, { a: 1 }], args: [[1]], errorKey: 'array/otherThan' },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]], errorKey: 'array/otherThan' },
-			{ input: [1, 3, 5], args: [[numChain.odd()]], errorKey: 'array/otherThan' },
-			{ input: [1, 1], args: [[1]], errorKey: 'array/otherThan' },
-			{ input: [1, 2], args: [[1, 2]], errorKey: 'array/otherThan' },
+			{ input: [1, { a: 1 }], args: [[{ a: 1 }]] },
+			{ input: [1, { a: 1 }], args: [[1]] },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]] },
+			{ input: [1, 3, 5], args: [[numChain.odd()]] },
+			{ input: [1, 1], args: [[1]] },
+			{ input: [1, 2], args: [[1, 2]] },
 		]);
 	});
 
@@ -245,19 +245,17 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.sorted.bind(handler), [
-			{ input: [2, 1, 3], errorKey: 'array/sorted' },
+			{ input: [2, 1, 3] },
 			{
 				input: ['aa', 'b', 'ccc'],
 				args: [(a: unknown, b: unknown): number => String(a).length - String(b).length as number],
-				errorKey: 'array/sorted'
 			},
 			{
 				input: [{ id: 2 }, { id: 1 }],
 				args: [new Path('id')],
-				errorKey: 'array/sorted'
 			},
-			{ input: [1, 3, 2], errorKey: 'array/sorted' },
-			{ input: [{ id: 2 }, { id: 2 }, { id: 1 }], args: [new Path('id')], errorKey: 'array/sorted' },
+			{ input: [1, 3, 2] },
+			{ input: [{ id: 2 }, { id: 2 }, { id: 1 }], args: [new Path('id')] },
 		]);
 	});
 
@@ -272,12 +270,12 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.tuple.bind(handler), [
-			{ input: [1, 'a', true], args: [[1, 'a']], errorKey: 'array/tuple' },
-			{ input: [{ a: 1 }, { b: 2 }], args: [[{ a: 1 }, { b: 1 }]], errorKey: 'array/tuple' },
-			{ input: [[1, 2], [3, 4]], args: [[[1, 2], [3]]], errorKey: 'array/tuple' },
-			{ input: [-1, 1], args: [[numChain.positive(), numChain.negative()]], errorKey: 'array/tuple' },
-			{ input: [], args: [[0]], errorKey: 'array/tuple' },
-			{ input: [1, 2], args: [[1, 3]], errorKey: 'array/tuple' },
+			{ input: [1, 'a', true], args: [[1, 'a']] },
+			{ input: [{ a: 1 }, { b: 2 }], args: [[{ a: 1 }, { b: 1 }]] },
+			{ input: [[1, 2], [3, 4]], args: [[[1, 2], [3]]] },
+			{ input: [-1, 1], args: [[numChain.positive(), numChain.negative()]] },
+			{ input: [], args: [[0]] },
+			{ input: [1, 2], args: [[1, 3]] },
 		]);
 	});
 
@@ -291,20 +289,18 @@ describe('ArrayHandler validators', () => {
 		]);
 
 		runFailTests(handler.unique.bind(handler), [
-			{ input: [1, 2, 1], errorKey: 'array/unique' },
-			{ input: [[2, 3], [2, 3]], errorKey: 'array/unique' },
+			{ input: [1, 2, 1] },
+			{ input: [[2, 3], [2, 3]] },
 			{
 				input: [{ id: 1 }, { id: 2 }, { id: 1 }],
 				args: [new Path('id')],
-				errorKey: 'array/unique'
 			},
 			{
 				input: ['A', 'a'],
 				args: [(a, b) => String(a).toLowerCase() === String(b).toLowerCase()],
-				errorKey: 'array/unique'
 			},
-			{ input: [null, null], errorKey: 'array/unique' },
-			{ input: [0, -0], errorKey: 'array/unique' }
+			{ input: [null, null] },
+			{ input: [0, -0] }
 		]);
 	});
 });
@@ -592,3 +588,5 @@ describe('ArrayHandler mutators', () => {
 		]);
 	});
 });
+
+

@@ -23,12 +23,12 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> 
         const { chainHandler, maxLength, removeEmpties, emptyValues } = props;
 
         if (removeEmpties) {
-            tracker.setValue(chainHandler.removeEmpties(tracker.getValue() as unknown[], emptyValues)._value);
+            tracker.setValue(chainHandler.removeEmpties(tracker.getValue() as unknown[], emptyValues).value);
         }
 
         if (maxLength != null) {
             const result = chainHandler.maxLength(tracker.getValue() as unknown[], maxLength);
-            if (result._fail) {
+            if (result.fail) {
                 tracker.addError('array/maxLength', {
                     maxLength,
                     label

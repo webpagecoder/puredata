@@ -27,6 +27,11 @@ export type RegexMatchOptions = {
 
 export type RegexMatchResult = [string | null, string | null];
 
+export type GetPathOptions = {
+    includeRoots?: boolean;
+    rootsOnly?: boolean
+};
+
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 class Utils {
@@ -35,7 +40,13 @@ class Utils {
      * General utilities
      ***************************************************/
 
-    static areEqual(x: unknown, y: unknown): boolean {
+    /**
+     * Compares two values for equality.
+     * @param x The first value to compare.
+     * @param y The second value to compare.
+     * @returns True if the values are equal, false otherwise.
+     */
+    public static areEqual(x: unknown, y: unknown): boolean {
         if (x === y) {
             return true;
         }
@@ -72,42 +83,63 @@ class Utils {
         }
 
         for (const key of xKeys) {
-            if (!hasOwnProperty.call(y, key) || !Utils.areEqual((x as Record<string, unknown>)[key], (y as Record<string, unknown>)[key])) {
+            if (
+                !hasOwnProperty.call(y, key) ||
+                !Utils.areEqual(
+                    (x as Record<PropertyKey, unknown>)[key],
+                    (y as Record<PropertyKey, unknown>)[key]
+                )
+            ) {
                 return false;
             }
         }
         return true;
     }
 
-    static clone<T = unknown>(variable: T): T {
-        if (variable === null || typeof variable !== 'object') {
-            return variable;
+    /**
+     * Creates a deep copy of the given value.
+     * @param val The value to clone.
+     * @returns A deep copy of the value.
+     */
+    public static clone<T = unknown>(val: T): T {
+        if (val === null || typeof val !== 'object') {
+            return val;
         }
-        if (Array.isArray(variable)) {
-            return variable.map((item) => Utils.clone(item)) as T;
+        if (Array.isArray(val)) {
+            return val.map((item) => Utils.clone(item)) as T;
         }
-        const clone: Record<string, unknown> = {};
-        for (const key of Object.keys(variable as object)) {
-            clone[key] = Utils.clone((variable as Record<string, unknown>)[key]);
+        const source = val as Record<PropertyKey, unknown>;
+        const clone: Record<PropertyKey, unknown> = {};
+        for (const key of Reflect.ownKeys(source)) {
+            clone[key] = Utils.clone(source[key]);
         }
         return clone as T;
     }
+
+
+
 
 
     /****************************************************
      * Object-based utilities
      ***************************************************/
 
-    static getDepth(obj: unknown, maxDepth: number | null = null): number | boolean {
+    /**
+     * Calculates the maximum depth of an object.
+     * @param obj The object to analyze.
+     * @param maxDepth The maximum depth to consider.
+     * @returns The maximum depth of the object, or false if it exceeds the maximum.
+     */
+    public static getDepth(obj: object, maxDepth: number | null = null): number | boolean {
         if (!Utils.isObject(obj)) {
             return 0;
         }
         let depth = 1;
         const { isObject, getDepth } = Utils;
         for (const key of Object.keys(obj as object)) {
-            const value = (obj as Record<string, unknown>)[key];
+            const value = (obj as Record<PropertyKey, unknown>)[key];
             if (isObject(value)) {
-                const curDepth = 1 + (getDepth(value, maxDepth) as number);
+                const curDepth = 1 + (getDepth(value as object, maxDepth) as number);
                 if (maxDepth !== null && curDepth > maxDepth) {
                     return false;
                 }
@@ -117,18 +149,20 @@ class Utils {
         return depth;
     }
 
-    static getDepthAndKeyCount(obj: unknown, {
+    /**
+     * Calculates the maximum depth and key count of an object.
+     * @param obj The object to analyze.
+     * @param options The options for the calculation.
+     * @returns A tuple of the maximum depth and key count, or false if either exceeds the maximum.
+     */
+    public static getDepthAndKeyCount(obj: object, {
         depth = 0,
         keyCount = 0,
         maxDepth = null,
         maxKeyCount = null,
     }: { depth?: number; keyCount?: number; maxDepth?: number | null; maxKeyCount?: number | null } = {}): false | [number, number] {
 
-        if (!Utils.isObject(obj)) {
-            return false;
-        }
-
-        const keys = Object.keys(obj as object);
+        const keys = Object.keys(obj);
         keyCount += keys.length;
         depth++;
 
@@ -141,9 +175,9 @@ class Utils {
 
         let currentMaxDepth = depth;
         for (const key of keys) {
-            const value = (obj as Record<string, unknown>)[key];
+            const value = (obj as Record<PropertyKey, unknown>)[key];
             if (Utils.isObject(value)) {
-                const childResult = Utils.getDepthAndKeyCount(value, {
+                const childResult = Utils.getDepthAndKeyCount(value as object, {
                     depth,
                     keyCount,
                     maxDepth,
@@ -169,17 +203,20 @@ class Utils {
         return [currentMaxDepth, keyCount];
     }
 
-    static getRecursiveKeyCount(obj: unknown, maxKeyCount: number | null = null): number | boolean {
-        if (!Utils.isObject(obj)) {
-            return 0;
-        }
+    /**
+     * Calculates the total number of keys in an object and its nested objects.
+     * @param obj The object to analyze.
+     * @param maxKeyCount The maximum key count to consider.
+     * @returns The total key count, or false if it exceeds the maximum.
+     */
+    public static getRecursiveKeyCount(obj: object, maxKeyCount: number | null = null): number | boolean {
         let count = 0;
         const { isObject, getRecursiveKeyCount } = Utils;
-        for (const key of Object.keys(obj as object)) {
-            const value = (obj as Record<string, unknown>)[key];
+        for (const key of Object.keys(obj)) {
+            const value = (obj as Record<PropertyKey, unknown>)[key];
             if (isObject(value)) {
                 ++count;
-                count += getRecursiveKeyCount(value, maxKeyCount) as number;
+                count += getRecursiveKeyCount(value as object, maxKeyCount) as number;
                 if (maxKeyCount !== null && count > maxKeyCount) {
                     return false;
                 }
@@ -191,11 +228,21 @@ class Utils {
         return count;
     }
 
-    static isObject(value: unknown): boolean {
+    /**
+     * Checks if a value is an object.
+     * @param value The value to check.
+     * @returns True if the value is an object, false otherwise.
+     */
+    public static isObject(value: unknown): boolean {
         return typeof value === 'object' && value !== null;
     }
 
-    static isPlainObject(value: unknown): boolean {
+    /**
+     * Checks if a value is a plain object.
+     * @param value The value to check.
+     * @returns True if the value is a plain object, false otherwise.
+     */
+    public static isPlainObject(value: unknown): boolean {
         if (value === null || typeof value !== 'object') {
             return false;
         }
@@ -203,20 +250,26 @@ class Utils {
         return proto === Object.prototype || proto === null;
     }
 
-    static mergeObjects(parent: Record<string, unknown>, child: Record<string, unknown>): unknown {
-        let stack: [unknown, unknown][] = [[
+    /**
+     * Merges two objects.
+     * @param parent The parent object.
+     * @param child The child object.
+     * @returns The merged object.
+     */
+    public static mergeObjects(parent: object, child: object): unknown {
+        let stack: [object, object][] = [[
             parent = Utils.clone(parent),
             Utils.clone(child)
         ]];
         while (stack.length) {
             const [parentVal, childVal] = stack.shift()!;
-            const parentObj = parentVal as Record<string, unknown>;
-            const childObj = childVal as Record<string, unknown>;
+            const parentObj = parentVal as Record<PropertyKey, unknown>;
+            const childObj = childVal as Record<PropertyKey, unknown>;
             for (const key of Object.keys(childObj)) {
                 if (Utils.isPlainObject(parentObj[key]) && Utils.isPlainObject(childObj[key])) {
                     stack.push([
-                        parentObj[key],
-                        childObj[key]
+                        parentObj[key] as object,
+                        childObj[key] as object
                     ]);
                 }
                 else {
@@ -227,51 +280,98 @@ class Utils {
         return parent;
     }
 
+
+
+
+
     /****************************************************
      * Object path utilities
      ***************************************************/
 
-    static *getAllPaths(obj: unknown, separator: string, {
-        keys = [],
-        includeObjectRoots = false,
-        rootsOnly = false
-    }: { keys?: string[]; includeObjectRoots?: boolean; rootsOnly?: boolean } = {}): Generator<Path> {
-        const { isObject, getAllPaths } = Utils;
-        // Store original separator and set to provided one
-        const originalSeparator = Path.separator;
-        Path.separator = separator;
+    /**
+     * Generates all paths in an object.
+     * @param obj 
+     * @param options 
+     * @returns 
+     */
+    public static *getAllPaths(obj: object, options: GetPathOptions = {}): Generator<Path> {
+        yield* Utils.getAllPathsRecursively(obj, {
+            parentKeys: [],
+            includeRoots: options.includeRoots ?? false,
+            rootsOnly: options.rootsOnly ?? false
+        });
+    }
 
-        try {
-            for (const key of Object.keys(obj as object)) {
-                const value = (obj as Record<string, unknown>)[key];
-                if (isObject(value)) {
-                    if (includeObjectRoots || rootsOnly) {
-                        yield Path.fromArray(keys.concat(key));
-                    }
-                    yield* getAllPaths(value, separator, {
-                        keys: keys.concat(key),
-                        includeObjectRoots,
-                        rootsOnly
-                    });
+    private static *getAllPathsRecursively(obj: object, {
+        parentKeys = [],
+        includeRoots = false,
+        rootsOnly = false
+    }: GetPathOptions & { parentKeys?: string[] }): Generator<Path> {
+        for (const key of Object.keys(obj)) {
+            const child = (obj as Record<PropertyKey, unknown>)[key];
+            if (Utils.isPlainObject(child)) {
+                if (includeRoots || rootsOnly) {
+                    yield new Path(parentKeys.concat(key));
                 }
-                else if (!rootsOnly) {
-                    yield Path.fromArray(keys.concat(key));
-                }
+                yield* Utils.getAllPathsRecursively(child as object, {
+                    parentKeys: parentKeys.concat(key),
+                    includeRoots,
+                    rootsOnly
+                });
             }
-        } finally {
-            Path.separator = originalSeparator;
+            else if (!rootsOnly) {
+                yield new Path(parentKeys.concat(key));
+            }
         }
     }
 
-    static getPathCount(obj: unknown, options: Record<string, unknown> = {}): number {
+    /**
+     * Gets the number of paths in an object.
+     * @param obj The object to count paths in.
+     * @param options The options for counting paths.
+     * @returns The number of paths in the object.
+     */
+    public static getPathCount(obj: object, options: GetPathOptions = {}): number {
         let count = 0;
-        for (const _ of Utils.getAllPaths(obj, '', options as { keys?: string[]; includeObjectRoots?: boolean; rootsOnly?: boolean })) {
+        for (const _ of Utils.getAllPaths(obj, options)) {
             count++;
         }
         return count;
     }
 
-    static getRefByPath(obj: Record<string, unknown>, path: Path, create: boolean = false, overwrite: boolean = false): [NestedStringRecord, string] | null {
+    /**
+     * Gets the value of a path in an object.
+     * @param obj The object to search.
+     * @param path The path to the value.
+     * @returns The value at the specified path, or undefined if the path is not found.
+     */
+    public static getPathValue(obj: object, path: Path): unknown {
+        const { keys } = path;
+        const { isObject } = Utils;
+        let pointer = obj as Record<PropertyKey, unknown>;
+        if (keys.length === 0) {
+            return obj;
+        }
+        for (const key of keys) {
+            if (isObject(pointer)) {
+                pointer = pointer[key] as Record<PropertyKey, unknown>;
+            }
+            else {
+                return undefined;
+            }
+        }
+        return pointer;
+    }
+
+    /**
+     * Gets a reference to a value in an object by its path.
+     * @param obj The object to search.
+     * @param path The path to the value.
+     * @param create Whether to create the path if it doesn't exist.
+     * @param overwrite Whether to overwrite the value if it already exists.
+     * @returns A tuple of the parent object and the key, or null if the path is not found.
+     */
+    public static getRefByPath(obj: object, path: Path, create: boolean = false, overwrite: boolean = false): [NestedStringRecord, string] | null {
         let { keys } = path;
         const { isObject } = Utils;
         if (!isObject(obj) || keys.length === 0) {
@@ -303,29 +403,23 @@ class Utils {
         return isObject(pointer) && hasOwnProperty.call(pointer, lastKey) ? [pointer, lastKey] : null;
     }
 
-    static getPathValue(obj: Record<string, unknown>, path: Path): unknown {
-        const { keys } = path;
-        const { isObject } = Utils;
-        let pointer: Record<string, unknown> = obj;
-        if (keys.length === 0) {
-            return obj;
-        }
-        for (const key of keys) {
-            if (isObject(pointer)) {
-                pointer = pointer[key] as Record<string, unknown>;
-            }
-            else {
-                return undefined;
-            }
-        }
-        return pointer;
-    }
-
-    static hasPath(obj: Record<string, unknown>, path: Path): boolean {
+    /**
+     * Checks if a path exists in an object.
+     * @param obj The object to search.
+     * @param path The path to check.
+     * @returns True if the path exists, false otherwise.
+     */
+    public static hasPath(obj: object, path: Path): boolean {
         return Utils.getRefByPath(obj, path, false, false) !== null;
     }
 
-    static removePath(obj: Record<string, unknown>, path: Path): boolean {
+    /**
+     * Removes a path from an object.
+     * @param obj The object to modify.
+     * @param path The path to remove.
+     * @returns True if the path was removed, false otherwise.
+     */
+    public static removePath(obj: object, path: Path): boolean {
         const result = Utils.getRefByPath(obj, path, false, false);
         if (result === null) {
             return false;
@@ -335,11 +429,20 @@ class Utils {
         return true;
     }
 
-    static setPathValue(obj: Record<string, unknown>, path: Path, value: unknown, create = true, overwrite = true): boolean {
+    /**
+     * Sets the value of a path in an object.
+     * @param obj The object to modify.
+     * @param path The path to the value.
+     * @param value The value to set.
+     * @param create Whether to create the path if it doesn't exist.
+     * @param overwrite Whether to overwrite the value if it already exists.
+     * @returns True if the path was set, false otherwise.
+     */
+    public static setPathValue(obj: object, path: Path, value: unknown, create = true, overwrite = true): boolean {
         const result = Utils.getRefByPath(obj, path, create, overwrite);
         if (result && result.length > 0) {
             const [objRef, key] = result as [unknown, string];
-            const objRefRecord = objRef as Record<string, unknown>;
+            const objRefRecord = objRef as Record<PropertyKey, unknown>;
             if (overwrite || create && objRefRecord[key] === undefined) {
                 objRefRecord[key] = value;
                 return true;
@@ -348,15 +451,29 @@ class Utils {
         return false;
     }
 
+
+
+
     /****************************************************
      * String utilities
      ***************************************************/
 
-    static escapeForRegex(str: string): string {
+    /**
+     * Escapes a string for use in a regular expression.
+     * @param str The string to escape.
+     * @returns The escaped string.
+     */
+    public static escapeForRegex(str: string): string {
         return str.replace(/([\\^$*+?.()\|{}\[\]-])/g, '\\$1')
     }
 
-    static generateCheckDigit(str: string, {
+    /**
+     * Generates a check digit for a string.
+     * @param str The string to generate a check digit for.
+     * @param options The options for generating the check digit.
+     * @returns The generated check digit.
+     */
+    public static generateCheckDigit(str: string, {
         weights = [2, 1],
         alpha = {
             A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, G: 16, H: 17, I: 18, J: 19, K: 20, L: 21, M: 22,
@@ -365,8 +482,8 @@ class Utils {
         mod = 10,
         transform = (x: number): number => x,
         reverse = false
-    }: { weights?: number[]; alpha?: Record<string, number>; mod?: number; transform?: (x: number) => number; reverse?: boolean } = {}): number {
-        const values = str.toUpperCase().split('').map((ch: string): number => isNaN(+ch) ? (alpha as Record<string, number>)[ch] : +ch);
+    }: { weights?: number[]; alpha?: Record<PropertyKey, number>; mod?: number; transform?: (x: number) => number; reverse?: boolean } = {}): number {
+        const values = str.toUpperCase().split('').map((ch: string): number => isNaN(+ch) ? (alpha as Record<PropertyKey, number>)[ch] : +ch);
         if (reverse) {
             values.reverse();
         }
@@ -379,7 +496,14 @@ class Utils {
         return (mod - (sum % mod)) % mod;
     }
 
-    static padLeft(str: unknown, length: number, char: string = ' '): string {
+    /**
+     * Pads a string on the left with a specified character.
+     * @param str The string to pad.
+     * @param length The desired length of the string.
+     * @param char The character to use for padding.
+     * @returns The padded string.
+     */
+    public static padLeft(str: unknown, length: number, char: string = ' '): string {
         let padding = '';
         const strValue = String(str);
         if (strValue.length < length) {
@@ -388,7 +512,14 @@ class Utils {
         return padding + strValue;
     }
 
-    static padRight(str: unknown, length: number, char: string = ' '): string {
+    /**
+     * Pads a string on the right with a specified character.
+     * @param str The string to pad.
+     * @param length The desired length of the string.
+     * @param char The character to use for padding.
+     * @returns The padded string.
+     */
+    public static padRight(str: unknown, length: number, char: string = ' '): string {
         let padding = '';
         const strValue = String(str);
         if (strValue.length < length) {
@@ -398,7 +529,7 @@ class Utils {
     }
 
     /**
-     * 
+     * Performs a regex match on a string.
      * @param str The string to perform the match on
      * @param regexParts The pieces of the regex, split on where the delims would appear
      * @param options @see RegexMatchOptions
@@ -406,7 +537,7 @@ class Utils {
      * @returns The result of the regex match, including the normalized string, the string with all delims removed, 
      * and the a "massaged" suggestion string
      */
-    static regexMatch(
+    public static regexMatch(
         str: string,
         regexParts: string[],
         options: RegexMatchOptions,
@@ -509,11 +640,24 @@ class Utils {
         return [null, massagedStr];
     }
 
-    static replaceChars(str: string, delims: string, replacement: string = ''): string {
+    /**
+     * Replaces all occurrences of a set of characters in a string with a replacement string.
+     * @param str The string to modify.
+     * @param delims The characters to replace.
+     * @param replacement The string to replace the characters with.
+     * @returns The modified string.
+     */
+    public static replaceChars(str: string, delims: string, replacement: string = ''): string {
         return str.replace(RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+', 'g'), replacement);
     }
 
-    static splitOnDelims(str: string, delims: string): string[] {
+    /**
+     * Splits a string on a set of delimiters.
+     * @param str The string to split.
+     * @param delims The delimiters to split on.
+     * @returns An array of the split strings.
+     */
+    public static splitOnDelims(str: string, delims: string): string[] {
         const splitter = delims.length > 0 ? RegexCache.get('[' + Utils.escapeForRegex(delims) + ']+') : '';
         const final: string[] = [];
         for (const part of str.split(splitter)) {
@@ -524,7 +668,13 @@ class Utils {
         return final;
     }
 
-    static validateWithCheckDigit(str: string, {
+    /**
+     * Validates a string with a check digit.
+     * @param str The string to validate.
+     * @param options The options for validation.
+     * @returns True if the string is valid, false otherwise.
+     */
+    public static validateWithCheckDigit(str: string, {
         weights = [2, 1],
         mod = 10,
         transform = (x: number): number => x,
@@ -539,11 +689,19 @@ class Utils {
     }
 
 
+
+
     /****************************************************
      * Number utilities
      ***************************************************/
 
-    static parseNumber(value: unknown, {
+    /**
+     * Parses a string into a number.
+     * @param value The value to parse.
+     * @param options The options for parsing.
+     * @returns The parsed number, or null if the value is not a valid number.
+     */
+    public static parseNumber(value: unknown, {
         autoConvert = true,
         ensureSafe = true,
         ensureFinite = true,
