@@ -144,30 +144,30 @@ describe('Object based utils', () => {
     });
 
     it('getRecursiveKeyCount', () => {
-        expect(Utils.getRecursiveKeyCount({})).toBe(0);
-        expect(Utils.getRecursiveKeyCount({ a: 1, b: 2 })).toBe(2);
-        expect(Utils.getRecursiveKeyCount({ a: { b: 1 }, c: 2 })).toBe(3);
-        expect(Utils.getRecursiveKeyCount({ a: { b: { c: 1 } }, d: 2 })).toBe(4);
-        expect(Utils.getRecursiveKeyCount({
+        expect(Utils.getKeyCountRecursive({})).toBe(0);
+        expect(Utils.getKeyCountRecursive({ a: 1, b: 2 })).toBe(2);
+        expect(Utils.getKeyCountRecursive({ a: { b: 1 }, c: 2 })).toBe(3);
+        expect(Utils.getKeyCountRecursive({ a: { b: { c: 1 } }, d: 2 })).toBe(4);
+        expect(Utils.getKeyCountRecursive({
             a: { b: { c: 1 } },
             x: 1,
             y: { z: 2 },
             m: { n: { o: { p: 3 } } }
         })).toBe(10);
 
-        expect(Utils.getRecursiveKeyCount(
+        expect(Utils.getKeyCountRecursive(
             { a: 1, b: { c: 2 } },
             3
         )).toBe(3);
-        expect(Utils.getRecursiveKeyCount(
+        expect(Utils.getKeyCountRecursive(
             { a: 1, b: { c: 2 } },
             2
         )).toBe(false);
-        expect(Utils.getRecursiveKeyCount(
+        expect(Utils.getKeyCountRecursive(
             { a: { b: { c: 1 } }, d: 2 },
             4
         )).toBe(4);
-        expect(Utils.getRecursiveKeyCount(
+        expect(Utils.getKeyCountRecursive(
             { a: { b: { c: 1 } }, d: 2 },
             3
         )).toBe(4);

@@ -30,8 +30,6 @@ export type AnyProcessorCtorParams<C extends AnyChain = AnyChain> = ProcessorCto
 
 class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
-    // protected _hasPipelineHooks: boolean;
-
     constructor(args: AnyProcessorCtorParams<C>) {
         super(args);
     }

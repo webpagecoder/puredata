@@ -5,6 +5,8 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { AnyHandler } from '../any/AnyHandler.ts';
 const { pass, fail } = HandlerResult;
 
+export type BooleanHandlerResult = HandlerResult<unknown>;
+
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
 class BooleanHandler extends AnyHandler {
@@ -13,13 +15,17 @@ class BooleanHandler extends AnyHandler {
     //               VALIDATORS 
     // ***************************************
 
+    
+    // ============= OVERRIDES =====================
+
+
     /**
      * Passes when the value is `false` or matches one of the provided falsy equivalents.
      * @param bool - Value to validate as falsy.
      * @param falsyValues - Additional values treated as falsy.
      * @returns A passing result with the original value when it is falsy; otherwise a failing result with `boolean/falsy`.
      */
-    public override falsy(bool: unknown, falsyValues: unknown[] = []): HandlerResult {
+    public override falsy(bool: unknown, falsyValues: unknown[] = []): BooleanHandlerResult {
         if (bool === false) {
             return pass(bool);
         }
@@ -37,7 +43,7 @@ class BooleanHandler extends AnyHandler {
      * @param truthyValues - Additional values treated as truthy.
      * @returns A passing result with the original value when it is truthy; otherwise a failing result with `boolean/truthy`.
      */
-    public override truthy(bool: unknown, truthyValues: unknown[] = []): HandlerResult {
+    public override truthy(bool: unknown, truthyValues: unknown[] = []): BooleanHandlerResult {
         if (bool === true) {
             return pass(bool);
         }
@@ -63,7 +69,7 @@ class BooleanHandler extends AnyHandler {
      * @param boolishPairs - Custom truthy/falsy tuple pairs.
      * @returns A passing result containing the paired opposite value when a match is found; otherwise a failing result with `boolean/invert`.
      */
-    public invert(bool: unknown, boolishPairs: BoolishPair[] = []): HandlerResult {
+    public invert(bool: unknown, boolishPairs: BoolishPair[] = []): BooleanHandlerResult {
         boolishPairs.push([true, false]);
 
         const truthyMatchIndex = boolishPairs.map(([truthy, _]): unknown => truthy).indexOf(bool);

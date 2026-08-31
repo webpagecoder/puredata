@@ -287,6 +287,18 @@ describe('DateHandler validators', () => {
 		]);
 	});
 
+	it('notEquals', () => {
+		runPassTests(handler.notEquals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-17')] },
+		]);
+
+		runFailTests(handler.notEquals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-15')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-16')] },
+		]);
+	});
+
 	it('sameDay', () => {
 		runPassTests(handler.sameDay.bind(handler), [
 			{ input: makeUtcDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-15T05:00:00Z')] },

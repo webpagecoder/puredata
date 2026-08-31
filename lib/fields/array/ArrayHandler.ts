@@ -6,6 +6,8 @@ import { AnyHandler } from '../any/AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
+export type ArrayHandlerResult = HandlerResult<unknown[]>;
+
 export type Filter = (a: unknown) => unknown;
 export type PathOrFilter = Path | Filter;
 
@@ -96,8 +98,9 @@ function getEqualityComparator(pathOrEqualityComparator: PathOrEqualityComparato
  * @param arr Array to validate at the current depth.
  * @param dimensions Expected length at each dimension level.
  * @param index Current dimension index being validated.
+ * @returns Returns the original array when dimensions match, otherwise failure details.
  */
-function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number = 0): HandlerResult {
+function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number = 0): ArrayHandlerResult {
     if (arr.length !== dimensions[index]) {
         return fail(arr, "array/dimensions", { dimensions });
     }
@@ -114,9 +117,85 @@ function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number
 
 class ArrayHandler extends AnyHandler {
 
+
     // ***************************************
     //               VALIDATORS 
     // ***************************************
+
+
+    // ============= OVERRIDES =====================
+
+
+    /**
+     * Validates that the array contains at least one of the possible values.
+     * @param arr Array being validated.
+     * @param possibleValues Candidate values to look for.
+     * @returns Returns the original array when any candidate value is present.
+     */
+    public override anyOf(arr: unknown[], possibleValues: unknown[] = []): ArrayHandlerResult {
+        if (possibleValues.length === 0) {
+            return pass(arr);
+        }
+        for (const value of possibleValues) {
+            for (const entry of arr) {
+                if (Utils.areEqual(entry, value)) {
+                    return pass(arr);
+                }
+            }
+        }
+        return fail(arr, 'array/anyOf', { possibleValues });
+    }
+
+    /**
+     * Validates that the array is empty.
+     * @param arr Array being validated.
+     * @returns Returns the original array when the array has no items.
+     */
+    public override empty(arr: unknown[]): ArrayHandlerResult {
+        return arr.length === 0
+            ? pass(arr)
+            : fail(arr, 'array/empty', {
+                length: arr.length
+            });
+    }
+
+    /**
+     * Validates that the array contains none of the forbidden values.
+     * @param arr Array being validated.
+     * @param forbiddenValues Values that must not appear in the array.
+     * @returns Returns the original array when no forbidden values are found.
+     */
+    public override noneOf(arr: unknown[], forbiddenValues: unknown[] = []): ArrayHandlerResult {
+        for (const forbiddenValue of forbiddenValues) {
+            for (let i = 0, len = arr.length; i < len; i++) {
+                const value = arr[i];
+                if (Utils.areEqual(value, forbiddenValue)) {
+                    return fail(arr, 'array/noneOf', {
+                        forbiddenValues,
+                        index: i,
+                        invalidValue: value
+                    });
+                }
+            }
+        }
+        return pass(arr);
+    }
+
+    /**
+     * Validates that the array contains at least one item.
+     * @param arr Array being validated.
+     * @returns Returns the original array when the array is not empty.
+     */
+    public override notEmpty(arr: unknown[]): ArrayHandlerResult {
+        return arr.length > 0
+            ? pass(arr)
+            : fail(arr, 'array/notEmpty');
+    }
+
+
+
+
+    // ============= THE REST =====================
 
 
     /**
@@ -125,7 +204,7 @@ class ArrayHandler extends AnyHandler {
      * @param requiredValues Values that must all exist in the array.
      * @returns Returns the original array when all values are present, otherwise failure details.
      */
-    public allOf(arr: unknown[], requiredValues: unknown[] = []): HandlerResult {
+    public allOf(arr: unknown[], requiredValues: unknown[] = []): ArrayHandlerResult {
         checkRequired: for (const requiredValue of requiredValues) {
             for (const entry of arr) {
                 if (Utils.areEqual(entry, requiredValue)) {
@@ -141,47 +220,16 @@ class ArrayHandler extends AnyHandler {
     }
 
     /**
-     * Validates that the array contains at least one of the possible values.
-     * @param arr Array being validated.
-     * @param possibleValues Candidate values to look for.
-     * @returns Returns the original array when any candidate value is present.
-     */
-    public override anyOf(arr: unknown[], possibleValues: unknown[] = []): HandlerResult {
-        if (possibleValues.length === 0) {
-            return pass(arr);
-        }
-        for (const value of possibleValues) {
-            for (const entry of arr) {
-                if (Utils.areEqual(entry, value)) {
-                    return pass(arr);
-                }
-            }
-        }
-        return fail(arr, 'array/anyOf', { possibleValues });
-    }
-
-    /**
      * Validates that a nested array matches the provided dimensions.
      * @param arr Array being validated.
      * @param dimensions Expected dimensions for each array depth.
      * @returns Returns the original array when dimensions match, otherwise failure details.
      */
-    public dimensions(arr: unknown[], dimensions: number[]): HandlerResult {
+    public dimensions(arr: unknown[], dimensions: number[]): ArrayHandlerResult {
         return dimensionsRecursive(arr, dimensions, 0);
     }
 
-    /**
-     * Validates that the array is empty.
-     * @param arr Array being validated.
-     * @returns Returns the original array when the array has no items.
-     */
-    public override empty(arr: unknown[]): HandlerResult {
-        return arr.length === 0
-            ? pass(arr)
-            : fail(arr, 'array/empty', {
-                length: arr.length
-            });
-    }
+
 
     /**
      * Validates that the array contains exactly the required values.
@@ -189,7 +237,7 @@ class ArrayHandler extends AnyHandler {
      * @param requiredValues Values the array must contain, disregarding order.
      * @returns Returns the original array when contents match exactly.
      */
-    public exactly(arr: unknown[], requiredValues: unknown[] = []): HandlerResult {
+    public exactly(arr: unknown[], requiredValues: unknown[] = []): ArrayHandlerResult {
         const length = arr.length;
         const expectedLength = requiredValues.length;
         if (length !== expectedLength) {
@@ -218,7 +266,7 @@ class ArrayHandler extends AnyHandler {
      * @param requiredLength Exact required array length.
      * @returns Returns the original array when the length matches.
      */
-    public length(arr: unknown[], requiredLength: number): HandlerResult {
+    public length(arr: unknown[], requiredLength: number): ArrayHandlerResult {
         return arr.length === requiredLength
             ? pass(arr)
             : fail(arr, 'array/length', {
@@ -234,7 +282,7 @@ class ArrayHandler extends AnyHandler {
      * @param max Inclusive maximum length.
      * @returns Returns the original array when the length is within range.
      */
-    public lengthBetween(arr: unknown[], min: number, max: number): HandlerResult {
+    public lengthBetween(arr: unknown[], min: number, max: number): ArrayHandlerResult {
         const length = arr.length;
         if (length < min || length > max) {
             return fail(arr, 'array/lengthBetween', {
@@ -252,7 +300,7 @@ class ArrayHandler extends AnyHandler {
      * @param max Maximum allowed length.
      * @returns Returns the original array when the array length is at most the maximum.
      */
-    public maxLength(arr: unknown[], max: number): HandlerResult {
+    public maxLength(arr: unknown[], max: number): ArrayHandlerResult {
         return arr.length <= max
             ? pass(arr)
             : fail(arr, 'array/maxLength', {
@@ -267,7 +315,7 @@ class ArrayHandler extends AnyHandler {
      * @param min Minimum allowed length.
      * @returns Returns the original array when the array length is at least the minimum.
      */
-    public minLength(arr: unknown[], min: number): HandlerResult {
+    public minLength(arr: unknown[], min: number): ArrayHandlerResult {
         return arr.length >= min
             ? pass(arr)
             : fail(arr, 'array/minLength', {
@@ -276,38 +324,8 @@ class ArrayHandler extends AnyHandler {
             });
     }
 
-    /**
-     * Validates that the array contains none of the forbidden values.
-     * @param arr Array being validated.
-     * @param forbiddenValues Values that must not appear in the array.
-     * @returns Returns the original array when no forbidden values are found.
-     */
-    public override noneOf(arr: unknown[], forbiddenValues: unknown[] = []): HandlerResult {
-        for (const forbiddenValue of forbiddenValues) {
-            for (let i = 0, len = arr.length; i < len; i++) {
-                const value = arr[i];
-                if (Utils.areEqual(value, forbiddenValue)) {
-                    return fail(arr, 'array/noneOf', {
-                        forbiddenValues,
-                        index: i,
-                        invalidValue: value
-                    });
-                }
-            }
-        }
-        return pass(arr);
-    }
 
-    /**
-     * Validates that the array contains at least one item.
-     * @param arr Array being validated.
-     * @returns Returns the original array when the array is not empty.
-     */
-    public override notEmpty(arr: unknown[]): HandlerResult {
-        return arr.length > 0
-            ? pass(arr)
-            : fail(arr, 'array/notEmpty');
-    }
+
 
     /**
      * Validates that every array entry belongs to the allowed set.
@@ -315,7 +333,7 @@ class ArrayHandler extends AnyHandler {
      * @param allowedValues Values permitted in the array.
      * @returns Returns the original array when every entry is allowed.
      */
-    public only(arr: unknown[], allowedValues: unknown[] = []): HandlerResult {
+    public only(arr: unknown[], allowedValues: unknown[] = []): ArrayHandlerResult {
         checkValues: for (let i = 0, len = arr.length; i < len; i++) {
             const value = arr[i];
             for (const allowedValue of allowedValues) {
@@ -338,7 +356,7 @@ class ArrayHandler extends AnyHandler {
      * @param forbiddenValues Values the array must not consist exclusively of.
      * @returns Returns the original array when at least one entry is different.
      */
-    public otherThan(arr: unknown[], forbiddenValues: unknown[] = []): HandlerResult {
+    public otherThan(arr: unknown[], forbiddenValues: unknown[] = []): ArrayHandlerResult {
         if (forbiddenValues.length === 0) {
             return pass(arr);
         }
@@ -368,7 +386,7 @@ class ArrayHandler extends AnyHandler {
      * If neither is provided, natural ordering will be used.
      * @returns Returns the original array when the array is sorted.
      */
-    public sorted(arr: unknown[], pathOrSortComparator: PathOrSortComparator | null = null): HandlerResult {
+    public sorted(arr: unknown[], pathOrSortComparator: PathOrSortComparator | null = null): ArrayHandlerResult {
         const getSortOrder = getSortComparator(pathOrSortComparator);
         for (let i = 1, len = arr.length; i < len; i++) {
             if (getSortOrder(arr[i - 1], arr[i]) > 0) {
@@ -387,7 +405,7 @@ class ArrayHandler extends AnyHandler {
      * @param tupleValues Expected values at each index.
      * @returns Returns the original array when the tuple matches.
      */
-    public tuple(arr: unknown[], tupleValues: unknown[] = []): HandlerResult {
+    public tuple(arr: unknown[], tupleValues: unknown[] = []): ArrayHandlerResult {
         if (arr.length !== tupleValues.length) {
             return fail(arr, 'array/tuple', { tupleValues });
         }
@@ -412,7 +430,7 @@ class ArrayHandler extends AnyHandler {
      * @param allowedValues Values the array must only contain.
      * @returns Returns the same outcome as the only validator.
      */
-    public type(arr: unknown[], allowedValues: unknown[] = []): HandlerResult {
+    public type(arr: unknown[], allowedValues: unknown[] = []): ArrayHandlerResult {
         return this.only(arr, allowedValues);
     }
 
@@ -422,7 +440,7 @@ class ArrayHandler extends AnyHandler {
      * @param pathOrEqualityComparator Optional path or comparator used to compare entries.
      * @returns Returns the original array when all values are unique.
      */
-    public unique(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator | null = null): HandlerResult {
+    public unique(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator | null = null): ArrayHandlerResult {
         const areEqual = getEqualityComparator(pathOrEqualityComparator);
 
         for (let x = 0, xMax = arr.length - 1; x < xMax; x++) {
@@ -456,7 +474,7 @@ class ArrayHandler extends AnyHandler {
      * @param values Values to append.
      * @returns Returns the extended array.
      */
-    public add(arr: unknown[], values: unknown[] = []): HandlerResult {
+    public add(arr: unknown[], values: unknown[] = []): ArrayHandlerResult {
         return pass([...arr, ...values]);
     }
 
@@ -466,7 +484,7 @@ class ArrayHandler extends AnyHandler {
      * @param length Maximum size of each chunk.
      * @returns Returns the chunked array.
      */
-    public chunk(arr: unknown[], length: number): HandlerResult {
+    public chunk(arr: unknown[], length: number): ArrayHandlerResult {
         const allChunks: unknown[][] = [];
         let newChunk: unknown[] = [];
         if (length >= arr.length) {
@@ -491,7 +509,7 @@ class ArrayHandler extends AnyHandler {
      * @param filter Filter function used by Array.prototype.filter.
      * @returns Returns the filtered array.
      */
-    public filter(arr: unknown[], filter: Filter): HandlerResult {
+    public filter(arr: unknown[], filter: Filter): ArrayHandlerResult {
         return pass(arr.filter(filter));
     }
 
@@ -500,7 +518,7 @@ class ArrayHandler extends AnyHandler {
      * @param arr Source array.
      * @returns Returns the flattened array.
      */
-    public flatten(arr: unknown[]): HandlerResult {
+    public flatten(arr: unknown[]): ArrayHandlerResult {
         const flattened: unknown[] = [];
         for (const item of arr) {
             if (Array.isArray(item)) {
@@ -519,7 +537,7 @@ class ArrayHandler extends AnyHandler {
      * @param pathOrGroupFilter Optional path or filter function used to compute each group key.
      * @returns Returns grouped entries.
      */
-    public group(arr: unknown[], pathOrGroupFilter: PathOrFilter | null = null): HandlerResult {
+    public group(arr: unknown[], pathOrGroupFilter: PathOrFilter | null = null): ArrayHandlerResult {
         const groups = new Map<unknown, unknown[]>();
 
         for (const value of arr) {
@@ -553,7 +571,7 @@ class ArrayHandler extends AnyHandler {
      * @param allowedValues Values to keep.
      * @returns Returns the filtered array.
      */
-    public keep(arr: unknown[], allowedValues: unknown[] = []): HandlerResult {
+    public keep(arr: unknown[], allowedValues: unknown[] = []): ArrayHandlerResult {
         const filtered: unknown[] = [];
         for (const entry of arr) {
             for (const value of allowedValues) {
@@ -571,7 +589,7 @@ class ArrayHandler extends AnyHandler {
      * @param map Mapping function used by Array.prototype.map.
      * @returns Returns the mapped array.
      */
-    public map(arr: unknown[], map: Filter): HandlerResult {
+    public map(arr: unknown[], map: Filter): ArrayHandlerResult {
         return pass(arr.map(map));
     }
 
@@ -582,7 +600,7 @@ class ArrayHandler extends AnyHandler {
      * @param padValue Value appended until the target length is reached.
      * @returns Returns the padded array.
      */
-    public padEnd(arr: unknown[], targetLength: number, padValue: unknown = null): HandlerResult {
+    public padEnd(arr: unknown[], targetLength: number, padValue: unknown = null): ArrayHandlerResult {
         if (arr.length >= targetLength) {
             return pass([...arr]);
         }
@@ -599,7 +617,7 @@ class ArrayHandler extends AnyHandler {
      * @param count Number of items to pick.
      * @returns Returns the randomly selected items.
      */
-    public pickRandom(arr: unknown[], count: number = 1): HandlerResult {
+    public pickRandom(arr: unknown[], count: number = 1): ArrayHandlerResult {
         const arrCopy = [...arr];
         const random: unknown[] = [];
         if (count > arrCopy.length) {
@@ -623,7 +641,7 @@ class ArrayHandler extends AnyHandler {
      * @param forbiddenValues Values to remove.
      * @returns Returns the filtered array.
      */
-    public remove(arr: unknown[], forbiddenValues: unknown[] = []): HandlerResult {
+    public remove(arr: unknown[], forbiddenValues: unknown[] = []): ArrayHandlerResult {
         const filtered: unknown[] = [];
         for (const entry of arr) {
             let isAllowed = true;
@@ -646,7 +664,7 @@ class ArrayHandler extends AnyHandler {
      * @param pathOrEqualityComparator Optional path or comparator used to compare entries.
      * @returns Returns the deduplicated array.
      */
-    public removeDuplicates(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator | null = null): HandlerResult {
+    public removeDuplicates(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator | null = null): ArrayHandlerResult {
         const areEqual = getEqualityComparator(pathOrEqualityComparator);
         return pass(arr.reduce((acc: unknown[], current: unknown) => {
             if (!acc.some(item => areEqual(item, current))) {
@@ -662,7 +680,7 @@ class ArrayHandler extends AnyHandler {
      * @param emptyValues Values treated as empty.
      * @returns Returns the filtered array.
      */
-    public removeEmpties(arr: unknown[], emptyValues: unknown[] = [null, undefined, '']): HandlerResult {
+    public removeEmpties(arr: unknown[], emptyValues: unknown[] = [null, undefined, '']): ArrayHandlerResult {
         return this.remove(arr, emptyValues);
     }
 
@@ -671,7 +689,7 @@ class ArrayHandler extends AnyHandler {
      * @param arr Source array.
      * @returns Returns the filtered array.
      */
-    public removeUndefined(arr: unknown[]): HandlerResult {
+    public removeUndefined(arr: unknown[]): ArrayHandlerResult {
         return this.remove(arr, [undefined]);
     }
 
@@ -680,7 +698,7 @@ class ArrayHandler extends AnyHandler {
      * @param arr Source array.
      * @returns Returns the reversed array.
      */
-    public reverse(arr: unknown[]): HandlerResult {
+    public reverse(arr: unknown[]): ArrayHandlerResult {
         return pass([...arr].reverse());
     }
 
@@ -689,7 +707,7 @@ class ArrayHandler extends AnyHandler {
      * @param arr Source array.
      * @returns Returns the shuffled array.
      */
-    public shuffle(arr: unknown[]): HandlerResult {
+    public shuffle(arr: unknown[]): ArrayHandlerResult {
         const arrCopy = [...arr];
         const random: unknown[] = [];
         while (arrCopy.length > 0) {
@@ -710,7 +728,7 @@ class ArrayHandler extends AnyHandler {
      * @param endIndex Exclusive end index.
      * @returns Returns the sliced array.
      */
-    public slice(arr: unknown[], startIndex: number, endIndex?: number): HandlerResult {
+    public slice(arr: unknown[], startIndex: number, endIndex?: number): ArrayHandlerResult {
         return pass(arr.slice(startIndex, endIndex));
     }
 
@@ -720,7 +738,7 @@ class ArrayHandler extends AnyHandler {
      * @param count Number of items to take.
      * @returns Returns the leading slice.
      */
-    public sliceFirst(arr: unknown[], count: number = 1): HandlerResult {
+    public sliceFirst(arr: unknown[], count: number = 1): ArrayHandlerResult {
         return pass(arr.slice(0, count));
     }
 
@@ -730,7 +748,7 @@ class ArrayHandler extends AnyHandler {
      * @param count Number of items to take.
      * @returns Returns the trailing slice.
      */
-    public sliceLast(arr: unknown[], count: number = 1): HandlerResult {
+    public sliceLast(arr: unknown[], count: number = 1): ArrayHandlerResult {
         return pass(arr.slice(-count));
     }
 
@@ -743,7 +761,7 @@ class ArrayHandler extends AnyHandler {
      * If neither is provided, natural ordering will be used.
      * @returns Returns the sorted array.
      */
-    public sortAsc(arr: unknown[], pathOrSortComparator: PathOrSortComparator | null = null): HandlerResult {
+    public sortAsc(arr: unknown[], pathOrSortComparator: PathOrSortComparator | null = null): ArrayHandlerResult {
         return pass([...arr].sort(getSortComparator(pathOrSortComparator)));
     }
 
@@ -756,7 +774,7 @@ class ArrayHandler extends AnyHandler {
      * If neither is provided, natural ordering will be used.
      * @returns Returns the sorted array.
      */
-    public sortDesc(arr: unknown[], pathOrSortComparator: PathOrSortComparator | null = null): HandlerResult {
+    public sortDesc(arr: unknown[], pathOrSortComparator: PathOrSortComparator | null = null): ArrayHandlerResult {
         return pass([...arr].sort(getSortComparator(pathOrSortComparator, true)));
     }
 
@@ -768,7 +786,7 @@ class ArrayHandler extends AnyHandler {
      * @param insertValues Values to insert at the start index.
      * @returns Returns the spliced array.
      */
-    public splice(arr: unknown[], startIndex: number, deleteCount: number = 0, insertValues: unknown[] = []): HandlerResult {
+    public splice(arr: unknown[], startIndex: number, deleteCount: number = 0, insertValues: unknown[] = []): ArrayHandlerResult {
         const arrCopy = [...arr];
         arrCopy.splice(startIndex, deleteCount, ...insertValues);
         return pass(arrCopy);

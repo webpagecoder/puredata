@@ -19,6 +19,7 @@ class DateHandler extends AnyHandler {
 
 
 
+
     // ***********************************************
     //              DATE CATEGORY VALIDATORS 
     // ***********************************************
@@ -107,6 +108,47 @@ class DateHandler extends AnyHandler {
     //              GLOBAL VALIDATORS 
     // ***********************************************
 
+
+
+
+    // ============= OVERRIDES =====================
+
+    /**
+     * Validates that the input date has the same exact timestamp as the comparison date.
+     * @param inputDate Date value being validated.
+     * @param referenceDate Date value to compare against.
+     * @returns Input date or error.
+     */
+    public override equals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        if (!parsedReferenceDate) {
+            return fail(referenceDate, 'date/base');
+        }
+        return inputDate.globalDate.getTime() === parsedReferenceDate.globalDate.getTime()
+            ? pass(inputDate)
+            : fail(inputDate, 'date/equals', { referenceDate });
+    }
+
+    /**
+     * Validates that the input date has the same exact timestamp as the comparison date.
+     * @param inputDate Date value being validated.
+     * @param referenceDate Date value to compare against.
+     * @returns Input date or error.
+     */
+    public override notEquals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        if (!parsedReferenceDate) {
+            return fail(referenceDate, 'date/base');
+        }
+        return inputDate.globalDate.getTime() !== parsedReferenceDate.globalDate.getTime()
+            ? pass(inputDate)
+            : fail(inputDate, 'date/notEquals', { referenceDate });
+    }
+
+
+
+    // ============= THE REST =====================
+
     /**
      * Validates that the input date occurs strictly after the provided comparison date.
      * @param inputDate Date value being validated.
@@ -171,22 +213,6 @@ class DateHandler extends AnyHandler {
         return dayIndex === dayOfWeek
             ? pass(inputDate)
             : fail(inputDate, 'date/dayOfWeek', { dayOfWeek });
-    }
-
-    /**
-     * Validates that the input date has the same exact timestamp as the comparison date.
-     * @param inputDate Date value being validated.
-     * @param referenceDate Date value to compare against.
-     * @returns Input date or error.
-     */
-    public override equals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
-        if (!parsedReferenceDate) {
-            return fail(referenceDate, 'date/base');
-        }
-        return inputDate.globalDate.getTime() === parsedReferenceDate.globalDate.getTime()
-            ? pass(inputDate)
-            : fail(inputDate, 'date/equals', { referenceDate });
     }
 
 

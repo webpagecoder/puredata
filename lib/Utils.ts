@@ -131,22 +131,29 @@ class Utils {
      * @returns The maximum depth of the object, or false if it exceeds the maximum.
      */
     public static getDepth(obj: object, maxDepth: number | null = null): number | boolean {
-        if (!Utils.isObject(obj)) {
+        if (!Utils.isPlainObject(obj)) {
             return 0;
         }
-        let depth = 1;
-        const { isObject, getDepth } = Utils;
+        if (maxDepth !== null && maxDepth < 1) {
+            return false;
+        }
+
+        let maxDepthCalculated: number | boolean = 1;
+
         for (const key of Object.keys(obj as object)) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
-            if (isObject(value)) {
-                const curDepth = 1 + (getDepth(value as object, maxDepth) as number);
-                if (maxDepth !== null && curDepth > maxDepth) {
+            if (Utils.isObject(value)) {
+                const result = Utils.getDepth(value as object, maxDepth);
+                if (result === false) {
                     return false;
                 }
-                depth = Math.max(depth, curDepth);
+                maxDepthCalculated = Math.max(maxDepthCalculated, 1 + (result as number));
+                if (maxDepth !== null && maxDepthCalculated > maxDepth) {
+                    return false;
+                }
             }
         }
-        return depth;
+        return maxDepthCalculated;
     }
 
     /**
@@ -176,7 +183,7 @@ class Utils {
         let currentMaxDepth = depth;
         for (const key of keys) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
-            if (Utils.isObject(value)) {
+            if (Utils.isPlainObject(value)) {
                 const childResult = Utils.getDepthAndKeyCount(value as object, {
                     depth,
                     keyCount,
@@ -209,20 +216,25 @@ class Utils {
      * @param maxKeyCount The maximum key count to consider.
      * @returns The total key count, or false if it exceeds the maximum.
      */
-    public static getRecursiveKeyCount(obj: object, maxKeyCount: number | null = null): number | boolean {
-        let count = 0;
-        const { isObject, getRecursiveKeyCount } = Utils;
-        for (const key of Object.keys(obj)) {
+    public static getKeyCountRecursive(obj: object, maxKeyCount: number | null = null): number | boolean {
+
+        const allKeys = Object.keys(obj);
+        let count = allKeys.length;
+        if (maxKeyCount !== null && count > maxKeyCount) {
+            return false;
+        }
+
+        for (const key of allKeys) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
-            if (isObject(value)) {
-                ++count;
-                count += getRecursiveKeyCount(value as object, maxKeyCount) as number;
+            if (Utils.isPlainObject(value)) {
+                const result = Utils.getKeyCountRecursive(value as object, maxKeyCount);
+                if (result === false) {
+                    return false;
+                }
+                count += result as number;
                 if (maxKeyCount !== null && count > maxKeyCount) {
                     return false;
                 }
-            }
-            else {
-                ++count;
             }
         }
         return count;
@@ -295,14 +307,14 @@ class Utils {
      * @returns 
      */
     public static *getAllPaths(obj: object, options: GetPathOptions = {}): Generator<Path> {
-        yield* Utils.getAllPathsRecursively(obj, {
+        yield* Utils.getAllPathsRecursive(obj, {
             parentKeys: [],
             includeRoots: options.includeRoots ?? false,
             rootsOnly: options.rootsOnly ?? false
         });
     }
 
-    private static *getAllPathsRecursively(obj: object, {
+    private static *getAllPathsRecursive(obj: object, {
         parentKeys = [],
         includeRoots = false,
         rootsOnly = false
@@ -313,7 +325,7 @@ class Utils {
                 if (includeRoots || rootsOnly) {
                     yield new Path(parentKeys.concat(key));
                 }
-                yield* Utils.getAllPathsRecursively(child as object, {
+                yield* Utils.getAllPathsRecursive(child as object, {
                     parentKeys: parentKeys.concat(key),
                     includeRoots,
                     rootsOnly
@@ -434,11 +446,11 @@ class Utils {
      * @param obj The object to modify.
      * @param path The path to the value.
      * @param value The value to set.
-     * @param create Whether to create the path if it doesn't exist.
      * @param overwrite Whether to overwrite the value if it already exists.
+     * @param create Whether to create the path if it doesn't exist.
      * @returns True if the path was set, false otherwise.
      */
-    public static setPathValue(obj: object, path: Path, value: unknown, create = true, overwrite = true): boolean {
+    public static setPathValue(obj: object, path: Path, value: unknown, overwrite = true, create = true): boolean {
         const result = Utils.getRefByPath(obj, path, create, overwrite);
         if (result && result.length > 0) {
             const [objRef, key] = result as [unknown, string];

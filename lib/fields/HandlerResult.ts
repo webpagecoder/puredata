@@ -11,7 +11,7 @@ class HandlerResult<T = unknown> {
         return new HandlerResult({ value, pass: true });
     }
 
-    public static fail(value: unknown, errorKey: string, args: Record<string, unknown> = {}): HandlerResult<unknown> {
+    public static fail<T = unknown>(value: T, errorKey: string, args: Record<string, unknown> = {}): HandlerResult<T> {
         return new HandlerResult({ value, pass: false, errorKey, args });
     }
 

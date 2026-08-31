@@ -381,7 +381,7 @@ class StringHandler extends AnyHandler {
      * @param str The input string.
      */
     public alpha(str: string): StringHandlerResult {
-        return /^[A-Z]+$/i.test(str)
+        return /^[A-Z]*$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alpha');
     }
@@ -391,11 +391,11 @@ class StringHandler extends AnyHandler {
      * @param str The input string.
      */
     public alphanumeric(str: string): StringHandlerResult {
-        return /^[A-Z0-9]+$/i.test(str)
+        return /^[A-Z0-9]*$/i.test(str)
             ? pass(str)
             : fail(str, 'string/alphanumeric');
     }
-
+    
     /**
      * Validates that the string contains only ASCII characters.
      * @param str The input string.
@@ -421,9 +421,19 @@ class StringHandler extends AnyHandler {
      * @param str The input string.
      */
     public binary(str: string): StringHandlerResult {
-        return /^[01]+$/.test(str)
+        return /^[01]*$/.test(str)
             ? pass(str)
             : fail(str, 'string/binary');
+    }
+
+    /**
+     * Validates that the string contains only whitespace characters (space, tab, newline, etc.).
+     * @param str The input string.
+     */
+    public blank(str: string): StringHandlerResult {
+        return str.trim().length === 0
+            ? pass(str)
+            : fail(str, 'string/blank');
     }
 
     /**
@@ -441,7 +451,7 @@ class StringHandler extends AnyHandler {
      * @param str The input string.
      */
     public digits(str: string): StringHandlerResult {
-        return /^\d+$/.test(str)
+        return /^\d*$/.test(str)
             ? pass(str)
             : fail(str, 'string/digits');
     }
@@ -484,12 +494,23 @@ class StringHandler extends AnyHandler {
             : fail(str, 'string/hexColor', resolvedOptions);
     }
 
+
+    /**
+     * Validates that the string contains only blank characters (spaces, tabs, etc.).
+     * @param str The input string.
+     */
+    public notBlank(str: string): StringHandlerResult {
+        return str.trim().length > 0
+            ? pass(str)
+            : fail(str, 'string/blank');
+    }
+
     /**
      * Validates that the string contains only octal digits.
      * @param str The input string.
      */
     public octal(str: string): StringHandlerResult {
-        return /^[0-7]+$/.test(str)
+        return /^[0-7]*$/.test(str)
             ? pass(str)
             : fail(str, 'string/octal');
     }
