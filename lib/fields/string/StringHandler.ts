@@ -73,10 +73,12 @@ export const DATA_URL_DEFAULTS: DataUrlOptions = {
 };
 
 export type DomainOptions = NormalizeOption & {
-    wildcards: Presence;
+    extensions: string[];
     subdomains: Presence;
+    wildcards: Presence;
 };
 export const DOMAIN_DEFAULTS: DomainOptions = {
+    extensions: [],
     normalize: true,
     subdomains: 'optional',
     wildcards: 'forbidden',
@@ -89,9 +91,10 @@ export const E123_DEFAULTS: E123Options = {
     normalizedDelim: ' ',
 };
 
-export type E164Options = Omit<GenericMatchOptions, 'mode' | 'normalize'>;
+export type E164Options = GenericMatchOptions;
 export const E164_DEFAULTS: E164Options = {
     acceptableDelims: ' -./',
+    normalize: true,
     normalizedDelim: '',
 };
 
@@ -207,16 +210,17 @@ export const ONLY_CHARS_DEFAULTS: OnlyCharsOptions = {
     ignoreCase: false,
 };
 
-export type PathOptions = NormalizeOption & {
+export type PathOptions = {
     absolute: Presence;
     extensions: string[];
+    lowercase: boolean;
     segmentMaxLen: number;
     style: 'unix' | 'win' | 'win-unc';
 };
 export const PATH_DEFAULTS: PathOptions = {
     absolute: 'required',
     extensions: [],
-    normalize: true,
+    lowercase: false,
     segmentMaxLen: 100,
     style: 'unix',
 };
@@ -395,7 +399,7 @@ class StringHandler extends AnyHandler {
             ? pass(str)
             : fail(str, 'string/alphanumeric');
     }
-    
+
     /**
      * Validates that the string contains only ASCII characters.
      * @param str The input string.
@@ -470,7 +474,7 @@ class StringHandler extends AnyHandler {
             this._matchingDefaults,
             options
         );
-        return /^[0-9A-F]+$/i.test(str)
+        return /^[0-9A-F]*$/i.test(str)
             ? pass(resolvedOptions.normalize ? str.toLowerCase() : str)
             : fail(str, 'string/hex', resolvedOptions);
     }
@@ -522,14 +526,14 @@ class StringHandler extends AnyHandler {
 
     // =========== DIGITAL FORMATS =====================
 
-   /**
-     * Validates that the input is a base64 data URL of an allowed media type.
-     * @param str The input string.
-     * @param options Allowed data URL media types.
-     * Default: {} (merged with {@link DATA_URL_DEFAULTS}).
-     * @param options.allowedTypes Allowed top-level media families in the data URL.
-     * Default: ['image', 'video', 'audio', 'text'].
-     */
+    /**
+      * Validates that the input is a base64 data URL of an allowed media type.
+      * @param str The input string.
+      * @param options Allowed data URL media types.
+      * Default: {} (merged with {@link DATA_URL_DEFAULTS}).
+      * @param options.allowedTypes Allowed top-level media families in the data URL.
+      * Default: ['image', 'video', 'audio', 'text'].
+      */
     public dataUrl(str: string, options: Partial<DataUrlOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign({}, DATA_URL_DEFAULTS, options);
 
@@ -552,11 +556,13 @@ class StringHandler extends AnyHandler {
      * @param options.normalize Whether to return lowercase normalized output. Default: true.
      * @param options.subdomains Whether subdomains are required, optional, or forbidden. Default: 'optional'.
      * @param options.wildcards Whether leading wildcard labels are required, optional, or forbidden. Default: 'forbidden'.
+     * @param options.extensions Array of allowed domain extensions strings. Default: [].
      */
     public domain(str: string, options: Partial<DomainOptions> = {}): StringHandlerResult {
         const resolvedOptions = Object.assign({}, DOMAIN_DEFAULTS, options);
 
         const {
+            extensions,
             normalize,
             subdomains,
             wildcards
@@ -565,19 +571,22 @@ class StringHandler extends AnyHandler {
         const regexResult = RegexCache.get([
             `^`, (
                 // Start with *. if allowed/'required'
-                wildcards === 'optional' && '(?:\\*\\.)?'
-                || wildcards === 'required' && '(?:\\*\\.)' || ''
+                wildcards === 'optional' && '(?:\\*\\.)?' ||
+                wildcards === 'required' && '(?:\\*\\.)' || ''
             ),
             `(?=(`,
             // [a-z0-9-] up to 63 chars, can't start or end w/ dash
             `(?:[a-z\\d](?:[-a-z\\d]{0,61}[a-z\\d])?\\.)`, (
-                subdomains === 'optional'
-                && '+' || subdomains === 'required'
-                && '{2,}' || '' // Subdomains or not
+                subdomains === 'optional' && '+' ||
+                subdomains === 'required' && '{2,}' || '' // Subdomains or not
             ),
             `))\\1`,
             `(?!\\d+$)`, // TLD cannot be all digits
-            `(?:[a-z\\d][-a-z\\d]{0,22}[a-z\\d])`, // TLD up to 24 chars
+            (
+                extensions.length > 0
+                    ? `(?:${extensions.map(ext => Utils.escapeForRegex(ext)).join('|')})`
+                    : `(?:[a-z\\d][-a-z\\d]{0,22}[a-z\\d])` // TLD up to 24 chars
+            ),
             `$`,
         ].join(''), 'i').test(str);
 
@@ -592,9 +601,9 @@ class StringHandler extends AnyHandler {
      * @param options Matching and normalization options.
      * Default: {} (merged with {@link E123_DEFAULTS}).
      * @param options.acceptableDelims Delimiters accepted in loose matching. Default: ' -./'.
+     * @param options.mode Matching mode for regex normalization. Default: 'strict'.
      * @param options.normalizedDelim Delimiter used when normalization is applied. Default: ' '.
      * @param options.normalize Whether to return normalized output when validation passes. Default: true.
-     * @param options.mode Matching mode for regex normalization. Default: 'strict'.
      * @param options.stripDelims Delimiters removed before loose matching. Default: ' '.
      */
     public e123(str: string, options: Partial<E123Options> = {}): StringHandlerResult {
@@ -678,6 +687,10 @@ class StringHandler extends AnyHandler {
 
         if (normalized === null) {
             return fail(str, 'string/e164', Object.assign({ suggestion }, resolvedOptions));
+        }
+
+        if (normalized[0] !== '+') {
+            normalized = '+' + normalized;
         }
 
         return pass(normalize ? normalized : str);
@@ -923,7 +936,7 @@ class StringHandler extends AnyHandler {
      * @param options.absolute Whether absolute paths are required, optional, or forbidden. Default: 'required'.
      * @param options.extensions Allowed file extensions, including dot (for example '.txt'). Empty array allows any/none.
      * Default: [].
-     * @param options.normalize Whether to return lowercase normalized output. Default: true.
+     * @param options.lowercase Whether to lowercase output. Default: false.
      * @param options.segmentMaxLen Maximum length for each folder/file segment. Default: 100.
      * @param options.style Path style to validate. Default: 'unix'.
      */
@@ -938,7 +951,7 @@ class StringHandler extends AnyHandler {
         const {
             absolute,
             extensions,
-            normalize,
+            lowercase,
             segmentMaxLen,
             style,
         } = resolvedOptions;
@@ -999,7 +1012,7 @@ class StringHandler extends AnyHandler {
             '))\\1' +
             '$';
         return RegexCache.get(fullRegex, 'i').test(str)
-            ? pass(normalize ? str.toLowerCase() : str)
+            ? pass(lowercase ? str.toLowerCase() : str)
             : fail(str, 'string/path', resolvedOptions)
     }
 
@@ -1294,7 +1307,7 @@ class StringHandler extends AnyHandler {
             : fail(str, 'string/contains', Object.assign({ substring }, resolvedOptions));
     }
 
- 
+
     /**
      * Validates that the input ends with a suffix.
      * @param str The input string.
@@ -2008,7 +2021,7 @@ class StringHandler extends AnyHandler {
 
 
 
-    
+
 
     // =================== NUMERIC =========================
 
@@ -2169,19 +2182,21 @@ class StringHandler extends AnyHandler {
 
         const looseRegex = looseSpacing ? '\\s*' : '';
         const parts = RegexCache.get(
-            '^(\\+?)(-?)'
-            + looseRegex
-            + (leadingSymbols.length > 0
-                ? `(${leadingSymbols.map(Utils.escapeForRegex).join('|')})`
-                : '')
-            + looseRegex
-            + '(.+?)'
-            + looseRegex
-            + (trailingSymbols.length > 0
-                ? `(${trailingSymbols.map(Utils.escapeForRegex).join('|')})`
-                : '')
-            + looseRegex
-            + '(\\+?)(-?)$'
+            '^(\\+?)(-?)' +
+            looseRegex + (
+                leadingSymbols.length > 0
+                    ? `(${leadingSymbols.map(Utils.escapeForRegex).join('|')})`
+                    : '()'
+            ) +
+            looseRegex +
+            '(.+?)' +
+            looseRegex + (
+                trailingSymbols.length > 0
+                    ? `(${trailingSymbols.map(Utils.escapeForRegex).join('|')})`
+                    : '()'
+            ) +
+            looseRegex +
+            '(\\+?)(-?)$'
         ).exec(str);
 
         if (!parts) {
@@ -2223,9 +2238,13 @@ class StringHandler extends AnyHandler {
         // Split into integral and fractional parts
         const [
             integral = '',
-            fractional = ''
-        ] = number.split(decimalDelim, 2);
+            fractional = '',
+            extraCruft = false,
+        ] = number.split(decimalDelim);
 
+        if (extraCruft !== false) {
+            return fail(str, 'string/numeric/invalidDecimal', resolvedOptions);
+        }
         if (decimal === 'forbidden' && fractional !== '') {
             return fail(str, 'string/numeric/forbiddenDecimal', resolvedOptions);
         }

@@ -5,7 +5,7 @@ import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
 
 
 
-describe('StringHandler validators overrides', () => {
+describe('StringHandler overrides', () => {
 	let handler: StringHandler;
 
 	beforeEach(() => {
@@ -39,6 +39,11 @@ describe('StringHandler validators overrides', () => {
 });
 
 
+
+
+
+
+
 describe('StringHandler validators basic', () => {
 	let handler: StringHandler;
 
@@ -64,6 +69,137 @@ describe('StringHandler validators basic', () => {
 		]);
 	});
 
+	it('alphanumeric', () => {
+		runPassTests(handler.alphanumeric.bind(handler), [
+			{ input: '' },
+			{ input: 'abc123' },
+			{ input: 'A1b2C3' },
+			{ input: '0' },
+		]);
+
+		runFailTests(handler.alphanumeric.bind(handler), [
+			{ input: 'abc-123' },
+			{ input: 'abc 123' },
+			{ input: '#123' },
+		]);
+	});
+
+	it('ascii', () => {
+		runPassTests(handler.ascii.bind(handler), [
+			{ input: '' },
+			{ input: 'ABC123!' },
+			{ input: 'line\nbreak\tand tab' },
+		]);
+
+		runFailTests(handler.ascii.bind(handler), [
+			{ input: 'cafe\u00E9' },
+			{ input: 'snowman \u2603' },
+		]);
+	});
+
+	it('base64', () => {
+		runPassTests(handler.base64.bind(handler), [
+			{ input: 'TWFu' },
+			{ input: 'TWE=' },
+			{ input: 'TQ==' },
+			{ input: 'QUJDRA==' },
+		]);
+
+		runFailTests(handler.base64.bind(handler), [
+			{ input: 'TWFu=' },
+			{ input: 'TWE' },
+			{ input: 'TQ===' },
+			{ input: 'TW!u' },
+		]);
+	});
+
+	it('binary', () => {
+		runPassTests(handler.binary.bind(handler), [
+			{ input: '' },
+			{ input: '0' },
+			{ input: '1' },
+			{ input: '101010' },
+		]);
+
+		runFailTests(handler.binary.bind(handler), [
+			{ input: '10201' },
+			{ input: 'abc' },
+			{ input: '10 01' },
+		]);
+	});
+
+	it('bmp', () => {
+		runPassTests(handler.bmp.bind(handler), [
+			{ input: '' },
+			{ input: 'ASCII text 123' },
+			{ input: '\u0000\u0001\u007F' },
+			{ input: '\uD7FF\uE000\uFFFF' },
+			{ input: 'A\u2603B' },
+		]);
+
+		runFailTests(handler.bmp.bind(handler), [
+			{ input: 'a\u{1F600}' },
+			{ input: 'music \u{1D11E}' },
+		]);
+	});
+
+	it('digits', () => {
+		runPassTests(handler.digits.bind(handler), [
+			{ input: '' },
+			{ input: '0' },
+			{ input: '0123456789' },
+			{ input: '000000' },
+		]);
+
+		runFailTests(handler.digits.bind(handler), [
+			{ input: '123a' },
+			{ input: '12 34' },
+			{ input: '-123' },
+			{ input: '1.23' },
+			{ input: '١٢٣' },
+		]);
+	});
+
+	it('hex', () => {
+		runPassTests(handler.hex.bind(handler), [
+			{ input: '' },
+			{ input: 'A1b2', output: 'a1b2' },
+			{ input: 'ABCDEF', output: 'abcdef' },
+			{ input: '00FF00', output: '00ff00' },
+			{ input: 'deadbeef' },
+			{ input: 'A1b2', args: [{ normalize: false }] },
+			{ input: 'ABCDEF', args: [{ normalize: false }] },
+		]);
+
+		runFailTests(handler.hex.bind(handler), [
+			{ input: 'G1' },
+			{ input: '0xFF' },
+			{ input: 'ab cd' },
+			{ input: '#A1B2' },
+		]);
+	});
+
+	it('hexColor', () => {
+		runPassTests(handler.hexColor.bind(handler), [
+			{ input: '#A1b2C3', output: '#a1b2c3' },
+			{ input: '#ABC', output: '#abc' },
+			{ input: 'A1b2C3', output: 'a1b2c3' },
+			{ input: 'ABC', output: 'abc' },
+			{ input: '#A1b2C3', args: [{ normalize: false }] },
+			{ input: 'ABC', args: [{ normalize: false }] },
+		]);
+
+		runFailTests(handler.hexColor.bind(handler), [
+			{ input: '' },
+			{ input: '#abcd' },
+			{ input: '#12' },
+			{ input: '#12345' },
+			{ input: '#1234567' },
+			{ input: '#GGG' },
+			{ input: '##123456' },
+		]);
+	});
+
 	it('blank', () => {
 		runPassTests(handler.blank.bind(handler), [
 			{ input: '' },
@@ -80,17 +216,35 @@ describe('StringHandler validators basic', () => {
 	});
 
 	it('notBlank', () => {
-		runPassTests(handler.blank.bind(handler), [
+		runPassTests(handler.notBlank.bind(handler), [
+			{ input: '\naNfk ' },
+			{ input: 'abc1' },
+			{ input: '#' },
+		]);
+
+		runFailTests(handler.notBlank.bind(handler), [
 			{ input: '' },
 			{ input: ' ' },
 			{ input: '\t ' },
 			{ input: '\n\n' },
 		]);
+	});
 
-		runFailTests(handler.blank.bind(handler), [
-			{ input: '\naNfk ' },
-			{ input: 'abc1' },
-			{ input: '#' },
+	it('octal', () => {
+		runPassTests(handler.octal.bind(handler), [
+			{ input: '' },
+			{ input: '0' },
+			{ input: '7' },
+			{ input: '70123456' },
+			{ input: '000777' },
+		]);
+
+		runFailTests(handler.octal.bind(handler), [
+			{ input: '8' },
+			{ input: '128' },
+			{ input: '70 12' },
+			{ input: '-701' },
+			{ input: 'abc' },
 		]);
 	});
 });
@@ -104,1423 +258,2116 @@ describe('StringHandler validators basic', () => {
 
 
 
-// describe('StringHandler validators: basic', () => {
-// 	let handler: StringHandler;
-
-// 	beforeEach(() => {
-// 		handler = new StringHandler();
-// 	});
-
-// 	it('alpha', () => {
-// 		runCases(handler.alpha.bind(handler), [
-// 			{ input: 'AbCd', pass: true },
-// 			{ input: 'abc123', pass: false, errorKey: 'string/alpha' }
-// 		]);
-// 	});
-
-// 	it('alphanumeric', () => {
-// 		runCases(handler.alphanumeric.bind(handler), [
-// 			{ input: 'a1B2', pass: true },
-// 			{ input: 'abc-123', pass: false, errorKey: 'string/alphanumeric' }
-// 		]);
-// 	});
-
-// 	it('ascii', () => {
-// 		runCases(handler.ascii.bind(handler), [
-// 			{ input: 'ABC123!', pass: true },
-// 			{ input: 'cafe\u00E9', pass: false, errorKey: 'string/ascii' }
-// 		]);
-// 	});
-
-// 	it('base64', () => {
-// 		runCases(handler.base64.bind(handler), [
-// 			{ input: 'TWFu', pass: true },
-// 			{ input: 'TWFu=', pass: false, errorKey: 'string/base64' }
-// 		]);
-// 	});
-
-// 	it('binary', () => {
-// 		runCases(handler.binary.bind(handler), [
-// 			{ input: '101010', pass: true },
-// 			{ input: '10201', pass: false, errorKey: 'string/binary' }
-// 		]);
-// 	});
-
-// 	it('bmp', () => {
-// 		runCases(handler.bmp.bind(handler), [
-// 			{ input: 'ABC\u2603', pass: true },
-// 			{ input: 'a\u{1F600}', pass: false, errorKey: 'string/bmp' }
-// 		]);
-// 	});
-
-// 	it('digits', () => {
-// 		runCases(handler.digits.bind(handler), [
-// 			{ input: '012345', pass: true },
-// 			{ input: '123a', pass: false, errorKey: 'string/digits' }
-// 		]);
-// 	});
-
-// 	it('hex', () => {
-// 		runCases(handler.hex.bind(handler), [
-// 			{ input: 'A1b2', pass: true, value: 'a1b2' },
-// 			{ input: 'A1b2', options: { normalize: false }, pass: true, value: 'A1b2' },
-// 			{ input: 'G1', pass: false, errorKey: 'string/hex' }
-// 		]);
-// 	});
-
-// 	it('hexColor', () => {
-// 		runCases(handler.hexColor.bind(handler), [
-// 			{ input: '#A1b2C3', pass: true, value: '#a1b2c3' },
-// 			{ input: '#A1b2C3', options: { normalize: false }, pass: true, value: '#A1b2C3' },
-// 			{ input: '#abcd', pass: false, errorKey: 'string/hexColor' }
-// 		]);
-// 	});
-
-// 	it('octal', () => {
-// 		runCases(handler.octal.bind(handler), [
-// 			{ input: '7012', pass: true },
-// 			{ input: '128', pass: false, errorKey: 'string/octal' }
-// 		]);
-// 	});
-// });
-
-// describe('StringHandler validators: digital', () => {
-// 	let handler: StringHandler;
-
-// 	beforeEach(() => {
-// 		handler = new StringHandler();
-// 	});
-
-// 	it('dataUrl', () => {
-// 		runCases(handler.dataUrl.bind(handler), [
-// 			{ input: 'data:image/png;base64,QUJD', pass: true },
-// 			{ input: 'data:audio/mp3;base64,QUJD', pass: true },
-// 			{ input: 'data:image/png;base64,QUJD', options: { allowedTypes: ['image'] }, pass: true },
-// 			{ input: 'data:audio/mp3;base64,QUJD', options: { allowedTypes: ['image'] }, pass: false, errorKey: 'string/dataUrl' },
-// 			{ input: 'data:text/plain;base64,QUJD', options: { allowedTypes: ['text', 'audio'] }, pass: true },
-// 			{ input: 'data:image/png;base64,QUJD', options: { allowedTypes: ['text', 'audio'] }, pass: false, errorKey: 'string/dataUrl' }
-// 		]);
-// 	});
-
-// 	describe('domain', () => {
-// 		it('normalizes by default and can preserve case when normalize is false', () => {
-// 			runCases(handler.domain.bind(handler), [
-// 				{ input: 'ExAmPlE.CoM', pass: true, value: 'example.com' },
-// 				{ input: 'ExAmPlE.CoM', options: { normalize: false }, pass: true, value: 'ExAmPlE.CoM' }
-// 			]);
-// 		});
-
-// 		it('supports all subdomains modes', () => {
-// 			runCases(handler.domain.bind(handler), [
-// 				{ input: 'example.com', options: { subdomains: 'optional' }, pass: true },
-// 				{ input: 'api.example.com', options: { subdomains: 'optional' }, pass: true },
-// 				{ input: 'api.example.com', options: { subdomains: 'required' }, pass: true },
-// 				{ input: 'example.com', options: { subdomains: 'required' }, pass: false, errorKey: 'string/domain' },
-// 				{ input: 'example.com', options: { subdomains: 'forbidden' }, pass: true },
-// 				{ input: 'api.example.com', options: { subdomains: 'forbidden' }, pass: false, errorKey: 'string/domain' }
-// 			]);
-// 		});
-
-// 		it('supports all wildcards modes', () => {
-// 			runCases(handler.domain.bind(handler), [
-// 				{ input: '*.example.com', options: { wildcards: 'forbidden' }, pass: false, errorKey: 'string/domain' },
-// 				{ input: 'example.com', options: { wildcards: 'optional' }, pass: true },
-// 				{ input: '*.example.com', options: { wildcards: 'optional' }, pass: true },
-// 				{ input: '*.example.com', options: { wildcards: 'required' }, pass: true },
-// 				{ input: 'example.com', options: { wildcards: 'required' }, pass: false, errorKey: 'string/domain' }
-// 			]);
-// 		});
-
-// 		it('still rejects malformed domain labels', () => {
-// 			runCases(handler.domain.bind(handler), [{ input: '-example.com', pass: false, errorKey: 'string/domain' }]);
-// 		});
-// 	});
-
-// 	describe('e123', () => {
-// 		it('uses strict mode by default and fails malformed input', () => {
-// 			runCases(handler.e123.bind(handler), [
-// 				{ input: '+1 212 555 1234', pass: true },
-// 				{ input: '123', pass: false, errorKey: 'string/e123' }
-// 			]);
-// 		});
-
-// 		it('supports mode option (strict vs loose)', () => {
-// 			runCases(handler.e123.bind(handler), [
-// 				{ input: '+1.212.555.1234', options: { mode: 'strict' }, pass: false, errorKey: 'string/e123' },
-// 				{ input: '+1.212.555.1234', options: { mode: 'loose' }, pass: true }
-// 			]);
-// 		});
-
-// 		it('supports normalize option', () => {
-// 			runCases(handler.e123.bind(handler), [
-// 				{ input: '+1.212.555.1234', options: { mode: 'loose' }, pass: true, value: '+1 212 555 1234' },
-// 				{ input: '+1.212.555.1234', options: { mode: 'loose', normalize: false }, pass: true, value: '+1.212.555.1234' }
-// 			]);
-// 		});
-
-// 		it('supports acceptableDelims and normalizedDelim options', () => {
-// 			runCases(handler.e123.bind(handler), [
-// 				{ input: '+1_212_555_1234', options: { mode: 'loose' }, pass: false, errorKey: 'string/e123' },
-// 				{
-// 					input: '+1_212_555_1234',
-// 					options: { mode: 'loose', acceptableDelims: ' _', normalizedDelim: '-' },
-// 					pass: true,
-// 					value: '+1-212-555-1234'
-// 				}
-// 			]);
-// 		});
-
-// 		it('supports stripDelims option', () => {
-// 			runCases(handler.e123.bind(handler), [
-// 				{ input: '+1 (212) 555-1234', options: { mode: 'loose' }, pass: false, errorKey: 'string/e123' },
-// 				{
-// 					input: '+1 (212) 555-1234',
-// 					options: { mode: 'loose', stripDelims: ' ()' },
-// 					pass: true,
-// 					value: '+1 212 555 1234'
-// 				}
-// 			]);
-// 		});
-// 	});
-
-// 	describe('e164', () => {
-// 		it('uses strict mode by default and requires leading +', () => {
-// 			runCases(handler.e164.bind(handler), [
-// 				{ input: '+12125551234', pass: true },
-// 				{ input: '12125551234', pass: false, errorKey: 'string/e164' }
-// 			]);
-// 		});
-
-// 		it('supports mode via matching defaults (strict vs loose)', () => {
-// 			handler.configMatchingDefaults({ mode: 'strict' });
-// 			runCases(handler.e164.bind(handler), [{ input: '12125551234', pass: false, errorKey: 'string/e164' }]);
-
-// 			handler.configMatchingDefaults({ mode: 'loose' });
-// 			runCases(handler.e164.bind(handler), [{ input: '12125551234', pass: true }]);
-// 		});
-
-// 		it('supports normalize via matching defaults', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose' });
-// 			runCases(handler.e164.bind(handler), [{ input: '+1-212-555-1234', pass: true, value: '+1-212-555-1234' }]);
-
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: true });
-// 			runCases(handler.e164.bind(handler), [{ input: '+1-212-555-1234', pass: true, value: '+12125551234' }]);
-// 		});
-
-// 		it('supports acceptableDelims and stripDelims options', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: true });
-// 			runCases(handler.e164.bind(handler), [
-// 				{ input: '+1(212)5551234', pass: false, errorKey: 'string/e164' },
-// 				{ input: '+1(212)5551234', options: { stripDelims: ' ()' }, pass: true, value: '+12125551234' },
-// 				{ input: '+1_212_555_1234', pass: false, errorKey: 'string/e164' },
-// 				{ input: '+1_212_555_1234', options: { acceptableDelims: ' _' }, pass: true, value: '+12125551234' }
-// 			]);
-// 		});
-
-// 		it('supports normalizedDelim option behavior', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: true });
-// 			runCases(handler.e164.bind(handler), [
-// 				{ input: '+1 212 555 1234', options: { normalizedDelim: '-' }, pass: false, errorKey: 'string/e164' },
-// 				{ input: '+1 212 555 1234', options: { normalizedDelim: '' }, pass: true, value: '+12125551234' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('email', () => {
-// 		it('normalizes to lowercase by default', () => {
-// 			runCases(handler.email.bind(handler), [{ input: 'A.B+Tag@Example.COM', pass: true, value: 'a.b+tag@example.com' }]);
-// 		});
-
-// 		it('supports normalize false option', () => {
-// 			runCases(handler.email.bind(handler), [
-// 				{ input: 'A.B+Tag@Example.COM', options: { normalize: false }, pass: true, value: 'A.B+Tag@Example.COM' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.email.bind(handler), [{ input: 'A.B+Tag@Example.COM', pass: true, value: 'A.B+Tag@Example.COM' }]);
-// 			runCases(handler.email.bind(handler), [
-// 				{ input: 'A.B+Tag@Example.COM', options: { normalize: true }, pass: true, value: 'a.b+tag@example.com' }
-// 			]);
-// 		});
-
-// 		it('fails when address does not have exactly one @', () => {
-// 			runCases(handler.email.bind(handler), [{ input: 'invalid@@example.com', pass: false, errorKey: 'string/email' }]);
-// 		});
-
-// 		it('fails when domain part is invalid', () => {
-// 			runCases(handler.email.bind(handler), [{ input: 'user@-example.com', pass: false, errorKey: 'string/email' }]);
-// 		});
-
-// 		it('fails when local part starts with a dot', () => {
-// 			runCases(handler.email.bind(handler), [{ input: '.user@example.com', pass: false, errorKey: 'string/email' }]);
-// 		});
-// 	});
-
-// 	describe('ip', () => {
-// 		it('accepts valid IPv4 and IPv6 and rejects invalid input', () => {
-// 			runCases(handler.ip.bind(handler), [
-// 				{ input: '8.8.8.8', pass: true },
-// 				{ input: '2001:db8::1', pass: true },
-// 				{ input: '999.8.8.8', pass: false, errorKey: 'string/ip' }
-// 			]);
-// 		});
-
-// 		it('normalizes IPv6 to lowercase by default and can preserve case', () => {
-// 			runCases(handler.ip.bind(handler), [
-// 				{ input: 'FE80::ABCD', pass: true, value: 'fe80::abcd' },
-// 				{ input: 'FE80::ABCD', options: { normalize: false }, pass: true, value: 'FE80::ABCD' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.ip.bind(handler), [{ input: 'FE80::ABCD', pass: true, value: 'FE80::ABCD' }]);
-// 			runCases(handler.ip.bind(handler), [{ input: 'FE80::ABCD', options: { normalize: true }, pass: true, value: 'fe80::abcd' }]);
-// 		});
-// 	});
-
-// 	it('ipCidr', () => {
-// 		runCases(handler.ipCidr.bind(handler), [
-// 			{ input: '192.168.0.1/24', pass: true },
-// 			{ input: '192.168.0.1/33', pass: false, errorKey: 'string/ipCidr' }
-// 		]);
-// 	});
-
-// 	it('ipCidrV4', () => {
-// 		runCases(handler.ipCidrV4.bind(handler), [
-// 			{ input: '10.0.0.1/8', pass: true },
-// 			{ input: '10.0.0.1/50', pass: false, errorKey: 'string/ipCidrV4' }
-// 		]);
-// 	});
-
-// 	it('ipCidrV6', () => {
-// 		runCases(handler.ipCidrV6.bind(handler), [
-// 			{ input: '2001:db8::1/64', pass: true },
-// 			{ input: '2001:db8::1/129', pass: false, errorKey: 'string/ipCidrV6' }
-// 		]);
-// 	});
-
-// 	describe('ipV4', () => {
-// 		it('accepts valid IPv4 and rejects invalid IPv4', () => {
-// 			runCases(handler.ipV4.bind(handler), [
-// 				{ input: '127.0.0.1', pass: true },
-// 				{ input: '256.0.0.1', pass: false, errorKey: 'string/ipV4' }
-// 			]);
-// 		});
-
-// 		it('supports normalize option and defaults for option precedence', () => {
-// 			runCases(handler.ipV4.bind(handler), [
-// 				{ input: '127.0.0.1', pass: true, value: '127.0.0.1' },
-// 				{ input: '127.0.0.1', options: { normalize: false }, pass: true, value: '127.0.0.1' }
-// 			]);
-
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.ipV4.bind(handler), [{ input: '127.0.0.1', pass: true, value: '127.0.0.1' }]);
-// 			runCases(handler.ipV4.bind(handler), [{ input: '127.0.0.1', options: { normalize: true }, pass: true, value: '127.0.0.1' }]);
-// 		});
-// 	});
-
-// 	describe('ipV6', () => {
-// 		it('accepts valid IPv6 and rejects invalid IPv6', () => {
-// 			runCases(handler.ipV6.bind(handler), [
-// 				{ input: 'fe80::1', pass: true },
-// 				{ input: 'gggg::1', pass: false, errorKey: 'string/ipV6' }
-// 			]);
-// 		});
-
-// 		it('normalizes to lowercase by default and can preserve case', () => {
-// 			runCases(handler.ipV6.bind(handler), [
-// 				{ input: 'FE80::ABCD', pass: true, value: 'fe80::abcd' },
-// 				{ input: 'FE80::ABCD', options: { normalize: false }, pass: true, value: 'FE80::ABCD' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.ipV6.bind(handler), [{ input: 'FE80::ABCD', pass: true, value: 'FE80::ABCD' }]);
-// 			runCases(handler.ipV6.bind(handler), [{ input: 'FE80::ABCD', options: { normalize: true }, pass: true, value: 'fe80::abcd' }]);
-// 		});
-// 	});
-
-// 	it('json', () => {
-// 		runCases(handler.json.bind(handler), [
-// 			{ input: '{"a":1}', pass: true },
-// 			{ input: '{a:1}', pass: false, errorKey: 'string/json' }
-// 		]);
-// 	});
-
-// 	it('jwt', () => {
-// 		runCases(handler.jwt.bind(handler), [
-// 			{ input: 'aaa.bbb.ccc', pass: true },
-// 			{ input: 'aaa.bbb', pass: false, errorKey: 'string/jwt' }
-// 		]);
-// 	});
-
-// 	describe('label', () => {
-// 		it('normalizes to lowercase by default', () => {
-// 			runCases(handler.label.bind(handler), [{ input: 'My-Label', pass: true, value: 'my-label' }]);
-// 		});
-
-// 		it('supports normalize false option', () => {
-// 			runCases(handler.label.bind(handler), [
-// 				{ input: 'My-Label', options: { normalize: false }, pass: true, value: 'My-Label' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.label.bind(handler), [{ input: 'My-Label', pass: true, value: 'My-Label' }]);
-// 			runCases(handler.label.bind(handler), [{ input: 'My-Label', options: { normalize: true }, pass: true, value: 'my-label' }]);
-// 		});
-
-// 		it('fails on invalid labels', () => {
-// 			runCases(handler.label.bind(handler), [
-// 				{ input: '-bad', pass: false, errorKey: 'string/label' },
-// 				{ input: 'bad-', pass: false, errorKey: 'string/label' },
-// 				{ input: 'a'.repeat(64), pass: false, errorKey: 'string/label' },
-// 				{ input: 'bad_label', pass: false, errorKey: 'string/label' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('mac', () => {
-// 		it('validates strict default format and rejects malformed values', () => {
-// 			runCases(handler.mac.bind(handler), [
-// 				{ input: 'AA:BB:CC:DD:EE:FF', pass: true, value: 'aa:bb:cc:dd:ee:ff' },
-// 				{ input: 'AA-BB-CC', pass: false, errorKey: 'string/mac' }
-// 			]);
-// 		});
-
-// 		it('supports normalize false option', () => {
-// 			runCases(handler.mac.bind(handler), [
-// 				{ input: 'AA:BB:CC:DD:EE:FF', options: { normalize: false }, pass: true, value: 'AA:BB:CC:DD:EE:FF' }
-// 			]);
-// 		});
-
-// 		it('supports loose mode and delimiter options', () => {
-// 			runCases(handler.mac.bind(handler), [
-// 				{ input: 'AA-BB-CC-DD-EE-FF', options: { mode: 'strict' }, pass: false, errorKey: 'string/mac' },
-// 				{ input: 'AA-BB-CC-DD-EE-FF', options: { mode: 'loose' }, pass: true, value: 'aa:bb:cc:dd:ee:ff' },
-// 				{ input: 'AA_BB_CC_DD_EE_FF', options: { mode: 'loose', normalizedDelim: '-' }, pass: true, value: 'aa-bb-cc-dd-ee-ff' },
-// 				{ input: 'AA~BB~CC~DD~EE~FF', options: { mode: 'loose', acceptableDelims: '~' }, pass: true, value: 'aa:bb:cc:dd:ee:ff' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: false });
-// 			runCases(handler.mac.bind(handler), [{ input: 'AA-BB-CC-DD-EE-FF', pass: true, value: 'AA-BB-CC-DD-EE-FF' }]);
-// 			runCases(handler.mac.bind(handler), [
-// 				{ input: 'AA-BB-CC-DD-EE-FF', options: { normalize: true, normalizedDelim: '-' }, pass: true, value: 'aa-bb-cc-dd-ee-ff' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('path', () => {
-// 		it('supports normalize option and matching-default precedence', () => {
-// 			runCases(handler.path.bind(handler), [
-// 				{ input: '/UsR/LoCaL/File.TXT', pass: true, value: '/usr/local/file.txt' },
-// 				{ input: '/UsR/LoCaL/File.TXT', options: { normalize: false }, pass: true, value: '/UsR/LoCaL/File.TXT' }
-// 			]);
-
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.path.bind(handler), [{ input: '/UsR/LoCaL/File.TXT', pass: true, value: '/UsR/LoCaL/File.TXT' }]);
-// 			runCases(handler.path.bind(handler), [
-// 				{ input: '/UsR/LoCaL/File.TXT', options: { normalize: true }, pass: true, value: '/usr/local/file.txt' }
-// 			]);
-// 		});
-
-// 		it('supports absolute option modes for unix style', () => {
-// 			runCases(handler.path.bind(handler), [
-// 				{ input: '/usr/local/file.txt', options: { absolute: 'required' }, pass: true },
-// 				{ input: 'usr/local/file.txt', options: { absolute: 'required' }, pass: false, errorKey: 'string/path' },
-// 				{ input: '/usr/local/file.txt', options: { absolute: 'optional' }, pass: true },
-// 				{ input: 'usr/local/file.txt', options: { absolute: 'optional' }, pass: true },
-// 				{ input: 'usr/local/file.txt', options: { absolute: 'forbidden' }, pass: true },
-// 				{ input: '/usr/local/file.txt', options: { absolute: 'forbidden' }, pass: false, errorKey: 'string/path' }
-// 			]);
-// 		});
-
-// 		it('supports style option: unix, win, and win-unc', () => {
-// 			runCases(handler.path.bind(handler), [
-// 				{ input: '/usr/local/file.txt', options: { style: 'unix' }, pass: true },
-// 				{ input: 'C:\\Users\\Me\\file.txt', options: { style: 'win' }, pass: true },
-// 				{ input: 'Users\\Me\\file.txt', options: { style: 'win' }, pass: false, errorKey: 'string/path' },
-// 				{ input: '\\\\server\\share\\folder\\file.txt', options: { style: 'win-unc' }, pass: true },
-// 				{ input: 'C:\\Users\\Me\\file.txt', options: { style: 'win-unc' }, pass: false, errorKey: 'string/path' }
-// 			]);
-// 		});
-
-// 		it('supports extensions option', () => {
-// 			runCases(handler.path.bind(handler), [
-// 				{ input: '/usr/local/file.txt', options: { extensions: ['.txt'] }, pass: true },
-// 				{ input: '/usr/local/file.jpg', options: { extensions: ['.txt'] }, pass: false, errorKey: 'string/path' },
-// 				{ input: '/usr/local/file.jpg', options: { extensions: ['.*'] }, pass: true },
-// 				{ input: '/usr/local/file', options: { extensions: ['.*'] }, pass: false, errorKey: 'string/path' }
-// 			]);
-// 		});
-
-// 		it('supports segmentMaxLen option', () => {
-// 			const validSegment = '/usr/' + 'a'.repeat(10) + '.txt';
-// 			const tooLongSegment = '/usr/' + 'a'.repeat(11) + '.txt';
-// 			runCases(handler.path.bind(handler), [
-// 				{ input: validSegment, options: { segmentMaxLen: 10 }, pass: true },
-// 				{ input: tooLongSegment, options: { segmentMaxLen: 10 }, pass: false, errorKey: 'string/path' }
-// 			]);
-// 		});
-// 	});
-
-// 	it('slug', () => {
-// 		runCases(handler.slug.bind(handler), [
-// 			{ input: 'my-slug-1', pass: true },
-// 			{ input: 'My Slug', pass: false, errorKey: 'string/slug' }
-// 		]);
-// 	});
-
-// 	describe('url', () => {
-// 		it('normalizes by default and can preserve case', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'HTTPS://EXAMPLE.COM/Path?X=1#Top', pass: true, value: 'https://example.com/path?x=1#top' },
-// 				{ input: 'HTTPS://EXAMPLE.COM/Path?X=1#Top', options: { normalize: false }, pass: true, value: 'HTTPS://EXAMPLE.COM/Path?X=1#Top' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call normalize override', () => {
-// 			handler.configMatchingDefaults({ normalize: false });
-// 			runCases(handler.url.bind(handler), [{ input: 'HTTPS://EXAMPLE.COM/Path', pass: true, value: 'HTTPS://EXAMPLE.COM/Path' }]);
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'HTTPS://EXAMPLE.COM/Path', options: { normalize: true }, pass: true, value: 'https://example.com/path' }
-// 			]);
-// 		});
-
-// 		it('supports allowedProtocols option', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://example.com', options: { allowedProtocols: ['https'] }, pass: true },
-// 				{ input: 'http://example.com', options: { allowedProtocols: ['https'] }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('supports protocols option modes', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://example.com', options: { protocols: 'required' }, pass: true },
-// 				{ input: 'example.com', options: { protocols: 'required' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'example.com', options: { protocols: 'forbidden' }, pass: true },
-// 				{ input: 'https://example.com', options: { protocols: 'forbidden' }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('supports host type options: domain, ip, and label', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://example.com', options: { domain: 'required', ip: 'forbidden', label: 'forbidden' }, pass: true },
-// 				{ input: 'https://127.0.0.1', options: { domain: 'required', ip: 'forbidden', label: 'forbidden' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://127.0.0.1', options: { ip: 'required', domain: 'forbidden', label: 'forbidden' }, pass: true },
-// 				{ input: 'https://example.com', options: { ip: 'required', domain: 'forbidden', label: 'forbidden' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'localhost', options: { label: 'required', domain: 'forbidden', ip: 'forbidden', protocols: 'forbidden' }, pass: true },
-// 				{ input: 'example.com', options: { label: 'required', domain: 'forbidden', ip: 'forbidden', protocols: 'forbidden' }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('supports port option modes and validates port range', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://example.com:8080', options: { port: 'required' }, pass: true },
-// 				{ input: 'https://example.com', options: { port: 'required' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://example.com', options: { port: 'forbidden' }, pass: true },
-// 				{ input: 'https://example.com:8080', options: { port: 'forbidden' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://example.com:70000', options: { port: 'optional' }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('supports query option modes', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://example.com?a=1', options: { query: 'required' }, pass: true },
-// 				{ input: 'https://example.com', options: { query: 'required' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://example.com', options: { query: 'forbidden' }, pass: true },
-// 				{ input: 'https://example.com?a=1', options: { query: 'forbidden' }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('supports fragment option modes', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://example.com#top', options: { fragment: 'required' }, pass: true },
-// 				{ input: 'https://example.com', options: { fragment: 'required' }, pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://example.com', options: { fragment: 'forbidden' }, pass: true },
-// 				{ input: 'https://example.com#top', options: { fragment: 'forbidden' }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('supports rootRelative option and rejects host/protocol when enabled', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: '/docs/page?x=1#t', options: { rootRelative: true }, pass: true },
-// 				{ input: 'https://example.com/docs', options: { rootRelative: true }, pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('accepts more complex valid URLs', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://sub.example.com:443/path/to/resource-name_1.2~ok?q=abc%2Fdef&x=1#frag-1', pass: true },
-// 				{ input: 'https://[2001:db8::1]:8443/path/to/resource?token=a-b_c~d%2E1#section-2', pass: true },
-// 				{ input: 'sub.example.com:8080/path-here?query=value#frag', pass: true }
-// 			]);
-// 		});
-
-// 		it('rejects complex malformed URLs', () => {
-// 			runCases(handler.url.bind(handler), [
-// 				{ input: 'https://[2001:db8::1/path?x=1#f', pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://example.com:99999/path?x=1#f', pass: false, errorKey: 'string/url' },
-// 				{ input: 'https://example.com/path?x=%ZZ#f', pass: false, errorKey: 'string/url' }
-// 			]);
-// 		});
-
-// 		it('returns url error key on invalid protocol usage', () => {
-// 			runCases(handler.url.bind(handler), [{ input: 'ftp://example.com', pass: false, errorKey: 'string/url' }]);
-// 		});
-// 	});
-
-// 	describe('uuid', () => {
-// 		it('validates a canonical UUID and rejects malformed/unsupported version', () => {
-// 			runCases(handler.uuid.bind(handler), [
-// 				{ input: '550e8400-e29b-41d4-a716-446655440000', pass: true },
-// 				{ input: '550e8400-e29b-61d4-a716-446655440000', pass: false, errorKey: 'string/uuid' },
-// 				{ input: '550e8400-e29b-41d4-a716-44665544000', pass: false, errorKey: 'string/uuid' }
-// 			]);
-// 		});
-
-// 		it('supports version option', () => {
-// 			runCases(handler.uuid.bind(handler), [
-// 				{
-// 					input: '550e8400-e29b-11d4-a716-446655440000',
-// 					options: { version: 1 },
-// 					pass: true
-// 				},
-// 				{
-// 					input: '550e8400-e29b-11d4-a716-446655440000',
-// 					options: { version: 4 },
-// 					pass: false,
-// 					errorKey: 'string/uuid'
-// 				},
-// 				{
-// 					input: '550e8400-e29b-41d4-a716-446655440000',
-// 					options: { version: 4 },
-// 					pass: true
-// 				},
-// 				{
-// 					input: '550e8400-e29b-41d4-a716-446655440000',
-// 					options: { version: '4' },
-// 					pass: true
-// 				}
-// 			]);
-// 		});
-
-// 		it('supports mode strict and loose', () => {
-// 			runCases(handler.uuid.bind(handler), [
-// 				{
-// 					input: '550e8400e29b41d4a716446655440000',
-// 					options: { mode: 'strict' },
-// 					pass: false,
-// 					errorKey: 'string/uuid'
-// 				},
-// 				{
-// 					input: '550e8400e29b41d4a716446655440000',
-// 					options: { mode: 'loose' },
-// 					pass: true
-// 				},
-// 				{
-// 					input: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000',
-// 					options: { mode: 'strict' },
-// 					pass: false,
-// 					errorKey: 'string/uuid'
-// 				},
-// 				{
-// 					input: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000',
-// 					options: { mode: 'loose' },
-// 					pass: true
-// 				},
-// 				{
-// 					input: '{550e8400-e29b-41d4-a716-446655440000}',
-// 					options: { mode: 'loose' },
-// 					pass: true
-// 				}
-// 			]);
-// 		});
-
-// 		it('supports normalize option', () => {
-// 			runCases(handler.uuid.bind(handler), [
-// 				{
-// 					input: '550E8400-E29B-41D4-A716-446655440000',
-// 					pass: true,
-// 					value: '550e8400-e29b-41d4-a716-446655440000'
-// 				},
-// 				{
-// 					input: '550E8400-E29B-41D4-A716-446655440000',
-// 					options: { normalize: false },
-// 					pass: true,
-// 					value: '550E8400-E29B-41D4-A716-446655440000'
-// 				}
-// 			]);
-// 		});
-
-// 		it('supports normalizedDelim and acceptableDelims options in loose mode', () => {
-// 			runCases(handler.uuid.bind(handler), [
-// 				{
-// 					input: '550e8400_e29b_41d4_a716_446655440000',
-// 					options: { mode: 'loose' },
-// 					pass: true
-// 				},
-// 				{
-// 					input: '550e8400~e29b~41d4~a716~446655440000',
-// 					options: { mode: 'loose' },
-// 					pass: false,
-// 					errorKey: 'string/uuid'
-// 				},
-// 				{
-// 					input: '550e8400_e29b_41d4_a716_446655440000',
-// 					options: { mode: 'loose', acceptableDelims: ' _' },
-// 					pass: true,
-// 					value: '550e8400-e29b-41d4-a716-446655440000'
-// 				},
-// 				{
-// 					input: '550e8400_e29b_41d4_a716_446655440000',
-// 					options: { mode: 'loose', acceptableDelims: ' _', normalizedDelim: ':' },
-// 					pass: true,
-// 					value: '550e8400:e29b:41d4:a716:446655440000'
-// 				}
-// 			]);
-// 		});
-
-// 		it('supports stripDelims option', () => {
-// 			runCases(handler.uuid.bind(handler), [
-// 				{
-// 					input: '550e8400#e29b#41d4#a716#446655440000',
-// 					options: { mode: 'loose' },
-// 					pass: false,
-// 					errorKey: 'string/uuid'
-// 				},
-// 				{
-// 					input: '550e8400#e29b#41d4#a716#446655440000',
-// 					options: { mode: 'loose', stripDelims: ' #' },
-// 					pass: true,
-// 					value: '550e8400-e29b-41d4-a716-446655440000'
-// 				}
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: false });
-// 			runCases(handler.uuid.bind(handler), [
-// 				{ input: '550E8400E29B41D4A716446655440000', pass: true, value: '550E8400E29B41D4A716446655440000' }
-// 			]);
-// 			runCases(handler.uuid.bind(handler), [
-// 				{
-// 					input: '550E8400E29B41D4A716446655440000',
-// 					options: { normalize: true, normalizedDelim: '-' },
-// 					pass: true,
-// 					value: '550e8400-e29b-41d4-a716-446655440000'
-// 				}
-// 			]);
-// 		});
-// 	});
-// });
-
-// describe('StringHandler validators: identifiers/financial', () => {
-// 	let handler: StringHandler;
-
-// 	beforeEach(() => {
-// 		handler = new StringHandler();
-// 	});
-
-// 	describe('creditCard', () => {
-// 		it('validates defaults, types, and luhn failures', () => {
-// 			runCases(handler.creditCard.bind(handler), [
-// 				{ input: '4111111111111111', pass: true, value: '4111111111111111' },
-// 				{ input: '4111111111111111', options: { types: ['visa'] }, pass: true },
-// 				{ input: '4111111111111111', options: { types: ['amex'] }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '4111111111111111', options: { types: null }, pass: true },
-// 				{ input: '4111111111111112', pass: false, errorKey: 'string/creditCard' }
-// 			]);
-// 		});
-
-// 		it('validates additional card brands and strict type filtering', () => {
-// 			runCases(handler.creditCard.bind(handler), [
-// 				{ input: '5555555555554444', pass: true },
-// 				{ input: '5555555555554444', options: { types: ['mastercard'] }, pass: true },
-// 				{ input: '5555555555554444', options: { types: ['visa'] }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '378282246310005', pass: true },
-// 				{ input: '378282246310005', options: { types: ['amex'] }, pass: true },
-// 				{ input: '378282246310005', options: { types: ['discover'] }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '6011111111111117', pass: true },
-// 				{ input: '6011111111111117', options: { types: ['discover'] }, pass: true },
-// 				{ input: '6011111111111117', options: { types: ['jcb'] }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '30569309025904', pass: true },
-// 				{ input: '30569309025904', options: { types: ['diners'] }, pass: true },
-// 				{ input: '30569309025904', options: { types: ['diners16'] }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '5500000000000004', pass: true },
-// 				{ input: '5500000000000004', options: { types: ['diners16'] }, pass: true },
-// 				{ input: '5500000000000004', options: { types: ['diners'] }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '3530111333300000', pass: true },
-// 				{ input: '3530111333300000', options: { types: ['jcb'] }, pass: true },
-// 				{ input: '3530111333300000', options: { types: ['mastercard'] }, pass: false, errorKey: 'string/creditCard' }
-// 			]);
-// 		});
-
-// 		it('supports mode, normalize, delimiter options, and stripDelims', () => {
-// 			runCases(handler.creditCard.bind(handler), [
-// 				{ input: '4111 1111 1111 1111', pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '4111 1111 1111 1111', options: { mode: 'loose' }, pass: true, value: '4111111111111111' },
-// 				{ input: '4111 1111 1111 1111', options: { mode: 'loose', normalize: false }, pass: true, value: '4111 1111 1111 1111' },
-// 				{ input: '4111 1111 1111 1111', options: { mode: 'loose', normalizedDelim: '-' }, pass: true, value: '4111-1111-1111-1111' },
-// 				{ input: '4111~1111~1111~1111', options: { mode: 'loose' }, pass: false, errorKey: 'string/creditCard' },
-// 				{ input: '4111~1111~1111~1111', options: { mode: 'loose', acceptableDelims: ' ~' }, pass: true, value: '4111111111111111' },
-// 				{ input: '(4111)(1111)(1111)(1111)', options: { mode: 'loose', stripDelims: '()' }, pass: true, value: '4111111111111111' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: false });
-// 			runCases(handler.creditCard.bind(handler), [{ input: '4111 1111 1111 1111', pass: true, value: '4111 1111 1111 1111' }]);
-// 			runCases(handler.creditCard.bind(handler), [
-// 				{ input: '4111 1111 1111 1111', options: { normalize: true, normalizedDelim: '-' }, pass: true, value: '4111-1111-1111-1111' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('currencyCode', () => {
-// 		it('supports ignoreCase and normalize options', () => {
-// 			runCases(handler.currencyCode.bind(handler), [
-// 				{ input: 'USD', pass: true, value: 'USD' },
-// 				{ input: 'usd', pass: false, errorKey: 'string/currencyCode' },
-// 				{ input: 'usd', options: { ignoreCase: true }, pass: true, value: 'USD' },
-// 				{ input: 'usd', options: { ignoreCase: true, normalize: false }, pass: true, value: 'usd' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ ignoreCase: true, normalize: false });
-// 			runCases(handler.currencyCode.bind(handler), [{ input: 'eur', pass: true, value: 'eur' }]);
-// 			runCases(handler.currencyCode.bind(handler), [{ input: 'eur', options: { normalize: true }, pass: true, value: 'EUR' }]);
-// 		});
-// 	});
-
-// 	describe('gtin', () => {
-// 		it('validates allowed lengths and check-digit failures', () => {
-// 			runCases(handler.gtin.bind(handler), [
-// 				{ input: '4006381333931', pass: true, value: '4006381333931' },
-// 				{ input: '4006381333932', pass: false, errorKey: 'string/gtin' },
-// 				{ input: '96385074', options: { lengths: [8] }, pass: true },
-// 				{ input: '96385074', options: { lengths: [13] }, pass: false, errorKey: 'string/gtin' }
-// 			]);
-// 		});
-
-// 		it('supports mode, normalize, delimiter options, and stripDelims', () => {
-// 			runCases(handler.gtin.bind(handler), [
-// 				{ input: '4 006381 333931', pass: false, errorKey: 'string/gtin' },
-// 				{ input: '4 006381 333931', options: { mode: 'loose' }, pass: true, value: '4006381333931' },
-// 				{ input: '4 006381 333931', options: { mode: 'loose', normalize: false }, pass: true, value: '4 006381 333931' },
-// 				{ input: '4 006381 333931', options: { mode: 'loose', normalizedDelim: '.' }, pass: true, value: '4.006381.333931' },
-// 				{ input: '4~006381~333931', options: { mode: 'loose' }, pass: false, errorKey: 'string/gtin' },
-// 				{ input: '4~006381~333931', options: { mode: 'loose', acceptableDelims: ' ~' }, pass: true, value: '4006381333931' },
-// 				{ input: '(4)(006381)(333931)', options: { mode: 'loose', stripDelims: '()' }, pass: true, value: '4006381333931' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ mode: 'loose', normalize: false });
-// 			runCases(handler.gtin.bind(handler), [{ input: '4 006381 333931', pass: true, value: '4 006381 333931' }]);
-// 			runCases(handler.gtin.bind(handler), [{ input: '4 006381 333931', options: { normalize: true }, pass: true, value: '4006381333931' }]);
-// 		});
-// 	});
-
-// 	describe('hash', () => {
-// 		it('supports known algorithms, default algorithm, and rejects invalid/unknown', () => {
-// 			runCases(handler.hash.bind(handler), [
-// 				{ input: 'd41d8cd98f00b204e9800998ecf8427e', options: 'md5', pass: true },
-// 				{ input: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', options: 'sha256', pass: true },
-// 				{ input: 'd41d8cd98f00b204e9800998ecf8427e', pass: true },
-// 				{ input: 'xyz', options: 'md5', pass: false, errorKey: 'string/hash' },
-// 				{ input: 'd41d8cd98f00b204e9800998ecf8427e', options: 'unknown', pass: false, errorKey: 'string/hash' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('imei', () => {
-// 		it('validates check digit and supports mode/normalization options', () => {
-// 			runCases(handler.imei.bind(handler), [
-// 				{ input: '490154203237518', pass: true, value: '490154203237518' },
-// 				{ input: '490154203237519', pass: false, errorKey: 'string/imei' },
-// 				{ input: '49.015420.323751.8', pass: false, errorKey: 'string/imei' },
-// 				{ input: '49.015420.323751.8', options: { mode: 'loose' }, pass: true, value: '490154203237518' },
-// 				{ input: '49 015420 323751 8', options: { mode: 'loose', normalize: false }, pass: true, value: '49 015420 323751 8' },
-// 				{ input: '49 015420 323751 8', options: { mode: 'loose', normalizedDelim: '.' }, pass: true, value: '49.015420.323751.8' }
-// 			]);
-// 		});
-
-// 		it('supports acceptableDelims and stripDelims', () => {
-// 			runCases(handler.imei.bind(handler), [
-// 				{ input: '49~015420~323751~8', options: { mode: 'loose' }, pass: false, errorKey: 'string/imei' },
-// 				{ input: '49~015420~323751~8', options: { mode: 'loose', acceptableDelims: ' ~' }, pass: true, value: '490154203237518' },
-// 				{ input: '(49)(015420)(323751)(8)', options: { mode: 'loose', stripDelims: '()' }, pass: true, value: '490154203237518' }
-// 			]);
-// 		});
-// 	});
-
-// 	it('luhn', () => {
-// 		runCases(handler.luhn.bind(handler), [
-// 			{ input: '79927398713', pass: true },
-// 			{ input: '79927398714', pass: false, errorKey: 'string/luhn' }
-// 		]);
-// 	});
-
-// 	it('luhn supports varied lengths and rejects non-digit input', () => {
-// 		runCases(handler.luhn.bind(handler), [
-// 			{ input: '4242424242424242', pass: true },
-// 			{ input: '4242424242424241', pass: false, errorKey: 'string/luhn' },
-// 			{ input: '0000000000000000', pass: true },
-// 			{ input: 'abc123', pass: false, errorKey: 'string/luhn' }
-// 		]);
-// 	});
-
-// 	describe('phone', () => {
-// 		it('supports mode, normalize, delimiter options, and stripDelims', () => {
-// 			runCases(handler.phone.bind(handler), [
-// 				{ input: '212-555-1234', pass: true, value: '212-555-1234' },
-// 				{ input: '2125551234', pass: false, errorKey: 'string/phone' },
-// 				{ input: '2125551234', options: { mode: 'loose' }, pass: true, value: '212-555-1234' },
-// 				{ input: '212 555 1234', options: { mode: 'loose', normalize: false }, pass: true, value: '212 555 1234' },
-// 				{ input: '212 555 1234', options: { mode: 'loose', normalizedDelim: '.' }, pass: true, value: '212.555.1234' },
-// 				{ input: '212~555~1234', options: { mode: 'loose' }, pass: false, errorKey: 'string/phone' },
-// 				{ input: '212~555~1234', options: { mode: 'loose', acceptableDelims: ' ~' }, pass: true, value: '212-555-1234' },
-// 				{ input: '(212)5551234', options: { mode: 'loose', stripDelims: '()' }, pass: true, value: '212-555-1234' }
-// 			]);
-// 		});
-
-// 		it('handles country-code variants and rejects malformed/unsupported formats', () => {
-// 			runCases(handler.phone.bind(handler), [
-// 				{ input: '(212)555-1234', pass: false, errorKey: 'string/phone' },
-// 				{ input: '+1 (212) 555-1234', pass: false, errorKey: 'string/phone' },
-// 				{ input: '+1 (212) 555-1234', options: { mode: 'loose' }, pass: true, value: '212-555-1234' },
-// 				{ input: '1-212-555-1234', options: { mode: 'loose' }, pass: true, value: '212-555-1234' },
-// 				{ input: '212.555.1234', options: { mode: 'strict' }, pass: false, errorKey: 'string/phone' },
-// 				{ input: '212.555.1234', options: { mode: 'loose' }, pass: true, value: '212-555-1234' },
-// 				{ input: '212/555/1234', options: { mode: 'loose' }, pass: true, value: '212-555-1234' },
-// 				{ input: '(212) 555 1234', options: { mode: 'loose', stripDelims: '()', normalizedDelim: ' ' }, pass: true, value: '212 555 1234' },
-// 				{ input: '+44 20 7946 0958', options: { mode: 'loose' }, pass: false, errorKey: 'string/phone' },
-// 				{ input: '212-555-123', options: { mode: 'loose' }, pass: false, errorKey: 'string/phone' },
-// 				{ input: '123-45-6789', pass: false, errorKey: 'string/phone' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('ssn', () => {
-// 		it('validates structural constraints and supports regex options', () => {
-// 			runCases(handler.ssn.bind(handler), [
-// 				{ input: '123-45-6789', pass: true, value: '123-45-6789' },
-// 				{ input: '000-45-6789', pass: false, errorKey: 'string/ssn' },
-// 				{ input: '123456789', options: { mode: 'loose' }, pass: true, value: '123-45-6789' },
-// 				{ input: '123 45 6789', options: { mode: 'loose', normalize: false }, pass: true, value: '123 45 6789' },
-// 				{ input: '123 45 6789', options: { mode: 'loose', normalizedDelim: '.' }, pass: true, value: '123.45.6789' },
-// 				{ input: '123~45~6789', options: { mode: 'loose' }, pass: false, errorKey: 'string/ssn' },
-// 				{ input: '123~45~6789', options: { mode: 'loose', acceptableDelims: ' ~' }, pass: true, value: '123-45-6789' },
-// 				{ input: '(123)(45)(6789)', options: { mode: 'loose', stripDelims: '()' }, pass: true, value: '123-45-6789' }
-// 			]);
-// 		});
-// 	});
-
-// 	describe('state', () => {
-// 		it('supports ignoreCase and normalize options', () => {
-// 			runCases(handler.state.bind(handler), [
-// 				{ input: 'CA', pass: true, value: 'CA' },
-// 				{ input: 'ca', pass: false, errorKey: 'string/state' },
-// 				{ input: 'ca', options: { ignoreCase: true }, pass: true, value: 'CA' },
-// 				{ input: 'ca', options: { ignoreCase: true, normalize: false }, pass: true, value: 'ca' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ ignoreCase: true, normalize: false });
-// 			runCases(handler.state.bind(handler), [{ input: 'ny', pass: true, value: 'ny' }]);
-// 			runCases(handler.state.bind(handler), [{ input: 'ny', options: { normalize: true }, pass: true, value: 'NY' }]);
-// 		});
-// 	});
-
-// 	describe('zip', () => {
-// 		it('validates base format and zip4 presence modes', () => {
-// 			runCases(handler.zip.bind(handler), [
-// 				{ input: '12345', pass: false, errorKey: 'string/zip/base' },
-// 				{ input: '12345-6789', pass: true, value: '12345-6789' },
-// 				{ input: '123456789', options: { mode: 'loose' }, pass: true, value: '12345-6789' },
-// 				{ input: '12345', options: { mode: 'loose', zip4: 'required' }, pass: false, errorKey: 'string/zip/required4' },
-// 				{ input: '123456789', options: { mode: 'loose', zip4: 'required' }, pass: true, value: '12345-6789' },
-// 				{ input: '123456789', options: { mode: 'loose', zip4: 'forbidden' }, pass: false, errorKey: 'string/zip/forbidden4' },
-// 				{ input: '12345', options: { mode: 'loose', zip4: 'forbidden' }, pass: true, value: '12345-' }
-// 			]);
-// 		});
-
-// 		it('supports normalize and delimiter options', () => {
-// 			runCases(handler.zip.bind(handler), [
-// 				{ input: '123456789', options: { mode: 'loose', normalize: false }, pass: true, value: '123456789' },
-// 				{ input: '123456789', options: { mode: 'loose', normalizedDelim: '.' }, pass: true, value: '12345.6789' },
-// 				{ input: '12345~6789', options: { mode: 'loose' }, pass: false, errorKey: 'string/zip/base' },
-// 				{ input: '12345~6789', options: { mode: 'loose', acceptableDelims: ' ~' }, pass: true, value: '12345-6789' },
-// 				{ input: '(12345)(6789)', options: { mode: 'loose', stripDelims: '()' }, pass: true, value: '12345-6789' }
-// 			]);
-// 		});
-// 	});
-// });
-
-// describe('StringHandler validators: numeric', () => {
-// 	let handler: StringHandler;
-
-// 	beforeEach(() => {
-// 		handler = new StringHandler();
-// 	});
-
-// 	describe('numeric', () => {
-// 		it('numeric: sign and alignment options', () => {
-// 			runCases(handler.numeric.bind(handler), [
-// 				{ input: '+12', options: { plus: 'required' }, pass: true, value: '+12' },
-// 				{ input: '12', options: { plus: 'required' }, pass: false, errorKey: 'string/numeric/missingPlusSign' },
-// 				{ input: '+12', options: { plus: 'forbidden' }, pass: false, errorKey: 'string/numeric/forbiddenPlusSign' },
-// 				{ input: '-12', options: { minus: 'required' }, pass: true, value: '-12' },
-// 				{ input: '12', options: { minus: 'required' }, pass: false, errorKey: 'string/numeric/missingMinusSign' },
-// 				{ input: '-12', options: { minus: 'forbidden' }, pass: false, errorKey: 'string/numeric/forbiddenMinusSign' },
-// 				{ input: '12+', options: { alignment: 'right', plus: 'required' }, pass: true, value: '12+' },
-// 				{ input: '+12', options: { alignment: 'right', plus: 'required' }, pass: false, errorKey: 'string/numeric/missingSign' }
-// 			]);
-// 		});
-
-// 		it('numeric: min, max, and decimal presence options', () => {
-// 			runCases(handler.numeric.bind(handler), [
-// 				{ input: '9', options: { min: 10 }, pass: false, errorKey: 'string/numeric/min' },
-// 				{ input: '10', options: { min: 10 }, pass: true, value: '10' },
-// 				{ input: '11', options: { max: 10 }, pass: false, errorKey: 'string/numeric/max' },
-// 				{ input: '10', options: { max: 10 }, pass: true, value: '10' },
-// 				{ input: '12', options: { decimal: 'required' }, pass: false, errorKey: 'string/numeric/missingDecimal' },
-// 				{ input: '12.3', options: { decimal: 'required' }, pass: true, value: '12.3' },
-// 				{ input: '12.3', options: { decimal: 'forbidden' }, pass: false, errorKey: 'string/numeric/forbiddenDecimal' },
-// 				{ input: '12', options: { decimal: 'forbidden' }, pass: true, value: '12' }
-// 			]);
-// 		});
-
-// 		it('numeric: delimiter and precision options', () => {
-// 			runCases(handler.numeric.bind(handler), [
-// 				{ input: '1_234', options: { thousandsDelim: '_' }, pass: true, value: '1_234' },
-// 				{ input: '1,234', options: { thousandsDelim: '_' }, pass: false, errorKey: 'string/numeric/invalidIntegral' },
-// 				{ input: '12,5', options: { decimalDelim: ',', decimal: 'required' }, pass: true, value: '12,5' },
-// 				{ input: '12.34', options: { decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: true, value: '12.34' },
-// 				{ input: '12.3', options: { decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: false, errorKey: 'string/numeric/invalidFractional' },
-// 				{ input: '12.345', options: { decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: false, errorKey: 'string/numeric/invalidFractional' }
-// 			]);
-// 		});
-
-// 		it('numeric: leading and trailing zero options', () => {
-// 			runCases(handler.numeric.bind(handler), [
-// 				{ input: '.5', options: { decimal: 'required', leadingZero: 'required' }, pass: false, errorKey: 'string/numeric/missingLeadingZero' },
-// 				{ input: '0.5', options: { decimal: 'required', leadingZero: 'required' }, pass: true, value: '0.5' },
-// 				{ input: '0.5', options: { decimal: 'required', leadingZero: 'forbidden' }, pass: false, errorKey: 'string/numeric/forbiddenLeadingZero' },
-// 				{ input: '.5', options: { decimal: 'required', leadingZero: 'forbidden' }, pass: true, value: '.5' },
-// 				{ input: '12', options: { decimal: 'required', trailingZero: 'required' }, pass: false, errorKey: 'string/numeric/missingDecimal' },
-// 				{ input: '12.0', options: { decimal: 'required', trailingZero: 'required' }, pass: true, value: '12.0' },
-// 				{ input: '12.0', options: { decimal: 'required', trailingZero: 'forbidden' }, pass: false, errorKey: 'string/numeric/forbiddenTrailingZero' },
-// 				{ input: '12.5', options: { decimal: 'required', trailingZero: 'forbidden' }, pass: true, value: '12.5' }
-// 			]);
-// 		});
-
-// 		it('numeric: symbol and loose spacing options', () => {
-// 			runCases(handler.numeric.bind(handler), [
-// 				{ input: 'USD12', options: { leadingSymbols: ['USD'] }, pass: true, value: 'USD12' },
-// 				{ input: '$12', options: { leadingSymbols: ['USD'] }, pass: false, errorKey: 'string/numeric/base' },
-// 				{ input: '12kg', options: { trailingSymbols: ['kg'] }, pass: true, value: '12kg' },
-// 				{ input: '12lb', options: { trailingSymbols: ['kg'] }, pass: false, errorKey: 'string/numeric/base' },
-// 				{
-// 					input: '+   USD12   kg',
-// 					options: { leadingSymbols: ['USD'], trailingSymbols: ['kg'], plus: 'required', looseSpacing: true },
-// 					pass: true,
-// 					value: '+USD12kg'
-// 				},
-// 				{
-// 					input: '+   USD12   kg',
-// 					options: { leadingSymbols: ['USD'], trailingSymbols: ['kg'], plus: 'required', looseSpacing: false },
-// 					pass: false,
-// 					errorKey: 'string/numeric/base'
-// 				}
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ plus: 'required' });
-// 			runCases(handler.numeric.bind(handler), [{ input: '12', pass: false, errorKey: 'string/numeric/missingPlusSign' }]);
-// 			runCases(handler.numeric.bind(handler), [{ input: '12', options: { plus: 'optional' }, pass: true, value: '12' }]);
-// 		});
-// 	});
-
-// 	describe('measurement', () => {
-// 		it('measurement: units and inherited numeric options', () => {
-// 			runCases(handler.measurement.bind(handler), [
-// 				{ input: '12cm', pass: true, value: '12cm' },
-// 				{ input: '12kg', pass: false, errorKey: 'string/measurement' },
-// 				{ input: '12kg', options: { units: ['kg'] }, pass: true, value: '12kg' },
-// 				{ input: '+12cm', options: { plus: 'required' }, pass: true, value: '+12cm' },
-// 				{ input: '12cm-', options: { alignment: 'right', minus: 'required' }, pass: true, value: '12cm-' },
-// 				{ input: '12cm', options: { decimal: 'required' }, pass: false, errorKey: 'string/measurement' },
-// 				{ input: '12.30cm', options: { decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: true, value: '12.30cm' },
-// 				{ input: '9cm', options: { min: 10 }, pass: false, errorKey: 'string/measurement' },
-// 				{ input: '11cm', options: { max: 10 }, pass: false, errorKey: 'string/measurement' },
-// 				{ input: '1_234cm', options: { thousandsDelim: '_' }, pass: true, value: '1_234cm' },
-// 				{ input: '12,5cm', options: { decimalDelim: ',', decimal: 'required' }, pass: true, value: '12,5cm' }
-// 			]);
-// 		});
-
-// 		it('measurement: symbol, zero, and spacing options', () => {
-// 			runCases(handler.measurement.bind(handler), [
-// 				{ input: '~12cm', options: { leadingSymbols: ['~'] }, pass: true, value: '~12cm' },
-// 				{ input: '12kg', options: { units: ['cm'], trailingSymbols: ['kg'] }, pass: true, value: '12kg' },
-// 				{ input: '.5cm', options: { decimal: 'required', leadingZero: 'required' }, pass: false, errorKey: 'string/measurement' },
-// 				{ input: '0.5cm', options: { decimal: 'required', leadingZero: 'forbidden' }, pass: false, errorKey: 'string/measurement' },
-// 				{ input: '12.0cm', options: { decimal: 'required', trailingZero: 'forbidden' }, pass: false, errorKey: 'string/measurement' },
-// 				{ input: '+  ~12  cm', options: { leadingSymbols: ['~'], plus: 'required', looseSpacing: true }, pass: true, value: '+~12cm' },
-// 				{ input: '+  ~12  cm', options: { leadingSymbols: ['~'], plus: 'required', looseSpacing: false }, pass: false, errorKey: 'string/measurement' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ plus: 'required' });
-// 			runCases(handler.measurement.bind(handler), [{ input: '12cm', pass: false, errorKey: 'string/measurement' }]);
-// 			runCases(handler.measurement.bind(handler), [{ input: '12cm', options: { plus: 'optional' }, pass: true, value: '12cm' }]);
-// 		});
-// 	});
-
-// 	describe('money', () => {
-// 		it('money: parens, symbols, and sign options', () => {
-// 			runCases(handler.money.bind(handler), [
-// 				{ input: '$12', pass: true, value: '$12' },
-// 				{ input: '12', pass: false, errorKey: 'string/money' },
-// 				{ input: '(USD12)', options: { parens: 'required', leadingSymbols: ['USD'] }, pass: true, value: '(USD12)' },
-// 				{ input: 'USD12', options: { parens: 'required', leadingSymbols: ['USD'] }, pass: false, errorKey: 'string/money' },
-// 				{ input: '(USD12)', options: { parens: 'forbidden', leadingSymbols: ['USD'] }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12', options: { parens: 'optional', leadingSymbols: ['USD'] }, pass: true, value: 'USD12' },
-// 				{ input: '(USD12)', options: { parens: 'optional', leadingSymbols: ['USD'] }, pass: true, value: '(USD12)' },
-// 				{ input: '+USD12', options: { plus: 'required', leadingSymbols: ['USD'] }, pass: true, value: '+USD12' },
-// 				{ input: '+USD12', options: { plus: 'forbidden', leadingSymbols: ['USD'] }, pass: false, errorKey: 'string/money' },
-// 				{ input: '-USD12', options: { minus: 'required', leadingSymbols: ['USD'] }, pass: true, value: '-USD12' },
-// 				{ input: '-USD12', options: { minus: 'forbidden', leadingSymbols: ['USD'] }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12+', options: { alignment: 'right', plus: 'required', leadingSymbols: ['USD'] }, pass: false, errorKey: 'string/money' }
-// 			]);
-// 		});
-
-// 		it('money: inherited numeric format options', () => {
-// 			runCases(handler.money.bind(handler), [
-// 				{ input: 'USD9', options: { leadingSymbols: ['USD'], min: 10 }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD11', options: { leadingSymbols: ['USD'], max: 10 }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12.3', options: { leadingSymbols: ['USD'], decimal: 'required' }, pass: true, value: 'USD12.3' },
-// 				{ input: 'USD12', options: { leadingSymbols: ['USD'], decimal: 'required' }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12.3', options: { leadingSymbols: ['USD'], decimal: 'forbidden' }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD1_234', options: { leadingSymbols: ['USD'], thousandsDelim: '_' }, pass: true, value: 'USD1_234' },
-// 				{ input: 'USD1,234', options: { leadingSymbols: ['USD'], thousandsDelim: '_' }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12,5', options: { leadingSymbols: ['USD'], decimalDelim: ',', decimal: 'required' }, pass: true, value: 'USD12,5' },
-// 				{ input: 'USD12.30', options: { leadingSymbols: ['USD'], decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: true, value: 'USD12.30' },
-// 				{ input: 'USD12.3', options: { leadingSymbols: ['USD'], decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12.300', options: { leadingSymbols: ['USD'], decimal: 'required', minPrecision: 2, maxPrecision: 2 }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD.5', options: { leadingSymbols: ['USD'], decimal: 'required', leadingZero: 'required' }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD0.5', options: { leadingSymbols: ['USD'], decimal: 'required', leadingZero: 'forbidden' }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12.0', options: { leadingSymbols: ['USD'], decimal: 'required', trailingZero: 'required' }, pass: true, value: 'USD12.0' },
-// 				{ input: 'USD12', options: { leadingSymbols: ['USD'], decimal: 'required', trailingZero: 'required' }, pass: false, errorKey: 'string/money' },
-// 				{ input: 'USD12.0', options: { leadingSymbols: ['USD'], decimal: 'required', trailingZero: 'forbidden' }, pass: false, errorKey: 'string/money' }
-// 			]);
-// 		});
-
-// 		it('money: trailing symbol and loose spacing options', () => {
-// 			runCases(handler.money.bind(handler), [
-// 				{ input: '12USD', options: { leadingSymbols: [''], trailingSymbols: ['USD'] }, pass: true, value: '12USD' },
-// 				{ input: '+   USD12', options: { leadingSymbols: ['USD'], plus: 'required', looseSpacing: true }, pass: true, value: '+USD12' },
-// 				{ input: '+   USD12', options: { leadingSymbols: ['USD'], plus: 'required', looseSpacing: false }, pass: false, errorKey: 'string/money' }
-// 			]);
-// 		});
-
-// 		it('applies configMatchingDefaults and allows per-call override', () => {
-// 			handler.configMatchingDefaults({ plus: 'required', leadingSymbols: ['USD'] });
-// 			runCases(handler.money.bind(handler), [{ input: 'USD12', pass: false, errorKey: 'string/money' }]);
-// 			runCases(handler.money.bind(handler), [{ input: 'USD12', options: { plus: 'optional' }, pass: true, value: 'USD12' }]);
-// 		});
-// 	});
-// });
-
-// describe('StringHandler mutators', () => {
-// 	let handler: StringHandler;
-
-// 	beforeEach(() => {
-// 		handler = new StringHandler();
-// 	});
-
-// 	it('base64Decode', () => {
-// 		runCases(handler.base64Decode.bind(handler), [{ input: 'TWFu', pass: true, value: 'Man' }]);
-// 	});
-
-// 	it('base64Encode', () => {
-// 		runCases(handler.base64Encode.bind(handler), [{ input: 'Man', pass: true, value: 'TWFu' }]);
-// 	});
-
-// 	it('collapseRepeats', () => {
-// 		runCases(
-// 			(input: string, options?: { char: string }): ValidationResult =>
-// 				handler.collapseRepeats(input, options?.char ?? ''),
-// 			[
-// 				{ input: 'aaabbbcc', options: { char: 'a' }, pass: true, value: 'abbbcc' },
-// 				{ input: 'aaabbbcc', options: { char: '' }, pass: true, value: 'abc' }
-// 			]
-// 		);
-// 	});
-
-// 	it('collapseSpacing', () => {
-// 		runCases(handler.collapseSpacing.bind(handler), [{ input: 'a\t  b\n\n c', pass: true, value: 'a b c' }]);
-// 	});
-
-// 	it('escapeHtml', () => {
-// 		runCases(handler.escapeHtml.bind(handler), [{ input: '&<>' + '"' + "'", pass: true, value: '&amp;&lt;&gt;&quot;&#39;' }]);
-// 	});
-
-// 	it('hexDecode', () => {
-// 		runCases(handler.hexDecode.bind(handler), [{ input: '4869', pass: true, value: 'Hi' }]);
-// 	});
-
-// 	it('hexEncode', () => {
-// 		runCases(handler.hexEncode.bind(handler), [{ input: 'Hi', pass: true, value: '4869' }]);
-// 	});
-
-// 	it('normalizeLineBreaks', () => {
-// 		runCases(
-// 			(input: string, options?: { lineBreak?: string }): ValidationResult =>
-// 				handler.normalizeLineBreaks(input, options?.lineBreak),
-// 			[
-// 				{ input: 'a\r\nb\rc\nd', pass: true, value: 'a\nb\nc\nd' },
-// 				{ input: 'a\r\nb\rc\nd', options: { lineBreak: '|' }, pass: true, value: 'a|b|c|d' }
-// 			]
-// 		);
-// 	});
-
-// 	it('normalizeUnicode', () => {
-// 		runCases(
-// 			(input: string, options?: { type?: string }): ValidationResult =>
-// 				handler.normalizeUnicode(input, options?.type),
-// 			[
-// 				{ input: '\u0065\u0301', pass: true, value: '\u00E9' },
-// 				{ input: '\u00E9', options: { type: 'NFD' }, pass: true, value: '\u0065\u0301' }
-// 			]
-// 		);
-// 	});
-
-// 	it('padLeft', () => {
-// 		runCases(
-// 			(input: string, options?: { length: number; char: string }): ValidationResult =>
-// 				handler.padLeft(input, options?.length ?? 0, options?.char ?? ''),
-// 			[{ input: '7', options: { length: 3, char: '0' }, pass: true, value: '007' }]
-// 		);
-// 	});
-
-// 	it('padRight', () => {
-// 		runCases(
-// 			(input: string, options?: { length: number; char: string }): ValidationResult =>
-// 				handler.padRight(input, options?.length ?? 0, options?.char ?? ''),
-// 			[{ input: '7', options: { length: 3, char: '0' }, pass: true, value: '700' }]
-// 		);
-// 	});
-
-// 	it('slice', () => {
-// 		runCases(
-// 			(input: string, options?: { startIndex: number; endIndex: number }): ValidationResult =>
-// 				handler.slice(input, options?.startIndex ?? 0, options?.endIndex ?? 0),
-// 			[{ input: 'abcdef', options: { startIndex: 1, endIndex: 4 }, pass: true, value: 'bcd' }]
-// 		);
-// 	});
-
-// 	it('sliceFirst', () => {
-// 		runCases(
-// 			(input: string, options?: { count?: number }): ValidationResult =>
-// 				handler.sliceFirst(input, options?.count),
-// 			[
-// 				{ input: 'abcdef', pass: true, value: 'a' },
-// 				{ input: 'abcdef', options: { count: 3 }, pass: true, value: 'abc' }
-// 			]
-// 		);
-// 	});
-
-// 	it('sliceLast', () => {
-// 		runCases(
-// 			(input: string, options?: { count?: number }): ValidationResult =>
-// 				handler.sliceLast(input, options?.count),
-// 			[
-// 				{ input: 'abcdef', pass: true, value: 'f' },
-// 				{ input: 'abcdef', options: { count: 3 }, pass: true, value: 'def' }
-// 			]
-// 		);
-// 	});
-
-// 	it('stripChars', () => {
-// 		runCases(
-// 			(input: string, options?: { chars: string }): ValidationResult =>
-// 				handler.stripChars(input, options?.chars ?? ''),
-// 			[{ input: 'a-b_c.d', options: { chars: '-_.' }, pass: true, value: 'abcd' }]
-// 		);
-// 	});
-
-// 	it('stripHtml', () => {
-// 		runCases(handler.stripHtml.bind(handler), [{ input: '<p>Hello <b>World</b></p>', pass: true, value: 'Hello World' }]);
-// 	});
-
-// 	it('stripWhitespace', () => {
-// 		runCases(handler.stripWhitespace.bind(handler), [{ input: ' a\t b\n c ', pass: true, value: 'abc' }]);
-// 	});
-
-// 	it('toDelimited', () => {
-// 		runCases(handler.toDelimited.bind(handler), [
-// 			{
-// 				input: 'one_two-three',
-// 				options: {
-// 					fromDelims: '_-',
-// 					toDelim: '.',
-// 					transformer1: (word: string): string => word.toUpperCase()
-// 				},
-// 				pass: true,
-// 				value: 'ONE.TWO.THREE'
-// 			},
-// 			{
-// 				input: 'one_two_three',
-// 				options: {
-// 					fromDelims: '_',
-// 					toDelim: '-',
-// 					transformer1: (word: string): string => word.toLowerCase(),
-// 					transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-// 					transformerSwitchIndex: 1
-// 				},
-// 				pass: true,
-// 				value: 'one-Two-Three'
-// 			},
-// 			{
-// 				input: 'MiXeD',
-// 				options: {
-// 					fromDelims: null,
-// 					toDelim: '',
-// 					transformer1: (word: string): string => word.toLowerCase(),
-// 					transformer2: (word: string): string => word.toUpperCase(),
-// 					transformerSwitchIndex: null
-// 				},
-// 				pass: true,
-// 				value: 'mixed'
-// 			}
-// 		]);
-// 	});
-
-// 	it('toCamelCase', () => {
-// 		runCases(
-// 			(input: string, options?: { delims?: string }): ValidationResult =>
-// 				handler.toCamelCase(input, options?.delims),
-// 			[
-// 				{ input: 'HELLO WORLD', pass: true, value: 'helloWorld' },
-// 				{ input: 'hello_world_test', options: { delims: '_' }, pass: true, value: 'helloWorldTest' }
-// 			]
-// 		);
-// 	});
-
-// 	it('toKebabCase', () => {
-// 		runCases(
-// 			(input: string, options?: { fromDelims?: string }): ValidationResult =>
-// 				handler.toKebabCase(input, options?.fromDelims),
-// 			[
-// 				{ input: 'Hello World', pass: true, value: 'hello-world' },
-// 				{ input: 'One_Two_Three', options: { fromDelims: '_' }, pass: true, value: 'one-two-three' }
-// 			]
-// 		);
-// 	});
-
-// 	it('toPascalCase', () => {
-// 		runCases(
-// 			(input: string, options?: { fromDelims?: string }): ValidationResult =>
-// 				handler.toPascalCase(input, options?.fromDelims),
-// 			[
-// 				{ input: 'hello world', pass: true, value: 'HelloWorld' },
-// 				{ input: 'hello_world', options: { fromDelims: '_' }, pass: true, value: 'HelloWorld' }
-// 			]
-// 		);
-// 	});
-
-// 	it('toSentenceCase', () => {
-// 		runCases(
-// 			(input: string, options?: { fromDelims?: string }): ValidationResult =>
-// 				handler.toSentenceCase(input, options?.fromDelims),
-// 			[
-// 				{ input: 'HELLO WORLD TEST', pass: true, value: 'Hello world test' },
-// 				{ input: 'hello_world_test', options: { fromDelims: '_' }, pass: true, value: 'Hello world test' }
-// 			]
-// 		);
-// 	});
-
-// 	it('toSnakeCase', () => {
-// 		runCases(
-// 			(input: string, options?: { fromDelims?: string }): ValidationResult =>
-// 				handler.toSnakeCase(input, options?.fromDelims),
-// 			[
-// 				{ input: 'Hello World', pass: true, value: 'hello_world' },
-// 				{ input: 'One-Two-Three', options: { fromDelims: '-' }, pass: true, value: 'one_two_three' }
-// 			]
-// 		);
-// 	});
-
-// 	it('toTitleCase', () => {
-// 		runCases(
-// 			(input: string, options?: { fromDelims?: string }): ValidationResult =>
-// 				handler.toTitleCase(input, options?.fromDelims),
-// 			[
-// 				{ input: 'hello world test', pass: true, value: 'Hello World Test' },
-// 				{ input: 'hello_world_test', options: { fromDelims: '_' }, pass: true, value: 'Hello World Test' }
-// 			]
-// 		);
-// 	});
-
-// 	it('toLowerCase', () => {
-// 		runCases(handler.toLowerCase.bind(handler), [{ input: 'AbC', pass: true, value: 'abc' }]);
-// 	});
-
-// 	it('toUpperCase', () => {
-// 		runCases(handler.toUpperCase.bind(handler), [{ input: 'AbC', pass: true, value: 'ABC' }]);
-// 	});
-
-// 	it('trim', () => {
-// 		runCases(
-// 			(input: string, options?: { chars?: string }): ValidationResult =>
-// 				handler.trim(input, options?.chars),
-// 			[
-// 				{ input: ' \t abc \n', pass: true, value: 'abc' },
-// 				{ input: '..abc..', options: { chars: '.' }, pass: true, value: 'abc' }
-// 			]
-// 		);
-// 	});
-
-// 	it('trimLeft', () => {
-// 		runCases(
-// 			(input: string, options?: { chars?: string }): ValidationResult =>
-// 				handler.trimLeft(input, options?.chars),
-// 			[
-// 				{ input: ' \t abc ', pass: true, value: 'abc ' },
-// 				{ input: '..abc..', options: { chars: '.' }, pass: true, value: 'abc..' }
-// 			]
-// 		);
-// 	});
-
-// 	it('trimRight', () => {
-// 		runCases(
-// 			(input: string, options?: { chars?: string }): ValidationResult =>
-// 				handler.trimRight(input, options?.chars),
-// 			[
-// 				{ input: ' abc \n\t ', pass: true, value: ' abc' },
-// 				{ input: '..abc..', options: { chars: '.' }, pass: true, value: '..abc' }
-// 			]
-// 		);
-// 	});
-
-// 	it('urlEncode', () => {
-// 		runCases(handler.urlEncode.bind(handler), [{ input: 'a b/c?d=e&f', pass: true, value: 'a%20b%2Fc%3Fd%3De%26f' }]);
-// 	});
-
-// 	it('urlDecode', () => {
-// 		runCases(handler.urlDecode.bind(handler), [{ input: 'a%20b%2Fc%3Fd%3De%26f', pass: true, value: 'a b/c?d=e&f' }]);
-// 	});
-// });
+
+
+describe('StringHandler validators digital', () => {
+	let handler: StringHandler;
+
+	beforeEach(() => {
+		handler = new StringHandler();
+	});
+
+	it('dataUrl', () => {
+
+		runPassTests(handler.dataUrl.bind(handler), [
+			{ input: 'data:image/png;base64,QUJD' },
+			{ input: 'data:audio/mp3;base64,QUJD' },
+			{ input: 'data:image/png;base64,QUJD', args: [{ allowedTypes: ['image'] }] },
+			{ input: 'data:text/plain;base64,QUJD', args: [{ allowedTypes: ['text', 'audio'] }] },
+			{ input: 'data:text/plain;base64,TQ==' },
+			{ input: 'DATA:IMAGE/SVG+XML;BASE64,QUJD' },
+			{ input: 'data:video/x-matroska;base64,QUJDRA==' },
+			{ input: 'data:image/vnd.microsoft.icon;base64,QUJD' },
+			{ input: 'data:text/plain;base64,AB+/=' },
+			{ input: 'data:audio/mp3;base64,QUJD', args: [{ allowedTypes: ['audio'] }] },
+			{ input: 'data:video/mp4;base64,QUJD', args: [{ allowedTypes: ['video'] }] },
+		]);
+
+		runFailTests(handler.dataUrl.bind(handler), [
+			{ input: 'data:audio/mp3;base64,QUJD', args: [{ allowedTypes: ['image'] }] },
+			{ input: 'data:image/png;base64,QUJD', args: [{ allowedTypes: ['text', 'audio'] }] },
+			{ input: 'data:image/png,QUJD' },
+			{ input: 'data:image/png;base64,' },
+			{ input: 'data:image/png;base64,QUJD*' },
+			{ input: 'data:application/json;base64,QUJD' },
+			{ input: 'data:image/png;base64,QUJD', args: [{ allowedTypes: [] }] },
+			{ input: 'http:image/png;base64,QUJD' },
+			{ input: 'data:image/png;base64,QU JD' },
+		]);
+
+	});
+
+	describe('domain', () => {
+		it('normalizes by default and preserves case when normalize is false', () => {
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'ExAmPlE.CoM', output: 'example.com' },
+				{ input: 'ExAmPlE.CoM', args: [{ normalize: false }] },
+			]);
+		});
+
+		it('supports normalize option across additional domain shapes', () => {
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'Api.Example.COM', output: 'api.example.com' },
+				{ input: 'Api.Example.COM', args: [{ normalize: false }] },
+				{ input: '*.Api.Example.COM', args: [{ wildcards: 'optional' }], output: '*.api.example.com' },
+				{ input: '*.Api.Example.COM', args: [{ wildcards: 'optional', normalize: false }] },
+			]);
+		});
+
+		it('supports all subdomains modes', () => {
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'example.com', args: [{ subdomains: 'optional' }] },
+				{ input: 'api.example.com', args: [{ subdomains: 'optional' }] },
+				{ input: 'api.example.com', args: [{ subdomains: 'required' }] },
+				{ input: 'example.com', args: [{ subdomains: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.domain.bind(handler), [
+				{ input: 'example.com', args: [{ subdomains: 'required' }] },
+				{ input: 'api.example.com', args: [{ subdomains: 'forbidden' }] },
+			]);
+		});
+
+		it('supports all wildcards modes', () => {
+			// Existing commented coverage brought into active tests first.
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'example.com', args: [{ wildcards: 'optional' }] },
+				{ input: '*.example.com', args: [{ wildcards: 'optional' }] },
+				{ input: '*.example.com', args: [{ wildcards: 'required' }] },
+			]);
+
+			runFailTests(handler.domain.bind(handler), [
+				{ input: '*.example.com', args: [{ wildcards: 'forbidden' }] },
+				{ input: 'example.com', args: [{ wildcards: 'required' }] },
+			]);
+		});
+
+		it('supports extensions array option via args', () => {
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'example.com', args: [{ extensions: ['com'] }] },
+				{ input: 'example.io', args: [{ extensions: ['com', 'io'] }] },
+				{ input: 'api.example.com', args: [{ extensions: ['com'], subdomains: 'required' }] },
+				{ input: 'example.xn--p1ai', args: [{ extensions: ['xn--p1ai'] }] },
+				{ input: 'ExAmPlE.CoM', args: [{ extensions: ['com'], normalize: false }] },
+			]);
+
+			runFailTests(handler.domain.bind(handler), [
+				{ input: 'example.net', args: [{ extensions: ['com', 'io'] }] },
+				{ input: 'example.com', args: [{ extensions: ['.com'] }] },
+				{ input: 'api.example.co.uk', args: [{ extensions: ['com'] }] },
+				{ input: 'example.com', args: [{ extensions: [], subdomains: 'required' }] },
+			]);
+		});
+
+		it('supports domain extensions and rejects invalid TLD shapes', () => {
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'example.com' },
+				{ input: 'example.co.uk' },
+				{ input: 'example.io' },
+				{ input: 'example.net' },
+				{ input: 'example.org' },
+				{ input: 'example.12a' },
+				{ input: 'service.example.co.uk' },
+				{ input: 'service.example.com.au' },
+				{ input: 'service.example.gov.uk' },
+				{ input: 'example.xn--p1ai' },
+				{ input: 'example.xn--fiqs8s' },
+				{ input: 'EXAMPLE.ORG', output: 'example.org' },
+				{ input: 'example.co.uk' },
+			]);
+
+			runFailTests(handler.domain.bind(handler), [
+				{ input: 'example.c' },
+				{ input: 'example.abcdefghijklmnopqrstuvwxyz' },
+				{ input: 'example.123' },
+				{ input: 'example.-com' },
+				{ input: 'example.c_m' },
+				{ input: 'example.com-' },
+				{ input: 'example..co.uk' },
+			]);
+		});
+
+		it('rejects malformed domain labels and handles edge cases', () => {
+
+			runPassTests(handler.domain.bind(handler), [
+				{ input: 'xn--bcher-kva.de' },
+				{ input: '*.API.Example.COM', args: [{ wildcards: 'optional' }], output: '*.api.example.com' },
+				{ input: '*.example.com', args: [{ wildcards: 'required', subdomains: 'forbidden' }] },
+				{ input: '*.api.example.com', args: [{ wildcards: 'required', subdomains: 'required' }] },
+				{ input: 'api.example.com', args: [{ wildcards: 'forbidden', subdomains: 'required' }] },
+				{ input: 'example.a23456789012345678901234' },
+			]);
+
+			runFailTests(handler.domain.bind(handler), [
+				{ input: '*.example.co.uk', args: [{ wildcards: 'required', subdomains: 'forbidden' }] },
+				{ input: '-example.com' },
+				{ input: 'example..com' },
+				{ input: 'example.com.' },
+				{ input: '.example.com' },
+				{ input: 'exa_mple.com' },
+				{ input: 'example.123' },
+				{ input: '*.example.com', args: [{ wildcards: 'forbidden', subdomains: 'required' }] },
+				{ input: '*.com', args: [{ wildcards: 'required', subdomains: 'required' }] },
+				{ input: 'api.example.com', args: [{ wildcards: 'required' }] },
+				{ input: 'example.com', args: [{ subdomains: 'required', wildcards: 'required' }] },
+				{ input: 'toolongtld.abcdefghijklmnopqrstuvwxyz' },
+			]);
+		});
+
+
+	});
+
+	describe('e123', () => {
+		it('validates strict by default and enforces length bounds', () => {
+			runPassTests(handler.e123.bind(handler), [
+				{ input: '+1 212 555 1234' },
+				{ input: '+12 34567' },
+				{ input: '+123 456789012345' },
+			]);
+
+			runFailTests(handler.e123.bind(handler), [
+				{ input: '123' },
+				{ input: '+123456' },
+				{ input: '+123 4567890123456' },
+				{ input: '+1.212.555.1234' },
+				{ input: '+1 212 ABC 1234' },
+			]);
+		});
+
+		it('supports mode option (strict vs loose)', () => {
+			runPassTests(handler.e123.bind(handler), [
+				{ input: '+1.212.555.1234', args: [{ mode: 'loose' }], output: '+1 212 555 1234' },
+				{ input: '+1/212/555/1234', args: [{ mode: 'loose' }], output: '+1 212 555 1234' },
+			]);
+
+			runFailTests(handler.e123.bind(handler), [
+				{ input: '+1.212.555.1234', args: [{ mode: 'strict' }] },
+				{ input: '1.212.555.1234', args: [{ mode: 'loose' }] },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.e123.bind(handler), [
+				{ input: '+1.212.555.1234', args: [{ mode: 'loose' }], output: '+1 212 555 1234' },
+				{ input: '+1.212.555.1234', args: [{ mode: 'loose', normalize: false }] },
+			]);
+		});
+
+		it('supports acceptableDelims option', () => {
+			runPassTests(handler.e123.bind(handler), [
+				{ input: '+1_212_555_1234', args: [{ mode: 'loose', acceptableDelims: ' _' }], output: '+1 212 555 1234' },
+			]);
+
+			runFailTests(handler.e123.bind(handler), [
+				{ input: '+1_212_555_1234', args: [{ mode: 'loose' }] },
+			]);
+		});
+
+		it('supports normalizedDelim option', () => {
+			runPassTests(handler.e123.bind(handler), [
+				{
+					input: '+1_212_555_1234',
+					args: [{ mode: 'loose', acceptableDelims: ' _', normalizedDelim: '-' }],
+					output: '+1-212-555-1234'
+				},
+			]);
+		});
+
+		it('supports stripDelims option for noisy input', () => {
+			runPassTests(handler.e123.bind(handler), [
+				{
+					input: '+1 (212) 555-1234',
+					args: [{ mode: 'loose', stripDelims: ' ()' }],
+					output: '+1 212 555 1234'
+				},
+			]);
+
+			runFailTests(handler.e123.bind(handler), [
+				{ input: '+1 (212) 555-1234', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+	describe('e164', () => {
+		type E164CallOptions = NonNullable<Parameters<StringHandler['e164']>[1]> & {
+			mode?: 'strict' | 'loose';
+			normalize?: boolean;
+		};
+
+		it('validates strict by default and enforces + with digit-length bounds', () => {
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '+12125551234' },
+				{ input: '+1234567' },
+				{ input: '+123456789012345' },
+			]);
+
+			runFailTests(handler.e164.bind(handler), [
+				{ input: '12125551234' },
+				{ input: '+123456' },
+				{ input: '+1234567890123456' },
+				{ input: '+1-212-555-1234' },
+				{ input: '++12125551234' },
+				{ input: '+12A25551234' },
+			]);
+		});
+
+		it('supports mode option (strict vs loose)', () => {
+			const strictOptions: E164CallOptions = { mode: 'strict' };
+			const looseOptions: E164CallOptions = { mode: 'loose' };
+
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '12125551234', args: [looseOptions], output: '+12125551234' },
+				{ input: '+1-212-555-1234', args: [looseOptions], output: '+12125551234' },
+			]);
+
+			runFailTests(handler.e164.bind(handler), [
+				{ input: '12125551234', args: [strictOptions], output: '12125551234' },
+			]);
+
+
+		});
+
+		it('supports normalize option', () => {
+			const looseOptions: E164CallOptions = { mode: 'loose' };
+			const looseNormalizedOptions: E164CallOptions = { mode: 'loose', normalize: true };
+
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '+1-212-555-1234', args: [looseOptions], output: '+12125551234' },
+			]);
+
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '+1-212-555-1234', args: [looseNormalizedOptions], output: '+12125551234' },
+				{ input: '1 212 555 1234', args: [looseNormalizedOptions], output: '+12125551234' },
+			]);
+		});
+
+		it('supports acceptableDelims option in loose matching', () => {
+			const options: E164CallOptions = { mode: 'loose', normalize: true };
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '+1_212_555_1234', args: [{ ...options, acceptableDelims: ' _' }], output: '+12125551234' },
+			]);
+
+			runFailTests(handler.e164.bind(handler), [
+				{ input: '+1_212_555_1234', args: [options] },
+			]);
+		});
+
+		it('supports stripDelims option in loose matching', () => {
+			const options: E164CallOptions = { mode: 'loose', normalize: true };
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '+1(212)5551234', args: [{ ...options, stripDelims: ' ()' }], output: '+12125551234' },
+			]);
+
+			runFailTests(handler.e164.bind(handler), [
+				{ input: '+1(212)5551234', args: [options] },
+			]);
+		});
+
+		it('supports normalizedDelim option behavior', () => {
+			const options: E164CallOptions = { mode: 'loose', normalize: true };
+			runPassTests(handler.e164.bind(handler), [
+				{ input: '+1 212 555 1234', args: [{ ...options, acceptableDelims: '', stripDelims: ' ' }], output: '+12125551234' },
+			]);
+
+			runFailTests(handler.e164.bind(handler), [
+				{ input: '+1 212 555 1234', args: [{ ...options, normalizedDelim: '-' }] },
+			]);
+		});
+	});
+
+	describe('email', () => {
+		it('accepts valid emails and normalizes by default', () => {
+			runPassTests(handler.email.bind(handler), [
+				{ input: 'A.B+Tag@Example.COM', output: 'a.b+tag@example.com' },
+				{ input: "o'hara@sub.example.co.uk" },
+				{ input: 'user_name-123@example.io' },
+				{ input: 'x@x.io' },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.email.bind(handler), [
+				{ input: 'A.B+Tag@Example.COM', args: [{ normalize: false }] },
+				{ input: 'A.B+Tag@Example.COM', args: [{ normalize: true }], output: 'a.b+tag@example.com' },
+			]);
+		});
+
+		it('rejects malformed local or domain parts', () => {
+			runFailTests(handler.email.bind(handler), [
+				{ input: '' },
+				{ input: 'invalid@@example.com' },
+				{ input: '@example.com' },
+				{ input: 'user@' },
+				{ input: '.user@example.com' },
+				{ input: 'user.@example.com' },
+				{ input: 'user@-example.com' },
+				{ input: 'user@exa_mple.com' },
+				{ input: 'user@example.123' },
+			]);
+		});
+	});
+
+	describe('ip', () => {
+		it('accepts valid IPv4 and IPv6 forms and rejects malformed inputs', () => {
+			runPassTests(handler.ip.bind(handler), [
+				{ input: '8.8.8.8' },
+				{ input: '127.0.0.1' },
+				{ input: '2001:db8::1' },
+				{ input: '::1' },
+				{ input: 'FE80::ABCD', output: 'fe80::abcd' },
+			]);
+
+			runFailTests(handler.ip.bind(handler), [
+				{ input: '' },
+				{ input: '999.8.8.8' },
+				{ input: '1.2.3' },
+				{ input: '2001:::1' },
+				{ input: 'gggg::1' },
+				{ input: 'not-an-ip' },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.ip.bind(handler), [
+				{ input: 'FE80::ABCD', args: [{ normalize: false }] },
+				{ input: 'FE80::ABCD', args: [{ normalize: true }], output: 'fe80::abcd' },
+			]);
+		});
+	});
+
+	it('ipCidr', () => {
+		runPassTests(handler.ipCidr.bind(handler), [
+			{ input: '192.168.0.1/24' },
+			{ input: '0.0.0.0/0' },
+			{ input: '255.255.255.255/32' },
+			{ input: '2001:db8::1/64' },
+			{ input: '::/0' },
+			{ input: '::1/128' },
+		]);
+
+		runFailTests(handler.ipCidr.bind(handler), [
+			{ input: '192.168.0.1/33' },
+			{ input: '2001:db8::1/129' },
+			{ input: '192.168.0.1/-1' },
+			{ input: '192.168.0.1/abc' },
+			{ input: '192.168.0.1' },
+			{ input: '1.2.3.4/24/extra' },
+		]);
+	});
+
+	it('ipCidrV4', () => {
+		runPassTests(handler.ipCidrV4.bind(handler), [
+			{ input: '10.0.0.1/8' },
+			{ input: '0.0.0.0/0' },
+			{ input: '255.255.255.255/32' },
+		]);
+
+		runFailTests(handler.ipCidrV4.bind(handler), [
+			{ input: '10.0.0.1/33' },
+			{ input: '10.0.0.1/50' },
+			{ input: '10.0.0.1' },
+			{ input: '10.0.0.1/abc' },
+			{ input: '256.0.0.1/24' },
+			{ input: '2001:db8::1/64' },
+		]);
+	});
+
+	it('ipCidrV6', () => {
+		runPassTests(handler.ipCidrV6.bind(handler), [
+			{ input: '2001:db8::1/64' },
+			{ input: '::/0' },
+			{ input: '::1/128' },
+		]);
+
+		runFailTests(handler.ipCidrV6.bind(handler), [
+			{ input: '2001:db8::1/129' },
+			{ input: '2001:db8::1' },
+			{ input: '2001:db8::1/abc' },
+			{ input: 'gggg::1/64' },
+			{ input: '10.0.0.1/24' },
+		]);
+	});
+
+	describe('ipV4', () => {
+		it('accepts valid edge values and rejects malformed IPv4', () => {
+			runPassTests(handler.ipV4.bind(handler), [
+				{ input: '0.0.0.0' },
+				{ input: '1.2.3.4' },
+				{ input: '127.0.0.1' },
+				{ input: '255.255.255.255' },
+			]);
+
+			runFailTests(handler.ipV4.bind(handler), [
+				{ input: '' },
+				{ input: '256.0.0.1' },
+				{ input: '01.2.3.4' },
+				{ input: '1.2.3' },
+				{ input: '1.2.3.4.5' },
+				{ input: '1..3.4' },
+				{ input: '1.2.3.-1' },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.ipV4.bind(handler), [
+				{ input: '127.0.0.1', args: [{ normalize: false }] },
+				{ input: '127.0.0.1', args: [{ normalize: true }] },
+			]);
+		});
+	});
+
+	describe('ipV6', () => {
+		it('accepts standard and condensed IPv6 forms and rejects malformed values', () => {
+			runPassTests(handler.ipV6.bind(handler), [
+				{ input: '2001:0db8:85a3:0000:0000:8a2e:0370:7334' },
+				{ input: '2001:db8::1' },
+				{ input: 'fe80::1' },
+				{ input: '::1' },
+				{ input: '::' },
+				{ input: 'FE80::ABCD', output: 'fe80::abcd' },
+			]);
+
+			runFailTests(handler.ipV6.bind(handler), [
+				{ input: '' },
+				{ input: '2001:::1' },
+				{ input: 'gggg::1' },
+				{ input: '12345::' },
+				{ input: '1:2:3:4:5:6:7:8:9' },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.ipV6.bind(handler), [
+				{ input: 'FE80::ABCD', args: [{ normalize: false }] },
+				{ input: 'FE80::ABCD', args: [{ normalize: true }], output: 'fe80::abcd' },
+			]);
+		});
+	});
+
+	it('json', () => {
+		runPassTests(handler.json.bind(handler), [
+			{ input: '{}' },
+			{ input: '[]' },
+			{ input: '{"a":1,"b":[true,null,"x"]}' },
+			{ input: 'true' },
+			{ input: 'null' },
+			{ input: '"text"' },
+			{ input: '  {"a":[1,2,3]}  ' },
+		]);
+
+		runFailTests(handler.json.bind(handler), [
+			{ input: '' },
+			{ input: '{a:1}' },
+			{ input: '{"a":1,}' },
+			{ input: '[1,2,]' },
+			{ input: 'undefined' },
+			{ input: '{"a": Infinity}' },
+		]);
+	});
+
+	it('jwt', () => {
+		runPassTests(handler.jwt.bind(handler), [
+			{ input: 'aaa.bbb.ccc' },
+			{ input: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTYifQ.c2ln' },
+			{ input: 'a-b_c.d-e_f.g-h_i' },
+			{ input: 'aaa=.bbb=.ccc=' },
+		]);
+
+		runFailTests(handler.jwt.bind(handler), [
+			{ input: '' },
+			{ input: 'aaa.bbb' },
+			{ input: 'aaa.bbb.ccc.ddd' },
+			{ input: 'aaa..ccc' },
+			{ input: '.bbb.ccc' },
+			{ input: 'aa+/bb.ccc.ddd' },
+		]);
+	});
+
+	describe('label', () => {
+		it('accepts valid label forms and rejects invalid shapes', () => {
+			runPassTests(handler.label.bind(handler), [
+				{ input: 'My-Label', output: 'my-label' },
+				{ input: 'a' },
+				{ input: 'a'.repeat(63) },
+				{ input: 'abc-123' },
+				{ input: '0abc' },
+			]);
+
+			runFailTests(handler.label.bind(handler), [
+				{ input: '' },
+				{ input: '-bad' },
+				{ input: 'bad-' },
+				{ input: 'a'.repeat(64) },
+				{ input: 'bad_label' },
+				{ input: 'bad label' },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.label.bind(handler), [
+				{ input: 'My-Label', args: [{ normalize: false }] },
+				{ input: 'My-Label', args: [{ normalize: true }], output: 'my-label' },
+			]);
+		});
+	});
+
+	describe('mac', () => {
+		it('validates strict default format and rejects malformed values', () => {
+			runPassTests(handler.mac.bind(handler), [
+				{ input: 'AA:BB:CC:DD:EE:FF', output: 'aa:bb:cc:dd:ee:ff' },
+				{ input: 'aa:bb:cc:dd:ee:ff' },
+			]);
+
+			runFailTests(handler.mac.bind(handler), [
+				{ input: '' },
+				{ input: 'AA-BB-CC-DD-EE-FF' },
+				{ input: 'AA:BB:CC:DD:EE' },
+				{ input: 'AA:BB:CC:DD:EE:FF:11' },
+				{ input: 'GG:BB:CC:DD:EE:FF' },
+				{ input: 'A:BB:CC:DD:EE:FF' },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.mac.bind(handler), [
+				{ input: 'AA:BB:CC:DD:EE:FF', args: [{ normalize: false }] },
+				{ input: 'AA:BB:CC:DD:EE:FF', args: [{ normalize: true }], output: 'aa:bb:cc:dd:ee:ff' },
+			]);
+		});
+
+		it('supports mode option (strict vs loose)', () => {
+			runPassTests(handler.mac.bind(handler), [
+				{ input: 'AA-BB-CC-DD-EE-FF', args: [{ mode: 'loose' }], output: 'aa:bb:cc:dd:ee:ff' },
+				{ input: 'AA.BB.CC.DD.EE.FF', args: [{ mode: 'loose' }], output: 'aa:bb:cc:dd:ee:ff' },
+			]);
+
+			runFailTests(handler.mac.bind(handler), [
+				{ input: 'AA-BB-CC-DD-EE-FF', args: [{ mode: 'strict' }] },
+				{ input: 'AABBCCDDEEF', args: [{ mode: 'loose' }] },
+			]);
+		});
+
+		it('supports normalizedDelim option in loose mode', () => {
+			runPassTests(handler.mac.bind(handler), [
+				{ input: 'AA_BB_CC_DD_EE_FF', args: [{ mode: 'loose', normalizedDelim: '-' }], output: 'aa-bb-cc-dd-ee-ff' },
+				{ input: 'AA/BB/CC/DD/EE/FF', args: [{ mode: 'loose', normalizedDelim: '.' }], output: 'aa.bb.cc.dd.ee.ff' },
+			]);
+		});
+
+		it('supports acceptableDelims option in loose mode', () => {
+			runPassTests(handler.mac.bind(handler), [
+				{ input: 'AA~BB~CC~DD~EE~FF', args: [{ mode: 'loose', acceptableDelims: ':~' }], output: 'aa:bb:cc:dd:ee:ff' },
+			]);
+
+			runFailTests(handler.mac.bind(handler), [
+				{ input: 'AA~BB~CC~DD~EE~FF', args: [{ mode: 'loose' }] },
+			]);
+		});
+
+		it('supports stripDelims option in loose mode', () => {
+			runPassTests(handler.mac.bind(handler), [
+				{ input: '(AA)(BB)(CC)(DD)(EE)(FF)', args: [{ mode: 'loose', stripDelims: '()' }], output: 'aa:bb:cc:dd:ee:ff' },
+			]);
+
+			runFailTests(handler.mac.bind(handler), [
+				{ input: '(AA)(BB)(CC)(DD)(EE)(FF)', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+	describe('path', () => {
+		it('supports lowercase option', () => {
+			runPassTests(handler.path.bind(handler), [
+				{ input: '/UsR/LoCaL/File.TXT' },
+				{ input: '/UsR/LoCaL/File.TXT', args: [{ lowercase: true }], output: '/usr/local/file.txt' },
+				{ input: 'C:\\Users\\Me\\File.TXT', args: [{ style: 'win' }] },
+				{ input: 'C:\\Users\\Me\\File.TXT', args: [{ style: 'win', lowercase: true }], output: 'c:\\users\\me\\file.txt' },
+			]);
+		});
+
+		it('supports absolute option modes for unix style', () => {
+			runPassTests(handler.path.bind(handler), [
+				{ input: '/usr/local/file.txt', args: [{ absolute: 'required' }] },
+				{ input: '/usr/local/file.txt', args: [{ absolute: 'optional' }] },
+				{ input: 'usr/local/file.txt', args: [{ absolute: 'optional' }] },
+				{ input: 'usr/local/file.txt', args: [{ absolute: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.path.bind(handler), [
+				{ input: 'usr/local/file.txt', args: [{ absolute: 'required' }] },
+				{ input: '/usr/local/file.txt', args: [{ absolute: 'forbidden' }] },
+			]);
+		});
+
+		it('supports absolute option modes for win style', () => {
+			runPassTests(handler.path.bind(handler), [
+				{ input: 'C:\\Users\\Me\\file.txt', args: [{ style: 'win', absolute: 'required' }] },
+				{ input: 'C:\\Users\\Me\\file.txt', args: [{ style: 'win', absolute: 'optional' }] },
+				{ input: 'Users\\Me\\file.txt', args: [{ style: 'win', absolute: 'optional' }] },
+				{ input: 'Users\\Me\\file.txt', args: [{ style: 'win', absolute: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.path.bind(handler), [
+				{ input: 'Users\\Me\\file.txt', args: [{ style: 'win', absolute: 'required' }] },
+				{ input: 'C:\\Users\\Me\\file.txt', args: [{ style: 'win', absolute: 'forbidden' }] },
+			]);
+		});
+
+		it('supports style option: unix, win, and win-unc', () => {
+			runPassTests(handler.path.bind(handler), [
+				{ input: '/usr/local/file.txt', args: [{ style: 'unix' }] },
+				{ input: 'C:\\Users\\Me\\file.txt', args: [{ style: 'win' }] },
+				{ input: '\\\\server\\share\\folder\\file.txt', args: [{ style: 'win-unc' }] },
+			]);
+
+			runFailTests(handler.path.bind(handler), [
+				{ input: 'Users\\Me\\file.txt', args: [{ style: 'win' }] },
+				{ input: 'C:\\Users\\Me\\file.txt', args: [{ style: 'win-unc' }] },
+				{ input: '/usr/local/file.txt', args: [{ style: 'win' }] },
+			]);
+		});
+
+		it('supports extensions option', () => {
+			runPassTests(handler.path.bind(handler), [
+				{ input: '/usr/local/file.txt', args: [{ extensions: ['.txt'] }] },
+				{ input: '/usr/local/file.jpg', args: [{ extensions: ['.*'] }] },
+				{ input: '/usr/local/file.tar.gz', args: [{ extensions: ['.tar.gz'] }] },
+				{ input: '/usr/local/file.TXT', args: [{ extensions: ['.txt'] }] },
+				{ input: '/usr/local/file.TXT', args: [{ extensions: ['.txt'], lowercase: true }], output: '/usr/local/file.txt' },
+			]);
+
+			runFailTests(handler.path.bind(handler), [
+				{ input: '/usr/local/file.jpg', args: [{ extensions: ['.txt'] }] },
+				{ input: '/usr/local/file', args: [{ extensions: ['.*'] }] },
+				{ input: '/usr/local/file', args: [{ extensions: ['.txt'] }] },
+				{ input: '/usr/local/.txt', args: [{ extensions: ['.txt'] }] },
+			]);
+		});
+
+		it('supports segmentMaxLen option for file and folder segments', () => {
+			const validFileSegment = '/usr/' + 'a'.repeat(10) + '.txt';
+			const tooLongFileSegment = '/usr/' + 'a'.repeat(11) + '.txt';
+			const tooLongFolderSegment = '/' + 'b'.repeat(11) + '/file.txt';
+
+			runPassTests(handler.path.bind(handler), [
+				{ input: validFileSegment, args: [{ segmentMaxLen: 10 }] },
+			]);
+
+			runFailTests(handler.path.bind(handler), [
+				{ input: tooLongFileSegment, args: [{ segmentMaxLen: 10 }] },
+				{ input: tooLongFolderSegment, args: [{ segmentMaxLen: 10 }] },
+			]);
+		});
+
+
+	});
+
+	it('slug', () => {
+		runPassTests(handler.slug.bind(handler), [
+			{ input: 'my-slug-1' },
+			{ input: 'a' },
+			{ input: 'z9' },
+			{ input: 'abc123' },
+			{ input: 'abc-123-def-456' },
+			{ input: '0' },
+		]);
+
+		runFailTests(handler.slug.bind(handler), [
+			{ input: '' },
+			{ input: 'My Slug' },
+			{ input: 'My-Slug' },
+			{ input: '-slug' },
+			{ input: 'slug-' },
+			{ input: 'two--hyphens' },
+			{ input: 'has_underscore' },
+			{ input: 'has.dot' },
+			{ input: 'white space' },
+			{ input: 'slug!' },
+		]);
+	});
+
+	describe('url', () => {
+		it('normalizes by default and can preserve case', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'HTTPS://EXAMPLE.COM/Path?X=1#Top', output: 'https://example.com/path?x=1#top' },
+				{ input: 'HTTPS://EXAMPLE.COM/Path?X=1#Top', args: [{ normalize: false }] },
+			]);
+		});
+
+		it('allows explicit normalize override per call', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'HTTPS://EXAMPLE.COM/Path', args: [{ normalize: false }] },
+				{ input: 'HTTPS://EXAMPLE.COM/Path', args: [{ normalize: true }], output: 'https://example.com/path' },
+			]);
+		});
+
+		it('supports allowedProtocols option', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://example.com', args: [{ allowedProtocols: ['https'] }] },
+				{ input: 'ftp://example.com', args: [{ allowedProtocols: ['ftp'], protocols: 'required' }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'http://example.com', args: [{ allowedProtocols: ['https'] }] },
+				{ input: 'ftp://example.com' },
+			]);
+		});
+
+		it('supports protocols option modes', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://example.com', args: [{ protocols: 'required' }] },
+				{ input: 'example.com', args: [{ protocols: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'example.com', args: [{ protocols: 'required' }] },
+				{ input: 'https://example.com', args: [{ protocols: 'forbidden' }] },
+			]);
+		});
+
+		it('supports host type options: domain, ip, and label', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://example.com', args: [{ domain: 'required', ip: 'forbidden', label: 'forbidden' }] },
+				{ input: 'https://127.0.0.1', args: [{ ip: 'required', domain: 'forbidden', label: 'forbidden' }] },
+				{ input: 'localhost', args: [{ label: 'required', domain: 'forbidden', ip: 'forbidden', protocols: 'forbidden' }] },
+				{ input: 'https://[2001:db8::1]', args: [{ ip: 'required', domain: 'forbidden', label: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'https://127.0.0.1', args: [{ domain: 'required', ip: 'forbidden', label: 'forbidden' }] },
+				{ input: 'https://example.com', args: [{ ip: 'required', domain: 'forbidden', label: 'forbidden' }] },
+				{ input: 'example.com', args: [{ label: 'required', domain: 'forbidden', ip: 'forbidden', protocols: 'forbidden' }] },
+				{ input: 'https://2001:db8::1', args: [{ ip: 'required' }] },
+			]);
+		});
+
+		it('supports port option modes and validates port range', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://example.com:8080', args: [{ port: 'required' }] },
+				{ input: 'https://example.com', args: [{ port: 'forbidden' }] },
+				{ input: 'https://example.com:1', args: [{ port: 'required' }] },
+				{ input: 'https://example.com:65535', args: [{ port: 'required' }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'https://example.com', args: [{ port: 'required' }] },
+				{ input: 'https://example.com:8080', args: [{ port: 'forbidden' }] },
+				{ input: 'https://example.com:70000', args: [{ port: 'optional' }] },
+				{ input: 'https://example.com:0', args: [{ port: 'required' }] },
+			]);
+		});
+
+		it('supports query option modes', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://example.com?a=1', args: [{ query: 'required' }] },
+				{ input: 'https://example.com', args: [{ query: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'https://example.com', args: [{ query: 'required' }] },
+				{ input: 'https://example.com?a=1', args: [{ query: 'forbidden' }] },
+			]);
+		});
+
+		it('supports fragment option modes', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://example.com#top', args: [{ fragment: 'required' }] },
+				{ input: 'https://example.com', args: [{ fragment: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'https://example.com', args: [{ fragment: 'required' }] },
+				{ input: 'https://example.com#top', args: [{ fragment: 'forbidden' }] },
+			]);
+		});
+
+		it('supports rootRelative option and rejects host/protocol when enabled', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: '/docs/page?x=1#t', args: [{ rootRelative: true }] },
+				{ input: '/docs', args: [{ rootRelative: true }] },
+			]);
+
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'https://example.com/docs', args: [{ rootRelative: true }] },
+				{ input: 'example.com/docs', args: [{ rootRelative: true }] },
+			]);
+		});
+
+		it('accepts more complex valid URLs', () => {
+			runPassTests(handler.url.bind(handler), [
+				{ input: 'https://sub.example.com:443/path/to/resource-name_1.2~ok?q=abc%2Fdef&x=1#frag-1', output: 'https://sub.example.com:443/path/to/resource-name_1.2~ok?q=abc%2fdef&x=1#frag-1' },
+				{ input: 'https://[2001:db8::1]:8443/path/to/resource?token=a-b_c~d%2E1#section-2', output: 'https://[2001:db8::1]:8443/path/to/resource?token=a-b_c~d%2e1#section-2' },
+				{ input: 'sub.example.com:8080/path-here?query=value#frag' },
+			]);
+		});
+
+		it('rejects complex malformed URLs', () => {
+			runFailTests(handler.url.bind(handler), [
+				{ input: 'https://[2001:db8::1/path?x=1#f' },
+				{ input: 'https://example.com:99999/path?x=1#f' },
+				{ input: 'https://example.com/path?x=%ZZ#f' },
+				{ input: 'https://example.com:abc/path' },
+			]);
+		});
+	});
+
+	describe('uuid', () => {
+		it('validates canonical UUID and rejects malformed values', () => {
+			runPassTests(handler.uuid.bind(handler), [
+				{ input: '550e8400-e29b-41d4-a716-446655440000' },
+				{ input: '550E8400-E29B-41D4-A716-446655440000', output: '550e8400-e29b-41d4-a716-446655440000' },
+			]);
+
+			runFailTests(handler.uuid.bind(handler), [
+				{ input: '550e8400-e29b-61d4-a716-446655440000' },
+				{ input: '550e8400-e29b-41d4-a716-44665544000' },
+				{ input: '550e8400-e29b-41d4-c716-446655440000' },
+			]);
+		});
+
+		it('supports version option', () => {
+			runPassTests(handler.uuid.bind(handler), [
+				{ input: '550e8400-e29b-11d4-a716-446655440000', args: [{ version: 1 }] },
+				{ input: '550e8400-e29b-41d4-a716-446655440000', args: [{ version: 4 }] },
+				{ input: '550e8400-e29b-41d4-a716-446655440000', args: [{ version: '4' }] },
+			]);
+
+			runFailTests(handler.uuid.bind(handler), [
+				{ input: '550e8400-e29b-11d4-a716-446655440000', args: [{ version: 4 }] },
+				{ input: '550e8400-e29b-41d4-a716-446655440000', args: [{ version: 1 }] },
+			]);
+		});
+
+		it('supports mode option (strict and loose)', () => {
+			runPassTests(handler.uuid.bind(handler), [
+				{ input: '550e8400e29b41d4a716446655440000', args: [{ mode: 'loose' }], output: '550e8400-e29b-41d4-a716-446655440000' },
+				{ input: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000', args: [{ mode: 'loose' }], output: '550e8400-e29b-41d4-a716-446655440000' },
+				{ input: '{550e8400-e29b-41d4-a716-446655440000}', args: [{ mode: 'loose' }], output: '550e8400-e29b-41d4-a716-446655440000' },
+			]);
+
+			runFailTests(handler.uuid.bind(handler), [
+				{ input: '550e8400e29b41d4a716446655440000', args: [{ mode: 'strict' }] },
+				{ input: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000', args: [{ mode: 'strict' }] },
+			]);
+		});
+
+		it('supports normalize option', () => {
+			runPassTests(handler.uuid.bind(handler), [
+				{ input: '550E8400-E29B-41D4-A716-446655440000', args: [{ normalize: false }] },
+				{ input: '550E8400-E29B-41D4-A716-446655440000', args: [{ normalize: true }], output: '550e8400-e29b-41d4-a716-446655440000' },
+			]);
+		});
+
+		it('supports normalizedDelim and acceptableDelims options in loose mode', () => {
+			runPassTests(handler.uuid.bind(handler), [
+				{ input: '550e8400_e29b_41d4_a716_446655440000', args: [{ mode: 'loose' }], output: '550e8400-e29b-41d4-a716-446655440000' },
+				{ input: '550e8400_e29b_41d4_a716_446655440000', args: [{ mode: 'loose', acceptableDelims: ' _' }], output: '550e8400-e29b-41d4-a716-446655440000' },
+				{ input: '550e8400_e29b_41d4_a716_446655440000', args: [{ mode: 'loose', acceptableDelims: ' _', normalizedDelim: ':' }], output: '550e8400:e29b:41d4:a716:446655440000' },
+			]);
+
+			runFailTests(handler.uuid.bind(handler), [
+				{ input: '550e8400~e29b~41d4~a716~446655440000', args: [{ mode: 'loose' }] },
+			]);
+		});
+
+		it('supports stripDelims option', () => {
+			runPassTests(handler.uuid.bind(handler), [
+				{ input: '550e8400#e29b#41d4#a716#446655440000', args: [{ mode: 'loose', stripDelims: ' #' }], output: '550e8400-e29b-41d4-a716-446655440000' },
+			]);
+
+			runFailTests(handler.uuid.bind(handler), [
+				{ input: '550e8400#e29b#41d4#a716#446655440000', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+describe('StringHandler content validators', () => {
+	let handler: StringHandler;
+
+	beforeEach(() => {
+		handler = new StringHandler();
+	});
+
+	it('balanced', () => {
+		runPassTests(handler.balanced.bind(handler), [
+			{ input: '' },
+			{ input: '()' },
+			{ input: '(a(b)c)' },
+			{ input: 'no delimiters here' },
+			{ input: '[x[y]z]', args: ['[', ']'] },
+			{ input: '<<>>', args: ['<', '>'] },
+		]);
+
+		runFailTests(handler.balanced.bind(handler), [
+			{ input: ')(' },
+			{ input: '(()' },
+			{ input: '())' },
+			{ input: '][', args: ['[', ']'] },
+			{ input: '[[', args: ['[', ']'] },
+		]);
+	});
+
+	describe('complex', () => {
+		it('enforces default complexity requirements', () => {
+			runPassTests(handler.complex.bind(handler), [
+				{ input: 'Aa1!bCd2' },
+				{ input: 'Ab3$xyZ9' },
+			]);
+
+			runFailTests(handler.complex.bind(handler), [
+				{ input: 'Aa1!abc' },
+				{ input: 'aa1!bcde' },
+				{ input: 'AA1!BCDE' },
+				{ input: 'Ab!cDefg' },
+				{ input: 'Ab1cDefg' },
+				{ input: 'Ab1!cccd' },
+			]);
+		});
+
+		it('supports minLength and maxLength options', () => {
+			runPassTests(handler.complex.bind(handler), [
+				{ input: 'Ab1!xyZa', args: [{ minLength: 8 }] },
+				{ input: 'Ab1!xy', args: [{ minLength: 1, maxLength: 6 }] },
+			]);
+
+			runFailTests(handler.complex.bind(handler), [
+				{ input: 'Ab1!xy', args: [{ minLength: 8 }] },
+				{ input: 'Ab1!xyZa', args: [{ minLength: 1, maxLength: 6 }] },
+			]);
+		});
+
+		it('supports count thresholds and maxRepeats options', () => {
+			runPassTests(handler.complex.bind(handler), [
+				{ input: 'AAbb11!!', args: [{ minUppercase: 2, minLowercase: 2, minDigits: 2, minSpecialChars: 2 }] },
+				{ input: 'Aaa1!bbb', args: [{ maxRepeats: 3 }] },
+			]);
+
+			runFailTests(handler.complex.bind(handler), [
+				{ input: 'Ab1!cdef', args: [{ minUppercase: 2 }] },
+				{ input: 'AB1!CDEF', args: [{ minLowercase: 2 }] },
+				{ input: 'Abc!Defg', args: [{ minDigits: 2 }] },
+				{ input: 'Ab12Defg', args: [{ minSpecialChars: 2 }] },
+				{ input: 'Aaaaa1!b', args: [{ maxRepeats: 3 }] },
+			]);
+		});
+	});
+
+	it('contains', () => {
+		runPassTests(handler.contains.bind(handler), [
+			{ input: 'hello world', args: ['world'] },
+			{ input: 'abc', args: [''] },
+			{ input: 'abc', args: ['abc'] },
+			{ input: 'Hello World', args: ['WORLD', { ignoreCase: true }], output: 'hello world' },
+		]);
+
+		runFailTests(handler.contains.bind(handler), [
+			{ input: 'hello world', args: ['mars'] },
+			{ input: 'abc', args: ['abcd'] },
+			{ input: 'Hello World', args: ['WORLD'] },
+		]);
+	});
+
+	it('endsWith', () => {
+		runPassTests(handler.endsWith.bind(handler), [
+			{ input: 'report.pdf', args: ['.pdf'] },
+			{ input: 'abc', args: [''] },
+			{ input: 'abc', args: ['abc'] },
+			{ input: 'Hello.TXT', args: ['.txt', { ignoreCase: true }], output: 'hello.txt' },
+		]);
+
+		runFailTests(handler.endsWith.bind(handler), [
+			{ input: 'report.pdf', args: ['.txt'] },
+			{ input: 'abc', args: ['zabc'] },
+			{ input: 'Hello.TXT', args: ['.txt'] },
+		]);
+	});
+
+	it('excludesChars', () => {
+		runPassTests(handler.excludesChars.bind(handler), [
+			{ input: 'abcdef', args: ['xyz'] },
+			{ input: 'ABC', args: ['a', { ignoreCase: false }] },
+			{ input: 'a.c+d', args: ['[]()'] },
+		]);
+
+		runFailTests(handler.excludesChars.bind(handler), [
+			{ input: 'abc', args: ['b'] },
+			{ input: 'ABC', args: ['a', { ignoreCase: true }] },
+			{ input: 'a.c+d', args: ['.+'] },
+		]);
+	});
+
+	it('length', () => {
+		runPassTests(handler.length.bind(handler), [
+			{ input: '', args: [0] },
+			{ input: 'abcd', args: [4] },
+		]);
+
+		runFailTests(handler.length.bind(handler), [
+			{ input: 'abc', args: [2] },
+			{ input: '', args: [1] },
+		]);
+	});
+
+	it('lengthBetween', () => {
+		runPassTests(handler.lengthBetween.bind(handler), [
+			{ input: '', args: [0, 0] },
+			{ input: 'abc', args: [1, 3] },
+			{ input: 'abc', args: [3, 3] },
+		]);
+
+		runFailTests(handler.lengthBetween.bind(handler), [
+			{ input: '', args: [1, 2] },
+			{ input: 'abcd', args: [1, 3] },
+			{ input: 'abc', args: [4, 2] },
+		]);
+	});
+
+	it('lowerCase', () => {
+		runPassTests(handler.lowerCase.bind(handler), [
+			{ input: '' },
+			{ input: 'abc' },
+			{ input: 'abc123!_-' },
+		]);
+
+		runFailTests(handler.lowerCase.bind(handler), [
+			{ input: 'Abc' },
+			{ input: 'ABC' },
+		]);
+	});
+
+	it('matches', () => {
+		runPassTests(handler.matches.bind(handler), [
+			{ input: 'abc123', args: [/^[a-z]+\d+$/] },
+			{ input: 'HELLO', args: [/^[a-z]+$/i] },
+		]);
+
+		runFailTests(handler.matches.bind(handler), [
+			{ input: 'abc', args: [/^\d+$/] },
+			{ input: 'abc123', args: [/^[a-z]+$/] },
+		]);
+	});
+
+	it('maxLength', () => {
+		runPassTests(handler.maxLength.bind(handler), [
+			{ input: '', args: [0] },
+			{ input: 'abc', args: [3] },
+			{ input: 'abc', args: [5] },
+		]);
+
+		runFailTests(handler.maxLength.bind(handler), [
+			{ input: 'abcd', args: [3] },
+		]);
+	});
+
+	it('maxWords', () => {
+		runPassTests(handler.maxWords.bind(handler), [
+			{ input: 'one two', args: [2] },
+			{ input: 'one|two|three', args: [3, '|'] },
+			{ input: 'a  b', args: [3, ' '] },
+			{ input: 'a, b, c', args: [3, ', '] },
+		]);
+
+		runFailTests(handler.maxWords.bind(handler), [
+			{ input: 'one two three', args: [2] },
+			{ input: 'one|two|three', args: [2, '|'] },
+			{ input: ' one', args: [1] },
+		]);
+	});
+
+	it('minLength', () => {
+		runPassTests(handler.minLength.bind(handler), [
+			{ input: 'abc', args: [3] },
+			{ input: 'abcd', args: [3] },
+		]);
+
+		runFailTests(handler.minLength.bind(handler), [
+			{ input: '', args: [1] },
+			{ input: 'ab', args: [3] },
+		]);
+	});
+
+	it('minWords', () => {
+		runPassTests(handler.minWords.bind(handler), [
+			{ input: 'one two', args: [2] },
+			{ input: 'one|two|three', args: [3, '|'] },
+			{ input: 'a  b', args: [3, ' '] },
+			{ input: ' one', args: [2] },
+		]);
+
+		runFailTests(handler.minWords.bind(handler), [
+			{ input: 'one', args: [2] },
+			{ input: 'one|two', args: [3, '|'] },
+			{ input: 'a, b, c', args: [4, ', '] },
+		]);
+	});
+
+	it('onlyChars', () => {
+		runPassTests(handler.onlyChars.bind(handler), [
+			{ input: '', args: ['abc'] },
+			{ input: 'abccba', args: ['abc'] },
+			{ input: 'AbC', args: ['abc', { ignoreCase: true }] },
+			{ input: '.+*', args: ['.+*'] },
+		]);
+
+		runFailTests(handler.onlyChars.bind(handler), [
+			{ input: 'abcd', args: ['abc'] },
+			{ input: 'AbC', args: ['abc'] },
+			{ input: '.+x', args: ['.+*'] },
+		]);
+	});
+
+	it('repeats', () => {
+		runPassTests(handler.repeats.bind(handler), [
+			{ input: 'abcabcXabc', args: ['abc', 2] },
+			{ input: 'abcabc', args: ['abc', 2, 2] },
+			{ input: 'AAxxaa', args: ['aa', 2, 2, { ignoreCase: true }] },
+			{ input: 'abab', args: ['ab', 2, 2, { otherText: false }] },
+			{ input: 'aaaa', args: ['aa', 2, 2] },
+		]);
+
+		runFailTests(handler.repeats.bind(handler), [
+			{ input: 'abcX', args: ['abc', 2] },
+			{ input: 'abcabcabc', args: ['abc', 1, 2] },
+			{ input: 'AAxxaa', args: ['aa', 2, 2, { ignoreCase: false }] },
+			{ input: 'abXab', args: ['ab', 2, 2, { otherText: false }] },
+			{ input: '', args: ['x', 0, null, { otherText: false }] },
+		]);
+	});
+
+	it('startsWith', () => {
+		runPassTests(handler.startsWith.bind(handler), [
+			{ input: 'prefix-value', args: ['pre'] },
+			{ input: 'abc', args: [''] },
+			{ input: 'HelloWorld', args: ['hello', { ignoreCase: true }], output: 'helloworld' },
+		]);
+
+		runFailTests(handler.startsWith.bind(handler), [
+			{ input: 'prefix-value', args: ['value'] },
+			{ input: 'HelloWorld', args: ['hello'] },
+		]);
+	});
+
+	it('upperCase', () => {
+		runPassTests(handler.upperCase.bind(handler), [
+			{ input: '' },
+			{ input: 'ABC' },
+			{ input: 'ABC123!_-' },
+		]);
+
+		runFailTests(handler.upperCase.bind(handler), [
+			{ input: 'AbC' },
+			{ input: 'abc' },
+		]);
+	});
+
+	it('wordCount', () => {
+		runPassTests(handler.wordCount.bind(handler), [
+			{ input: 'one two three', args: [3, 3] },
+			{ input: '  one\n two\tthree  ', args: [3, null] },
+			{ input: '', args: [0, 0] },
+			{ input: '\n\t ', args: [0, 0] },
+			{ input: 'one-two', args: [1, 1] },
+			{ input: 'single' },
+		]);
+
+		runFailTests(handler.wordCount.bind(handler), [
+			{ input: 'one two', args: [3, null] },
+			{ input: 'one two three', args: [1, 2] },
+			{ input: '   ', args: [1, null] },
+		]);
+	});
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+describe('StringHandler identifiers/financial', () => {
+	let handler: StringHandler;
+
+	beforeEach(() => {
+		handler = new StringHandler();
+	});
+
+	describe('creditCard', () => {
+		it('validates known brands and luhn by default', () => {
+			runPassTests(handler.creditCard.bind(handler), [
+				{ input: '4111111111111111' },
+				{ input: '5555555555554444' },
+				{ input: '378282246310005' },
+				{ input: '6011111111111117' },
+				{ input: '30569309025904' },
+				{ input: '3530111333300000' },
+			]);
+
+			runFailTests(handler.creditCard.bind(handler), [
+				{ input: '' },
+				{ input: '4111111111111112' },
+				{ input: '1234567890123456' },
+			]);
+		});
+
+		it('supports types filtering including null and empty-array behavior', () => {
+			runPassTests(handler.creditCard.bind(handler), [
+				{ input: '4111111111111111', args: [{ types: ['visa'] }] },
+				{ input: '378282246310005', args: [{ types: ['amex'] }] },
+				{ input: '30569309025904', args: [{ types: ['diners'] }] },
+				{ input: '6011111111111117', args: [{ types: ['discover'] }] },
+				{ input: '3530111333300000', args: [{ types: ['jcb'] }] },
+				{ input: '4111111111111111', args: [{ types: ['visa', 'amex'] }] },
+				{ input: '4111111111111111', args: [{ types: [] }] },
+				{ input: '5555555555554444', args: [{ types: null }] },
+			]);
+
+			runFailTests(handler.creditCard.bind(handler), [
+				{ input: '4111111111111111', args: [{ types: ['amex'] }] },
+				{ input: '378282246310005', args: [{ types: ['visa'] }] },
+				{ input: '30569309025904', args: [{ types: ['diners16'] }] },
+				{ input: '6011111111111117', args: [{ types: ['jcb'] }] },
+				{ input: '3530111333300000', args: [{ types: ['discover'] }] },
+			]);
+		});
+
+		it('supports loose mode normalize and delimiter options', () => {
+			runPassTests(handler.creditCard.bind(handler), [
+				{ input: '4111 1111 1111 1111', args: [{ mode: 'loose' }], output: '4111111111111111' },
+				{ input: '4111 1111 1111 1111', args: [{ mode: 'loose', normalize: false }] },
+				{ input: '4111 1111 1111 1111', args: [{ mode: 'loose', normalizedDelim: '-' }], output: '4111-1111-1111-1111' },
+				{ input: '4111~1111~1111~1111', args: [{ mode: 'loose', acceptableDelims: ' ~' }], output: '4111111111111111' },
+				{ input: '(4111)(1111)(1111)(1111)', args: [{ mode: 'loose', stripDelims: '()' }], output: '4111111111111111' },
+			]);
+
+			runFailTests(handler.creditCard.bind(handler), [
+				{ input: '4111 1111 1111 1111' },
+				{ input: '4111~1111~1111~1111', args: [{ mode: 'loose' }] },
+				{ input: '(4111)(1111)(1111)(1111)', args: [{ mode: 'loose' }] },
+			]);
+		});
+
+		it('supports additional delimiter shapes and strict-vs-loose boundaries', () => {
+			runPassTests(handler.creditCard.bind(handler), [
+				{ input: '4111:1111:1111:1111', args: [{ mode: 'loose', acceptableDelims: ' :' }], output: '4111111111111111' },
+				{ input: '[4111].[1111].[1111].[1111]', args: [{ mode: 'loose', stripDelims: '[]', acceptableDelims: ' .', normalizedDelim: '.' }], output: '4111.1111.1111.1111' },
+				{ input: '4111/1111/1111/1111', args: [{ mode: 'loose', normalizedDelim: '/' }], output: '4111/1111/1111/1111' },
+				{ input: '4111111111111111', args: [{ mode: 'loose', normalizedDelim: '-' }], output: '4111-1111-1111-1111' },
+				{ input: '4111 1111 1111 1111', args: [{ mode: 'loose', types: ['visa'] }], output: '4111111111111111' },
+			]);
+
+			runFailTests(handler.creditCard.bind(handler), [
+				{ input: '4111:1111:1111:1111', args: [{ mode: 'loose' }] },
+				{ input: '[4111].[1111].[1111].[1111]', args: [{ mode: 'loose', acceptableDelims: ' .' }] },
+				{ input: '4111/1111/1111/1111', args: [{ mode: 'strict' }] },
+				{ input: '4111 1111 1111 1111', args: [{ mode: 'loose', types: ['amex'] }] },
+			]);
+		});
+	});
+
+	describe('currencyCode', () => {
+		it('validates strict case by default', () => {
+			runPassTests(handler.currencyCode.bind(handler), [
+				{ input: 'USD' },
+				{ input: 'EUR' },
+			]);
+
+			runFailTests(handler.currencyCode.bind(handler), [
+				{ input: 'usd' },
+				{ input: 'US' },
+				{ input: 'ZZZ' },
+			]);
+		});
+
+		it('supports ignoreCase and normalize options', () => {
+			runPassTests(handler.currencyCode.bind(handler), [
+				{ input: 'usd', args: [{ ignoreCase: true }], output: 'USD' },
+				{ input: 'usd', args: [{ ignoreCase: true, normalize: false }] },
+			]);
+		});
+	});
+
+	describe('gtin', () => {
+		it('validates check digit and default allowed lengths', () => {
+			runPassTests(handler.gtin.bind(handler), [
+				{ input: '96385074' },
+				{ input: '036000291452' },
+				{ input: '4006381333931' },
+				{ input: '12345678901231' },
+			]);
+
+			runFailTests(handler.gtin.bind(handler), [
+				{ input: '4006381333932' },
+				{ input: '96385075' },
+			]);
+		});
+
+		it('supports lengths option', () => {
+			runPassTests(handler.gtin.bind(handler), [
+				{ input: '96385074', args: [{ lengths: [8] }] },
+				{ input: '4006381333931', args: [{ lengths: [13] }] },
+			]);
+
+			runFailTests(handler.gtin.bind(handler), [
+				{ input: '96385074', args: [{ lengths: [13] }] },
+				{ input: '4006381333931', args: [{ lengths: [8] }] },
+			]);
+		});
+
+		it('supports loose mode normalize and delimiter options', () => {
+			runPassTests(handler.gtin.bind(handler), [
+				{ input: '4 006381 333931', args: [{ mode: 'loose' }], output: '4006381333931' },
+				{ input: '4 006381 333931', args: [{ mode: 'loose', normalize: false }] },
+				{ input: '4 006381 333931', args: [{ mode: 'loose', normalizedDelim: '.' }], output: '4.006381.333931' },
+				{ input: '4~006381~333931', args: [{ mode: 'loose', acceptableDelims: ' ~' }], output: '4006381333931' },
+				{ input: '(4)(006381)(333931)', args: [{ mode: 'loose', stripDelims: '()' }], output: '4006381333931' },
+			]);
+
+			runFailTests(handler.gtin.bind(handler), [
+				{ input: '4 006381 333931' },
+				{ input: '4~006381~333931', args: [{ mode: 'loose' }] },
+				{ input: '(4)(006381)(333931)', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+	describe('hash', () => {
+		it('supports default and explicit algorithms', () => {
+			runPassTests(handler.hash.bind(handler), [
+				{ input: 'd41d8cd98f00b204e9800998ecf8427e' },
+				{ input: 'd41d8cd98f00b204e9800998ecf8427e', args: ['md5'] },
+				{ input: 'da39a3ee5e6b4b0d3255bfef95601890afd80709', args: ['sha1'] },
+				{ input: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', args: ['sha256'] },
+			]);
+
+			runFailTests(handler.hash.bind(handler), [
+				{ input: 'xyz', args: ['md5'] },
+				{ input: 'd41d8cd98f00b204e9800998ecf8427e', args: ['unknown'] },
+			]);
+		});
+	});
+
+	describe('imei', () => {
+		it('validates check digit and strict form', () => {
+			runPassTests(handler.imei.bind(handler), [
+				{ input: '490154203237518' },
+			]);
+
+			runFailTests(handler.imei.bind(handler), [
+				{ input: '490154203237519' },
+				{ input: '49.015420.323751.8' },
+			]);
+		});
+
+		it('supports loose mode normalize and delimiter options', () => {
+			runPassTests(handler.imei.bind(handler), [
+				{ input: '49.015420.323751.8', args: [{ mode: 'loose' }], output: '490154203237518' },
+				{ input: '49 015420 323751 8', args: [{ mode: 'loose', normalize: false }] },
+				{ input: '49 015420 323751 8', args: [{ mode: 'loose', normalizedDelim: '.' }], output: '49.015420.323751.8' },
+				{ input: '49~015420~323751~8', args: [{ mode: 'loose', acceptableDelims: ' ~' }], output: '490154203237518' },
+				{ input: '(49)(015420)(323751)(8)', args: [{ mode: 'loose', stripDelims: '()' }], output: '490154203237518' },
+			]);
+
+			runFailTests(handler.imei.bind(handler), [
+				{ input: '49~015420~323751~8', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+	it('luhn', () => {
+		runPassTests(handler.luhn.bind(handler), [
+			{ input: '79927398713' },
+			{ input: '4242424242424242' },
+			{ input: '0000000000000000' },
+		]);
+
+		runFailTests(handler.luhn.bind(handler), [
+			{ input: '79927398714' },
+			{ input: '4242424242424241' },
+			{ input: 'abc123' },
+		]);
+	});
+
+	describe('phone', () => {
+		it('validates strict default format and malformed inputs', () => {
+			runPassTests(handler.phone.bind(handler), [
+				{ input: '212-555-1234' },
+			]);
+
+			runFailTests(handler.phone.bind(handler), [
+				{ input: '2125551234' },
+				{ input: '(212)555-1234' },
+				{ input: '+44 20 7946 0958' },
+			]);
+		});
+
+		it('supports mode normalize and delimiter options', () => {
+			runPassTests(handler.phone.bind(handler), [
+				{ input: '2125551234', args: [{ mode: 'loose' }], output: '212-555-1234' },
+				{ input: '212 555 1234', args: [{ mode: 'loose', normalize: false }] },
+				{ input: '212 555 1234', args: [{ mode: 'loose', normalizedDelim: '.' }], output: '212.555.1234' },
+				{ input: '212~555~1234', args: [{ mode: 'loose', acceptableDelims: ' ~' }], output: '212-555-1234' },
+				{ input: '(212)5551234', args: [{ mode: 'loose', stripDelims: '()' }], output: '212-555-1234' },
+				{ input: '+1 (212) 555-1234', args: [{ mode: 'loose' }], output: '212-555-1234' },
+			]);
+
+			runFailTests(handler.phone.bind(handler), [
+				{ input: '212~555~1234', args: [{ mode: 'loose' }] },
+				{ input: '212-555-123', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+	describe('ssn', () => {
+		it('validates structural constraints in strict mode', () => {
+			runPassTests(handler.ssn.bind(handler), [
+				{ input: '123-45-6789' },
+			]);
+
+			runFailTests(handler.ssn.bind(handler), [
+				{ input: '000-45-6789' },
+				{ input: '666-45-6789' },
+				{ input: '900-45-6789' },
+				{ input: '123-00-6789' },
+				{ input: '123-45-0000' },
+			]);
+		});
+
+		it('supports loose mode normalize and delimiter options', () => {
+			runPassTests(handler.ssn.bind(handler), [
+				{ input: '123456789', args: [{ mode: 'loose' }], output: '123-45-6789' },
+				{ input: '123 45 6789', args: [{ mode: 'loose', normalize: false }] },
+				{ input: '123 45 6789', args: [{ mode: 'loose', normalizedDelim: '.' }], output: '123.45.6789' },
+				{ input: '123~45~6789', args: [{ mode: 'loose', acceptableDelims: ' ~' }], output: '123-45-6789' },
+				{ input: '(123)(45)(6789)', args: [{ mode: 'loose', stripDelims: '()' }], output: '123-45-6789' },
+			]);
+
+			runFailTests(handler.ssn.bind(handler), [
+				{ input: '123~45~6789', args: [{ mode: 'loose' }] },
+			]);
+		});
+	});
+
+	describe('state', () => {
+		it('validates strict case and rejects unknown values', () => {
+			runPassTests(handler.state.bind(handler), [
+				{ input: 'CA' },
+				{ input: 'NY' },
+			]);
+
+			runFailTests(handler.state.bind(handler), [
+				{ input: 'ca' },
+				{ input: 'XX' },
+				{ input: 'PR' },
+			]);
+		});
+
+		it('supports ignoreCase and normalize options', () => {
+			runPassTests(handler.state.bind(handler), [
+				{ input: 'ca', args: [{ ignoreCase: true }], output: 'CA' },
+				{ input: 'ny', args: [{ ignoreCase: true, normalize: false }] },
+			]);
+		});
+	});
+
+	describe('zip', () => {
+		it('validates strict base forms and zip4 modes', () => {
+			runPassTests(handler.zip.bind(handler), [
+				{ input: '12345-6789' },
+				{ input: '12345-6789', args: [{ zip4: 'required' }] },
+				{ input: '12345', args: [{ mode: 'loose', zip4: 'forbidden' }], output: '12345-' },
+			]);
+
+			runFailTests(handler.zip.bind(handler), [
+				{ input: '12345' },
+				{ input: '12345', args: [{ mode: 'loose', zip4: 'required' }] },
+				{ input: '12345-6789', args: [{ zip4: 'forbidden' }] },
+			]);
+		});
+
+		it('supports loose mode normalize and delimiter options', () => {
+			runPassTests(handler.zip.bind(handler), [
+				{ input: '123456789', args: [{ mode: 'loose' }], output: '12345-6789' },
+				{ input: '123456789', args: [{ mode: 'loose', normalize: false }] },
+				{ input: '123456789', args: [{ mode: 'loose', normalizedDelim: '.' }], output: '12345.6789' },
+				{ input: '12345~6789', args: [{ mode: 'loose', acceptableDelims: ' ~' }], output: '12345-6789' },
+				{ input: '(12345)(6789)', args: [{ mode: 'loose', stripDelims: '()' }], output: '12345-6789' },
+			]);
+
+			runFailTests(handler.zip.bind(handler), [
+				{ input: '12345~6789', args: [{ mode: 'loose' }] },
+				{ input: '00000-1234' },
+				{ input: '12345-0000' },
+			]);
+		});
+	});
+});
+
+
+
+
+
+
+describe('StringHandler validators numeric', () => {
+	let handler: StringHandler;
+
+	beforeEach(() => {
+		handler = new StringHandler();
+	});
+
+	describe('numeric', () => {
+		it('supports sign and alignment options', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '+12', args: [{ plus: 'required' }] },
+				{ input: '-12', args: [{ minus: 'required' }] },
+				{ input: '12+', args: [{ alignment: 'right', plus: 'required' }] },
+				{ input: '12-', args: [{ alignment: 'right', minus: 'required' }] },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '12', args: [{ plus: 'required' }] },
+				{ input: '+12', args: [{ plus: 'forbidden' }] },
+				{ input: '12', args: [{ minus: 'required' }] },
+				{ input: '-12', args: [{ minus: 'forbidden' }] },
+				{ input: '+12', args: [{ alignment: 'right', plus: 'required' }] },
+				{ input: '12+', args: [{ alignment: 'left', plus: 'required' }] },
+			]);
+		});
+
+		it('supports min max decimal and precision options', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '10', args: [{ min: 10 }] },
+				{ input: '10', args: [{ max: 10 }] },
+				{ input: '12.3', args: [{ decimal: 'required' }] },
+				{ input: '12', args: [{ decimal: 'forbidden' }] },
+				{ input: '12.34', args: [{ decimal: 'required', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: '12.345', args: [{ decimal: 'required', minPrecision: 2, maxPrecision: 3 }] },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '9', args: [{ min: 10 }] },
+				{ input: '11', args: [{ max: 10 }] },
+				{ input: '12', args: [{ decimal: 'required' }] },
+				{ input: '12.3', args: [{ decimal: 'forbidden' }] },
+				{ input: '12.3', args: [{ decimal: 'required', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: '12.3456', args: [{ decimal: 'required', minPrecision: 2, maxPrecision: 3 }] },
+			]);
+		});
+
+		it('supports delimiters symbols and loose spacing', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '1_234', args: [{ thousandsDelim: '_' }] },
+				{ input: '12,5', args: [{ decimalDelim: ',', decimal: 'required' }] },
+				{ input: 'USD12', args: [{ leadingSymbols: ['USD'] }] },
+				{ input: '12kg', args: [{ trailingSymbols: ['kg'] }] },
+				{ input: '+   USD12   kg', args: [{ leadingSymbols: ['USD'], trailingSymbols: ['kg'], plus: 'required', looseSpacing: true }], output: '+USD12kg' },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '1,234', args: [{ thousandsDelim: '_' }] },
+				{ input: '$12', args: [{ leadingSymbols: ['USD'] }] },
+				{ input: '12lb', args: [{ trailingSymbols: ['kg'] }] },
+				{ input: '+   USD12   kg', args: [{ leadingSymbols: ['USD'], trailingSymbols: ['kg'], plus: 'required', looseSpacing: false }] },
+			]);
+		});
+
+		it('supports leadingZero and trailingZero edge behavior', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '0.5', args: [{ decimal: 'required', leadingZero: 'required' }] },
+				{ input: '.5', args: [{ decimal: 'required', leadingZero: 'forbidden' }] },
+				{ input: '12.0', args: [{ decimal: 'required', trailingZero: 'required' }] },
+				{ input: '12.5', args: [{ decimal: 'required', trailingZero: 'forbidden' }] },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '.5', args: [{ decimal: 'required', leadingZero: 'required' }] },
+				{ input: '0.5', args: [{ decimal: 'required', leadingZero: 'forbidden' }] },
+				{ input: '12', args: [{ decimal: 'required', trailingZero: 'required' }] },
+				{ input: '12.0', args: [{ decimal: 'required', trailingZero: 'forbidden' }] },
+			]);
+		});
+
+		it('handles grouping and delimiter edge cases', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '1,234,567' },
+				{ input: '1234', args: [{ thousandsDelim: '' }] },
+				{ input: '1.234.567,89', args: [{ thousandsDelim: '.', decimalDelim: ',', decimal: 'required' }] },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '12,34' },
+				{ input: '1,234', args: [{ thousandsDelim: '' }] },
+				{ input: '1.234,56', args: [{ thousandsDelim: ',', decimalDelim: '.', decimal: 'required' }] },
+			]);
+		});
+
+		it('handles sign conflicts and signed bounds', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '-12', args: [{ minus: 'required', max: -10 }] },
+				{ input: '-12', args: [{ min: -20, max: -1 }] },
+				{ input: '12-', args: [{ alignment: 'right', minus: 'required', min: -20, max: -1 }] },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '+-12', args: [{ plus: 'required', minus: 'required' }] },
+				{ input: '-+', args: [{ alignment: 'right', plus: 'required', minus: 'required' }] },
+				{ input: '-12', args: [{ min: -10 }] },
+				{ input: '-12', args: [{ max: -20 }] },
+			]);
+		});
+
+		it('supports symbol arrays and precision interaction with optional decimal', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: '12', args: [{ leadingSymbols: [], trailingSymbols: [] }] },
+				{ input: 'EUR12kg', args: [{ leadingSymbols: ['USD', 'EUR'], trailingSymbols: ['kg', 'lb'] }] },
+				{ input: '12.34', args: [{ decimal: 'optional', minPrecision: 2, maxPrecision: 2 }] },
+
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: '12..3', args: [{ leadingSymbols: [], trailingSymbols: [] }] },
+				{ input: '12+', args: [{ leadingSymbols: [], trailingSymbols: [] }] },
+				{ input: 'GBP12kg', args: [{ leadingSymbols: ['USD', 'EUR'], trailingSymbols: ['kg', 'lb'] }] },
+				{ input: '12', args: [{ decimal: 'optional', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: '12.3', args: [{ decimal: 'optional', minPrecision: 2, maxPrecision: 2 }] },
+
+			]);
+		});
+
+		it('supports right-aligned signs with loose spacing around symbols', () => {
+			runPassTests(handler.numeric.bind(handler), [
+				{ input: 'USD12   +', args: [{ leadingSymbols: ['USD'], alignment: 'right', plus: 'required', looseSpacing: true }], output: 'USD12+' },
+				{ input: 'EUR12kg   -', args: [{ leadingSymbols: ['EUR'], trailingSymbols: ['kg'], alignment: 'right', minus: 'required', looseSpacing: true }], output: 'EUR12kg-' },
+			]);
+
+			runFailTests(handler.numeric.bind(handler), [
+				{ input: 'USD12   +', args: [{ leadingSymbols: ['USD'], alignment: 'right', plus: 'required', looseSpacing: false }] },
+				{ input: 'EUR12kg   -', args: [{ leadingSymbols: ['EUR'], trailingSymbols: ['kg'], alignment: 'right', minus: 'required', looseSpacing: false }] },
+			]);
+		});
+	});
+
+	describe('measurement', () => {
+		it('supports units and inherited numeric options', () => {
+			runPassTests(handler.measurement.bind(handler), [
+				{ input: '12cm' },
+				{ input: '12kg', args: [{ units: ['kg'] }] },
+				{ input: '+12cm', args: [{ plus: 'required' }] },
+				{ input: '12cm-', args: [{ alignment: 'right', minus: 'required' }] },
+				{ input: '12.30cm', args: [{ decimal: 'required', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: '1_234cm', args: [{ thousandsDelim: '_' }] },
+				{ input: '12,5cm', args: [{ decimalDelim: ',', decimal: 'required' }] },
+			]);
+
+			runFailTests(handler.measurement.bind(handler), [
+				{ input: '12kg' },
+				{ input: '12cm', args: [{ decimal: 'required' }] },
+				{ input: '9cm', args: [{ min: 10 }] },
+				{ input: '11cm', args: [{ max: 10 }] },
+			]);
+		});
+
+		it('supports symbol zero and loose spacing options with unit overrides', () => {
+			runPassTests(handler.measurement.bind(handler), [
+				{ input: '~12cm', args: [{ leadingSymbols: ['~'] }] },
+				{ input: '12kg', args: [{ units: ['cm'], trailingSymbols: ['kg'] }] },
+				{ input: '+  ~12  cm', args: [{ leadingSymbols: ['~'], plus: 'required', looseSpacing: true }], output: '+~12cm' },
+			]);
+
+			runFailTests(handler.measurement.bind(handler), [
+				{ input: '.5cm', args: [{ decimal: 'required', leadingZero: 'required' }] },
+				{ input: '0.5cm', args: [{ decimal: 'required', leadingZero: 'forbidden' }] },
+				{ input: '12.0cm', args: [{ decimal: 'required', trailingZero: 'forbidden' }] },
+				{ input: '+  ~12  cm', args: [{ leadingSymbols: ['~'], plus: 'required', looseSpacing: false }] },
+			]);
+		});
+	});
+
+	describe('money', () => {
+		it('supports parens symbols and sign options', () => {
+			runPassTests(handler.money.bind(handler), [
+				{ input: '$12' },
+				{ input: '(USD12)', args: [{ parens: 'required', leadingSymbols: ['USD'] }] },
+				{ input: 'USD12', args: [{ parens: 'optional', leadingSymbols: ['USD'] }] },
+				{ input: '(USD12)', args: [{ parens: 'optional', leadingSymbols: ['USD'] }] },
+				{ input: '+USD12', args: [{ plus: 'required', leadingSymbols: ['USD'] }] },
+				{ input: '-USD12', args: [{ minus: 'required', leadingSymbols: ['USD'] }] },
+			]);
+
+			runFailTests(handler.money.bind(handler), [
+				{ input: '12' },
+				{ input: 'USD12', args: [{ parens: 'required', leadingSymbols: ['USD'] }] },
+				{ input: '(USD12)', args: [{ parens: 'forbidden', leadingSymbols: ['USD'] }] },
+				{ input: '+USD12', args: [{ plus: 'forbidden', leadingSymbols: ['USD'] }] },
+				{ input: '-USD12', args: [{ minus: 'forbidden', leadingSymbols: ['USD'] }] },
+				{ input: '12+USD', args: [{ alignment: 'right', plus: 'required', leadingSymbols: ['USD'] }] },
+			]);
+		});
+
+		it('supports inherited numeric format options', () => {
+			runPassTests(handler.money.bind(handler), [
+				{ input: 'USD12.3', args: [{ leadingSymbols: ['USD'], decimal: 'required' }] },
+				{ input: 'USD1_234', args: [{ leadingSymbols: ['USD'], thousandsDelim: '_' }] },
+				{ input: 'USD12,5', args: [{ leadingSymbols: ['USD'], decimalDelim: ',', decimal: 'required' }] },
+				{ input: 'USD12.30', args: [{ leadingSymbols: ['USD'], decimal: 'required', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: 'USD12.0', args: [{ leadingSymbols: ['USD'], decimal: 'required', trailingZero: 'required' }] },
+			]);
+
+			runFailTests(handler.money.bind(handler), [
+				{ input: 'USD9', args: [{ leadingSymbols: ['USD'], min: 10 }] },
+				{ input: 'USD11', args: [{ leadingSymbols: ['USD'], max: 10 }] },
+				{ input: 'USD12', args: [{ leadingSymbols: ['USD'], decimal: 'required' }] },
+				{ input: 'USD12.3', args: [{ leadingSymbols: ['USD'], decimal: 'forbidden' }] },
+				{ input: 'USD1,234', args: [{ leadingSymbols: ['USD'], thousandsDelim: '_' }] },
+				{ input: 'USD12.3', args: [{ leadingSymbols: ['USD'], decimal: 'required', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: 'USD12.300', args: [{ leadingSymbols: ['USD'], decimal: 'required', minPrecision: 2, maxPrecision: 2 }] },
+				{ input: 'USD.5', args: [{ leadingSymbols: ['USD'], decimal: 'required', leadingZero: 'required' }] },
+				{ input: 'USD0.5', args: [{ leadingSymbols: ['USD'], decimal: 'required', leadingZero: 'forbidden' }] },
+				{ input: 'USD12', args: [{ leadingSymbols: ['USD'], decimal: 'required', trailingZero: 'required' }] },
+				{ input: 'USD12.0', args: [{ leadingSymbols: ['USD'], decimal: 'required', trailingZero: 'forbidden' }] },
+			]);
+		});
+
+		it('supports trailing symbols and loose spacing options', () => {
+			runPassTests(handler.money.bind(handler), [
+				{ input: '12USD', args: [{ leadingSymbols: [''], trailingSymbols: ['USD'] }] },
+				{ input: '+   USD12', args: [{ leadingSymbols: ['USD'], plus: 'required', looseSpacing: true }], output: '+USD12' },
+			]);
+
+			runFailTests(handler.money.bind(handler), [
+				{ input: '+   USD12', args: [{ leadingSymbols: ['USD'], plus: 'required', looseSpacing: false }] },
+			]);
+		});
+	});
+});
+
+
+describe('StringHandler mutators', () => {
+	let handler: StringHandler;
+
+	beforeEach(() => {
+		handler = new StringHandler();
+	});
+
+	it('base64Decode', () => {
+		runPassTests(handler.base64Decode.bind(handler), [
+			{ input: 'TWFu', output: 'Man' },
+			{ input: '', output: '' },
+			{ input: '8J+YgA==', output: '😀' },
+		]);
+	});
+
+	it('base64Encode', () => {
+		runPassTests(handler.base64Encode.bind(handler), [
+			{ input: 'Man', output: 'TWFu' },
+			{ input: '', output: '' },
+			{ input: '😀', output: '8J+YgA==' },
+		]);
+	});
+
+	it('collapseRepeats', () => {
+		runPassTests(handler.collapseRepeats.bind(handler), [
+			{ input: 'aaabbbcc', args: ['a'], output: 'abbbcc' },
+			{ input: 'aaabbbcc', args: [''], output: 'abc' },
+			{ input: '....', args: ['.'], output: '.' },
+			{ input: 'abba', args: ['a'] },
+		]);
+	});
+
+	it('collapseSpacing', () => {
+		runPassTests(handler.collapseSpacing.bind(handler), [
+			{ input: 'a\t  b\n\n c', output: 'a b c' },
+			{ input: '   a   ', output: ' a ' },
+			{ input: '', output: '' },
+		]);
+	});
+
+	it('escapeHtml', () => {
+		runPassTests(handler.escapeHtml.bind(handler), [
+			{ input: '&<>' + '"' + "'", output: '&amp;&lt;&gt;&quot;&#39;' },
+			{ input: 'safe text' },
+			{ input: '&amp;', output: '&amp;amp;' },
+		]);
+	});
+
+	it('hexDecode', () => {
+		runPassTests(handler.hexDecode.bind(handler), [
+			{ input: '4869', output: 'Hi' },
+			{ input: '414243', output: 'ABC' },
+			{ input: '', output: '' },
+		]);
+	});
+
+	it('hexEncode', () => {
+		runPassTests(handler.hexEncode.bind(handler), [
+			{ input: 'Hi', output: '4869' },
+			{ input: 'ABC', output: '414243' },
+			{ input: '', output: '' },
+		]);
+	});
+
+	it('normalizeLineBreaks', () => {
+		runPassTests(handler.normalizeLineBreaks.bind(handler), [
+			{ input: 'a\r\nb\rc\nd', output: 'a\nb\nc\nd' },
+			{ input: 'a\r\nb\rc\nd', args: ['|'], output: 'a|b|c|d' },
+			{ input: 'a\r\nb\rc\nd', args: ['\r\n'], output: 'a\r\nb\r\nc\r\nd' },
+		]);
+	});
+
+	it('normalizeUnicode', () => {
+		runPassTests(handler.normalizeUnicode.bind(handler), [
+			{ input: '\u0065\u0301', output: '\u00E9' },
+			{ input: '\u00E9', args: ['NFD'], output: '\u0065\u0301' },
+			{ input: '\u2460', args: ['NFKD'], output: '1' },
+		]);
+	});
+
+	it('padLeft', () => {
+		runPassTests(handler.padLeft.bind(handler), [
+			{ input: '7', args: [3, '0'], output: '007' },
+			{ input: 'abc', args: [2, '0'] },
+			{ input: '', args: [3, '.'], output: '...' },
+		]);
+	});
+
+	it('padRight', () => {
+		runPassTests(handler.padRight.bind(handler), [
+			{ input: '7', args: [3, '0'], output: '700' },
+			{ input: 'abc', args: [2, '0'] },
+			{ input: '', args: [3, '.'], output: '...' },
+		]);
+	});
+
+	it('slice', () => {
+		runPassTests(handler.slice.bind(handler), [
+			{ input: 'abcdef', args: [1, 4], output: 'bcd' },
+			{ input: 'abcdef', args: [-3, -1], output: 'de' },
+			{ input: 'abcdef', args: [3, 3], output: '' },
+		]);
+	});
+
+	it('sliceFirst', () => {
+		runPassTests(handler.sliceFirst.bind(handler), [
+			{ input: 'abcdef', output: 'a' },
+			{ input: 'abcdef', args: [3], output: 'abc' },
+			{ input: 'abcdef', args: [0], output: '' },
+			{ input: 'ab', args: [99], output: 'ab' },
+		]);
+	});
+
+	it('sliceLast', () => {
+		runPassTests(handler.sliceLast.bind(handler), [
+			{ input: 'abcdef', output: 'f' },
+			{ input: 'abcdef', args: [3], output: 'def' },
+			{ input: 'abcdef', args: [0] },
+			{ input: 'ab', args: [99], output: 'ab' },
+		]);
+	});
+
+	it('stripChars', () => {
+		runPassTests(handler.stripChars.bind(handler), [
+			{ input: 'a-b_c.d', args: ['-_.'], output: 'abcd' },
+			{ input: 'abc', args: [''] },
+			{ input: '[a](b)', args: ['[]()'], output: 'ab' },
+		]);
+	});
+
+	it('stripHtml', () => {
+		runPassTests(handler.stripHtml.bind(handler), [
+			{ input: '<p>Hello <b>World</b></p>', output: 'Hello World' },
+			{ input: '<div><span>x</span></div>', output: 'x' },
+			{ input: 'plain text' },
+		]);
+	});
+
+	it('stripWhitespace', () => {
+		runPassTests(handler.stripWhitespace.bind(handler), [
+			{ input: ' a\t b\n c ', output: 'abc' },
+			{ input: '\r\n\t', output: '' },
+			{ input: 'noSpaces' },
+		]);
+	});
+
+	it('toDelimited', () => {
+		runPassTests(handler.toDelimited.bind(handler), [
+			{
+				input: 'one_two-three',
+				args: [{
+					fromDelims: '_-',
+					toDelim: '.',
+					transformer1: (word: string): string => word.toUpperCase(),
+				}],
+				output: 'ONE.TWO.THREE'
+			},
+			{
+				input: 'one_two_three',
+				args: [{
+					fromDelims: '_',
+					toDelim: '-',
+					transformer1: (word: string): string => word.toLowerCase(),
+					transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+					transformerSwitchIndex: 1,
+				}],
+				output: 'one-Two-Three'
+			},
+			{
+				input: 'MiXeD',
+				args: [{
+					fromDelims: null,
+					toDelim: '',
+					transformer1: (word: string): string => word.toLowerCase(),
+					transformer2: (word: string): string => word.toUpperCase(),
+					transformerSwitchIndex: null,
+				}],
+				output: 'mixed'
+			},
+			{
+				input: '__a__b__',
+				args: [{
+					fromDelims: '_',
+					toDelim: ':',
+					transformer1: (word: string): string => word,
+				}],
+				output: 'a:b'
+			}
+		]);
+	});
+
+	it('toCamelCase', () => {
+		runPassTests(handler.toCamelCase.bind(handler), [
+			{ input: 'HELLO WORLD', output: 'helloWorld' },
+			{ input: 'hello_world_test', args: ['_'], output: 'helloWorldTest' },
+			{ input: 'one-two_three', args: ['_-'], output: 'oneTwoThree' },
+		]);
+	});
+
+	it('toKebabCase', () => {
+		runPassTests(handler.toKebabCase.bind(handler), [
+			{ input: 'Hello World', output: 'hello-world' },
+			{ input: 'One_Two_Three', args: ['_'], output: 'one-two-three' },
+			{ input: 'ONE--TWO', args: ['-'], output: 'one-two' },
+		]);
+	});
+
+	it('toPascalCase', () => {
+		runPassTests(handler.toPascalCase.bind(handler), [
+			{ input: 'hello world', output: 'HelloWorld' },
+			{ input: 'hello_world', args: ['_'], output: 'HelloWorld' },
+			{ input: 'multi-part-value', args: ['-'], output: 'MultiPartValue' },
+		]);
+	});
+
+	it('toSentenceCase', () => {
+		runPassTests(handler.toSentenceCase.bind(handler), [
+			{ input: 'HELLO WORLD TEST', output: 'Hello world test' },
+			{ input: 'hello_world_test', args: ['_'], output: 'Hello world test' },
+			{ input: 'ONE-TWO-THREE', args: ['-'], output: 'One two three' },
+		]);
+	});
+
+	it('toSnakeCase', () => {
+		runPassTests(handler.toSnakeCase.bind(handler), [
+			{ input: 'Hello World', output: 'hello_world' },
+			{ input: 'One-Two-Three', args: ['-'], output: 'one_two_three' },
+			{ input: 'A__B__C', args: ['_'], output: 'a_b_c' },
+		]);
+	});
+
+	it('toTitleCase', () => {
+		runPassTests(handler.toTitleCase.bind(handler), [
+			{ input: 'hello world test', output: 'Hello World Test' },
+			{ input: 'hello_world_test', args: ['_'], output: 'Hello World Test' },
+			{ input: 'ONE-TWO', args: ['-'], output: 'One Two' },
+		]);
+	});
+
+	it('toLowerCase', () => {
+		runPassTests(handler.toLowerCase.bind(handler), [
+			{ input: 'AbC', output: 'abc' },
+			{ input: '123!@#' },
+		]);
+	});
+
+	it('toUpperCase', () => {
+		runPassTests(handler.toUpperCase.bind(handler), [
+			{ input: 'AbC', output: 'ABC' },
+			{ input: '123!@#' },
+		]);
+	});
+
+	it('trim', () => {
+		runPassTests(handler.trim.bind(handler), [
+			{ input: ' \t abc \n', output: 'abc' },
+			{ input: '..abc..', args: ['.'], output: 'abc' },
+			{ input: '***abc***', args: ['*'], output: 'abc' },
+		]);
+	});
+
+	it('trimLeft', () => {
+		runPassTests(handler.trimLeft.bind(handler), [
+			{ input: ' \t abc ', output: 'abc ' },
+			{ input: '..abc..', args: ['.'], output: 'abc..' },
+			{ input: '***abc***', args: ['*'], output: 'abc***' },
+		]);
+	});
+
+	it('trimRight', () => {
+		runPassTests(handler.trimRight.bind(handler), [
+			{ input: ' abc \n\t ', output: ' abc' },
+			{ input: '..abc..', args: ['.'], output: '..abc' },
+			{ input: '***abc***', args: ['*'], output: '***abc' },
+		]);
+	});
+
+	it('urlEncode', () => {
+		runPassTests(handler.urlEncode.bind(handler), [
+			{ input: 'a b/c?d=e&f', output: 'a%20b%2Fc%3Fd%3De%26f' },
+			{ input: 'hello', output: 'hello' },
+			{ input: 'cafe\u00E9', output: 'cafe%C3%A9' },
+		]);
+	});
+
+	it('urlDecode', () => {
+		runPassTests(handler.urlDecode.bind(handler), [
+			{ input: 'a%20b%2Fc%3Fd%3De%26f', output: 'a b/c?d=e&f' },
+			{ input: 'hello', output: 'hello' },
+			{ input: 'cafe%C3%A9', output: 'cafe\u00E9' },
+		]);
+	});
+
+	it('urlDecode throws on malformed escapes', () => {
+		expect(() => handler.urlDecode('%E0%A4%A')).toThrow();
+	});
+});
+
+
+
+
+
+
+
+
+

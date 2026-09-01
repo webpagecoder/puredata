@@ -3,7 +3,7 @@
 import { BooleanHandler } from '../../../lib/fields/boolean/BooleanHandler.ts';
 import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
 
-describe('BooleanHandler validators', () => {
+describe('BooleanHandler overrides', () => {
 	let handler: BooleanHandler;
 
 	beforeEach(() => {

@@ -5,6 +5,88 @@ import { ArrayHandler } from '../../../lib/fields/array/ArrayHandler.ts';
 import { NumberChain } from '../../../lib/fields/number/NumberChain.ts';
 import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
 
+
+
+describe('ArrayHandler overrides', () => {
+	let handler: ArrayHandler;
+	let numChain: NumberChain;
+
+	beforeEach(() => {
+		handler = new ArrayHandler();
+		numChain = new NumberChain();
+	});
+
+	it('anyOf', () => {
+		runPassTests(handler.anyOf.bind(handler), [
+			{ input: [1, 2, 4, 3], args: [[77, 8, 4]] },
+			{ input: [1, { a: 1 }, 3], args: [[{ a: 1 }]] },
+			{ input: [1, 2, 3, 4], args: [[numChain.between(1, 4)]] },
+			{ input: [], args: [[]] },
+			{ input: [[1, 2], 3], args: [[[1, 2]]] },
+		]);
+
+		runFailTests(handler.anyOf.bind(handler), [
+			{ input: [1, { a: 2 }], args: [[{ a: 1 }]] },
+			{ input: [1, { a: 1 }], args: [[22]] },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]] },
+			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]] },
+			{ input: [], args: [[1]] },
+			{ input: [1, 2], args: [[3, 4]] },
+		]);
+	});
+
+	it('empty', () => {
+		runPassTests(handler.empty.bind(handler), [
+			{ input: [], output: [] },
+			{ input: new Array(), output: [] },
+			{ input: Array.from([]), output: [] },
+		]);
+
+		runFailTests(handler.empty.bind(handler), [
+			{ input: [1] },
+			{ input: [undefined] },
+			{ input: [null] }
+		]);
+	});
+	
+	it('noneOf', () => {
+		runPassTests(handler.noneOf.bind(handler), [
+			{ input: [1, 2, 3], args: [[4]] },
+			{ input: [1, 2, 3], args: [[0, 6]] },
+			{ input: [3, 4, 5], args: [[numChain.between(1, 2), numChain.between(6, 7)]] },
+			{ input: [], args: [[1]] },
+			{ input: [1, 2], args: [[]] },
+		]);
+
+		runFailTests(handler.noneOf.bind(handler), [
+			{ input: [1, { a: 1 }], args: [[{ a: 1 }]] },
+			{ input: [1, { a: 1 }], args: [[1]] },
+			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]] },
+			{ input: [3, 4, 5], args: [[numChain.between(3, 3)]] },
+			{ input: [2], args: [[2]] },
+			{ input: [{ x: 1 }], args: [[{ x: 1 }]] },
+		]);
+	});
+
+	it('notEmpty', () => {
+		runPassTests(handler.notEmpty.bind(handler), [
+			{ input: [1], output: [1] },
+			{ input: [0], output: [0] },
+			{ input: [null], output: [null] },
+		]);
+
+		runFailTests(handler.notEmpty.bind(handler), [
+			{ input: [] },
+			{ input: Array.from([]) },
+			{ input: new Array() }
+		]);
+	});
+});
+
+
+
+
+
 describe('ArrayHandler validators', () => {
 	let handler: ArrayHandler;
 	let numChain: NumberChain;
@@ -32,25 +114,6 @@ describe('ArrayHandler validators', () => {
 		]);
 	});
 
-	it('anyOf', () => {
-		runPassTests(handler.anyOf.bind(handler), [
-			{ input: [1, 2, 4, 3], args: [[77, 8, 4]] },
-			{ input: [1, { a: 1 }, 3], args: [[{ a: 1 }]] },
-			{ input: [1, 2, 3, 4], args: [[numChain.between(1, 4)]] },
-			{ input: [], args: [[]] },
-			{ input: [[1, 2], 3], args: [[[1, 2]]] },
-		]);
-
-		runFailTests(handler.anyOf.bind(handler), [
-			{ input: [1, { a: 2 }], args: [[{ a: 1 }]] },
-			{ input: [1, { a: 1 }], args: [[22]] },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[[2]]] },
-			{ input: [1, 2, 3, 4], args: [[numChain.between(0, 0)]] },
-			{ input: [], args: [[1]] },
-			{ input: [1, 2], args: [[3, 4]] },
-		]);
-	});
-
 	it('dimensions', () => {
 		runPassTests(handler.dimensions.bind(handler), [
 			{ input: [[1, 2], [3, 4]], args: [[2, 2]] },
@@ -65,20 +128,6 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 2], args: [[2, 2]] },
 			{ input: [], args: [[1]] },
 			{ input: [[1, 2], [3]], args: [[2, 2]] }
-		]);
-	});
-
-	it('empty', () => {
-		runPassTests(handler.empty.bind(handler), [
-			{ input: [], output: [] },
-			{ input: new Array(), output: [] },
-			{ input: Array.from([]), output: [] },
-		]);
-
-		runFailTests(handler.empty.bind(handler), [
-			{ input: [1] },
-			{ input: [undefined] },
-			{ input: [null] }
 		]);
 	});
 
@@ -158,39 +207,6 @@ describe('ArrayHandler validators', () => {
 			{ input: [1, 2, 3], args: [4] },
 			{ input: [], args: [2] },
 			{ input: [1], args: [2] }
-		]);
-	});
-
-	it('noneOf', () => {
-		runPassTests(handler.noneOf.bind(handler), [
-			{ input: [1, 2, 3], args: [[4]] },
-			{ input: [1, 2, 3], args: [[0, 6]] },
-			{ input: [3, 4, 5], args: [[numChain.between(1, 2), numChain.between(6, 7)]] },
-			{ input: [], args: [[1]] },
-			{ input: [1, 2], args: [[]] },
-		]);
-
-		runFailTests(handler.noneOf.bind(handler), [
-			{ input: [1, { a: 1 }], args: [[{ a: 1 }]] },
-			{ input: [1, { a: 1 }], args: [[1]] },
-			{ input: [1, { a: 1 }, [2, 3]], args: [[[2, 3]]] },
-			{ input: [3, 4, 5], args: [[numChain.between(3, 3)]] },
-			{ input: [2], args: [[2]] },
-			{ input: [{ x: 1 }], args: [[{ x: 1 }]] },
-		]);
-	});
-
-	it('notEmpty', () => {
-		runPassTests(handler.notEmpty.bind(handler), [
-			{ input: [1], output: [1] },
-			{ input: [0], output: [0] },
-			{ input: [null], output: [null] },
-		]);
-
-		runFailTests(handler.notEmpty.bind(handler), [
-			{ input: [] },
-			{ input: Array.from([]) },
-			{ input: new Array() }
 		]);
 	});
 

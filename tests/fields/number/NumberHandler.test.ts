@@ -4,6 +4,44 @@ import { NumberHandler } from '../../../lib/fields/number/NumberHandler.ts';
 import { runFailTests, runPassTests } from '../../helpers/runCases.ts';
 
 
+describe('ArrayHandler overrides', () => {
+	let handler: NumberHandler;
+
+	beforeEach(() => {
+		handler = new NumberHandler();
+	});
+
+	it('equals', () => {
+		runPassTests(handler.equals.bind(handler), [
+			{ input: 5, args: [5], output: 5 },
+			{ input: 0, args: [-0], output: 0 },
+			{ input: Infinity, args: [Infinity], output: Infinity },
+		]);
+
+		runFailTests(handler.equals.bind(handler), [
+			{ input: 5, args: ['5' as any] },
+			{ input: NaN, args: [NaN] },
+			{ input: 0, args: [false as any] }
+		]);
+	});
+	
+	it('notEquals', () => {
+		runPassTests(handler.notEquals.bind(handler), [
+			{ input: 5, args: [6], output: 5 },
+			{ input: 5, args: ['5' as any], output: 5 },
+			{ input: NaN, args: [NaN], output: NaN },
+		]);
+
+		runFailTests(handler.notEquals.bind(handler), [
+			{ input: 5, args: [5] },
+			{ input: 6, args: [6] },
+			{ input: 0, args: [-0] }
+		]);
+	});
+});
+
+
+
 describe('NumberHandler validators', () => {
 	let handler: NumberHandler;
 
@@ -54,20 +92,6 @@ describe('NumberHandler validators', () => {
 			{ input: 1.234, args: [{ minDecimalPlaces: undefined, maxDecimalPlaces: 2 }] },
 			{ input: 1.23, args: [{ minDecimalPlaces: 3, maxDecimalPlaces: 5 }] },
 			{ input: 1.23, args: [{ minDecimalPlaces: 0, maxDecimalPlaces: 1 }] }
-		]);
-	});
-
-	it('equals', () => {
-		runPassTests(handler.equals.bind(handler), [
-			{ input: 5, args: [5], output: 5 },
-			{ input: 0, args: [-0], output: 0 },
-			{ input: Infinity, args: [Infinity], output: Infinity },
-		]);
-
-		runFailTests(handler.equals.bind(handler), [
-			{ input: 5, args: ['5' as any] },
-			{ input: NaN, args: [NaN] },
-			{ input: 0, args: [false as any] }
 		]);
 	});
 
@@ -237,20 +261,6 @@ describe('NumberHandler validators', () => {
 			{ input: 0 },
 			{ input: 1 },
 			{ input: Number.MIN_VALUE }
-		]);
-	});
-
-	it('notEquals', () => {
-		runPassTests(handler.notEquals.bind(handler), [
-			{ input: 5, args: [6], output: 5 },
-			{ input: 5, args: ['5' as any], output: 5 },
-			{ input: NaN, args: [NaN], output: NaN },
-		]);
-
-		runFailTests(handler.notEquals.bind(handler), [
-			{ input: 5, args: [5] },
-			{ input: 6, args: [6] },
-			{ input: 0, args: [-0] }
 		]);
 	});
 

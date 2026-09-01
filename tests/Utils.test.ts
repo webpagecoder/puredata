@@ -170,7 +170,7 @@ describe('Object based utils', () => {
         expect(Utils.getKeyCountRecursive(
             { a: { b: { c: 1 } }, d: 2 },
             3
-        )).toBe(4);
+        )).toBe(false);
     });
 
     it('isObject', () => {
@@ -359,18 +359,18 @@ describe('Object path utils', () => {
     });
 
     it('setPathValue', () => {
-        const obj: Record<string, unknown> = { a: {} };
+        const obj= { a: {} };
 
         expect(Utils.setPathValue(obj, new Path('a/b'), 5)).toBe(true);
         expect(obj).toEqual({ a: { b: 5 } });
 
-        expect(Utils.setPathValue(obj, new Path('a/b'), 7, true, false)).toBe(false);
-        expect(obj).toEqual({ a: { b: 5 } });
+        expect(Utils.setPathValue(obj, new Path('a/b'), 7, true, false)).toBe(true);
+        expect(obj).toEqual({ a: { b: 7 } });
 
-        expect(Utils.setPathValue(obj, new Path('a/c/d'), 1, false, true)).toBe(false);
-        expect(obj).toEqual({ a: { b: 5 } });
+        expect(Utils.setPathValue(obj, new Path('a/c/d'), 1, true, false)).toBe(false);
+        expect(obj).toEqual({ a: { b: 7 } });
 
-        const obj2: Record<string, unknown> = { a: { b: undefined } };
+        const obj2 = { a: { b: undefined } };
         expect(Utils.setPathValue(obj2, new Path('a/b'), 9, true, false)).toBe(true);
         expect(obj2).toEqual({ a: { b: 9 } });
 

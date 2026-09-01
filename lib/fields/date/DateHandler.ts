@@ -21,7 +21,7 @@ class DateHandler extends AnyHandler {
 
 
     // ***********************************************
-    //              DATE CATEGORY VALIDATORS 
+    //              FORMAT VALIDATORS 
     // ***********************************************
 
     /**
@@ -105,7 +105,7 @@ class DateHandler extends AnyHandler {
 
 
     // ***********************************************
-    //              GLOBAL VALIDATORS 
+    //              VALIDATORS 
     // ***********************************************
 
 

@@ -167,6 +167,39 @@ describe('DateHandler parsers', () => {
 
 
 
+describe('DateHandler overrides', () => {
+	let handler: DateHandler;
+
+	beforeEach(() => {
+		handler = new DateHandler();
+		handler.configDateConverter(new Translation(DefaultCalendarText));
+	});
+
+	it('equals', () => {
+		runPassTests(handler.equals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-15')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-16')] },
+		]);
+
+		runFailTests(handler.equals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-17')] },
+		]);
+	});
+
+	it('notEquals', () => {
+		runPassTests(handler.notEquals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-17')] },
+		]);
+
+		runFailTests(handler.notEquals.bind(handler), [
+			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-15')] },
+			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-16')] },
+		]);
+	});
+
+});
 
 
 
@@ -226,18 +259,6 @@ describe('DateHandler validators', () => {
 		]);
 	});
 
-	it('equals', () => {
-		runPassTests(handler.equals.bind(handler), [
-			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-15')] },
-			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-16')] },
-		]);
-
-		runFailTests(handler.equals.bind(handler), [
-			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
-			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-17')] },
-		]);
-	});
-
 	it('leapYear', () => {
 		runPassTests(handler.leapYear.bind(handler), [
 			{ input: makeUtcDate('2024-01-15'), args: [] },
@@ -284,18 +305,6 @@ describe('DateHandler validators', () => {
 		runFailTests(handler.minAge.bind(handler), [
 			{ input: makeUtcDate('1982-01-15'), args: [54] },
 			{ input: makeUtcDate('2024-01-17T00:00:02Z'), args: [21] },
-		]);
-	});
-
-	it('notEquals', () => {
-		runPassTests(handler.notEquals.bind(handler), [
-			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-16')] },
-			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-17')] },
-		]);
-
-		runFailTests(handler.notEquals.bind(handler), [
-			{ input: makeUtcDate('2024-01-15'), args: [new Date('2024-01-15')] },
-			{ input: makeUtcDate('2024-01-16'), args: [new Date('2024-01-16')] },
 		]);
 	});
 
