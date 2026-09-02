@@ -412,19 +412,19 @@ class DateHandler extends AnyHandler {
     /**
      * Validates that the input date occurred within the last N days from the comparison date.
      * @param inputDate Date value being validated.
-     * @param daysDiff Maximum number of days difference allowed..
+     * @param numDays Maximum number of days difference allowed..
      * @param referenceDate Reference date used to compute elapsed days.
      * @returns Input date or error.
      */
-    public within(inputDate: UtcDate, daysDiff: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
+    public within(inputDate: UtcDate, numDays: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
         const actualDiff = (inputDate.globalDate.getTime() - parsedReferenceDate.globalDate.getTime()) / (1000 * 60 * 60 * 24);
-        return Math.abs(actualDiff) <= Math.abs(daysDiff)
+        return Math.abs(actualDiff) <= Math.abs(numDays)
             ? pass(inputDate)
-            : fail(inputDate, 'date/recent', { actualDiff, daysDiff });
+            : fail(inputDate, 'date/within', { actualDiff, daysDiff: numDays });
     }
 
 

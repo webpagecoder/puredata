@@ -506,7 +506,7 @@ class StringHandler extends AnyHandler {
     public notBlank(str: string): StringHandlerResult {
         return str.trim().length > 0
             ? pass(str)
-            : fail(str, 'string/blank');
+            : fail(str, 'string/notBlank');
     }
 
     /**

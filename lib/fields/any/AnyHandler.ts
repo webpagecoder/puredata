@@ -27,7 +27,7 @@ class AnyHandler {
                 return pass(value);
             }
         }
-        return fail(value, 'generic/anyOf', { allowedValues });
+        return fail(value, 'any/anyOf', { allowedValues });
     }
 
     /**
@@ -36,7 +36,7 @@ class AnyHandler {
      * @returns A passing result when the value is defined; otherwise a failing result.
      */
     public defined(value: unknown): HandlerResult {
-        return value !== undefined ? pass(value) : fail(value, 'generic/defined');
+        return value !== undefined ? pass(value) : fail(value, 'any/defined');
     }
 
     /**
@@ -48,7 +48,7 @@ class AnyHandler {
     public empty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
         return this.anyOf(value, empties).pass
             ? pass(value)
-            : fail(value, 'generic/empty');
+            : fail(value, 'any/empty');
     }
 
     /**
@@ -60,7 +60,7 @@ class AnyHandler {
     public equals(value: unknown, comparison: unknown): HandlerResult {
         return Utils.areEqual(value, comparison)
             ? pass(value)
-            : fail(value, 'generic/equals', { comparison });
+            : fail(value, 'any/equals', { comparison });
     }
 
     /**
@@ -69,7 +69,7 @@ class AnyHandler {
      * @returns A passing result for falsy values; otherwise a failing result.
      */
     public falsy(value: unknown): HandlerResult {
-        return value ? fail(value, 'generic/falsy') : pass(value);
+        return value ? fail(value, 'any/falsy') : pass(value);
     }
 
     /**
@@ -81,7 +81,7 @@ class AnyHandler {
     public instanceOf(value: unknown, constructor: CtorLike): HandlerResult {
         return value instanceof constructor
             ? pass(value)
-            : fail(value, 'generic/instanceOf', { constructor });
+            : fail(value, 'any/instanceOf', { constructor });
     }
 
     /**
@@ -93,7 +93,7 @@ class AnyHandler {
     public noneOf(value: unknown, forbiddenValues: unknown[] = []): HandlerResult {
         for (const forbidden of forbiddenValues) {
             if (Utils.areEqual(value, forbidden)) {
-                return fail(value, 'generic/noneOf', { forbiddenValues });
+                return fail(value, 'any/noneOf', { forbiddenValues });
             }
         }
         return pass(value);
@@ -108,7 +108,7 @@ class AnyHandler {
     public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
         return this.anyOf(value, empties).fail
             ? pass(value)
-            : fail(value, 'generic/notEmpty');
+            : fail(value, 'any/notEmpty');
     }
 
     /**
@@ -120,7 +120,7 @@ class AnyHandler {
     public notEquals(value: unknown, comparison: unknown): HandlerResult {
         return !Utils.areEqual(value, comparison)
             ? pass(value)
-            : fail(value, 'generic/notEquals', { comparison });
+            : fail(value, 'any/notEquals', { comparison });
     }
 
     /**
@@ -129,7 +129,7 @@ class AnyHandler {
      * @returns A passing result when the value is not null; otherwise a failing result.
      */
     public notNull(value: unknown): HandlerResult {
-        return value !== null ? pass(value) : fail(value, 'generic/notNull');
+        return value !== null ? pass(value) : fail(value, 'any/notNull');
     }
 
     /**
@@ -140,7 +140,7 @@ class AnyHandler {
     public notNullish(value: unknown): HandlerResult {
         return value !== null && value !== undefined
             ? pass(value)
-            : fail(value, 'generic/notNullish');
+            : fail(value, 'any/notNullish');
     }
 
     /**
@@ -149,7 +149,7 @@ class AnyHandler {
      * @returns A passing result when the value is null; otherwise a failing result.
      */
     public null(value: unknown): HandlerResult {
-        return value === null ? pass(value) : fail(value, 'generic/null');
+        return value === null ? pass(value) : fail(value, 'any/null');
     }
 
     /**
@@ -160,7 +160,7 @@ class AnyHandler {
     public nullish(value: unknown): HandlerResult {
         return value === null || value === undefined
             ? pass(value)
-            : fail(value, 'generic/nullish');
+            : fail(value, 'any/nullish');
     }
 
     /**
@@ -177,11 +177,11 @@ class AnyHandler {
         if (type) {
             return actualType === type
                 ? pass(value)
-                : fail(value, 'generic/primitive', { actualType });
+                : fail(value, 'any/primitive', { actualType });
         }
         return (primitives.indexOf(actualType as PrimitiveTypeName) > -1)
             ? pass(value)
-            : fail(value, 'generic/primitive', { actualType });
+            : fail(value, 'any/primitive', { actualType });
     }
 
     /**
@@ -190,7 +190,7 @@ class AnyHandler {
      * @returns A passing result for truthy values; otherwise a failing result.
      */
     public truthy(value: unknown): HandlerResult {
-        return value ? pass(value) : fail(value, 'generic/truthy');
+        return value ? pass(value) : fail(value, 'any/truthy');
     }
 
     /**
@@ -199,7 +199,7 @@ class AnyHandler {
      * @returns A passing result when the value is undefined; otherwise a failing result.
      */
     public undefined(value: unknown): HandlerResult {
-        return value === undefined ? pass(value) : fail(value, 'generic/undefined');
+        return value === undefined ? pass(value) : fail(value, 'any/undefined');
     }
 
 
