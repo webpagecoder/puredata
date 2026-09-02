@@ -4,11 +4,11 @@ import { BooleanHandler } from './BooleanHandler.ts';
 import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { BooleanProcessor } from './BooleanProcessor.ts';
 
-type BoolishPair = [truthy: unknown, falsy: unknown];
+export type BoolishPair = [truthy: unknown, falsy: unknown];
 
 export type BooleanChainProps = AnyChainProps<BooleanHandler> & {
-    allowBoolish: boolean;
     boolishPairs: BoolishPair[];
+    postConvert: boolean;
     transformer: (value: unknown) => unknown;
 };
 
@@ -20,36 +20,20 @@ class BooleanChain extends AnyChain<BooleanChainProps> {
         super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));
 
         const {
-            allowBoolish = false,
             boolishPairs = [],
-            transformer = x => x
+            postConvert = true,
+            transformer = x => typeof x === 'string' ? x.toLowerCase() : x
         } = args;
 
         const { props } = this;
-        props.allowBoolish = allowBoolish;
         props.boolishPairs = boolishPairs;
+        props.postConvert = postConvert;
         props.transformer = transformer;
     }
 
     public override createProcessor(): BooleanProcessor {
         return new BooleanProcessor({
             field: this,
-        });
-    }
-
-    // Configurators
-
-    /**
-     * Enables or disables boolish mode for accepting string/numeric boolean equivalents.
-     * @param {boolean} [boolish=true] - Whether to enable boolish parsing
-     * @returns {BooleanChain} Returns this chain for method chaining
-     * @example
-     * schema.boolean().propsBoolish(true) // Accepts 'yes', 'no', 1, 0, etc.
-     */
-    public configBoolish(allowBoolish: boolean = true, addBoolishPairs: BoolishPair[] = []): this {
-        return this.clone({
-            allowBoolish,
-            boolishPairs: [...(this.props.boolishPairs || []), ...addBoolishPairs]
         });
     }
 
@@ -64,9 +48,8 @@ class BooleanChain extends AnyChain<BooleanChainProps> {
      * // With boolish: accepts 'yes', 1, 'true', etc.
      */
     public truthy(): this {
-        return this.addStep('truthy', () => {
-            const { allowBoolish, boolishPairs = [] } = this.props;
-            return [allowBoolish ? boolishPairs.map(([truthy,]: [unknown, unknown]): unknown => truthy) : []];
+        return this.addHandlerStep('truthy', () => {
+            return [this.props.boolishPairs.map(([truthy,]) => truthy)];
         });
     }
 
@@ -79,9 +62,8 @@ class BooleanChain extends AnyChain<BooleanChainProps> {
      * // With boolish: accepts 'no', 0, 'false', etc.
      */
     public falsy(): this {
-        return this.addStep('falsy', () => {
-            const { allowBoolish, boolishPairs = [] } = this.props;
-            return [allowBoolish ? boolishPairs.map(([, falsy]: [unknown, unknown]): unknown => falsy) : []];
+        return this.addHandlerStep('falsy', () => {
+            return [this.props.boolishPairs.map(([, falsy]) => falsy)];
         });
     }
 
@@ -97,9 +79,8 @@ class BooleanChain extends AnyChain<BooleanChainProps> {
      * // With boolish: 'yes' -> 'no', 1 -> 0, etc.
      */
     public invert(): this {
-        return this.addStep('invert', () => {
-            const { allowBoolish, boolishPairs = [] } = this.props;
-            return [allowBoolish ? boolishPairs : []];
+        return this.addHandlerStep('invert', () => {
+            return [this.props.boolishPairs];
         });
     }
 

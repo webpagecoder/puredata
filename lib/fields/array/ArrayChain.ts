@@ -39,39 +39,39 @@ class ArrayChain extends AnyChain<ArrayChainProps> {
 
     // Configurators
 
-    /**
-     * Configures automatic removal of empty values from arrays during preprocessing
-     * @param {boolean} [removeEmpties=true] - Whether to remove empty values from arrays
-     * @param {Array} [addEmptyValues=[]] - Additional values to consider as empty beyond the default empty values
-     * @returns {ArrayChain} Returns this chain for method chaining
-     * @example
-     * // Configure to remove empty values including custom empties
-     * array([1, null, 2, '', 3, 'N/A']).propsRemoveEmpties(true, ['N/A'])
-     * // Results in: [1, 2, 3] after preprocessing
-     */
-    public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
-        return this.clone({
-            removeEmpties,
-            emptyValues: [...this.props.emptyValues, ...addEmptyValues],
-        });
-    }
+    // /**
+    //  * Configures automatic removal of empty values from arrays during preprocessing
+    //  * @param {boolean} [removeEmpties=true] - Whether to remove empty values from arrays
+    //  * @param {Array} [addEmptyValues=[]] - Additional values to consider as empty beyond the default empty values
+    //  * @returns {ArrayChain} Returns this chain for method chaining
+    //  * @example
+    //  * // Configure to remove empty values including custom empties
+    //  * array([1, null, 2, '', 3, 'N/A']).propsRemoveEmpties(true, ['N/A'])
+    //  * // Results in: [1, 2, 3] after preprocessing
+    //  */
+    // public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
+    //     return this.clone({
+    //         removeEmpties,
+    //         emptyValues: [...this.props.emptyValues, ...addEmptyValues],
+    //     });
+    // }
 
-    /**
-     * Configures automatic casting of single values to arrays during preprocessing
-     * @param {boolean} [castSingle=true] - Whether to cast single non-array values to arrays
-     * @returns {ArrayChain} Returns this chain for method chaining
-     * @example
-     * // Configure to cast single values to arrays
-     * array('hello').propsCastSingle(true)
-     * // Input 'hello' becomes ['hello'] during preprocessing
-     * 
-     * // Disable automatic casting
-     * array('hello').propsCastSingle(false)
-     * // Would fail validation since 'hello' is not an array
-     */
-    public configCastSingle(castSingle: boolean = true): this {
-        return this.clone({ castSingle } as any);
-    }
+    // /**
+    //  * Configures automatic casting of single values to arrays during preprocessing
+    //  * @param {boolean} [castSingle=true] - Whether to cast single non-array values to arrays
+    //  * @returns {ArrayChain} Returns this chain for method chaining
+    //  * @example
+    //  * // Configure to cast single values to arrays
+    //  * array('hello').propsCastSingle(true)
+    //  * // Input 'hello' becomes ['hello'] during preprocessing
+    //  * 
+    //  * // Disable automatic casting
+    //  * array('hello').propsCastSingle(false)
+    //  * // Would fail validation since 'hello' is not an array
+    //  */
+    // public configCastSingle(castSingle: boolean = true): this {
+    //     return this.clone({ castSingle } as any);
+    // }
 
     // Validators
 
@@ -88,7 +88,7 @@ class ArrayChain extends AnyChain<ArrayChainProps> {
             //todo: check this out...create
             ? new Path(pathStringOrComparator, this._pathDelims)
             : pathStringOrComparator;
-        return this.addStep('unique', [pathOrComparator]);
+        return this.addHandlerStep('unique', [pathOrComparator]);
     }
 
     // Transformers
@@ -104,7 +104,7 @@ class ArrayChain extends AnyChain<ArrayChainProps> {
         const path = typeof pathString === 'string'
             ? new Path(pathString, this._pathDelims)
             : null;
-        return this.addStep('group', [path]);
+        return this.addHandlerStep('group', [path]);
     }
 
     /**
@@ -119,7 +119,7 @@ class ArrayChain extends AnyChain<ArrayChainProps> {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             ? new Path(pathStringOrComparator, this._pathDelims)
             : pathStringOrComparator;
-        return this.addStep('removeDuplicates', [pathOrComparator]);
+        return this.addHandlerStep('removeDuplicates', [pathOrComparator]);
     }
 
     /**
@@ -129,7 +129,7 @@ class ArrayChain extends AnyChain<ArrayChainProps> {
      * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
      */
     public removeEmpties(): this {
-        return this.addStep('removeEmpties', () => {
+        return this.addHandlerStep('removeEmpties', () => {
             return [this.props.emptyValues];
         });
     }

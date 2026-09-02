@@ -64,10 +64,10 @@ class AnyChain<
         if (key in target) {
             return (target as Record<PropertyKey, unknown>)[key];
         }
-        return (...args: unknown[]): this => this.addStep(key as keyof P['chainHandler'], args);
+        return (...args: unknown[]): this => this.addHandlerStep(key as keyof P['chainHandler'], args);
     }
 
-    public addStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
+    public addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
         const chainHandler = this._props.chainHandler as P['chainHandler'];
         const fn = chainHandler[fnKey];
         if (typeof fn !== 'function') {
@@ -82,32 +82,7 @@ class AnyChain<
         } as C);
     }
 
-    // Validators
 
-    /**
-     * Validates that the value is considered empty per generic rules (null or undefined).
-     * @returns {AnyChain} Returns the chain for method chaining
-     * @example
-     * generic.empty()
-     */
-    public empty(): this {
-        return this.addStep('empty', () => {
-            return [this._props.emptyValues];
-        });
-    }
-
-
-    /**
-     * Validates that the value is not empty (i.e., not null or undefined).
-     * @returns {AnyChain} Returns the chain for method chaining
-     * @example
-     * generic.notEmpty()
-     */
-    public notEmpty(): this {
-        return this.addStep('notEmpty', () => {
-            return [this._props.emptyValues];
-        });
-    }
 
 
 }

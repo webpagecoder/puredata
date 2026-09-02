@@ -20,7 +20,7 @@ const GlobalConfig = Object.seal({
         removeEmpties: true,
     },
     boolean: {
-        allowBoolish: false,
+        allowBoolish: true,
         boolishPairs: [
             [1, 0],
             ['1', '0'],
@@ -28,7 +28,9 @@ const GlobalConfig = Object.seal({
             ['y', 'n'],
             ['true', 'false'],
             ['t', 'f'],
+            ['on', 'off'],
         ],
+        postConvert: true,
         transformer: (x: unknown) => typeof x === 'string' ? x.toLowerCase() : x, // Transforms boolish strings if needed
     },
     date: {

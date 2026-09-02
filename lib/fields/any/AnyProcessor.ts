@@ -42,12 +42,15 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
         return this;
     }
 
+    public postProcess(tracker: ValueTracker): void {}
+
     public override process(tracker: ValueTracker): void {
         this.preProcess(tracker);
         if (tracker.hasErrors()) {
             return;
         }
         this.executePipeline(tracker);
+        this.postProcess(tracker);
     }
 
     public resolveStepArgs(args: PipelineStep['args']): unknown[] {

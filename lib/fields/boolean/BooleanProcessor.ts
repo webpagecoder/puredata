@@ -8,34 +8,56 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { field } = this;
-        const { autoConvert, props: { boolishPairs, allowBoolish, transformer } } = field;
+        const { autoConvert, props: { boolishPairs, transformer } } = field;
 
-        let value = transformer(tracker.getValue());
+        const value = transformer(tracker.getValue());
 
         if (typeof value === 'boolean') {
             return;
         }
 
-        if (allowBoolish) {
-            for (const [truthy, falsy] of boolishPairs) {
-                if (truthy === value) {
-                    tracker.setValue(autoConvert ? true : value);
-                    return;
+        for (const [truthy, falsy] of boolishPairs) {
+            if (truthy === value) {
+                if(autoConvert) {
+                    tracker.setValue(true);
                 }
-                else if (falsy === value) {
-                    tracker.setValue(autoConvert ? false : value);
-                    return;
-                }
+                return;
             }
-        }
-
-        if(autoConvert) {
-            tracker.setValue(Boolean(value));
-            return;
+            else if (falsy === value) {
+                if(autoConvert) {
+                    tracker.setValue(false);
+                }
+                return;
+            }
         }
 
         tracker.addError('boolean/base');
     }
+
+    public override postProcess(tracker: ValueTracker): void {
+        const { field } = this;
+        const { props: { boolishPairs, postConvert } } = field;
+
+        const value = tracker.getValue();
+
+        if (typeof value === 'boolean') {
+            return;
+        }
+
+        if (postConvert) {
+            for (const [truthy, falsy] of boolishPairs) {
+                if (truthy === value) {
+                    tracker.setValue(true);
+                    return;
+                }
+                else if (falsy === value) {
+                    tracker.setValue(false);
+                    return;
+                }
+            }
+        }
+    }
+
 }
 
 export { BooleanProcessor };

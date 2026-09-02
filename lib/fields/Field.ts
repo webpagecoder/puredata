@@ -20,6 +20,10 @@ export type FieldCtorParams = {
     strip?: boolean;
 };
 
+export type Pretty<T> = {
+    [K in keyof T]: T[K];
+} & {}
+
 export type FieldCloneParams<P extends FieldProps = FieldProps> = Partial<FieldCtorParams & P>;
 
 abstract class Field<P extends FieldProps = FieldProps> {
@@ -89,7 +93,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
         return this._pathDelims;
     }
 
-    public clone(args: FieldCloneParams<P> = {}): this {
+    public clone(args: FieldCloneParams<FieldCtorParams & P> = {}): this {
 
         const {
             autoConvert = this._autoConvert,
@@ -147,7 +151,7 @@ abstract class Field<P extends FieldProps = FieldProps> {
     //               Declarative API Methods
     // *****************************************************
 
-    public config(config: P): this {
+    public config(config: Pretty<FieldCloneParams<FieldCtorParams & P>>): this {
         return this.clone(config);
     }
 

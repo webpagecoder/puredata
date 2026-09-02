@@ -92,7 +92,7 @@ class DateChain extends AnyChain<DateChainProps> {
         this.assertEmptyPipeline('human');
         return this
             .clone({ skipGenericParse: true, outputPrecision: null })
-            .addStep('human', [Object.assign({ dateOrder: this.props.dateOrder }, options)]);
+            .addHandlerStep('human', [Object.assign({ dateOrder: this.props.dateOrder }, options)]);
     }
 
     /**
@@ -108,7 +108,7 @@ class DateChain extends AnyChain<DateChainProps> {
      */
     public iso(options: IsoParseOptions = {}): this {
         this.assertEmptyPipeline('iso');
-        return this.clone({ skipGenericParse: true }).addStep('iso', [options]);
+        return this.clone({ skipGenericParse: true }).addHandlerStep('iso', [options]);
     }
 
     /**
@@ -122,7 +122,7 @@ class DateChain extends AnyChain<DateChainProps> {
      */
     public isoOrdinal(options: IsoOrdinalParseOptions = {}): this {
         this.assertEmptyPipeline('isoOrdinal');
-        return this.clone({ skipGenericParse: true }).addStep('isoOrdinal', [options]);
+        return this.clone({ skipGenericParse: true }).addHandlerStep('isoOrdinal', [options]);
     }
 
     /**
@@ -136,7 +136,7 @@ class DateChain extends AnyChain<DateChainProps> {
      */
     public isoWeek(options: IsoWeekParseOptions = {}): this {
         this.assertEmptyPipeline('isoWeek');
-        return this.clone({ skipGenericParse: true }).addStep('isoWeek', [options]);
+        return this.clone({ skipGenericParse: true }).addHandlerStep('isoWeek', [options]);
     }
 
     /**
@@ -150,7 +150,7 @@ class DateChain extends AnyChain<DateChainProps> {
      */
     public timestamp(isMilliseconds: boolean = true): this {
         this.assertEmptyPipeline('timestamp');
-        return this.clone({ skipGenericParse: true }).addStep('timestamp', [isMilliseconds]);
+        return this.clone({ skipGenericParse: true }).addHandlerStep('timestamp', [isMilliseconds]);
     }
 
     /**
@@ -162,7 +162,7 @@ class DateChain extends AnyChain<DateChainProps> {
     public today(): this {
         const now = new Date();
         now.setUTCMinutes(now.getUTCMinutes() + this.props.utcOffsetMinutes);
-        return this.addStep('today', [now]);
+        return this.addHandlerStep('today', [now]);
     }
 
     // Transformers
