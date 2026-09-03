@@ -1,10 +1,10 @@
 'use strict';
 
 import { NumberHandler } from './NumberHandler.ts';
-import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { NumberProcessor } from './NumberProcessor.ts';
 
-export type NumberChainProps = AnyChainProps<NumberHandler> & {
+export type NumberChainProps = AnyChainConfig<NumberHandler> & {
     autoConvert: boolean;
     ensureSafe: boolean;
     ensureFinite: boolean;

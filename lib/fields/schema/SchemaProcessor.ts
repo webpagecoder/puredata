@@ -12,7 +12,7 @@ import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
 import { Utils } from '../../Utils.ts';
 import { PathValueField } from './pathValue/PathValueField.ts';
 import { Field } from '../Field.ts';
-import { AnyChainProps } from '../any/AnyChain.ts';
+import { AnyChainConfig } from '../any/AnyChain.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
@@ -154,7 +154,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         if(processor instanceof AnyProcessor) {
-            for (const step of (field.props as AnyChainProps).pipeline || []) {
+            for (const step of (field.props as AnyChainConfig).pipeline || []) {
                 for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsOrCallback)) {
                     if (arg instanceof PathValueField) {
                         references.add(arg);

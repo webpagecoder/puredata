@@ -1,20 +1,20 @@
 'use strict';
 
 import { BooleanHandler } from './BooleanHandler.ts';
-import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { BooleanProcessor } from './BooleanProcessor.ts';
 
 export type BoolishPair = [truthy: unknown, falsy: unknown];
 
-export type BooleanChainProps = AnyChainProps<BooleanHandler> & {
+export type BooleanChainConfig = AnyChainConfig & {
     boolishPairs: BoolishPair[];
     postConvert: boolean;
     transformer: (value: unknown) => unknown;
 };
 
-export type BooleanChainCtorParams = AnyChainCtorParams<BooleanChainProps>;
+export type BooleanChainCtorParams = AnyChainCtorParams<BooleanChainConfig, BooleanHandler>;
 
-class BooleanChain extends AnyChain<BooleanChainProps> {
+class BooleanChain extends AnyChain<BooleanChainConfig, BooleanHandler> {
 
     public constructor(args: BooleanChainCtorParams) {
         super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));

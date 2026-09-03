@@ -1,10 +1,10 @@
 'use strict';
 
 import { StringHandler } from './StringHandler.ts';
-import { AnyChain, AnyChainCtorParams, AnyChainProps } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainCtorParams, AnyChainConfig } from '../any/AnyChain.ts';
 import { StringProcessor } from './StringProcessor.ts';
 
-export type StringChainProps = AnyChainProps<StringHandler> & {
+export type StringChainProps = AnyChainConfig<StringHandler> & {
     // General options
     maxLength: number | null;
     trim: boolean;
@@ -43,7 +43,7 @@ class StringChain extends AnyChain<StringChainProps> {
         props.stripDelims = stripDelims;
         props.normalize = normalize;
 
-        this._props.chainHandler.configMatchingDefaults({
+        this._config.chainHandler.configMatchingDefaults({
             ignoreCase,
             mode,
             normalize,

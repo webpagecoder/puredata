@@ -2,13 +2,13 @@
 'use strict';
 
 import { Path } from '../../../Path.ts';
-import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from '../../Field.ts';
+import { Field, FieldCloneParams, FieldCtorParams, FieldConfig } from '../../Field.ts';
 import { ValueField } from '../../value/ValueField.ts';
 import { ConditionalProcessor } from './ConditionalProcessor.ts';
 
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 
-export type ConditionalFieldProps = FieldProps & {
+export type ConditionalFieldProps = FieldConfig & {
     buildStage: number;
     comparisonMode?: 'equals' | 'notEquals';
     comparisonField: Field;

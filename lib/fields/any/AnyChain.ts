@@ -2,7 +2,7 @@
 
 import { AnyHandler } from './AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
-import { Field, FieldCloneParams, FieldCtorParams, FieldProps } from '../Field.ts';
+import { Field, FieldConfig } from '../Field.ts';
 
 type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
@@ -10,30 +10,32 @@ type Step = {
     argsOrCallback?: StepArgsOrCallback;
 };
 
-export type AnyChainProps<H extends AnyHandler = AnyHandler> =
-    FieldProps & {
+export type AnyChainConfig =
+    FieldConfig & {
         emptyValues: unknown[];
+    };
+
+export type AnyChainCtorParams<
+    C extends AnyChainConfig = AnyChainConfig,
+    H extends AnyHandler = AnyHandler
+> =
+    C & {
         chainHandler: H;
-        chainHandlerCtor: new () => H;
+        chainHandlerCtor?: new (...args: unknown[]) => H;
         pipeline: Step[];
     };
 
-export type AnyChainCtorParams<P extends AnyChainProps = AnyChainProps> =
-    FieldCtorParams & Partial<Omit<P, 'chainHandler'>> & {
-        chainHandlerCtor?: new () => P['chainHandler'];
-    };
-
-export type AnyChainCloneParams<P extends AnyChainProps = AnyChainProps> =
-    FieldCloneParams<P> & {
-        addStep?: Step;
-    };
-
 class AnyChain<
-    P extends AnyChainProps = AnyChainProps,
-    C extends AnyChainCloneParams<P> = AnyChainCloneParams<P>
-> extends Field<P> {
+    C extends AnyChainConfig = AnyChainConfig,
+    H extends AnyHandler = AnyHandler,
+    P extends AnyChainCtorParams<C, H> = AnyChainCtorParams<C, H>,
+> extends Field<C, P> {
 
-    public constructor(args: AnyChainCtorParams<P> = {}) {
+    protected _chainHandler: H;
+    protected _chainHandlerCtor: new (...args: unknown[]) => H;
+    protected _pipeline: Step[];
+
+    public constructor(args: Partial<P> = {}) {
         super(args);
 
         const {
@@ -42,21 +44,26 @@ class AnyChain<
             pipeline = [],
         } = args;
 
-        this._props = {
-            chainHandler: new chainHandlerCtor(),
-            chainHandlerCtor,
-            emptyValues,
-            pipeline
-        } as P;
+        this._config.emptyValues = emptyValues;
+
+        this._chainHandler = new chainHandlerCtor() as H;
+        this._chainHandlerCtor = chainHandlerCtor as new (...args: unknown[]) => H;
+        this._pipeline = pipeline;
 
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
-    public override clone(args: C = {} as C): this {
+    public override clone(args: Partial<C & P> = {}, addStep?: Step): this {
         const clone = super.clone(args);
-        if (args.addStep) {
-            clone._props.pipeline = [...clone._props.pipeline, args.addStep];
+        clone._chainHandler = new this._chainHandlerCtor() as H;
+        clone._chainHandlerCtor = this._chainHandlerCtor;
+        clone._config.emptyValues = this._config.emptyValues;
+        clone._pipeline = [...this._pipeline];
+
+        if (addStep) {
+            clone._pipeline.push(addStep);
         }
+
         return clone;
     }
 
@@ -64,26 +71,21 @@ class AnyChain<
         if (key in target) {
             return (target as Record<PropertyKey, unknown>)[key];
         }
-        return (...args: unknown[]): this => this.addHandlerStep(key as keyof P['chainHandler'], args);
+        return (...args: unknown[]): this => this.addHandlerStep(key as keyof H, args);
     }
 
-    public addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
-        const chainHandler = this._props.chainHandler as P['chainHandler'];
-        const fn = chainHandler[fnKey];
+    public addHandlerStep(fnKey: keyof H, argsOrCallback: StepArgsOrCallback = []): this {
+        const { _chainHandler } = this;
+        const fn = _chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }
 
-        return this.clone({
-            addStep: {
-                fn: (fn as Step['fn']).bind(chainHandler),
-                argsOrCallback,
-            },
-        } as C);
+        return this.clone({}, {
+            fn: fn.bind(_chainHandler),
+            argsOrCallback
+        });
     }
-
-
-
 
 }
 

@@ -1,9 +1,9 @@
 'use strict';
 
-import { Field, FieldProps, FieldCtorParams } from '../Field.ts';
+import { Field, FieldConfig, FieldCtorParams } from '../Field.ts';
 import { ValueProcessor } from './ValueProcessor.ts';
 
-export type ValueFieldProps = FieldProps & {
+export type ValueFieldProps = FieldConfig & {
     mutable: boolean;
     value: unknown;
 };

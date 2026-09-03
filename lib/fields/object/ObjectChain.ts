@@ -1,10 +1,10 @@
 'use strict';
 
 import { ObjectHandler } from './ObjectHandler.ts';
-import { AnyChain, AnyChainProps, AnyChainCtorParams, AnyChainCloneParams } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainConfig, AnyChainCtorParams, AnyChainCloneParams } from '../any/AnyChain.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
 
-export type ObjectChainProps = AnyChainProps<ObjectHandler> & {
+export type ObjectChainProps = AnyChainConfig<ObjectHandler> & {
     cloneObject: boolean;
     ensurePlain: boolean;
     maxDepth: number | null;

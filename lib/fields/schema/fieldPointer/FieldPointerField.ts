@@ -1,10 +1,10 @@
 'use strict';
 
 import { Path } from '../../../Path.ts';
-import { Field, FieldCtorParams, FieldProps } from '../../Field.ts';
+import { Field, FieldCtorParams, FieldConfig } from '../../Field.ts';
 import { FieldPointerProcessor } from './FieldPointerProcessor.ts';
 
-export type FieldPointerFieldProps = FieldProps & {
+export type FieldPointerFieldProps = FieldConfig & {
     fieldPath: Path;
     minDepth: number;
     maxDepth: number;

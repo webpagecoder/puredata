@@ -2,7 +2,7 @@
 
 import { Path } from '../../Path.ts';
 import { Translation, TranslationStringRecord } from '../../Translation.ts';
-import { AnyChain, AnyChainCtorParams, AnyChainProps } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainCtorParams, AnyChainConfig } from '../any/AnyChain.ts';
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
 import { DateProcessor } from './DateProcessor.ts';
@@ -10,7 +10,7 @@ import { DateProcessor } from './DateProcessor.ts';
 type OutputFormat = DateType | string;
 type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
 
-export type DateChainProps = AnyChainProps<DateHandler> & {
+export type DateChainConfig = AnyChainConfig & {
     calendarText: Translation;
     dateOrder: DateOrder;
     outputStringFormat: OutputFormat | null;
@@ -19,11 +19,11 @@ export type DateChainProps = AnyChainProps<DateHandler> & {
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
 };
-export type DateChainCtorParams = AnyChainCtorParams<DateChainProps> & {
+export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig,DateHandler> & {
     calendarText: Translation;
 };
 
-class DateChain extends AnyChain<DateChainProps> {
+class DateChain extends AnyChain<DateChainConfig> {
 
     constructor(args: DateChainCtorParams) {
         super(Object.assign({ chainHandlerCtor: DateHandler }, args));
@@ -47,7 +47,7 @@ class DateChain extends AnyChain<DateChainProps> {
         props.utcOffsetMinutes = utcOffsetMinutes;
         props.skipGenericParse = skipGenericParse;
 
-        this._props.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
+        this._config.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
     }
 
     public override createProcessor(): DateProcessor {
@@ -71,7 +71,7 @@ class DateChain extends AnyChain<DateChainProps> {
                 .toString({ self: '.', separator: '/', up: '..' });
             calendarOverrides[internalPathStyle] = overrides[pathStr];
         }
-        clone._props.calendarText.setText(calendarOverrides);
+        clone._config.calendarText.setText(calendarOverrides);
         return clone;
     }
 

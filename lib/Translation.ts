@@ -12,6 +12,10 @@ class Translation {
         this._translation = translation || {};
     }
 
+    public clone() {
+        return this.override();
+    }
+
     public override(overrides?: TranslationStringRecord | Translation): Translation {
         if (overrides instanceof Translation) {
             overrides._fallback = this;

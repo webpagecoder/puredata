@@ -1,10 +1,10 @@
 'use strict';
 
 import { Path } from '../../../Path.ts';
-import { Field, FieldCloneParams, FieldProps, FieldCtorParams } from '../../Field.ts';
+import { Field, FieldCloneParams, FieldConfig, FieldCtorParams } from '../../Field.ts';
 import { PathValueProcessor } from './PathValueProcessor.ts';
 
-export type PathValueFieldProps = FieldProps & {
+export type PathValueFieldProps = FieldConfig & {
     path: Path;
     defaultOrCallback: unknown | ((...args: unknown[]) => unknown);
 };

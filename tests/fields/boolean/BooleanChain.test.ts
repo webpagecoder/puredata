@@ -1,6 +1,6 @@
 'use strict';
 
-import { BooleanChain, BooleanChainProps } from '../../../lib/fields/boolean/BooleanChain.ts';
+import { BooleanChain, BooleanChainConfig } from '../../../lib/fields/boolean/BooleanChain.ts';
 
 describe('BooleanChain', () => {
 

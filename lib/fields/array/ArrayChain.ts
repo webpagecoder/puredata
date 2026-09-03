@@ -2,12 +2,12 @@
 
 import { ArrayHandler } from './ArrayHandler.ts';
 import { Path } from '../../Path.ts';
-import { AnyChain, AnyChainProps, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { ArrayProcessor } from './ArrayProcessor.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
-export type ArrayChainProps = AnyChainProps<ArrayHandler> & {
+export type ArrayChainProps = AnyChainConfig<ArrayHandler> & {
     castSingle: boolean;
     maxLength: number;
     removeEmpties: boolean;

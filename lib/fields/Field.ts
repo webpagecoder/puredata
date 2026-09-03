@@ -8,38 +8,27 @@ import { Path } from '../Path.ts';
 import { PathDelimTypes } from '../Path.ts';
 import { DefaultErrorText } from '../text/DefaultErrorText.ts';
 
-export type FieldProps = {};
-
-export type FieldCtorParams = {
-    autoConvert?: boolean;
-    defaultValue?: unknown;
-    errorMessages?: Translation;
-    label?: string;
-    pathDelims?: PathDelimTypes;
-    presence?: Presence;
-    strip?: boolean;
+export type FieldConfig = {
+    autoConvert: boolean;
+    defaultValue: unknown;
+    errorMessages: Translation;
+    label: string;
+    pathDelims: PathDelimTypes; //todo: put in chain only not sure...
+    presence: Presence;
+    strip: boolean;
 };
 
-export type Pretty<T> = {
-    [K in keyof T]: T[K];
-} & {}
+export type FieldCtorParams = Partial<FieldConfig>;
 
-export type FieldCloneParams<P extends FieldProps = FieldProps> = Partial<FieldCtorParams & P>;
-
-abstract class Field<P extends FieldProps = FieldProps> {
-
-    protected _autoConvert: boolean;
-    protected _defaultValue: unknown;
-    protected _errorMessages: Translation;
-    protected _label: string
-    protected _pathDelims: PathDelimTypes;
-    protected _presence: Presence;
-    protected _strip: boolean;
+abstract class Field<
+    C extends FieldConfig = FieldConfig,
+    P extends FieldCtorParams = FieldCtorParams
+> {
 
     protected _cachedProcessor: Processor | null;
-    protected _props: P;
+    protected _config: C;
 
-    public constructor(args: FieldCtorParams = {}) {
+    public constructor(args: Partial<P> = {}) {
         const {
             autoConvert = true,
             defaultValue = undefined,
@@ -50,32 +39,32 @@ abstract class Field<P extends FieldProps = FieldProps> {
             strip = false
         } = args;
 
-        this._autoConvert = autoConvert;
-        this._defaultValue = defaultValue;
-        this._errorMessages = errorMessages.override();
-        this._label = label;
-        this._pathDelims = pathDelims;
-        this._presence = presence;
-        this._strip = strip;
-
         this._cachedProcessor = null;
-        this._props = {} as P;
+        this._config = {
+            autoConvert,
+            defaultValue,
+            errorMessages: errorMessages.clone(),
+            label,
+            pathDelims,
+            presence,
+            strip
+        } as C;
     }
 
     public get defaultValue(): unknown {
-        return this._defaultValue;
+        return this._config.defaultValue;
     }
 
-    public get props(): P {
-        return this._props;
+    public get props(): C {
+        return this._config;
     }
 
     public get errorMessages(): Translation {
-        return this._errorMessages;
+        return this._config.errorMessages;
     }
 
     public get presence(): Presence {
-        return this._presence;
+        return this._config.presence;
     }
 
     public get processor(): Processor {
@@ -86,25 +75,27 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     public get autoConvert(): boolean {
-        return this._autoConvert;
+        return this._config.autoConvert;
     }
 
     public get pathDelims(): PathDelimTypes {
-        return this._pathDelims;
+        return this._config.pathDelims;
     }
 
-    public clone(args: FieldCloneParams<FieldCtorParams & P> = {}): this {
+    public clone(args: Partial<P & C> = {}): this {
 
+        const { _config } = this;
         const {
-            autoConvert = this._autoConvert,
-            defaultValue = this._defaultValue,
-            label = this._label,
-            errorMessages = this._errorMessages.override(),
-            pathDelims = this._pathDelims,
-            presence = this._presence
+            autoConvert = _config.autoConvert,
+            defaultValue = _config.defaultValue,
+            label = _config.label,
+            errorMessages = _config.errorMessages.override(),
+            pathDelims = _config.pathDelims,
+            presence = _config.presence
         } = args;
 
         const allProps = Object.assign(
+            this._config,
             {
                 autoConvert,
                 defaultValue,
@@ -113,11 +104,10 @@ abstract class Field<P extends FieldProps = FieldProps> {
                 pathDelims,
                 presence
             },
-            this._props,
-            args as Partial<P>
+            args
         );
 
-        return new (this.constructor as new (props?: FieldCtorParams) => this)(allProps);
+        return new (this.constructor as new (props?: Partial<P & C>) => this)(allProps);
     }
 
     public createProcessor(): Processor {
@@ -131,65 +121,65 @@ abstract class Field<P extends FieldProps = FieldProps> {
     }
 
     public isForbidden(): boolean {
-        return this._presence === 'forbidden';
+        return this._config.presence === 'forbidden';
     }
 
     public isOptional(): boolean {
-        return this._presence === 'optional';
+        return this._config.presence === 'optional';
     }
 
     public isRequired(): boolean {
-        return this._presence === 'required';
+        return this._config.presence === 'required';
     }
 
     public getLabel(): string {
-        return this._label;
+        return this._config.label;
     }
 
-    
+
     // *****************************************************
     //               Declarative API Methods
     // *****************************************************
 
-    public config(config: Pretty<FieldCloneParams<FieldCtorParams & P>>): this {
+    public config(config: Partial<FieldConfig>): this {
         return this.clone(config);
     }
 
     public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' } as FieldCloneParams<P>);
+        return this.clone({ defaultValue, presence: 'optional' } as Partial<P & C>);
     }
 
     public errorText(overrides: Record<string, string>): this {
         const clone = this.clone();
         const errorOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {
-            const internalPathStyle = new Path(pathStr, this._pathDelims)
+            const internalPathStyle = new Path(pathStr, this._config.pathDelims)
                 .toRelative()
                 .toString({ self: '.', separator: '/', up: '..' });
             errorOverrides[internalPathStyle] = overrides[pathStr];
         }
-        clone._errorMessages.setText(errorOverrides);
+        clone._config.errorMessages.setText(errorOverrides);
         return clone;
     }
 
     public forbidden(): this {
-        return this.clone({ presence: 'forbidden' } as FieldCloneParams<P>);
+        return this.clone({ presence: 'forbidden' } as Partial<P & C>);
     }
 
     public label(label: string): this {
-        return this.clone({ label } as FieldCloneParams<P>);
+        return this.clone({ label } as Partial<P & C>);
     }
 
     public optional(): this {
-        return this.clone({ presence: 'optional' } as FieldCloneParams<P>);
+        return this.clone({ presence: 'optional' } as Partial<P & C>);
     }
 
     public required(): this {
-        return this.clone({ presence: 'required' } as FieldCloneParams<P>);
+        return this.clone({ presence: 'required' } as Partial<P & C>);
     }
 
     public strip(strip: boolean = true): this {
-        return this.clone({ strip } as FieldCloneParams<P>);
+        return this.clone({ strip } as Partial<P & C>);
     }
 
 }
