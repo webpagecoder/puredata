@@ -4,7 +4,7 @@ import { Utils } from '../../Utils.ts';
 import { ArrayChain } from '../array/ArrayChain.ts';
 import { ArrayHandler } from '../array/ArrayHandler.ts';
 import { Field } from '../Field.ts';
-import { ObjectChain, ObjectChainCtorParams, ObjectChainProps } from '../object/ObjectChain.ts';
+import { ObjectChain, ObjectChainCtorParams, ObjectChainConfig } from '../object/ObjectChain.ts';
 import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { ValueField } from '../value/ValueField.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
@@ -15,7 +15,7 @@ export type SchemaObject = {
 
 export type SchemaMap = Map<string, Field>;
 
-export type SchemaChainProps = ObjectChainProps & {
+export type SchemaChainConfig = ObjectChainConfig & {
     arrayChain: ArrayChain;
     failOnFirstError: boolean;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
@@ -23,22 +23,20 @@ export type SchemaChainProps = ObjectChainProps & {
     stripUnknownKeys: boolean;
 };
 
-export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainProps> & {
+export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainConfig> & {
     schema?: SchemaObject;
 };
 
-export type SchemaChainCloneParams = Partial<SchemaChainCtorParams>;
+class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
-class SchemaChain extends ObjectChain<SchemaChainProps> {
-
-    constructor(args: SchemaChainCtorParams) {
+    constructor(args: Partial<SchemaChainCtorParams> = {}) {
         super(args);
 
         const {
             arrayChain = new ArrayChain({
                 chainHandlerCtor: ArrayHandler,
-                errorMessages: this._errorMessages,
-                pathDelims: this._pathDelims,
+                errorMessages: this._config.errorMessages,
+                pathDelims: this._config.pathDelims,
             }),
             failOnFirstError = false,
             renameKeysArgs = null,
@@ -56,7 +54,7 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
         props.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
     }
 
-    public override clone(args: SchemaChainCloneParams = {}): this {
+    public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
         const clone = super.clone(args);
         const {
             schema = null
@@ -89,12 +87,12 @@ class SchemaChain extends ObjectChain<SchemaChainProps> {
                 });
             }
             else if (Array.isArray(value)) {
-                field = this.props.arrayChain.tuple(value);
+                field = this._config.arrayChain.tuple(value);
             }
             else {
                 field = new ValueField({
-                    errorMessages: this._errorMessages,
-                    pathDelims: this._pathDelims,
+                    errorMessages: this._config.errorMessages,
+                    pathDelims: this._config.pathDelims,
                     value
                 });
             }

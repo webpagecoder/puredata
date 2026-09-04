@@ -71,7 +71,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     or(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this.props;
+        const { buildStage, conditionalChain } = this._config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "or" in condition chain');
         }
@@ -81,7 +81,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     and(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this.props;
+        const { buildStage, conditionalChain } = this._config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "and" in condition chain');
         }
@@ -91,14 +91,14 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     then(thenResult: unknown | Field) {
-        if (this.props.buildStage !== 0) {
+        if (this._config.buildStage !== 0) {
             throw new Error('Illegal placement of "then" in condition chain');
         }
         return this.clone({
             thenField: thenResult instanceof Field
                 ? thenResult
                 : new ValueField({ 
-                    errorMessages: this._errorMessages, 
+                    errorMessages: this._config.errorMessages, 
                     value: thenResult 
                 }),
             buildStage: 1
@@ -106,14 +106,14 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     otherwise(otherwiseResult: unknown | Field) {
-        if (this.props.buildStage !== 1) {
+        if (this._config.buildStage !== 1) {
             throw new Error('Illegal placement of "otherwise" in condition chain');
         }
         return this.clone({
             otherwiseField: otherwiseResult instanceof Field
                 ? otherwiseResult
                 : new ValueField({ 
-                    errorMessages: this._errorMessages, 
+                    errorMessages: this._config.errorMessages, 
                     value: otherwiseResult 
                 }),
             buildStage: 2

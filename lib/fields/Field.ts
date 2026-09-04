@@ -8,6 +8,7 @@ import { Path } from '../Path.ts';
 import { PathDelimTypes } from '../Path.ts';
 import { DefaultErrorText } from '../text/DefaultErrorText.ts';
 
+
 export type FieldConfig = {
     autoConvert: boolean;
     defaultValue: unknown;
@@ -18,15 +19,15 @@ export type FieldConfig = {
     strip: boolean;
 };
 
-export type FieldCtorParams = Partial<FieldConfig>;
+export type FieldCtorParams<C extends FieldConfig = FieldConfig> = Partial<C>;
 
-abstract class Field<
-    C extends FieldConfig = FieldConfig,
-    P extends FieldCtorParams = FieldCtorParams
-> {
+export type ConfigFromParams<P extends FieldCtorParams> =
+    P extends FieldCtorParams<infer C> ? C : never;
+
+abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
     protected _cachedProcessor: Processor | null;
-    protected _config: C;
+    protected _config: ConfigFromParams<P>;
 
     public constructor(args: Partial<P> = {}) {
         const {
@@ -48,14 +49,14 @@ abstract class Field<
             pathDelims,
             presence,
             strip
-        } as C;
+        } as ConfigFromParams<P>;
     }
 
     public get defaultValue(): unknown {
         return this._config.defaultValue;
     }
 
-    public get props(): C {
+    public get props(): ConfigFromParams<P> {
         return this._config;
     }
 
@@ -82,7 +83,7 @@ abstract class Field<
         return this._config.pathDelims;
     }
 
-    public clone(args: Partial<P & C> = {}): this {
+    public clone(args: Partial<P> = {}): this {
 
         const { _config } = this;
         const {
@@ -107,7 +108,7 @@ abstract class Field<
             args
         );
 
-        return new (this.constructor as new (props?: Partial<P & C>) => this)(allProps);
+        return new (this.constructor as new (props?: Partial<P>) => this)(allProps);
     }
 
     public createProcessor(): Processor {
@@ -141,12 +142,12 @@ abstract class Field<
     //               Declarative API Methods
     // *****************************************************
 
-    public config(config: Partial<FieldConfig>): this {
-        return this.clone(config);
+    public config(config: Partial<ConfigFromParams<P>>): this {
+        return this.clone(config as Partial<P>);
     }
 
     public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' } as Partial<P & C>);
+        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
     }
 
     public errorText(overrides: Record<string, string>): this {
@@ -163,23 +164,23 @@ abstract class Field<
     }
 
     public forbidden(): this {
-        return this.clone({ presence: 'forbidden' } as Partial<P & C>);
+        return this.clone({ presence: 'forbidden' } as Partial<P>);
     }
 
     public label(label: string): this {
-        return this.clone({ label } as Partial<P & C>);
+        return this.clone({ label } as Partial<P>);
     }
 
     public optional(): this {
-        return this.clone({ presence: 'optional' } as Partial<P & C>);
+        return this.clone({ presence: 'optional' } as Partial<P>);
     }
 
     public required(): this {
-        return this.clone({ presence: 'required' } as Partial<P & C>);
+        return this.clone({ presence: 'required' } as Partial<P>);
     }
 
     public strip(strip: boolean = true): this {
-        return this.clone({ strip } as Partial<P & C>);
+        return this.clone({ strip } as Partial<P>);
     }
 
 }

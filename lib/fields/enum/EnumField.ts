@@ -1,22 +1,19 @@
 'use strict';
 
-import { Field, FieldCloneParams, FieldConfig, FieldCtorParams } from '../Field.ts';
+import { Field, FieldConfig, FieldCtorParams } from '../Field.ts';
 import { EnumProcessor } from './EnumProcessor.ts';
 
 export type EnumStructure = unknown[] | Record<string, unknown>;
 
-export type EnumFieldProps = FieldConfig & {
+export type EnumFieldConfig = FieldConfig & {
     structure: EnumStructure;
-    isArray: boolean;
 };
 
-export type EnumFieldCtorParams = FieldCtorParams
-    & Partial<Omit<EnumFieldProps, 'isArray'>>;
+export type EnumFieldCtorParams = FieldCtorParams<EnumFieldConfig>;
 
-export type EnumFieldCloneParams =
-    FieldCloneParams<Omit<EnumFieldProps, 'isArray'>>;
+class EnumField extends Field<EnumFieldConfig> {
 
-class EnumField extends Field<EnumFieldProps> {
+    protected _isArray: boolean;
 
     constructor(args: EnumFieldCtorParams) {
         super(args);
@@ -24,14 +21,15 @@ class EnumField extends Field<EnumFieldProps> {
             structure = [],
         } = args;
 
+        this._isArray = Array.isArray(structure);
+
         const { props } = this;
         props.structure = structure;
-        props.isArray = Array.isArray(structure);
     }
 
-    public override clone(args: EnumFieldCloneParams = {}): this {
+    public override clone(args: Partial<EnumFieldCtorParams> = {}): this {
         const clone = super.clone(args);
-        clone.props.isArray = Array.isArray(clone.props.structure);
+        clone._isArray = Array.isArray(clone.props.structure);
         return clone;
     }
 

@@ -1,23 +1,23 @@
 'use strict';
 
 import { ObjectHandler } from './ObjectHandler.ts';
-import { AnyChain, AnyChainConfig, AnyChainCtorParams, AnyChainCloneParams } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
 
-export type ObjectChainProps = AnyChainConfig<ObjectHandler> & {
+export type ObjectChainConfig = AnyChainConfig & {
     cloneObject: boolean;
     ensurePlain: boolean;
     maxDepth: number | null;
     maxKeyCount: number | null;
 };
 
-export type ObjectChainCtorParams<C extends ObjectChainProps =
-    ObjectChainProps> = AnyChainCtorParams<C>;
+export type ObjectChainCtorParams<C extends ObjectChainConfig = ObjectChainConfig> = 
+    AnyChainCtorParams<C, ObjectHandler>;
 
-class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends AnyChain<C> {
+class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> extends AnyChain<P> {
 
-    constructor(args: ObjectChainCtorParams<C>) {
-        super(Object.assign({ chainHandlerCtor: ObjectHandler }, args));
+    constructor(args: Partial<P> = {}) {
+        super(args);
 
         const {
             cloneObject = false,
@@ -48,8 +48,8 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends AnyChai
      * object.removeEmpties() // Removes keys with falsy or empty values
      */
     public removeEmpties(): this {
-        return this.clone({ cloneObject: true } as AnyChainCloneParams<C>).addHandlerStep('removeEmpties', () => {
-            return [this.props.emptyValues];
+        return this.clone({ cloneObject: true } as Partial<P>).addHandlerStep('removeEmpties', () => {
+            return [this._config.emptyValues];
         });
     }
 
@@ -60,8 +60,8 @@ class ObjectChain<C extends ObjectChainProps = ObjectChainProps> extends AnyChai
      * object.removeEmptiesRecursive() // Deep clean of empty values in nested objects
      */
     public removeEmptiesRecursive(): this {
-        return this.clone({ cloneObject: true } as AnyChainCloneParams<C>).addHandlerStep('removeEmptiesRecursive', () => {
-            return [this.props.emptyValues];
+        return this.clone({ cloneObject: true } as Partial<P>).addHandlerStep('removeEmptiesRecursive', () => {
+            return [this._config.emptyValues];
         });
     }
 

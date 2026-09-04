@@ -4,7 +4,7 @@ import { StringHandler } from './StringHandler.ts';
 import { AnyChain, AnyChainCtorParams, AnyChainConfig } from '../any/AnyChain.ts';
 import { StringProcessor } from './StringProcessor.ts';
 
-export type StringChainProps = AnyChainConfig<StringHandler> & {
+export type StringChainConfig = AnyChainConfig & {
     // General options
     maxLength: number | null;
     trim: boolean;
@@ -17,11 +17,11 @@ export type StringChainProps = AnyChainConfig<StringHandler> & {
     stripDelims: string;
 };
 
-export type StringChainCtorParams = AnyChainCtorParams<StringChainProps>;
+export type StringChainCtorParams = AnyChainCtorParams<StringChainConfig, StringHandler>;
 
-class StringChain extends AnyChain<StringChainProps> {
+class StringChain extends AnyChain<StringChainCtorParams> {
     constructor(args: StringChainCtorParams) {
-        super(Object.assign({ chainHandlerCtor: StringHandler }, args));
+        super(args);
 
         const {
             maxLength = null,

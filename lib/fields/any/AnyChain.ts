@@ -25,14 +25,10 @@ export type AnyChainCtorParams<
         pipeline: Step[];
     };
 
-class AnyChain<
-    C extends AnyChainConfig = AnyChainConfig,
-    H extends AnyHandler = AnyHandler,
-    P extends AnyChainCtorParams<C, H> = AnyChainCtorParams<C, H>,
-> extends Field<C, P> {
+class AnyChain<P extends AnyChainCtorParams> extends Field<P> {
 
-    protected _chainHandler: H;
-    protected _chainHandlerCtor: new (...args: unknown[]) => H;
+    protected _chainHandler: P['chainHandler'];
+    protected _chainHandlerCtor: new (...args: unknown[]) => P['chainHandler'];
     protected _pipeline: Step[];
 
     public constructor(args: Partial<P> = {}) {
@@ -46,16 +42,16 @@ class AnyChain<
 
         this._config.emptyValues = emptyValues;
 
-        this._chainHandler = new chainHandlerCtor() as H;
-        this._chainHandlerCtor = chainHandlerCtor as new (...args: unknown[]) => H;
+        this._chainHandler = new chainHandlerCtor() as P['chainHandler'];
+        this._chainHandlerCtor = chainHandlerCtor as new (...args: unknown[]) => P['chainHandler'];
         this._pipeline = pipeline;
 
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
-    public override clone(args: Partial<C & P> = {}, addStep?: Step): this {
+    public override clone(args: Partial<P> = {}, addStep?: Step): this {
         const clone = super.clone(args);
-        clone._chainHandler = new this._chainHandlerCtor() as H;
+        clone._chainHandler = new this._chainHandlerCtor() as P['chainHandler'];
         clone._chainHandlerCtor = this._chainHandlerCtor;
         clone._config.emptyValues = this._config.emptyValues;
         clone._pipeline = [...this._pipeline];
@@ -71,10 +67,10 @@ class AnyChain<
         if (key in target) {
             return (target as Record<PropertyKey, unknown>)[key];
         }
-        return (...args: unknown[]): this => this.addHandlerStep(key as keyof H, args);
+        return (...args: unknown[]): this => this.addHandlerStep(key as keyof P['chainHandler'], args);
     }
 
-    public addHandlerStep(fnKey: keyof H, argsOrCallback: StepArgsOrCallback = []): this {
+    public addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
         const { _chainHandler } = this;
         const fn = _chainHandler[fnKey];
         if (typeof fn !== 'function') {

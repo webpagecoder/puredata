@@ -1,6 +1,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
+import { DefaultCalendarText } from '../../text/DefaultCalendarText.ts';
 import { Translation, TranslationStringRecord } from '../../Translation.ts';
 import { AnyChain, AnyChainCtorParams, AnyChainConfig } from '../any/AnyChain.ts';
 import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
@@ -19,17 +20,16 @@ export type DateChainConfig = AnyChainConfig & {
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
 };
-export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig,DateHandler> & {
-    calendarText: Translation;
-};
 
-class DateChain extends AnyChain<DateChainConfig> {
+export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig,DateHandler>;
 
-    constructor(args: DateChainCtorParams) {
-        super(Object.assign({ chainHandlerCtor: DateHandler }, args));
+class DateChain extends AnyChain<DateChainCtorParams> {
+
+    constructor(args: Partial<DateChainCtorParams> = {}) {
+        super(args);
 
         const {
-            calendarText,
+            calendarText = new Translation(DefaultCalendarText),
             dateOrder = 'MDY',
             outputStringFormat = null,
             outputPrecision = null,
@@ -57,7 +57,7 @@ class DateChain extends AnyChain<DateChainConfig> {
     }
 
     public assertEmptyPipeline(dateSubType: string): void {
-        if (this.props.pipeline.length > 0) {
+        if (this._config.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
     }
@@ -66,7 +66,7 @@ class DateChain extends AnyChain<DateChainConfig> {
         const clone = this.clone();
         const calendarOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {
-            const internalPathStyle = new Path(pathStr, this._pathDelims)
+            const internalPathStyle = new Path(pathStr, this._config.pathDelims)
                 .toRelative()
                 .toString({ self: '.', separator: '/', up: '..' });
             calendarOverrides[internalPathStyle] = overrides[pathStr];
@@ -92,7 +92,7 @@ class DateChain extends AnyChain<DateChainConfig> {
         this.assertEmptyPipeline('human');
         return this
             .clone({ skipGenericParse: true, outputPrecision: null })
-            .addHandlerStep('human', [Object.assign({ dateOrder: this.props.dateOrder }, options)]);
+            .addHandlerStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
     }
 
     /**
@@ -161,7 +161,7 @@ class DateChain extends AnyChain<DateChainConfig> {
      */
     public today(): this {
         const now = new Date();
-        now.setUTCMinutes(now.getUTCMinutes() + this.props.utcOffsetMinutes);
+        now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
         return this.addHandlerStep('today', [now]);
     }
 

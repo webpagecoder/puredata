@@ -14,10 +14,10 @@ export type BooleanChainConfig = AnyChainConfig & {
 
 export type BooleanChainCtorParams = AnyChainCtorParams<BooleanChainConfig, BooleanHandler>;
 
-class BooleanChain extends AnyChain<BooleanChainConfig, BooleanHandler> {
+class BooleanChain extends AnyChain<BooleanChainCtorParams> {
 
-    public constructor(args: BooleanChainCtorParams) {
-        super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));
+    public constructor(args: Partial<BooleanChainCtorParams> = {}) {
+        super(args);
 
         const {
             boolishPairs = [],
@@ -49,7 +49,7 @@ class BooleanChain extends AnyChain<BooleanChainConfig, BooleanHandler> {
      */
     public truthy(): this {
         return this.addHandlerStep('truthy', () => {
-            return [this.props.boolishPairs.map(([truthy,]) => truthy)];
+            return [this._config.boolishPairs.map(([truthy,]) => truthy)];
         });
     }
 
@@ -63,7 +63,7 @@ class BooleanChain extends AnyChain<BooleanChainConfig, BooleanHandler> {
      */
     public falsy(): this {
         return this.addHandlerStep('falsy', () => {
-            return [this.props.boolishPairs.map(([, falsy]) => falsy)];
+            return [this._config.boolishPairs.map(([, falsy]) => falsy)];
         });
     }
 
@@ -80,7 +80,7 @@ class BooleanChain extends AnyChain<BooleanChainConfig, BooleanHandler> {
      */
     public invert(): this {
         return this.addHandlerStep('invert', () => {
-            return [this.props.boolishPairs];
+            return [this._config.boolishPairs];
         });
     }
 

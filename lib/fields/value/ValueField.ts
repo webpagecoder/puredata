@@ -3,17 +3,16 @@
 import { Field, FieldConfig, FieldCtorParams } from '../Field.ts';
 import { ValueProcessor } from './ValueProcessor.ts';
 
-export type ValueFieldProps = FieldConfig & {
+export type ValueFieldConfig = FieldConfig & {
     mutable: boolean;
     value: unknown;
 };
 
-export type ValueFieldCtorParams = FieldCtorParams
-    & Partial<ValueFieldProps>;
+export type ValueFieldCtorParams = FieldCtorParams<ValueFieldConfig>;
 
-class ValueField extends Field<ValueFieldProps> {
+class ValueField extends Field<ValueFieldCtorParams> {
 
-    public constructor(args: ValueFieldCtorParams) {
+    public constructor(args: Partial<ValueFieldCtorParams> = {}) {
         super(args);
         const {
             mutable = false,
