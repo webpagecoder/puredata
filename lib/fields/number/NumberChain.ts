@@ -16,7 +16,7 @@ export type NumberChainCtorParams = AnyChainCtorParams<NumberChainConfig, Number
 class NumberChain extends AnyChain<NumberChainCtorParams> {
 
     public constructor(args: Partial<NumberChainCtorParams> = {}) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: NumberHandler }, args));
         
         const {
             autoConvert = true,

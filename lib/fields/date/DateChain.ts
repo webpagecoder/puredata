@@ -26,7 +26,7 @@ export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig,DateHandler
 class DateChain extends AnyChain<DateChainCtorParams> {
 
     constructor(args: Partial<DateChainCtorParams> = {}) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: DateHandler }, args));
 
         const {
             calendarText = new Translation(DefaultCalendarText),

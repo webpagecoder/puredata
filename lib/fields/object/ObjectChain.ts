@@ -17,7 +17,7 @@ export type ObjectChainCtorParams<C extends ObjectChainConfig = ObjectChainConfi
 class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> extends AnyChain<P> {
 
     constructor(args: Partial<P> = {}) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: ObjectHandler }, args));
 
         const {
             cloneObject = false,

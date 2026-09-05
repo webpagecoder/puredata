@@ -17,7 +17,7 @@ export type BooleanChainCtorParams = AnyChainCtorParams<BooleanChainConfig, Bool
 class BooleanChain extends AnyChain<BooleanChainCtorParams> {
 
     public constructor(args: Partial<BooleanChainCtorParams> = {}) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));
 
         const {
             boolishPairs = [],

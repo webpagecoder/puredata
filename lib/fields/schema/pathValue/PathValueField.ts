@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from '../../../Path.ts';
-import { Field, FieldCloneParams, FieldConfig, FieldCtorParams } from '../../Field.ts';
+import { Field, FieldConfig, FieldCtorParams } from '../../Field.ts';
 import { PathValueProcessor } from './PathValueProcessor.ts';
 
 export type PathValueFieldProps = FieldConfig & {
@@ -31,16 +31,16 @@ class PathValueField extends Field<PathValueFieldProps> {
             defaultOrCallback = undefined
         } = args;
 
-        const { props } = this;
-        props.path = new Path(pathStr, this._pathDelims);
-        props.defaultOrCallback = defaultOrCallback;
+        const { _config } = this;
+        _config.path = new Path(pathStr, _config.pathDelims);
+        _config.defaultOrCallback = defaultOrCallback;
     }
 
     public override clone(args: PathValueFieldCloneParams = {}): this {
         const clone = super.clone(args);
 
         if (args.pathStr !== undefined) {
-            clone.props.path = new Path(args.pathStr, this._pathDelims);
+            clone._config.path = new Path(args.pathStr, this._config.pathDelims);
         }
         return clone;
     }

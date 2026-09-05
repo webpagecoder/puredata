@@ -61,7 +61,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     }
 
     public executePipeline(tracker: ValueTracker): void {
-        const pipeline = this._field.props.pipeline || [];
+        const pipeline = this._field.pipeline || [];
         // const { _hasPipelineHooks } = this;
         for (const step of pipeline) {
             let { fn, argsOrCallback: args } = step;

@@ -25,7 +25,7 @@ export type AnyChainCtorParams<
         pipeline: Step[];
     };
 
-class AnyChain<P extends AnyChainCtorParams> extends Field<P> {
+class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<P> {
 
     protected _chainHandler: P['chainHandler'];
     protected _chainHandlerCtor: new (...args: unknown[]) => P['chainHandler'];
@@ -81,6 +81,10 @@ class AnyChain<P extends AnyChainCtorParams> extends Field<P> {
             fn: fn.bind(_chainHandler),
             argsOrCallback
         });
+    }
+
+    public get pipeline(): Step[] {
+        return this._pipeline;
     }
 
 }

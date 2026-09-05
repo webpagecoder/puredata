@@ -21,7 +21,7 @@ export type StringChainCtorParams = AnyChainCtorParams<StringChainConfig, String
 
 class StringChain extends AnyChain<StringChainCtorParams> {
     constructor(args: StringChainCtorParams) {
-        super(args);
+        super(Object.assign({ chainHandlerCtor: StringHandler }, args));
 
         const {
             maxLength = null,
