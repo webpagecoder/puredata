@@ -47,7 +47,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * schema.boolean().truthy()
      * // With boolish: accepts 'yes', 1, 'true', etc.
      */
-    public truthy(): this {
+    public override truthy(): this {
         return this.addHandlerStep('truthy', () => {
             return [this._config.boolishPairs.map(([truthy,]) => truthy)];
         });
@@ -61,7 +61,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * schema.boolean().falsy()
      * // With boolish: accepts 'no', 0, 'false', etc.
      */
-    public falsy(): this {
+    public override falsy(): this {
         return this.addHandlerStep('falsy', () => {
             return [this._config.boolishPairs.map(([, falsy]) => falsy)];
         });

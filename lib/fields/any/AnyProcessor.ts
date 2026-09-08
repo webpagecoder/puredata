@@ -8,25 +8,23 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { AnyChain } from './AnyChain.ts';
 import { PathValueProcessor } from '../schema/pathValue/PathValueProcessor.ts';
 
-type PipelineError = {
+export type PipelineError = {
     key: string;
     args: Record<string, unknown>;
 };
 
-type PipelineResult = {
+export type PipelineResult = {
     value: unknown;
     fail: boolean;
     errors: PipelineError[];
 };
 
-type PipelineStep = {
+export type PipelineStep = {
     fn: (value: unknown, ...args: unknown[]) => PipelineResult;
     args?: unknown[] | ((this: Field) => unknown[]);
 };
 
-export type AnyProcessorCtorParams<C extends AnyChain = AnyChain> = ProcessorCtorParams<C> & {
-    // hasPipelineHooks?: boolean;
-};
+export type AnyProcessorCtorParams<C extends AnyChain = AnyChain> = ProcessorCtorParams<C>;
 
 class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
@@ -62,7 +60,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
     public executePipeline(tracker: ValueTracker): void {
         const pipeline = this._field.pipeline || [];
-        // const { _hasPipelineHooks } = this;
+
         for (const step of pipeline) {
             let { fn, argsOrCallback: args } = step;
             const finalArgs: unknown[] = [];
