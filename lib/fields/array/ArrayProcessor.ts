@@ -7,7 +7,7 @@ import { AnyProcessor } from '../any/AnyProcessor.ts';
 class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, label, props } = this.field;
+        const { autoConvert, label, configuration: props } = this.field;
         const value = tracker.getValue();
 
         if (!Array.isArray(value)) {

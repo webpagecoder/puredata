@@ -3,6 +3,7 @@
 import { AnyHandler } from './AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { Field, FieldConfig } from '../Field.ts';
+import { AnyProcessor } from './AnyProcessor.ts';
 
 type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
 type Step = {
@@ -36,25 +37,37 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
 
         const {
             chainHandlerCtor = AnyHandler,
-            emptyValues = [null, undefined],
+            emptyValues = [null, undefined, ''],
             pipeline = [],
         } = args;
-
-        this._config.emptyValues = emptyValues;
 
         this._chainHandler = new chainHandlerCtor() as P['chainHandler'];
         this._chainHandlerCtor = chainHandlerCtor as new (...args: unknown[]) => P['chainHandler'];
         this._pipeline = pipeline;
 
+        this._config.emptyValues = emptyValues;
+
         return new Proxy(this, this as ProxyHandler<this>);
+    }
+
+    public get pipeline(): Step[] {
+        return this._pipeline;
+    }
+
+    public get(target: this, key: PropertyKey): unknown {
+        if (key in target) {
+            return (target as Record<PropertyKey, unknown>)[key];
+        }
+        return (...args: unknown[]): this => this.addHandlerStep(key as keyof P['chainHandler'], args);
     }
 
     public override clone(args: Partial<P> = {}, addStep?: Step): this {
         const clone = super.clone(args);
         clone._chainHandler = new this._chainHandlerCtor() as P['chainHandler'];
         clone._chainHandlerCtor = this._chainHandlerCtor;
-        clone._config.emptyValues = this._config.emptyValues;
         clone._pipeline = [...this._pipeline];
+
+        clone._config.emptyValues = this._config.emptyValues;
 
         if (addStep) {
             clone._pipeline.push(addStep);
@@ -63,11 +76,10 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return clone;
     }
 
-    public get(target: this, key: PropertyKey): unknown {
-        if (key in target) {
-            return (target as Record<PropertyKey, unknown>)[key];
-        }
-        return (...args: unknown[]): this => this.addHandlerStep(key as keyof P['chainHandler'], args);
+    public override createProcessor(): AnyProcessor {
+        return new AnyProcessor({
+            field: this,
+        });
     }
 
     public addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
@@ -83,10 +95,17 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         });
     }
 
-    public get pipeline(): Step[] {
-        return this._pipeline;
+    public empty(): this {
+        return this.addHandlerStep('empty', () => {
+            return [this._config.emptyValues];
+        });
     }
 
+    public notEmpty(): this {
+        return this.addHandlerStep('notEmpty', () => {
+            return [this._config.emptyValues];
+        });
+    }
 }
 
 export { AnyChain };

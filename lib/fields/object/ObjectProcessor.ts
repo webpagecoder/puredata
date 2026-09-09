@@ -17,7 +17,15 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
             return;
         }
 
-        const { ensurePlain, cloneObject, maxDepth, maxKeyCount } = this._field.props;
+        const {
+            cloneObject,
+            ensurePlain,
+            maxDepth,
+            maxKeyCount,
+            stripEmpties,
+            stripEmptiesDeep,
+            chainHandler: { removeEmpties, removeEmptiesRecursive }
+        } = this._field.configuration;
 
         if (ensurePlain && !Utils.isPlainObject(value)) {
             tracker.addError('object/plain');
@@ -36,8 +44,14 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
         }
 
         if (cloneObject) {
-            // Clone object if transforms are to be performed
             tracker.setValue(Utils.clone(value));
+        }
+
+        if(stripEmptiesDeep) {
+            tracker.setValue(removeEmptiesRecursive(tracker.getValue() as object));
+        }
+        else if(stripEmpties) {
+            tracker.setValue(removeEmpties(tracker.getValue() as object));
         }
     }
 }

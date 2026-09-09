@@ -5,9 +5,7 @@ export type GlobalConfig = typeof GlobalConfig;
 const GlobalConfig = Object.seal({
     general: {
         autoConvert: true,
-        emptyValues: [null, undefined, '', NaN],
-        // cloneValueBeforeFilter: false,
-        // exceptions: false, //todo: throw exceptions in special functions like delete/insert in chain only if this is true
+        emptyValues: [null, undefined, ''],
         pathDelims: {
             separator: '/',
             self: '.',
@@ -17,10 +15,9 @@ const GlobalConfig = Object.seal({
     array: {
         castSingle: true,
         maxLength: null,
-        removeEmpties: true,
+        stripEmpties: true,
     },
     boolean: {
-        allowBoolish: true,
         boolishPairs: [
             [1, 0],
             ['1', '0'],
@@ -43,24 +40,27 @@ const GlobalConfig = Object.seal({
         preservePrecision: true,
     },
     object: {
+        cloneObject: false,
         ensurePlain: true,
+        stripEmpties: true,
+        stripEmptiesDeep: true,
         maxDepth: 10, // set to -null to not check
         maxKeyCount: 100, // set to -null to not check - recursive        
     },
     schema: {
-        clone: true, //todo:not sure
-        failOnFirstError: false,
-        stripUnknownKeys: true
+        failOnFirstError: false, //TODO
+        stripExtraKeys: true
     },
     string: {
+        maxLength: 2000,
+        trim: true,
+        truncate: true,
+
+        // Used in various string validators to determine how to handle case sensitivity, whitespace, and delimiters.
         ignoreCase: false,
-        mode: 'strict',
+        mode: 'loose',
         normalize: true,
         stripDelims: ' ',
-        
-        maxLength: 2000,    // max length allowed for a string being validated todo: THIS PART
-        trim: true,
-        truncate: true //todo
     }
 });
 

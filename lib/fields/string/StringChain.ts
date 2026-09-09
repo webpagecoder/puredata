@@ -34,14 +34,15 @@ class StringChain extends AnyChain<StringChainCtorParams> {
             stripDelims = ''
         } = args;
 
-        const { props } = this;
-        props.maxLength = maxLength;
-        props.trim = trim;
-        props.truncate = truncate;
+        const { _config } = this;
+        _config.maxLength = maxLength;
+        _config.trim = trim;
+        _config.truncate = truncate;
 
-        props.ignoreCase = ignoreCase;
-        props.stripDelims = stripDelims;
-        props.normalize = normalize;
+        _config.ignoreCase = ignoreCase;
+        _config.mode = mode;
+        _config.normalize = normalize;
+        _config.stripDelims = stripDelims;
 
         this._config.chainHandler.configMatchingDefaults({
             ignoreCase,

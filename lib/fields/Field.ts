@@ -16,7 +16,7 @@ export type FieldConfig = {
     label: string;
     pathDelims: PathDelimTypes; //todo: put in chain only not sure...
     presence: Presence;
-    strip: boolean;
+    strip: boolean; //todo: implement stripping of the field
 };
 
 export type FieldCtorParams<C extends FieldConfig = FieldConfig> = Partial<C>;
@@ -56,7 +56,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this._config.defaultValue;
     }
 
-    public get props(): ConfigFromParams<P> {
+    public get configuration(): ConfigFromParams<P> {
         return this._config;
     }
 

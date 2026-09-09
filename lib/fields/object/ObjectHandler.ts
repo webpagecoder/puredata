@@ -350,7 +350,7 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with top-level keys removed when their values are considered empty.
      */
-    public removeEmpties(obj: object, emptyValues: unknown[] = [null, undefined]): ObjectHandlerResult {
+    public removeEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         return this.removeValues(obj, emptyValues);
     }
 
@@ -360,7 +360,7 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with empty values removed recursively through nested plain objects.
      */
-    public removeEmptiesRecursive(obj: object, emptyValues: unknown[] = [null, undefined]): ObjectHandlerResult {
+    public removeEmptiesRecursive(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         return this.removeValuesRecursive(obj, emptyValues);
     }
 
@@ -397,7 +397,7 @@ class ObjectHandler extends AnyHandler {
      * @param values Values that should be removed.
      * @returns Returns a new object with top-level keys removed when their values are in the provided list.
      */
-    public removeValues(obj: object, values: unknown[] = [null, undefined]): ObjectHandlerResult {
+    public removeValues(obj: object, values: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         const newObj: Record<PropertyKey, unknown> = {};
         for (const key of Object.keys(obj)) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
@@ -414,7 +414,7 @@ class ObjectHandler extends AnyHandler {
      * @param values Values that should be removed.
      * @returns Returns a new object with empty values removed recursively through nested plain objects.
      */
-    public removeValuesRecursive(obj: object, values: unknown[] = [null, undefined]): ObjectHandlerResult {
+    public removeValuesRecursive(obj: object, values: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         const newObj: Record<PropertyKey, unknown> = {};
         for (const key of Object.keys(obj)) {
             const value = (obj as Record<PropertyKey, unknown>)[key];

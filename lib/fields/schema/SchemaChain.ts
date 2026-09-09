@@ -20,7 +20,7 @@ export type SchemaChainConfig = ObjectChainConfig & {
     failOnFirstError: boolean;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     schemaMap: SchemaMap;
-    stripUnknownKeys: boolean;
+    stripExtraKeys: boolean;
 };
 
 export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainConfig> & {
@@ -41,17 +41,17 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
             failOnFirstError = false,
             renameKeysArgs = null,
             schema = {},
-            stripUnknownKeys = true,
+            stripExtraKeys = true,
         } = args;
 
-        const { props } = this;
-        props.arrayChain = arrayChain;
-        props.cloneObject = true;
-        props.ensurePlain = true;
-        props.failOnFirstError = failOnFirstError;
-        props.stripUnknownKeys = stripUnknownKeys;
-        props.renameKeysArgs = renameKeysArgs;
-        props.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
+        const { _config } = this;
+        _config.arrayChain = arrayChain;
+        _config.cloneObject = true;
+        _config.ensurePlain = true;
+        _config.failOnFirstError = failOnFirstError;
+        _config.stripExtraKeys = stripExtraKeys;
+        _config.renameKeysArgs = renameKeysArgs;
+        _config.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
     }
 
     public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
@@ -60,11 +60,10 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
             schema = null
         } = args;
         if (schema) {
-            clone.props.schemaMap = this._createSchemaMap(schema);
+            clone._config.schemaMap = this._createSchemaMap(schema);
         }
         return clone;
     }
-
 
     public override createProcessor(): SchemaProcessor {
         return new SchemaProcessor({
@@ -103,8 +102,8 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
     // Configurators
 
-    public configStripUnknownKeys(stripUnknownKeys: boolean = true): this {
-        return this.clone({ stripUnknownKeys });
+    public configStripUnknownKeys(stripExtraKeys: boolean = true): this {
+        return this.clone({ stripExtraKeys });
     }
 
     public configRenameKeys(renameKeysArgs: Parameters<ObjectHandler['renameKeys']>): this {

@@ -38,14 +38,14 @@ class DateChain extends AnyChain<DateChainCtorParams> {
             utcOffsetMinutes = 0,
         } = args;
 
-        const { props } = this;
-        props.calendarText = calendarText.override();
-        props.dateOrder = dateOrder;
-        props.outputStringFormat = outputStringFormat;
-        props.outputPrecision = outputPrecision;
-        props.outputTimeMode = outputTimeMode;
-        props.utcOffsetMinutes = utcOffsetMinutes;
-        props.skipGenericParse = skipGenericParse;
+        const { _config } = this;
+        _config.calendarText = calendarText.override();
+        _config.dateOrder = dateOrder;
+        _config.outputStringFormat = outputStringFormat;
+        _config.outputPrecision = outputPrecision;
+        _config.outputTimeMode = outputTimeMode;
+        _config.utcOffsetMinutes = utcOffsetMinutes;
+        _config.skipGenericParse = skipGenericParse;
 
         this._config.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
     }

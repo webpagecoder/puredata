@@ -12,7 +12,7 @@ import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
 import { Utils } from '../../Utils.ts';
 import { PathValueField } from './pathValue/PathValueField.ts';
 import { Field } from '../Field.ts';
-import { AnyChainConfig } from '../any/AnyChain.ts';
+import { AnyChain, AnyChainConfig } from '../any/AnyChain.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
@@ -59,7 +59,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
-        for (let [key, childField] of field.props.schemaMap) {
+        for (let [key, childField] of field.configuration.schemaMap) {
             this._localBasicProcessors.set(key, childField.createProcessor());
         }
     }
@@ -127,7 +127,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 });
 
                 for (const reference of references) {
-                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.props.path).toString();
+                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.configuration.path).toString();
                     const pubNode = referenceResolver.getNode(absolutePublisherPathStr) ||
                         referenceResolver.createNode(absolutePublisherPathStr);
                     referenceResolver.linkNodes(pubNode, subNode);
@@ -154,7 +154,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         if(processor instanceof AnyProcessor) {
-            for (const step of (field.props as AnyChainConfig).pipeline || []) {
+            for (const step of (field as AnyChain).pipeline || []) {
                 for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsOrCallback)) {
                     if (arg instanceof PathValueField) {
                         references.add(arg);
@@ -200,8 +200,8 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         } = this;
 
         const {
-            chainHandler: { renameKeys, stripKeys }, renameKeysArgs, stripUnknownKeys, failOnFirstError
-        } = _field.props;
+            chainHandler: { renameKeys, removeKeys }, renameKeysArgs, stripExtraKeys, failOnFirstError
+        } = _field.configuration;
 
         // Do any required key renaming
         if (renameKeysArgs) {
@@ -209,10 +209,11 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         // Strip unknown keys if needed
-        if (stripUnknownKeys) {
-            tracker.setValue(stripKeys(
-                tracker.getValue(),
-                Array.from(_field.props.schemaMap.keys())
+        //todo: move to preprocess? also this needs to be recursive for nested objects, but we don't know if the nested object is a schema or not at this point
+        if (stripExtraKeys) {
+            tracker.setValue(removeKeys(
+                tracker.getValue() as object,
+                Array.from(_field.configuration.schemaMap.keys())
             ).value);
         }
 

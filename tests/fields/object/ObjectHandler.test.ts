@@ -414,7 +414,7 @@ describe('ObjectHandler validators', () => {
 		runPassTests(handler.removeEmpties.bind(handler), [
 			{
 				input: { a: 1, b: undefined, c: null, d: 0, e: '' },
-				output: { a: 1, d: 0, e: '' },
+				output: { a: 1, d: 0 },
 			},
 			{
 				input: { a: false, b: null },

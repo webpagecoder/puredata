@@ -25,11 +25,11 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
             preservePrecision = false,
         } = args;
 
-        const { props } = this;
-        props.autoConvert = autoConvert;
-        props.ensureSafe = ensureSafe;
-        props.ensureFinite = ensureFinite;
-        props.preservePrecision = preservePrecision;
+        const { _config } = this;
+        _config.autoConvert = autoConvert;
+        _config.ensureSafe = ensureSafe;
+        _config.ensureFinite = ensureFinite;
+        _config.preservePrecision = preservePrecision;
     }
 
     public override createProcessor(): NumberProcessor {

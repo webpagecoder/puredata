@@ -8,7 +8,7 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
     public override preProcess(tracker: ValueTracker): void {
         const { field } = this;
-        const { autoConvert, props: { boolishPairs, transformer } } = field;
+        const { autoConvert, configuration: { boolishPairs, transformer } } = field;
 
         const value = transformer(tracker.getValue());
 
@@ -36,7 +36,7 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
     public override postProcess(tracker: ValueTracker): void {
         const { field } = this;
-        const { props: { boolishPairs, postConvert } } = field;
+        const { configuration: { boolishPairs, postConvert } } = field;
 
         const value = tracker.getValue();
 

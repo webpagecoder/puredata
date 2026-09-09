@@ -25,10 +25,10 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
             removeEmpties = false,
         } = args;
 
-        const { props } = this;
-        props.castSingle = castSingle;
-        props.maxLength = maxLength;
-        props.removeEmpties = removeEmpties;
+        const { _config } = this;
+        _config.castSingle = castSingle;
+        _config.maxLength = maxLength;
+        _config.removeEmpties = removeEmpties;
     }
 
     public override createProcessor(): ArrayProcessor {

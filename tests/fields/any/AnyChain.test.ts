@@ -16,10 +16,13 @@ describe('AnyChain', () => {
         const chain = new AnyChain();
         chain.config({
             defaultValue: 'default',
+            emptyValues: [null, undefined, ''],
         })
-        chain.anyOf()
+        const emptyChain = chain.empty();
+        const tracker = emptyChain.process(null);
 
-        expect(chain.props.defaultValue).toBe('default');
+        expect(tracker.value).toBe(null);
+        expect(tracker.pass).toBe(true);
     });
 
 });

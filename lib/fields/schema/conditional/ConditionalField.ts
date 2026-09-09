@@ -46,20 +46,20 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             thenField = null,
         } = args;
 
-        const { props } = this;
-        props.comparisonMode = comparisonMode;
-        props.comparisonField = comparisonField;
-        props.conditionalChain = conditionalChain;
-        props.otherwiseField = otherwiseField;
-        props.buildStage = buildStage;
-        props.targetPath = new Path(targetPathStr);
-        props.thenField = thenField;
+        const { _config } = this;
+        _config.comparisonMode = comparisonMode;
+        _config.comparisonField = comparisonField;
+        _config.conditionalChain = conditionalChain;
+        _config.otherwiseField = otherwiseField;
+        _config.buildStage = buildStage;
+        _config.targetPath = new Path(targetPathStr);
+        _config.thenField = thenField;
     }
 
     public override clone(args: ConditionalFieldCloneParams = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
-            clone.props.targetPath = new Path(args.targetPathStr);
+            clone._config.targetPath = new Path(args.targetPathStr);
         }
         return clone;
     }

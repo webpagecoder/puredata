@@ -25,10 +25,10 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
             transformer = x => typeof x === 'string' ? x.toLowerCase() : x
         } = args;
 
-        const { props } = this;
-        props.boolishPairs = boolishPairs;
-        props.postConvert = postConvert;
-        props.transformer = transformer;
+        const { _config } = this;
+        _config.boolishPairs = boolishPairs;
+        _config.postConvert = postConvert;
+        _config.transformer = transformer;
     }
 
     public override createProcessor(): BooleanProcessor {

@@ -19,9 +19,9 @@ class ValueField extends Field<ValueFieldCtorParams> {
             value = null,
         } = args;
 
-        const { props } = this;
-        props.mutable = mutable;
-        props.value = value;
+        const { _config } = this;
+        _config.mutable = mutable;
+        _config.value = value;
     }
 
     public override createProcessor(): ValueProcessor {

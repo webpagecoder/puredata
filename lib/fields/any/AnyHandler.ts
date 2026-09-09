@@ -45,7 +45,7 @@ class AnyHandler {
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is considered empty; otherwise a failing result.
      */
-    public empty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
+    public empty(value: unknown, empties: unknown[] = [null, undefined, '']): HandlerResult {
         return this.anyOf(value, empties).pass
             ? pass(value)
             : fail(value, 'any/empty');
@@ -105,7 +105,7 @@ class AnyHandler {
      * @param empties Values treated as empty. Defaults to null and undefined.
      * @returns A passing result when the value is not considered empty; otherwise a failing result.
      */
-    public notEmpty(value: unknown, empties: unknown[] = [null, undefined]): HandlerResult {
+    public notEmpty(value: unknown, empties: unknown[] = [null, undefined, '']): HandlerResult {
         return this.anyOf(value, empties).fail
             ? pass(value)
             : fail(value, 'any/notEmpty');

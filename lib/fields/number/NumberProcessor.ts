@@ -8,7 +8,7 @@ import { AnyProcessor } from '../any/AnyProcessor.ts';
 class NumberProcessor extends AnyProcessor<NumberChain> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.props;
+        const { autoConvert, ensureSafe, ensureFinite, preservePrecision } = this._field.configuration;
         const result = Utils.parseNumber(tracker.getValue(), {
             autoConvert,
             ensureSafe,
