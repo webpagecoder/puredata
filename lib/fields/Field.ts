@@ -163,12 +163,12 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return clone;
     }
 
-    public forbidden(): this {
-        return this.clone({ presence: 'forbidden' } as Partial<P>);
-    }
-
     public label(label: string): this {
         return this.clone({ label } as Partial<P>);
+    }
+
+    public forbidden(): this {
+        return this.clone({ presence: 'forbidden' } as Partial<P>);
     }
 
     public optional(): this {

@@ -209,7 +209,6 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         // Strip unknown keys if needed
-        //todo: move to preprocess? also this needs to be recursive for nested objects, but we don't know if the nested object is a schema or not at this point
         if (stripExtraKeys) {
             tracker.setValue(removeKeys(
                 tracker.getValue() as object,

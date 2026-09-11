@@ -3,7 +3,7 @@
 import { BooleanChain, BooleanChainConfig } from '../../../lib/fields/boolean/BooleanChain.ts';
 
 describe('BooleanChain', () => {
-    const configuredBoolishPairs: [truthy: unknown, falsy: unknown][] = [['yes', 'no']];
+    const configuredBoolishPairs: [truthy: unknown, falsy: unknown][] = [['yup', 'nope']];
     const emptyBoolishPairs: [truthy: unknown, falsy: unknown][] = [];
 
     type ComboCase = {
@@ -38,11 +38,11 @@ describe('BooleanChain', () => {
             postConvert,
         }) => {
             const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert })).truthy();
-            const tracker = chain.process('yes');
+            const tracker = chain.process('yup');
 
             if (!hasBoolishPairs) {
                 expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('yes');
+                expect(tracker.value).toBe('yup');
                 return;
             }
 
@@ -51,7 +51,7 @@ describe('BooleanChain', () => {
                 expect(tracker.value).toBe(true);
             }
             else {
-                expect(tracker.value).toBe('yes');
+                expect(tracker.value).toBe('yup');
             }
         });
     });
@@ -63,11 +63,11 @@ describe('BooleanChain', () => {
             postConvert,
         }) => {
             const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert })).falsy();
-            const tracker = chain.process('no');
+            const tracker = chain.process('nope');
 
             if (!hasBoolishPairs) {
                 expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('no');
+                expect(tracker.value).toBe('nope');
                 return;
             }
 
@@ -76,23 +76,23 @@ describe('BooleanChain', () => {
                 expect(tracker.value).toBe(false);
             }
             else {
-                expect(tracker.value).toBe('no');
+                expect(tracker.value).toBe('nope');
             }
         });
     });
 
     describe('base processing without validators', () => {
-        it.each(comboCases)('yes: hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
+        it.each(comboCases)('yup: hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
             hasBoolishPairs,
             autoConvert,
             postConvert,
         }) => {
             const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert }));
-            const tracker = chain.process('yes');
+            const tracker = chain.process('yup');
 
             if (!hasBoolishPairs) {
                 expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('yes');
+                expect(tracker.value).toBe('yup');
                 return;
             }
 
@@ -101,21 +101,21 @@ describe('BooleanChain', () => {
                 expect(tracker.value).toBe(true);
             }
             else {
-                expect(tracker.value).toBe('yes');
+                expect(tracker.value).toBe('yup');
             }
         });
 
-        it.each(comboCases)('no: hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
+        it.each(comboCases)('nope: hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
             hasBoolishPairs,
             autoConvert,
             postConvert,
         }) => {
             const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert }));
-            const tracker = chain.process('no');
+            const tracker = chain.process('nope');
 
             if (!hasBoolishPairs) {
                 expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('no');
+                expect(tracker.value).toBe('nope');
                 return;
             }
 
@@ -124,7 +124,7 @@ describe('BooleanChain', () => {
                 expect(tracker.value).toBe(false);
             }
             else {
-                expect(tracker.value).toBe('no');
+                expect(tracker.value).toBe('nope');
             }
         });
     });
@@ -145,37 +145,37 @@ describe('BooleanChain', () => {
         it('inverts boolish values and keeps boolish output when both conversions are disabled', () => {
             const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: false, postConvert: false }).invert();
 
-            const yesTracker = chain.process('yes');
-            expect(yesTracker.pass).toBe(true);
-            expect(yesTracker.value).toBe('no');
+            const yupTracker = chain.process('yup');
+            expect(yupTracker.pass).toBe(true);
+            expect(yupTracker.value).toBe('nope');
 
-            const noTracker = chain.process('no');
-            expect(noTracker.pass).toBe(true);
-            expect(noTracker.value).toBe('yes');
+            const nopeTracker = chain.process('nope');
+            expect(nopeTracker.pass).toBe(true);
+            expect(nopeTracker.value).toBe('yup');
         });
 
         it('inverts boolish values and returns booleans when autoConvert is enabled', () => {
             const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: true, postConvert: false }).invert();
 
-            const yesTracker = chain.process('yes');
-            expect(yesTracker.pass).toBe(true);
-            expect(yesTracker.value).toBe(false);
+            const yupTracker = chain.process('yup');
+            expect(yupTracker.pass).toBe(true);
+            expect(yupTracker.value).toBe(false);
 
-            const noTracker = chain.process('no');
-            expect(noTracker.pass).toBe(true);
-            expect(noTracker.value).toBe(true);
+            const nopeTracker = chain.process('nope');
+            expect(nopeTracker.pass).toBe(true);
+            expect(nopeTracker.value).toBe(true);
         });
 
         it('inverts boolish values and post-converts to booleans when autoConvert is disabled', () => {
             const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: false, postConvert: true }).invert();
 
-            const yesTracker = chain.process('yes');
-            expect(yesTracker.pass).toBe(true);
-            expect(yesTracker.value).toBe(false);
+            const yupTracker = chain.process('yup');
+            expect(yupTracker.pass).toBe(true);
+            expect(yupTracker.value).toBe(false);
 
-            const noTracker = chain.process('no');
-            expect(noTracker.pass).toBe(true);
-            expect(noTracker.value).toBe(true);
+            const nopeTracker = chain.process('nope');
+            expect(nopeTracker.pass).toBe(true);
+            expect(nopeTracker.value).toBe(true);
         });
 
         it('fails for non-boolish values', () => {

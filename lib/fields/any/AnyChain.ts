@@ -50,15 +50,16 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
+
     public get pipeline(): Step[] {
         return this._pipeline;
     }
 
-    public get(target: this, key: PropertyKey): unknown {
+    public get(target: this, key: keyof P['chainHandler'], receiver: this): unknown {
         if (key in target) {
-            return (target as Record<PropertyKey, unknown>)[key];
+            return Reflect.get(target, key, receiver);
         }
-        return (...args: unknown[]): this => this.addHandlerStep(key as keyof P['chainHandler'], args);
+        return (...args: unknown[]): this => this.addHandlerStep(key, args);
     }
 
     public override clone(args: Partial<P> = {}, addStep?: Step): this {
@@ -82,7 +83,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         });
     }
 
-    public addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
+    protected addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
         const { _chainHandler } = this;
         const fn = _chainHandler[fnKey];
         if (typeof fn !== 'function') {
