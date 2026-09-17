@@ -9,8 +9,7 @@ type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
 export type ArrayChainConfig = AnyChainConfig & {
     castSingle: boolean;
-    maxLength: number;
-    removeEmpties: boolean;
+    stripEmpties: boolean;
 };
 export type ArrayChainCtorParams = AnyChainCtorParams<ArrayChainConfig, ArrayHandler>;
 
@@ -21,14 +20,12 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         
         const {
             castSingle = true,
-            maxLength = -1,
-            removeEmpties = false,
+            stripEmpties = true,
         } = args;
 
         const { _config } = this;
         _config.castSingle = castSingle;
-        _config.maxLength = maxLength;
-        _config.removeEmpties = removeEmpties;
+        _config.stripEmpties = stripEmpties;
     }
 
     public override createProcessor(): ArrayProcessor {
@@ -39,39 +36,14 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
 
     // Configurators
 
-    // /**
-    //  * Configures automatic removal of empty values from arrays during preprocessing
-    //  * @param {boolean} [removeEmpties=true] - Whether to remove empty values from arrays
-    //  * @param {Array} [addEmptyValues=[]] - Additional values to consider as empty beyond the default empty values
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * // Configure to remove empty values including custom empties
-    //  * array([1, null, 2, '', 3, 'N/A']).propsRemoveEmpties(true, ['N/A'])
-    //  * // Results in: [1, 2, 3] after preprocessing
-    //  */
-    // public configRemoveEmpties(removeEmpties: boolean = true, addEmptyValues: unknown[] = []): this {
-    //     return this.clone({
-    //         removeEmpties,
-    //         emptyValues: [...this._config.emptyValues, ...addEmptyValues],
-    //     });
-    // }
+    public castSingle(castSingle: boolean = true): this {
+        return this.clone({ castSingle });
+    }
 
-    // /**
-    //  * Configures automatic casting of single values to arrays during preprocessing
-    //  * @param {boolean} [castSingle=true] - Whether to cast single non-array values to arrays
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * // Configure to cast single values to arrays
-    //  * array('hello').propsCastSingle(true)
-    //  * // Input 'hello' becomes ['hello'] during preprocessing
-    //  * 
-    //  * // Disable automatic casting
-    //  * array('hello').propsCastSingle(false)
-    //  * // Would fail validation since 'hello' is not an array
-    //  */
-    // public configCastSingle(castSingle: boolean = true): this {
-    //     return this.clone({ castSingle } as any);
-    // }
+    public stripEmpties(stripEmpties: boolean = true): this {
+        return this.clone({ stripEmpties });
+    }
+
 
     // Validators
 
@@ -88,7 +60,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
             //todo: check this out...create
             ? new Path(pathStringOrComparator, this._config.pathDelims)
             : pathStringOrComparator;
-        return this.addHandlerStep('unique', [pathOrComparator]);
+        return this.addStepToChain('unique', [pathOrComparator]);
     }
 
     // Transformers
@@ -104,7 +76,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         const path = typeof pathString === 'string'
             ? new Path(pathString, this._config.pathDelims)
             : null;
-        return this.addHandlerStep('group', [path]);
+        return this.addStepToChain('group', [path]);
     }
 
     /**
@@ -112,27 +84,27 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
      * @param {string|Function} [pathStringOrComparator] - Property path or comparator function
      * @returns {ArrayChain} Returns this chain for method chaining
      * @example
-     * array([1, 2, 2, 3]).removeDuplicates() // [1, 2, 3]
-     * array([{id: 1}, {id: 1}]).removeDuplicates('id') // [{id: 1}]
+     * array([1, 2, 2, 3]).stripDuplicates() // [1, 2, 3]
+     * array([{id: 1}, {id: 1}]).stripDuplicates('id') // [{id: 1}]
      */
-    public removeDuplicates(pathStringOrComparator?: string | SortComparator): this {
+    public stripDuplicates(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             ? new Path(pathStringOrComparator, this._config.pathDelims)
             : pathStringOrComparator;
-        return this.addHandlerStep('removeDuplicates', [pathOrComparator]);
+        return this.addStepToChain('stripDuplicates', [pathOrComparator]);
     }
 
-    /**
-     * Removes empty values from array
-     * @returns {ArrayChain} Returns this chain for method chaining
-     * @example
-     * array([1, null, 2, '', 3]).removeEmpties() // [1, 2, 3]
-     */
-    public removeEmpties(): this {
-        return this.addHandlerStep('removeEmpties', () => {
-            return [this._config.emptyValues];
-        });
-    }
+    // /**
+    //  * Removes empty values from array
+    //  * @returns {ArrayChain} Returns this chain for method chaining
+    //  * @example
+    //  * array([1, null, 2, '', 3]).stripEmpties() // [1, 2, 3]
+    //  */
+    // public stripEmpties(): this {
+    //     return this.addHandlerStep('stripEmpties', () => {
+    //         return [this._config.emptyValues];
+    //     });
+    // }
 
 }
 

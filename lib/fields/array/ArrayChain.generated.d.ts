@@ -233,13 +233,13 @@ interface ArrayChainGeneratedMethods {
     * @param forbiddenValues Values to remove.
     * @returns Returns the filtered array.
     */
-    remove(...args: DropFirst<Parameters<ArrayHandler['remove']>>): ArrayChain;
+    remove(...args: DropFirst<Parameters<ArrayHandler['strip']>>): ArrayChain;
 
     /**
     * Removes undefined values from the array.
     * @returns Returns the filtered array.
     */
-    removeUndefined(...args: DropFirst<Parameters<ArrayHandler['removeUndefined']>>): ArrayChain;
+    removeUndefined(...args: DropFirst<Parameters<ArrayHandler['stripUndefined']>>): ArrayChain;
 
     /**
     * Reverses the order of the array.

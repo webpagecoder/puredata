@@ -15,13 +15,12 @@ export type DateChainConfig = AnyChainConfig & {
     calendarText: Translation;
     dateOrder: DateOrder;
     outputStringFormat: OutputFormat | null;
-    outputPrecision: OutputPrecision | null;
     outputTimeMode: TimeMode;
     skipGenericParse: boolean;
     utcOffsetMinutes: number;
 };
 
-export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig,DateHandler>;
+export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig, DateHandler>;
 
 class DateChain extends AnyChain<DateChainCtorParams> {
 
@@ -32,7 +31,6 @@ class DateChain extends AnyChain<DateChainCtorParams> {
             calendarText = new Translation(DefaultCalendarText),
             dateOrder = 'MDY',
             outputStringFormat = null,
-            outputPrecision = null,
             outputTimeMode = 'utc',
             skipGenericParse = false,
             utcOffsetMinutes = 0,
@@ -42,7 +40,6 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         _config.calendarText = calendarText.override();
         _config.dateOrder = dateOrder;
         _config.outputStringFormat = outputStringFormat;
-        _config.outputPrecision = outputPrecision;
         _config.outputTimeMode = outputTimeMode;
         _config.utcOffsetMinutes = utcOffsetMinutes;
         _config.skipGenericParse = skipGenericParse;
@@ -62,6 +59,8 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         }
     }
 
+    // Configurators
+
     public calendarText(overrides: Record<string, string>): this {
         const clone = this.clone();
         const calendarOverrides: TranslationStringRecord = {};
@@ -73,6 +72,14 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         }
         clone._config.calendarText.setText(calendarOverrides);
         return clone;
+    }
+
+    public dateOrder(dateOrder: DateOrder): this {
+        return this.clone({ dateOrder });
+    }
+
+    public utcOffsetMinutes(utcOffsetMinutes: number): this {
+        return this.clone({ utcOffsetMinutes });
     }
 
     // Validators
@@ -91,8 +98,10 @@ class DateChain extends AnyChain<DateChainCtorParams> {
     public human(options: HumanParseOptions = {}): this {
         this.assertEmptyPipeline('human');
         return this
-            .clone({ skipGenericParse: true, outputPrecision: null })
-            .addHandlerStep('human', [Object.assign({ dateOrder: this._config.dateOrder }, options)]);
+            .clone({ skipGenericParse: true })
+            .addStepToChain('human', () => {
+                return [Object.assign({ dateOrder: this._config.dateOrder }, options)];
+            });
     }
 
     /**
@@ -108,7 +117,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public iso(options: IsoParseOptions = {}): this {
         this.assertEmptyPipeline('iso');
-        return this.clone({ skipGenericParse: true }).addHandlerStep('iso', [options]);
+        return this.clone({ skipGenericParse: true }).addStepToChain('iso', [options]);
     }
 
     /**
@@ -122,7 +131,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public isoOrdinal(options: IsoOrdinalParseOptions = {}): this {
         this.assertEmptyPipeline('isoOrdinal');
-        return this.clone({ skipGenericParse: true }).addHandlerStep('isoOrdinal', [options]);
+        return this.clone({ skipGenericParse: true }).addStepToChain('isoOrdinal', [options]);
     }
 
     /**
@@ -136,7 +145,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public isoWeek(options: IsoWeekParseOptions = {}): this {
         this.assertEmptyPipeline('isoWeek');
-        return this.clone({ skipGenericParse: true }).addHandlerStep('isoWeek', [options]);
+        return this.clone({ skipGenericParse: true }).addStepToChain('isoWeek', [options]);
     }
 
     /**
@@ -150,7 +159,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public timestamp(isMilliseconds: boolean = true): this {
         this.assertEmptyPipeline('timestamp');
-        return this.clone({ skipGenericParse: true }).addHandlerStep('timestamp', [isMilliseconds]);
+        return this.clone({ skipGenericParse: true }).addStepToChain('timestamp', [isMilliseconds]);
     }
 
     /**
@@ -160,15 +169,25 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.today() // Must be today's date
      */
     public today(): this {
-        const now = new Date();
-        now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
-        return this.addHandlerStep('today', [now]);
+        return this.addStepToChain('today', () => {
+            const now = new Date();
+            now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
+            return [now];
+        });
     }
 
     // Transformers
 
 
     // Exporters
+
+    /**
+     * Configures the output format for the date.
+     * @param outputStringFormat Format string for the date
+     * @param outputTimeMode UTC or local time mode
+     * @returns {DateChain} Returns the chain for method chaining
+     * date.toFormat('YYYY-MM-DDTHH:mm:ssZ', 'utc') // Output: "2023-01-01T12:00:00Z" 
+     */
     public toFormat(outputStringFormat: string, outputTimeMode: TimeMode = 'utc'): this {
         return this.clone({ outputStringFormat, outputTimeMode });
     }

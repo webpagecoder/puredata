@@ -410,8 +410,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('removeEmpties', () => {
-		runPassTests(handler.removeEmpties.bind(handler), [
+	it('stripEmpties', () => {
+		runPassTests(handler.stripEmpties.bind(handler), [
 			{
 				input: { a: 1, b: undefined, c: null, d: 0, e: '' },
 				output: { a: 1, d: 0 },
@@ -429,8 +429,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('removeEmptiesRecursive', () => {
-		runPassTests(handler.removeEmptiesRecursive.bind(handler), [
+	it('stripEmptiesRecursive', () => {
+		runPassTests(handler.stripEmptiesRecursive.bind(handler), [
 			{
 				input: { a: 1, b: undefined, c: null },
 				output: { a: 1 },

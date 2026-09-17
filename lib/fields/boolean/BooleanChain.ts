@@ -37,6 +37,20 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
         });
     }
 
+    // Configurators
+
+    public boolishPairs(pairs: BoolishPair[]): this {
+        return this.clone({ boolishPairs: pairs });
+    }
+
+    public postConvert(postConvert: boolean = true): this {
+        return this.clone({ postConvert });
+    }
+
+    public transformer(transformer: (value: unknown) => unknown): this {
+        return this.clone({ transformer });
+    }
+
     // Validators
 
     /**
@@ -48,7 +62,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * // With boolish: accepts 'yes', 1, 'true', etc.
      */
     public override truthy(): this {
-        return this.addHandlerStep('truthy', () => {
+        return this.addStepToChain('truthy', () => {
             return [this._config.boolishPairs.map(([truthy,]) => truthy)];
         });
     }
@@ -62,7 +76,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * // With boolish: accepts 'no', 0, 'false', etc.
      */
     public override falsy(): this {
-        return this.addHandlerStep('falsy', () => {
+        return this.addStepToChain('falsy', () => {
             return [this._config.boolishPairs.map(([, falsy]) => falsy)];
         });
     }
@@ -79,7 +93,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * // With boolish: 'yes' -> 'no', 1 -> 0, etc.
      */
     public invert(): this {
-        return this.addHandlerStep('invert', () => {
+        return this.addStepToChain('invert', () => {
             return [this._config.boolishPairs];
         });
     }

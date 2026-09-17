@@ -455,14 +455,14 @@ describe('ArrayHandler mutators', () => {
 	});
 
 	it('remove', () => {
-		runPassTests(handler.remove.bind(handler), [
+		runPassTests(handler.strip.bind(handler), [
 			{ input: [1, 2, 3, 2, 4], args: [[2, 4]], output: [1, 3] },
 			{ input: [1, 2], args: [], output: [1, 2] },
 			{ input: [1, 1, 2], args: [[1]], output: [2] },
 			{ input: [], args: [[1]], output: [] }
 		]);
 
-		runPassTests(handler.remove.bind(handler), [
+		runPassTests(handler.strip.bind(handler), [
 			{ input: [1, 2, 3, 2, 4], args: [[numChain.between(2, 3), numChain.between(4, 4)]], output: [1] },
 			{ input: [2, 4, 10], args: [[numChain.even()]], output: [] },
 			{ input: [1, 3, 5], args: [[numChain.even()]], output: [1, 3, 5] },
@@ -470,8 +470,8 @@ describe('ArrayHandler mutators', () => {
 		]);
 	});
 
-	it('removeDuplicates', () => {
-		runPassTests(handler.removeDuplicates.bind(handler), [
+	it('stripDuplicates', () => {
+		runPassTests(handler.stripDuplicates.bind(handler), [
 			{ input: [1, 2, 1, 3], output: [1, 2, 3] },
 			{
 				input: [{ id: 1 }, { id: 2 }, { id: 1 }, { id: 3 }],
@@ -489,8 +489,8 @@ describe('ArrayHandler mutators', () => {
 		);
 	});
 
-	it('removeEmpties', () => {
-		runPassTests(handler.removeEmpties.bind(handler), [
+	it('stripEmpties', () => {
+		runPassTests(handler.stripEmpties.bind(handler), [
 			{ input: [null, undefined, '', 0, false], output: [0, false] },
 			{ input: [0, '', false], args: [[0, '']], output: [false] },
 			{ input: ['', '', null], output: [] },
@@ -500,7 +500,7 @@ describe('ArrayHandler mutators', () => {
 	});
 
 	it('removeUndefined', () => {
-		runPassTests(handler.removeUndefined.bind(handler), [
+		runPassTests(handler.stripUndefined.bind(handler), [
 			{ input: [1, undefined, 2], output: [1, 2] },
 			{ input: [undefined, undefined], output: [] },
 			{ input: [], output: [] },

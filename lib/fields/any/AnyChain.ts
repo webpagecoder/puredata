@@ -50,7 +50,6 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
-
     public get pipeline(): Step[] {
         return this._pipeline;
     }
@@ -59,10 +58,10 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         if (key in target) {
             return Reflect.get(target, key, receiver);
         }
-        return (...args: unknown[]): this => this.addHandlerStep(key, args);
+        return (...args: unknown[]): this => this.addStepToChain(key, args);
     }
 
-    public override clone(args: Partial<P> = {}, addStep?: Step): this {
+    public override clone(args: Partial<P> = {}, stepToAdd?: Step): this {
         const clone = super.clone(args);
         clone._chainHandler = new this._chainHandlerCtor() as P['chainHandler'];
         clone._chainHandlerCtor = this._chainHandlerCtor;
@@ -70,8 +69,8 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
 
         clone._config.emptyValues = this._config.emptyValues;
 
-        if (addStep) {
-            clone._pipeline.push(addStep);
+        if (stepToAdd) {
+            clone._pipeline.push(stepToAdd);
         }
 
         return clone;
@@ -83,7 +82,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         });
     }
 
-    protected addHandlerStep(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
+    public addStepToChain(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
         const { _chainHandler } = this;
         const fn = _chainHandler[fnKey];
         if (typeof fn !== 'function') {
@@ -97,15 +96,21 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
     }
 
     public empty(): this {
-        return this.addHandlerStep('empty', () => {
+        return this.addStepToChain('empty', () => {
             return [this._config.emptyValues];
         });
     }
 
     public notEmpty(): this {
-        return this.addHandlerStep('notEmpty', () => {
+        return this.addStepToChain('notEmpty', () => {
             return [this._config.emptyValues];
         });
+    }
+
+    // Configurators
+
+    public emptyValues(values: unknown[]): this {
+        return this.clone({ emptyValues: values } as Partial<P>);
     }
 }
 

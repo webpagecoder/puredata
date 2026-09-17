@@ -3,7 +3,7 @@
 export type GlobalConfig = typeof GlobalConfig;
 
 const GlobalConfig = Object.seal({
-    general: {
+    any: {
         autoConvert: true,
         emptyValues: [null, undefined, ''],
         pathDelims: {
@@ -14,7 +14,6 @@ const GlobalConfig = Object.seal({
     },
     array: {
         castSingle: true,
-        maxLength: null,
         stripEmpties: true,
     },
     boolean: {

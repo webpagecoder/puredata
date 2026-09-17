@@ -350,7 +350,7 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with top-level keys removed when their values are considered empty.
      */
-    public removeEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+    public stripEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         return this.removeValues(obj, emptyValues);
     }
 
@@ -360,7 +360,7 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with empty values removed recursively through nested plain objects.
      */
-    public removeEmptiesRecursive(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+    public stripEmptiesRecursive(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         return this.removeValuesRecursive(obj, emptyValues);
     }
 

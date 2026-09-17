@@ -24,7 +24,7 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
             maxKeyCount,
             stripEmpties,
             stripEmptiesDeep,
-            chainHandler: { removeEmpties, removeEmptiesRecursive }
+            chainHandler: { stripEmpties, stripEmptiesRecursive }
         } = this._field.configuration;
 
         if (ensurePlain && !Utils.isPlainObject(value)) {
@@ -48,10 +48,10 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
         }
 
         if(stripEmptiesDeep) {
-            tracker.setValue(removeEmptiesRecursive(tracker.getValue() as object));
+            tracker.setValue(stripEmptiesRecursive(tracker.getValue() as object));
         }
         else if(stripEmpties) {
-            tracker.setValue(removeEmpties(tracker.getValue() as object));
+            tracker.setValue(stripEmpties(tracker.getValue() as object));
         }
     }
 }

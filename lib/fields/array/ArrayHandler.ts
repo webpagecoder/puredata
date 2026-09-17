@@ -638,14 +638,14 @@ class ArrayHandler extends AnyHandler {
     /**
      * Removes all entries that match one of the forbidden values.
      * @param arr Source array.
-     * @param forbiddenValues Values to remove.
+     * @param stripValues Values to remove.
      * @returns Returns the filtered array.
      */
-    public remove(arr: unknown[], forbiddenValues: unknown[] = []): ArrayHandlerResult {
+    public strip(arr: unknown[], stripValues: unknown[] = []): ArrayHandlerResult {
         const filtered: unknown[] = [];
         for (const entry of arr) {
             let isAllowed = true;
-            for (const value of forbiddenValues) {
+            for (const value of stripValues) {
                 if (Utils.areEqual(entry, value)) {
                     isAllowed = false;
                     break;
@@ -664,7 +664,7 @@ class ArrayHandler extends AnyHandler {
      * @param pathOrEqualityComparator Optional path or comparator used to compare entries.
      * @returns Returns the deduplicated array.
      */
-    public removeDuplicates(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator | null = null): ArrayHandlerResult {
+    public stripDuplicates(arr: unknown[], pathOrEqualityComparator: PathOrEqualityComparator | null = null): ArrayHandlerResult {
         const areEqual = getEqualityComparator(pathOrEqualityComparator);
         return pass(arr.reduce((acc: unknown[], current: unknown) => {
             if (!acc.some(item => areEqual(item, current))) {
@@ -680,8 +680,8 @@ class ArrayHandler extends AnyHandler {
      * @param emptyValues Values treated as empty.
      * @returns Returns the filtered array.
      */
-    public removeEmpties(arr: unknown[], emptyValues: unknown[] = [null, undefined, '']): ArrayHandlerResult {
-        return this.remove(arr, emptyValues);
+    public stripEmpties(arr: unknown[], emptyValues: unknown[] = [null, undefined, '']): ArrayHandlerResult {
+        return this.strip(arr, emptyValues);
     }
 
     /**
@@ -689,8 +689,8 @@ class ArrayHandler extends AnyHandler {
      * @param arr Source array.
      * @returns Returns the filtered array.
      */
-    public removeUndefined(arr: unknown[]): ArrayHandlerResult {
-        return this.remove(arr, [undefined]);
+    public stripUndefined(arr: unknown[]): ArrayHandlerResult {
+        return this.strip(arr, [undefined]);
     }
 
     /**

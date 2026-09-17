@@ -52,20 +52,8 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         } as ConfigFromParams<P>;
     }
 
-    public get defaultValue(): unknown {
-        return this._config.defaultValue;
-    }
-
     public get configuration(): ConfigFromParams<P> {
         return this._config;
-    }
-
-    public get errorMessages(): Translation {
-        return this._config.errorMessages;
-    }
-
-    public get presence(): Presence {
-        return this._config.presence;
     }
 
     public get processor(): Processor {
@@ -75,22 +63,14 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this._cachedProcessor;
     }
 
-    public get autoConvert(): boolean {
-        return this._config.autoConvert;
-    }
-
-    public get pathDelims(): PathDelimTypes {
-        return this._config.pathDelims;
-    }
-
     public clone(args: Partial<P> = {}): this {
 
         const { _config } = this;
         const {
             autoConvert = _config.autoConvert,
             defaultValue = _config.defaultValue,
+             errorMessages = _config.errorMessages.override(),
             label = _config.label,
-            errorMessages = _config.errorMessages.override(),
             pathDelims = _config.pathDelims,
             presence = _config.presence
         } = args;
@@ -100,8 +80,8 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
             {
                 autoConvert,
                 defaultValue,
-                label,
                 errorMessages,
+                label,
                 pathDelims,
                 presence
             },
@@ -133,24 +113,22 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this._config.presence === 'required';
     }
 
-    public getLabel(): string {
-        return this._config.label;
-    }
 
-
-    // *****************************************************
-    //               Declarative API Methods
-    // *****************************************************
+    // Configurators
 
     public config(config: Partial<ConfigFromParams<P>>): this {
         return this.clone(config as Partial<P>);
     }
 
-    public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
+    public autoConvert(autoConvert: boolean = true): this {
+        return this.clone({ autoConvert } as Partial<P>);
     }
 
-    public errorText(overrides: Record<string, string>): this {
+    public default(defaultValue: unknown): this {
+        return this.clone({ defaultValue } as Partial<P>);
+    }
+
+    public errorMessages(overrides: Record<string, string>): this {
         const clone = this.clone();
         const errorOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {
@@ -167,6 +145,10 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this.clone({ label } as Partial<P>);
     }
 
+    public pathDelims(pathDelims: PathDelimTypes): this {
+        return this.clone({ pathDelims } as Partial<P>);
+    }
+
     public forbidden(): this {
         return this.clone({ presence: 'forbidden' } as Partial<P>);
     }
@@ -179,9 +161,9 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this.clone({ presence: 'required' } as Partial<P>);
     }
 
-    public strip(strip: boolean = true): this {
-        return this.clone({ strip } as Partial<P>);
-    }
+    // public strip(strip: boolean = true): this {
+    //     return this.clone({ strip } as Partial<P>);
+    // }
 
 }
 

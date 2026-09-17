@@ -22,9 +22,9 @@ describe('AnyChain', () => {
         expect(emptyChain.pipeline).toHaveLength(1);
     });
 
-    it('throws when addHandlerStep receives a non-handler method name', () => {
+    it('throws when addStepToChain receives a non-handler method name', () => {
         const chain = new AnyChain();
-        const addUnknownStep = (): AnyChain => chain.addHandlerStep('missingMethod' as keyof AnyHandler);
+        const addUnknownStep = (): AnyChain => chain.addStepToChain('missingMethod' as keyof AnyHandler);
 
         expect(addUnknownStep).toThrow("Method 'missingMethod'(...) not found in chain handler");
     });

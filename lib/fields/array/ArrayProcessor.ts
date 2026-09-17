@@ -7,11 +7,12 @@ import { AnyProcessor } from '../any/AnyProcessor.ts';
 class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, label, configuration: props } = this.field;
+        const { castSingle, chainHandler, emptyValues, stripEmpties } = this.field.configuration;
+
         const value = tracker.getValue();
 
         if (!Array.isArray(value)) {
-            if (autoConvert || props.castSingle && value !== undefined) {
+            if (castSingle && value !== undefined) {
                 tracker.setValue([value]);
             }
             else {
@@ -20,21 +21,10 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> 
             }
         }
 
-        const { chainHandler, maxLength, removeEmpties, emptyValues } = props;
-
-        if (removeEmpties) {
-            tracker.setValue(chainHandler.removeEmpties(tracker.getValue() as unknown[], emptyValues).value);
+        if (stripEmpties) {
+            tracker.setValue(chainHandler.stripEmpties(tracker.getValue() as unknown[], emptyValues).value);
         }
 
-        if (maxLength != null) {
-            const result = chainHandler.maxLength(tracker.getValue() as unknown[], maxLength);
-            if (result.fail) {
-                tracker.addError('array/maxLength', {
-                    maxLength,
-                    label
-                });
-            }
-        }
     }
 }
 
