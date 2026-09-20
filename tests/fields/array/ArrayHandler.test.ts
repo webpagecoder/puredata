@@ -454,7 +454,7 @@ describe('ArrayHandler mutators', () => {
 		);
 	});
 
-	it('remove', () => {
+	it('strip', () => {
 		runPassTests(handler.strip.bind(handler), [
 			{ input: [1, 2, 3, 2, 4], args: [[2, 4]], output: [1, 3] },
 			{ input: [1, 2], args: [], output: [1, 2] },
@@ -499,7 +499,7 @@ describe('ArrayHandler mutators', () => {
 		);
 	});
 
-	it('removeUndefined', () => {
+	it('stripUndefined', () => {
 		runPassTests(handler.stripUndefined.bind(handler), [
 			{ input: [1, undefined, 2], output: [1, 2] },
 			{ input: [undefined, undefined], output: [] },

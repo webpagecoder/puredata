@@ -24,8 +24,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
     public override compile(context: FieldPointerProcessorCompilationContext): Processor {
         
         const { ancestors, parent, absolutePath } = context;
-        const { _field } = this;
-        const { fieldPath } = _field.configuration;
+        const { fieldPath } = this._field.config;
     
         const referencedProcessor = parent.resolvePath(fieldPath, this, ancestors);
 
@@ -55,28 +54,28 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
         }
     }
 
-    // Note: this will only be called if the reference is a nest (i.e. it points to an ancestor)
+    // Note: this will only be called if the reference is a nest (i.e. it has a parent)
     public override process(tracker: ValueTracker): void {
 
-        const { minDepth, maxDepth } = this._field.configuration;
+        const { minDepth, maxDepth } = this._field.config;
 
-        tracker.setNestDepth(tracker.parent.nestDepth + 1);
+        tracker.setNestDepth(tracker.parent!.nestDepth + 1);
 
         if (tracker.nestDepth === 1) {
             tracker.setNestRoot(tracker);
         }
         else {
-            tracker.setNestRoot(tracker.parent.nestRoot);
+            tracker.setNestRoot(tracker.parent!.nestRoot);
         }
 
         const value = tracker.getValue();
 
         if (value === undefined && tracker.nestDepth - 1 < minDepth) {
-            tracker.nestRoot!.addError('object/recursion/tooShallow', { minDepth, maxDepth });
+            tracker.nestRoot!.addError('object/nest/tooShallow', { minDepth, maxDepth });
         }
         else if (value !== undefined) {
             if (tracker.nestDepth > maxDepth) {
-                tracker.nestRoot!.addError('object/recursion/tooDeep', { minDepth, maxDepth });
+                tracker.nestRoot!.addError('object/nest/tooDeep', { minDepth, maxDepth });
             }
             else {
                 this._innerNestedProcessor!.process(tracker);

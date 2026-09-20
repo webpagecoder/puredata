@@ -33,7 +33,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     }
 
     public override compile(context?: ProcessorCompilationContext): Processor {
-        const { defaultValue } = this._field;
+        const { defaultValue } = this._field.config;
         if (defaultValue instanceof PathValueField) {
             this._defaultValuePathValueProcessor = defaultValue.createProcessor().compile(context) as PathValueProcessor;
         }
@@ -43,6 +43,11 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     public postProcess(tracker: ValueTracker): void {}
 
     public override process(tracker: ValueTracker): void {
+        const { defaultValue, mutable } = this._field.config;
+        if(!mutable) {
+            tracker.setValue(defaultValue);
+            return;
+        }
         this.preProcess(tracker);
         if (tracker.hasErrors()) {
             return;
@@ -70,7 +75,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
             // a regular chain cant really refer to itself
             for (const arg of args) {
                 if (arg instanceof PathValueField) {
-                    const refValueTracker = tracker.resolvePath(arg.configuration.path);
+                    const refValueTracker = tracker.resolvePath(arg.config.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {

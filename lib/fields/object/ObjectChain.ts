@@ -10,7 +10,7 @@ export type ObjectChainConfig = AnyChainConfig & {
     maxDepth: number | null;
     maxKeyCount: number | null;
     stripEmpties: boolean;
-    stripEmptiesDeep: boolean;
+    stripNestedEmpties: boolean;
 };
 
 export type ObjectChainCtorParams<C extends ObjectChainConfig = ObjectChainConfig> =
@@ -27,7 +27,7 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
             maxDepth = null,
             maxKeyCount = null,
             stripEmpties = false,
-            stripEmptiesDeep = false
+            stripNestedEmpties = false
         } = args;
 
         const { _config } = this;
@@ -36,7 +36,7 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
         _config.maxDepth = maxDepth;
         _config.maxKeyCount = maxKeyCount;
         _config.stripEmpties = stripEmpties;
-        _config.stripEmptiesDeep = stripEmptiesDeep;
+        _config.stripNestedEmpties = stripNestedEmpties;
     }
 
     public override createProcessor(): ObjectProcessor {

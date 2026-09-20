@@ -216,7 +216,7 @@ class Utils {
      * @param maxKeyCount The maximum key count to consider.
      * @returns The total key count, or false if it exceeds the maximum.
      */
-    public static getKeyCountRecursive(obj: object, maxKeyCount: number | null = null): number | boolean {
+    public static getNestedKeyCount(obj: object, maxKeyCount: number | null = null): number | boolean {
 
         const allKeys = Object.keys(obj);
         let count = allKeys.length;
@@ -227,7 +227,7 @@ class Utils {
         for (const key of allKeys) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
             if (Utils.isPlainObject(value)) {
-                const result = Utils.getKeyCountRecursive(value as object, maxKeyCount);
+                const result = Utils.getNestedKeyCount(value as object, maxKeyCount);
                 if (result === false) {
                     return false;
                 }
@@ -306,15 +306,15 @@ class Utils {
      * @param options 
      * @returns 
      */
-    public static *getAllPaths(obj: object, options: GetPathOptions = {}): Generator<Path> {
-        yield* Utils.getAllPathsRecursive(obj, {
+    public static *getAllNestedPaths(obj: object, options: GetPathOptions = {}): Generator<Path> {
+        yield* Utils.getAllNestedPathsInternal(obj, {
             parentKeys: [],
             includeRoots: options.includeRoots ?? false,
             rootsOnly: options.rootsOnly ?? false
         });
     }
 
-    private static *getAllPathsRecursive(obj: object, {
+    private static *getAllNestedPathsInternal(obj: object, {
         parentKeys = [],
         includeRoots = false,
         rootsOnly = false
@@ -325,7 +325,7 @@ class Utils {
                 if (includeRoots || rootsOnly) {
                     yield new Path(parentKeys.concat(key));
                 }
-                yield* Utils.getAllPathsRecursive(child as object, {
+                yield* Utils.getAllNestedPathsInternal(child as object, {
                     parentKeys: parentKeys.concat(key),
                     includeRoots,
                     rootsOnly
@@ -345,7 +345,7 @@ class Utils {
      */
     public static getPathCount(obj: object, options: GetPathOptions = {}): number {
         let count = 0;
-        for (const _ of Utils.getAllPaths(obj, options)) {
+        for (const _ of Utils.getAllNestedPaths(obj, options)) {
             count++;
         }
         return count;
@@ -431,7 +431,7 @@ class Utils {
      * @param path The path to remove.
      * @returns True if the path was removed, false otherwise.
      */
-    public static removePath(obj: object, path: Path): boolean {
+    public static stripPath(obj: object, path: Path): boolean {
         const result = Utils.getRefByPath(obj, path, false, false);
         if (result === null) {
             return false;

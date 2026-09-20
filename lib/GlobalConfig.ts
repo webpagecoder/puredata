@@ -3,7 +3,7 @@
 export type GlobalConfig = typeof GlobalConfig;
 
 const GlobalConfig = Object.seal({
-    any: {
+    any: { 
         autoConvert: true,
         emptyValues: [null, undefined, ''],
         pathDelims: {
@@ -41,10 +41,10 @@ const GlobalConfig = Object.seal({
     object: {
         cloneObject: false,
         ensurePlain: true,
+        maxDepth: 10, // set to -1 to not check
+        maxKeyCount: 100, // set to -1 to not check - recursive     
         stripEmpties: true,
-        stripEmptiesDeep: true,
-        maxDepth: 10, // set to -null to not check
-        maxKeyCount: 100, // set to -null to not check - recursive        
+        stripNestedEmpties: true,   
     },
     schema: {
         failOnFirstError: false, //TODO

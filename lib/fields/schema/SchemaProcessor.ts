@@ -11,8 +11,7 @@ import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
 import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
 import { Utils } from '../../Utils.ts';
 import { PathValueField } from './pathValue/PathValueField.ts';
-import { Field } from '../Field.ts';
-import { AnyChain, AnyChainConfig } from '../any/AnyChain.ts';
+import { AnyChain } from '../any/AnyChain.ts';
 
 export type CompiledSchema<P = Processor> = Map<string, P>;
 
@@ -59,7 +58,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
-        for (let [key, childField] of field.configuration.schemaMap) {
+        for (let [key, childField] of field.config.schemaMap) {
             this._localBasicProcessors.set(key, childField.createProcessor());
         }
     }
@@ -127,7 +126,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 });
 
                 for (const reference of references) {
-                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.configuration.path).toString();
+                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.config.path).toString();
                     const pubNode = referenceResolver.getNode(absolutePublisherPathStr) ||
                         referenceResolver.createNode(absolutePublisherPathStr);
                     referenceResolver.linkNodes(pubNode, subNode);
@@ -148,7 +147,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             return new Set([field]);
         }
         const references = new Set<PathValueField>();
-        const { defaultValue } = field;
+        const { defaultValue } = field.config;
         if (defaultValue instanceof PathValueField) {
             references.add(defaultValue);
         }
@@ -200,19 +199,22 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         } = this;
 
         const {
-            chainHandler: { renameKeys, removeKeys }, renameKeysArgs, stripExtraKeys, failOnFirstError
-        } = _field.configuration;
+            chainHandler, 
+            config: {
+                renameKeysArgs, stripExtraKeys, failOnFirstError
+            }
+        } = _field;
 
         // Do any required key renaming
         if (renameKeysArgs) {
-            tracker.setValue(renameKeys(...renameKeysArgs).value);
+            tracker.setValue(chainHandler.renameKeys(...renameKeysArgs).value);
         }
 
         // Strip unknown keys if needed
         if (stripExtraKeys) {
-            tracker.setValue(removeKeys(
+            tracker.setValue(chainHandler.stripKeys(
                 tracker.getValue() as object,
-                Array.from(_field.configuration.schemaMap.keys())
+                Array.from(_field.config.schemaMap.keys())
             ).value);
         }
 

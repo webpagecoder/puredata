@@ -133,7 +133,7 @@ class ValueTracker {
         }
 
         const {
-            _field: { errorMessages },
+            _field: { config: { errorMessages } },
             _path: path,
         } = this;
         let text = errorMessages.getText(errorKey) as string;
@@ -238,7 +238,7 @@ class ValueTracker {
 
         // Dive into path keys
         for (const key of path.keys) {
-            const child:ValueTracker | undefined = tracker._children[key];
+            const child: ValueTracker | undefined = tracker._children[key];
             if (!child) {
                 return null;
             }

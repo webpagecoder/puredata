@@ -4,26 +4,21 @@ import { Path } from '../../../Path.ts';
 import { Field, FieldConfig, FieldCtorParams } from '../../Field.ts';
 import { PathValueProcessor } from './PathValueProcessor.ts';
 
-export type PathValueFieldProps = FieldConfig & {
+export type PathValueFieldConfig = FieldConfig & {
     path: Path;
     defaultOrCallback: unknown | ((...args: unknown[]) => unknown);
 };
 
 export type PathValueFieldCtorParams =
     FieldCtorParams
-    & Partial<Omit<PathValueFieldProps, 'path'>>
+    & Partial<Omit<PathValueFieldConfig, 'path'>>
     & {
         pathStr: string;
     };
 
-export type PathValueFieldCloneParams =
-    FieldCloneParams<PathValueFieldProps> & {
-        pathStr?: string;
-    };
+class PathValueField extends Field<PathValueFieldConfig> {
 
-class PathValueField extends Field<PathValueFieldProps> {
-
-    constructor(args: PathValueFieldCtorParams) {
+    constructor(args: Partial<PathValueFieldCtorParams> = {}) {
         super(args);
 
         const {
@@ -36,7 +31,7 @@ class PathValueField extends Field<PathValueFieldProps> {
         _config.defaultOrCallback = defaultOrCallback;
     }
 
-    public override clone(args: PathValueFieldCloneParams = {}): this {
+    public override clone(args: Partial<PathValueFieldCtorParams> = {}): this {
         const clone = super.clone(args);
 
         if (args.pathStr !== undefined) {

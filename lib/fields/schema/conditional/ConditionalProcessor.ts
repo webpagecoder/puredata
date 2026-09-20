@@ -21,8 +21,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     constructor(args: ConditionalProcessorCtorParams) {
         super(args);
 
-        const { _field } = this;
-        const { comparisonField, conditionalChain, otherwiseField, thenField } = _field.configuration;
+        const { comparisonField, conditionalChain, otherwiseField, thenField } = this._field.config;
 
         this._comparisonProcessor = comparisonField.createProcessor().compile() as Processor;
         this._isNested = false;
@@ -44,7 +43,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     }
 
     public override compile({ isNested = false }: ConditionalProcessorCompilationContext = {}): this {
-        const { _field: { configuration: { buildStage } } } = this;
+        const { _field: { config: { buildStage } } } = this;
 
         this._isNested = isNested;
 
@@ -60,8 +59,16 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
     protected _nestedProcess(tracker: ValueTracker): void {
 
-        const { _field, _comparisonProcessor, _conditionalProcessorChain, } = this;
-        const { comparisonMode, targetPath } = _field.configuration;
+        const {
+            _comparisonProcessor,
+            _conditionalProcessorChain,
+            field: {
+                config: {
+                    comparisonMode,
+                    targetPath
+                }
+            }
+        } = this;
 
         let targetTracker = targetPath.isSelf
             ? tracker
@@ -82,7 +89,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
             const trackerClone = tracker.cloneWithoutErrors();
             conditionalProcessor._nestedProcess(trackerClone);
 
-            let chainPredicateResult = conditionalProcessor.field.configuration.comparisonMode === 'equals'
+            let chainPredicateResult = conditionalProcessor.field.config.comparisonMode === 'equals'
                 ? trackerClone.pass
                 : !trackerClone.pass;
 

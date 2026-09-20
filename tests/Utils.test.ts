@@ -143,31 +143,31 @@ describe('Object based utils', () => {
         )).toBe(false);
     });
 
-    it('getRecursiveKeyCount', () => {
-        expect(Utils.getKeyCountRecursive({})).toBe(0);
-        expect(Utils.getKeyCountRecursive({ a: 1, b: 2 })).toBe(2);
-        expect(Utils.getKeyCountRecursive({ a: { b: 1 }, c: 2 })).toBe(3);
-        expect(Utils.getKeyCountRecursive({ a: { b: { c: 1 } }, d: 2 })).toBe(4);
-        expect(Utils.getKeyCountRecursive({
+    it('getNestedKeyCount', () => {
+        expect(Utils.getNestedKeyCount({})).toBe(0);
+        expect(Utils.getNestedKeyCount({ a: 1, b: 2 })).toBe(2);
+        expect(Utils.getNestedKeyCount({ a: { b: 1 }, c: 2 })).toBe(3);
+        expect(Utils.getNestedKeyCount({ a: { b: { c: 1 } }, d: 2 })).toBe(4);
+        expect(Utils.getNestedKeyCount({
             a: { b: { c: 1 } },
             x: 1,
             y: { z: 2 },
             m: { n: { o: { p: 3 } } }
         })).toBe(10);
 
-        expect(Utils.getKeyCountRecursive(
+        expect(Utils.getNestedKeyCount(
             { a: 1, b: { c: 2 } },
             3
         )).toBe(3);
-        expect(Utils.getKeyCountRecursive(
+        expect(Utils.getNestedKeyCount(
             { a: 1, b: { c: 2 } },
             2
         )).toBe(false);
-        expect(Utils.getKeyCountRecursive(
+        expect(Utils.getNestedKeyCount(
             { a: { b: { c: 1 } }, d: 2 },
             4
         )).toBe(4);
-        expect(Utils.getKeyCountRecursive(
+        expect(Utils.getNestedKeyCount(
             { a: { b: { c: 1 } }, d: 2 },
             3
         )).toBe(false);
@@ -262,16 +262,16 @@ describe('Object path utils', () => {
             g: [1, 2],
         };
 
-        const defaultPaths = [...Utils.getAllPaths(obj)].map((path) => path.toString());
+        const defaultPaths = [...Utils.getAllNestedPaths(obj)].map((path) => path.toString());
         expect(defaultPaths).toEqual(['a/b', 'a/c/d', 'e', 'g']);
 
-        const includeRootsPaths = [...Utils.getAllPaths(obj, { includeRoots: true })].map((path) => path.toString());
+        const includeRootsPaths = [...Utils.getAllNestedPaths(obj, { includeRoots: true })].map((path) => path.toString());
         expect(includeRootsPaths).toEqual(['a', 'a/b', 'a/c', 'a/c/d', 'e', 'f', 'g']);
 
-        const rootsOnlyPaths = [...Utils.getAllPaths(obj, { rootsOnly: true })].map((path) => path.toString());
+        const rootsOnlyPaths = [...Utils.getAllNestedPaths(obj, { rootsOnly: true })].map((path) => path.toString());
         expect(rootsOnlyPaths).toEqual(['a', 'a/c', 'f']);
 
-        expect([...Utils.getAllPaths({})].map((path) => path.toString())).toEqual([]);
+        expect([...Utils.getAllNestedPaths({})].map((path) => path.toString())).toEqual([]);
     });
 
     it('getPathCount', () => {
@@ -341,21 +341,21 @@ describe('Object path utils', () => {
         expect(Utils.hasPath(obj, new Path(''))).toBe(false);
     });
 
-    it('removePath', () => {
+    it('stripPath', () => {
         const obj: Record<string, unknown> = {
             a: { b: 1, c: 2 },
             x: undefined,
         };
 
-        expect(Utils.removePath(obj, new Path('a/b'))).toBe(true);
+        expect(Utils.stripPath(obj, new Path('a/b'))).toBe(true);
         expect(obj).toEqual({ a: { c: 2 }, x: undefined });
 
-        expect(Utils.removePath(obj, new Path('x'))).toBe(true);
+        expect(Utils.stripPath(obj, new Path('x'))).toBe(true);
         expect(obj).toEqual({ a: { c: 2 } });
 
-        expect(Utils.removePath(obj, new Path('a/b'))).toBe(false);
-        expect(Utils.removePath(obj, new Path('missing/path'))).toBe(false);
-        expect(Utils.removePath(obj, new Path(''))).toBe(false);
+        expect(Utils.stripPath(obj, new Path('a/b'))).toBe(false);
+        expect(Utils.stripPath(obj, new Path('missing/path'))).toBe(false);
+        expect(Utils.stripPath(obj, new Path(''))).toBe(false);
     });
 
     it('setPathValue', () => {

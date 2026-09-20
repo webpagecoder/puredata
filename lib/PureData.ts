@@ -1,19 +1,18 @@
 'use strict';
 
 import { AnyChain, AnyChainCtorParams } from './fields/any/AnyChain.ts';
-import { ArrayChain } from './fields/array/ArrayChain.ts';
-import { BooleanChain } from './fields/boolean/BooleanChain.ts';
-import { DateChain } from './fields/date/DateChain.ts';
-import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
+import { ArrayChain, ArrayChainCtorParams } from './fields/array/ArrayChain.ts';
+import { BooleanChain, BooleanChainCtorParams } from './fields/boolean/BooleanChain.ts';
+import { DateChain, DateChainCtorParams } from './fields/date/DateChain.ts';
+import { EnumField, EnumFieldCtorParams, EnumStructure } from './fields/enum/EnumField.ts';
 import { Field, FieldCtorParams } from './fields/Field.ts';
-import { NumberChain } from './fields/number/NumberChain.ts';
+import { NumberChain, NumberChainCtorParams } from './fields/number/NumberChain.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
 import { FieldPointerField } from './fields/schema/fieldPointer/FieldPointerField.ts';
-import { PathValueField } from './fields/schema/pathValue/PathValueField.ts';
-import { SchemaChain, SchemaObject } from './fields/schema/SchemaChain.ts';
-import { StringChain } from './fields/string/StringChain.ts';
-import { ValueField } from './fields/value/ValueField.ts';
+import { PathValueField, PathValueFieldCtorParams } from './fields/schema/pathValue/PathValueField.ts';
+import { SchemaChain, SchemaChainCtorParams, SchemaObject } from './fields/schema/SchemaChain.ts';
+import { StringChain, StringChainCtorParams } from './fields/string/StringChain.ts';
 import { GlobalConfig } from './GlobalConfig.ts';
 import { Path, PathDelimTypes } from './Path.ts';
 import { DefaultCalendarText } from './text/DefaultCalendarText.ts';
@@ -25,7 +24,7 @@ class PureData {
 
     protected _calendarText: Translation;
     protected _errorMessages: Translation;
-    protected _config: GlobalConfig;
+    protected _globalConfig: GlobalConfig;
     protected _pathDelims: PathDelimTypes;
 
     constructor({
@@ -35,8 +34,8 @@ class PureData {
     } = {}) {
         this._calendarText = calendarText;
         this._errorMessages = errorMessages;
-        this._config = Utils.clone(globalConfig);
-        this._pathDelims = this._config.general.pathDelims;
+        this._globalConfig = Utils.clone(globalConfig);
+        this._pathDelims = this._globalConfig.any.pathDelims;
 
     }
 
@@ -50,63 +49,65 @@ class PureData {
     ) {
         return Object.assign(
             {},
-            this._config['general'],
+            this._globalConfig['any'],
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
             },
-            this._config[chainType as keyof GlobalConfig],
+            this._globalConfig[chainType as keyof GlobalConfig],
             props
         ) as T;
     }
 
-    protected _composeFieldProps<T extends FieldCtorParams>(props: Record<string, unknown> = {}) {
+    protected _composeFieldProps(
+        props: Record<string, unknown> = {}
+    ) {
         return Object.assign(
             {},
-            this._config['general'],
+            this._globalConfig['any'],
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
             },
             props
-        ) as T;
+        );
     }
 
     // Chains
 
     public any() {
-        return new AnyChain(this._composeChainProps('any', {}));
+        return new AnyChain(this._composeChainProps<AnyChainCtorParams>('any'));
     }
 
-    public array(props: Record<string, unknown> = {}) {
-        return new ArrayChain(this._composeChainProps('array', props));
+    public array() {
+        return new ArrayChain(this._composeChainProps<ArrayChainCtorParams>('array'));
     }
 
-    public boolean(props: Record<string, unknown> = {}) {
-        return new BooleanChain(this._composeChainProps('boolean', props));
+    public boolean() {
+        return new BooleanChain(this._composeChainProps<BooleanChainCtorParams>('boolean'));
     }
 
-    public date(props: Record<string, unknown> = {}) {
-        return new DateChain(this._composeChainProps(
-            'date',
-            Object.assign({ calendarText: this._calendarText }, props)
-        ));
+    public date() {
+        return new DateChain(this._composeChainProps<DateChainCtorParams>('date'));
+    }
+    public number() {
+        return new NumberChain(this._composeChainProps<NumberChainCtorParams>('number'));
     }
 
-    public number(props: Record<string, unknown> = {}) {
-        return new NumberChain(this._composeChainProps('number', props));
+    public object() {
+        return new ObjectChain(this._composeChainProps<ObjectChainCtorParams>('object'));
     }
 
-    public object(props: Record<string, unknown> = {}) {
-        return new ObjectChain(this._composeChainProps<ObjectChainCtorParams>('object', props));
+    public schema(schema: SchemaObject = {}) {
+        return new SchemaChain(this._composeChainProps<SchemaChainCtorParams>('object', {
+            schema,
+            anyChain: this.any(),
+            arrayChain: this.array(),
+        }));
     }
 
-    public schema(schema: SchemaObject = {}, props: Record<string, unknown> = {}) {
-        return new SchemaChain(this._composeChainProps('object', Object.assign({ schema }, props)));
-    }
-
-    public string(props: Record<string, unknown> = {}) {
-        return new StringChain(this._composeChainProps('string', props));
+    public string() {
+        return new StringChain(this._composeChainProps<StringChainCtorParams>('string'));
     }
 
     // Fields
@@ -116,11 +117,11 @@ class PureData {
     }
 
     public immutable(value: unknown) {
-        return new ValueField(this._composeFieldProps({ value, mutable: false }));
+        return new AnyChain(this._composeFieldProps({ value, mutable: false }));
     }
 
     public mutable(value: unknown) {
-        return new ValueField(this._composeFieldProps({ value, mutable: true }));
+        return new AnyChain(this._composeFieldProps({ value, mutable: true }));
     }
 
     public value(pathStr: string, defaultOrCallback: unknown = undefined) {
@@ -158,8 +159,8 @@ class PureData {
     // Settings 
 
     public config(config: Partial<GlobalConfig> = {}) {
-        this._config = Utils.mergeObjects(this._config, config) as GlobalConfig;
-        this._pathDelims = this._config.general.pathDelims;
+        this._globalConfig = Utils.mergeObjects(this._globalConfig, config) as GlobalConfig;
+        this._pathDelims = this._globalConfig.any.pathDelims;
     }
 
     public calendarText(overrides: Record<string, string>) {

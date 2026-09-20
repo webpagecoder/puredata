@@ -7,7 +7,7 @@ import { AnyProcessor } from '../any/AnyProcessor.ts';
 class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, boolishPairs, transformer } = this.field.configuration;
+        const { autoConvert, boolishPairs, transformer } = this.field.config;
 
         const value = transformer(tracker.getValue());
 
@@ -34,7 +34,7 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
     }
 
     public override postProcess(tracker: ValueTracker): void {
-        const { boolishPairs, postConvert } = this.field.configuration;
+        const { boolishPairs, postConvert } = this.field.config;
 
         const value = tracker.getValue();
 

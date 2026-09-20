@@ -5,7 +5,6 @@ import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts
 import { NumberProcessor } from './NumberProcessor.ts';
 
 export type NumberChainConfig = AnyChainConfig & {
-    autoConvert: boolean;
     ensureSafe: boolean;
     ensureFinite: boolean;
     preservePrecision: boolean;
@@ -19,14 +18,12 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
         super(Object.assign({ chainHandlerCtor: NumberHandler }, args));
         
         const {
-            autoConvert = true,
             ensureSafe = false,
             ensureFinite = false,
             preservePrecision = false,
         } = args;
 
         const { _config } = this;
-        _config.autoConvert = autoConvert;
         _config.ensureSafe = ensureSafe;
         _config.ensureFinite = ensureFinite;
         _config.preservePrecision = preservePrecision;
@@ -40,21 +37,13 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
 
     // Configurators
 
-    /**
-     * Configure whether to automatically convert string values to numbers
-     * @param {boolean} autoConvert - Whether to enable automatic conversion
-     * @returns {NumberChain} The chain instance for method chaining
-     */
-    public configAutoConvert(autoConvert = true) {
-        return this.clone({ autoConvert });
-    }
 
     /**
      * Configure whether to ensure numbers are within safe integer range
-     * @param {boolean} ensureSafe - Whether to ensure safe integer range
+     * @param  ensureSafe - Whether to ensure safe integer range
      * @returns {NumberChain} The chain instance for method chaining
      */
-    public configSafe(ensureSafe = true) {
+    public safe(ensureSafe = true) {
         return this.clone({ ensureSafe });
     }
 
@@ -63,16 +52,16 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
      * @param {boolean} ensureFinite - Whether to ensure finite values
      * @returns {NumberChain} The chain instance for method chaining
      */
-    public configFinite(ensureFinite = true) {
+    public finite(ensureFinite = true) {
         return this.clone({ ensureFinite });
     }
 
     /**
-     * Configure whether to preserve precision during number operations
+     * Configure whether to ensure string -> number conversion is precise
      * @param {boolean} preservePrecision - Whether to preserve precision
      * @returns {NumberChain} The chain instance for method chaining
      */
-    public configPreservePrecision(preservePrecision = true) {
+    public precision(preservePrecision = true) {
         return this.clone({ preservePrecision });
     }
 

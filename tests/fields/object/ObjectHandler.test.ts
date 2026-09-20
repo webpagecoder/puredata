@@ -145,15 +145,15 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('keyCountRecursive', () => {
-		runPassTests(handler.keyCountRecursive.bind(handler), [
+	it('nestedKeyCount', () => {
+		runPassTests(handler.nestedKeyCount.bind(handler), [
 			{ input: obj1, args: [8] },
 			{ input: obj2, args: [7] },
 			{ input: {}, args: [0] },
 			{ input: Object.create(null), args: [0] },
 		]);
 
-		runFailTests(handler.keyCountRecursive.bind(handler), [
+		runFailTests(handler.nestedKeyCount.bind(handler), [
 			{ input: obj1, args: [10] },
 			{ input: obj2, args: [6] },
 			{ input: obj1, args: [9] },
@@ -208,8 +208,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('maxKeyCountRecursive', () => {
-		runPassTests(handler.maxKeyCountRecursive.bind(handler), [
+	it('maxNestedKeyCount', () => {
+		runPassTests(handler.maxNestedKeyCount.bind(handler), [
 			{ input: {}, args: [0] },
 			{ input: { a: 1 }, args: [1] },
 			{ input: obj1, args: [8] },
@@ -221,7 +221,7 @@ describe('ObjectHandler validators', () => {
 			{ input: { arr: ['x', 'y'] }, args: [1] },
 		]);
 
-		runFailTests(handler.maxKeyCountRecursive.bind(handler), [
+		runFailTests(handler.maxNestedKeyCount.bind(handler), [
 			{ input: {}, args: [-1] },
 			{ input: { a: 1 }, args: [0] },
 			{ input: obj1, args: [7] },
@@ -276,8 +276,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('minKeyCountRecursive', () => {
-		runPassTests(handler.minKeyCountRecursive.bind(handler), [
+	it('minNestedKeyCount', () => {
+		runPassTests(handler.minNestedKeyCount.bind(handler), [
 			{ input: {}, args: [0] },
 			{ input: { a: 1 }, args: [-1] },
 			{ input: { a: 1 }, args: [0] },
@@ -289,7 +289,7 @@ describe('ObjectHandler validators', () => {
 			{ input: { a: { b: { c: 1 } } }, args: [2] },
 		]);
 
-		runFailTests(handler.minKeyCountRecursive.bind(handler), [
+		runFailTests(handler.minNestedKeyCount.bind(handler), [
 			{ input: { a: 1 }, args: [2] },
 			{ input: { a: { b: 1 } }, args: [3] },
 			{ input: obj1, args: [9] },
@@ -429,8 +429,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('stripEmptiesRecursive', () => {
-		runPassTests(handler.stripEmptiesRecursive.bind(handler), [
+	it('stripNestedEmpties', () => {
+		runPassTests(handler.stripNestedEmpties.bind(handler), [
 			{
 				input: { a: 1, b: undefined, c: null },
 				output: { a: 1 },
@@ -457,16 +457,16 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('removeKeys', () => {
-		runPassTests(handler.removeKeys.bind(handler), [
+	it('stripKeys', () => {
+		runPassTests(handler.stripKeys.bind(handler), [
 			{ input: obj1, args: [['a_1', 'c_1']], output: { a_1: 2, c_1: undefined } },
 			{ input: { a: 1, b: 2 }, args: [[]], output: {} },
 			{ input: { a: 1 }, args: [['a', 'missing']], output: { a: 1, missing: undefined } },
 		]);
 	});
 
-	it('removePaths', () => {
-		runPassTests(handler.removePaths.bind(handler), [
+	it('stripPaths', () => {
+		runPassTests(handler.stripPaths.bind(handler), [
 			{
 				input: { a: 1, b: { c: 2 }, d: [1, 2] },
 				args: [['a', 'b/c']],
@@ -485,8 +485,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('removeValues', () => {
-		runPassTests(handler.removeValues.bind(handler), [
+	it('stripValues', () => {
+		runPassTests(handler.stripValues.bind(handler), [
 			{
 				input: { a: 1, b: undefined, c: null, d: false },
 				output: { a: 1, d: false },
@@ -504,8 +504,8 @@ describe('ObjectHandler validators', () => {
 		]);
 	});
 
-	it('removeValuesRecursive', () => {
-		runPassTests(handler.removeValuesRecursive.bind(handler), [
+	it('stripNestedValues', () => {
+		runPassTests(handler.stripNestedValues.bind(handler), [
 			{
 				input: { a: 1, b: undefined, c: null },
 				output: { a: 1 },

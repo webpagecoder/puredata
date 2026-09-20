@@ -14,7 +14,7 @@ class DateProcessor extends AnyProcessor<DateChain> {
     }
 
     public override preProcess(tracker: ValueTracker): void {
-        const { chainHandler, skipGenericParse } = this._field.configuration;
+        const { chainHandler, config: { skipGenericParse } } = this._field;
         if (skipGenericParse) {
             return;
         }
@@ -29,7 +29,7 @@ class DateProcessor extends AnyProcessor<DateChain> {
         if (tracker.fail) {
             return;
         }
-        const { chainHandler, outputStringFormat, outputTimeMode } = this._field.configuration;
+        const { chainHandler, config: { outputStringFormat, outputTimeMode } } = this._field;
         this._copyResultToTracker(
             tracker,
             chainHandler.toFormat(tracker.getValue() as UtcDate, outputStringFormat, outputTimeMode)

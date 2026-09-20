@@ -15,7 +15,7 @@ class EnumField extends Field<EnumFieldConfig> {
 
     protected _isArray: boolean;
 
-    constructor(args: EnumFieldCtorParams) {
+    constructor(args: Partial<EnumFieldCtorParams> = {}) {
         super(args);
         const {
             structure = [],

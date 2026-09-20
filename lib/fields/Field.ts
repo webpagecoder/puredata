@@ -52,7 +52,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         } as ConfigFromParams<P>;
     }
 
-    public get configuration(): ConfigFromParams<P> {
+    public get config(): ConfigFromParams<P> {
         return this._config;
     }
 
@@ -69,10 +69,11 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         const {
             autoConvert = _config.autoConvert,
             defaultValue = _config.defaultValue,
-             errorMessages = _config.errorMessages.override(),
+            errorMessages = _config.errorMessages.override(),
             label = _config.label,
             pathDelims = _config.pathDelims,
-            presence = _config.presence
+            presence = _config.presence,
+            strip = _config.strip
         } = args;
 
         const allProps = Object.assign(
@@ -83,7 +84,8 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
                 errorMessages,
                 label,
                 pathDelims,
-                presence
+                presence,
+                strip
             },
             args
         );
@@ -115,10 +117,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
 
     // Configurators
-
-    public config(config: Partial<ConfigFromParams<P>>): this {
-        return this.clone(config as Partial<P>);
-    }
 
     public autoConvert(autoConvert: boolean = true): this {
         return this.clone({ autoConvert } as Partial<P>);
@@ -161,9 +159,9 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this.clone({ presence: 'required' } as Partial<P>);
     }
 
-    // public strip(strip: boolean = true): this {
-    //     return this.clone({ strip } as Partial<P>);
-    // }
+    public strip(strip: boolean = true): this {
+        return this.clone({ strip } as Partial<P>);
+    }
 
 }
 

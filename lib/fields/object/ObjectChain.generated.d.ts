@@ -97,7 +97,7 @@ interface ObjectChainGeneratedMethods {
     * @param keyCount Required recursive key count.
     * @returns Returns the original object when recursive key count matches exactly; otherwise returns a validation error.
     */
-    keyCountRecursive(...args: DropFirst<Parameters<ObjectHandler['keyCountRecursive']>>): ObjectChain;
+    nestedKeyCount(...args: DropFirst<Parameters<ObjectHandler['nestedKeyCount']>>): ObjectChain;
 
     /**
     * Validates that an object's depth does not exceed a maximum.
@@ -118,7 +118,7 @@ interface ObjectChainGeneratedMethods {
     * @param maxKeyCount Maximum allowed recursive key count.
     * @returns Returns the original object when recursive key count is within the maximum; otherwise returns a validation error.
     */
-    maxKeyCountRecursive(...args: DropFirst<Parameters<ObjectHandler['maxKeyCountRecursive']>>): ObjectChain;
+    maxNestedKeyCount(...args: DropFirst<Parameters<ObjectHandler['maxNestedKeyCount']>>): ObjectChain;
 
     /**
     * Validates that an object's depth meets a minimum.
@@ -139,7 +139,7 @@ interface ObjectChainGeneratedMethods {
     * @param minKeyCount Minimum required recursive key count.
     * @returns Returns the original object when recursive key count is at least the minimum; otherwise returns a validation error.
     */
-    minKeyCountRecursive(...args: DropFirst<Parameters<ObjectHandler['minKeyCountRecursive']>>): ObjectChain;
+    minNestedKeyCount(...args: DropFirst<Parameters<ObjectHandler['minNestedKeyCount']>>): ObjectChain;
 
     /**
     * Validates that a value does not match any of the forbidden values.
@@ -241,28 +241,28 @@ interface ObjectChainGeneratedMethods {
     * @param exceptFor Keys to keep.
     * @returns Returns a new object containing only the keys listed in exceptFor.
     */
-    removeKeys(...args: DropFirst<Parameters<ObjectHandler['removeKeys']>>): ObjectChain;
+    stripKeys(...args: DropFirst<Parameters<ObjectHandler['stripKeys']>>): ObjectChain;
 
     /**
     * Removes all provided paths from an object in place.
     * @param paths Paths to remove.
     * @returns Returns the same object after attempting to remove each provided path.
     */
-    removePaths(...args: DropFirst<Parameters<ObjectHandler['removePaths']>>): ObjectChain;
+    stripPaths(...args: DropFirst<Parameters<ObjectHandler['stripPaths']>>): ObjectChain;
 
     /**
     * Removes top-level keys whose values are in the provided values list.
     * @param values Values that should be removed.
     * @returns Returns a new object with top-level keys removed when their values are in the provided list.
     */
-    removeValues(...args: DropFirst<Parameters<ObjectHandler['removeValues']>>): ObjectChain;
+    stripValues(...args: DropFirst<Parameters<ObjectHandler['stripValues']>>): ObjectChain;
 
     /**
     * Recursively removes keys whose values are in the provided values list.
     * @param values Values that should be removed.
     * @returns Returns a new object with empty values removed recursively through nested plain objects.
     */
-    removeValuesRecursive(...args: DropFirst<Parameters<ObjectHandler['removeValuesRecursive']>>): ObjectChain;
+    stripNestedValues(...args: DropFirst<Parameters<ObjectHandler['stripNestedValues']>>): ObjectChain;
 
     /**
     * Renames object keys using a pattern replacement.

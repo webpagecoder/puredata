@@ -4,6 +4,7 @@ import { ObjectChain } from './ObjectChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
 import { AnyProcessor } from '../any/AnyProcessor.ts';
+import { AnyChain } from '../any/AnyChain.ts';
 
 class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<C> {
 
@@ -18,14 +19,16 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
         }
 
         const {
-            cloneObject,
-            ensurePlain,
-            maxDepth,
-            maxKeyCount,
-            stripEmpties,
-            stripEmptiesDeep,
-            chainHandler: { stripEmpties, stripEmptiesRecursive }
-        } = this._field.configuration;
+            chainHandler,
+            config: {
+                cloneObject,
+                ensurePlain,
+                maxDepth,
+                maxKeyCount,
+                stripEmpties,
+                stripNestedEmpties,
+            }
+        } = this._field as ObjectChain;
 
         if (ensurePlain && !Utils.isPlainObject(value)) {
             tracker.addError('object/plain');
@@ -47,11 +50,15 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
             tracker.setValue(Utils.clone(value));
         }
 
-        if(stripEmptiesDeep) {
-            tracker.setValue(stripEmptiesRecursive(tracker.getValue() as object));
+        if (stripNestedEmpties) {
+            tracker.setValue(
+                chainHandler.stripNestedEmpties(tracker.getValue() as object).value
+            );
         }
-        else if(stripEmpties) {
-            tracker.setValue(stripEmpties(tracker.getValue() as object));
+        else if (stripEmpties) {
+            tracker.setValue(
+                chainHandler.stripEmpties(tracker.getValue() as object).value
+            );
         }
     }
 }

@@ -1,12 +1,13 @@
 'use strict';
 
 import { Utils } from '../../Utils.ts';
-import { ArrayChain } from '../array/ArrayChain.ts';
+import { AnyChain, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { AnyHandler } from '../any/AnyHandler.ts';
+import { ArrayChain, ArrayChainCtorParams } from '../array/ArrayChain.ts';
 import { ArrayHandler } from '../array/ArrayHandler.ts';
 import { Field } from '../Field.ts';
 import { ObjectChain, ObjectChainCtorParams, ObjectChainConfig } from '../object/ObjectChain.ts';
 import { ObjectHandler } from '../object/ObjectHandler.ts';
-import { ValueField } from '../value/ValueField.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 
 export type SchemaObject = {
@@ -16,6 +17,7 @@ export type SchemaObject = {
 export type SchemaMap = Map<string, Field>;
 
 export type SchemaChainConfig = ObjectChainConfig & {
+    anyChain: AnyChain;
     arrayChain: ArrayChain;
     failOnFirstError: boolean;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
@@ -33,19 +35,24 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         super(args);
 
         const {
-            arrayChain = new ArrayChain({
-                chainHandlerCtor: ArrayHandler,
-                errorMessages: this._config.errorMessages,
-                pathDelims: this._config.pathDelims,
-            }),
+            anyChain = new AnyChain(),
+            arrayChain,
             failOnFirstError = false,
             renameKeysArgs = null,
             schema = {},
             stripExtraKeys = true,
         } = args;
 
+        if(!anyChain || !(anyChain instanceof AnyChain)) {
+            throw new Error('SchemaChain requires a valid AnyChain instance');
+        }
+        if(!arrayChain || !(arrayChain instanceof ArrayChain)) {
+            throw new Error('SchemaChain requires a valid ArrayChain instance');
+        }
+
         const { _config } = this;
-        _config.arrayChain = arrayChain;
+        _config.anyChain = anyChain.clearChain();
+        _config.arrayChain = arrayChain.clearChain();
         _config.cloneObject = true;
         _config.ensurePlain = true;
         _config.failOnFirstError = failOnFirstError;
@@ -56,9 +63,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
     public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
         const clone = super.clone(args);
-        const {
-            schema = null
-        } = args;
+        const { schema = null } = args;
         if (schema) {
             clone._config.schemaMap = this._createSchemaMap(schema);
         }
@@ -89,11 +94,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
                 field = this._config.arrayChain.tuple(value);
             }
             else {
-                field = new ValueField({
-                    errorMessages: this._config.errorMessages,
-                    pathDelims: this._config.pathDelims,
-                    value
-                });
+                field = this._config.anyChain.clone().default(value);
             }
             schemaMap.set(key, field);
         }

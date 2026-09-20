@@ -100,14 +100,14 @@ function getEqualityComparator(pathOrEqualityComparator: PathOrEqualityComparato
  * @param index Current dimension index being validated.
  * @returns Returns the original array when dimensions match, otherwise failure details.
  */
-function dimensionsRecursive(arr: unknown[], dimensions: number[], index: number = 0): ArrayHandlerResult {
+function getDimensionsInternal(arr: unknown[], dimensions: number[], index: number = 0): ArrayHandlerResult {
     if (arr.length !== dimensions[index]) {
         return fail(arr, "array/dimensions", { dimensions });
     }
     ++index;
     if (index < dimensions.length) {
         for (const item of arr) {
-            if (!Array.isArray(item) || dimensionsRecursive(item, dimensions, index).fail) {
+            if (!Array.isArray(item) || getDimensionsInternal(item, dimensions, index).fail) {
                 return fail(arr, "array/dimensions", { dimensions });
             }
         }
@@ -226,7 +226,7 @@ class ArrayHandler extends AnyHandler {
      * @returns Returns the original array when dimensions match, otherwise failure details.
      */
     public dimensions(arr: unknown[], dimensions: number[]): ArrayHandlerResult {
-        return dimensionsRecursive(arr, dimensions, 0);
+        return getDimensionsInternal(arr, dimensions, 0);
     }
 
 

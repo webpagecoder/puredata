@@ -7,7 +7,7 @@ import { Processor } from '../../Processor.ts';
 class PathValueProcessor extends Processor<PathValueField> {
 
     public override process(tracker: ValueTracker): void {
-        const { path, defaultOrCallback } = this._field.configuration;
+        const { path, defaultOrCallback } = this._field.config;
         const isCallback = typeof defaultOrCallback === 'function';
 
         if(path.isSelf) {

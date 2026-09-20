@@ -20,7 +20,8 @@ export type StringChainConfig = AnyChainConfig & {
 export type StringChainCtorParams = AnyChainCtorParams<StringChainConfig, StringHandler>;
 
 class StringChain extends AnyChain<StringChainCtorParams> {
-    constructor(args: StringChainCtorParams) {
+
+    constructor(args: Partial<StringChainCtorParams> = {}) {
         super(Object.assign({ chainHandlerCtor: StringHandler }, args));
 
         const {

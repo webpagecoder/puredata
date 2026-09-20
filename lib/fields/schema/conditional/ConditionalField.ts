@@ -2,13 +2,14 @@
 'use strict';
 
 import { Path } from '../../../Path.ts';
-import { Field, FieldCloneParams, FieldCtorParams, FieldConfig } from '../../Field.ts';
-import { ValueField } from '../../value/ValueField.ts';
+import { AnyChain } from '../../any/AnyChain.ts';
+import { Field, FieldCtorParams, FieldConfig } from '../../Field.ts';
 import { ConditionalProcessor } from './ConditionalProcessor.ts';
 
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 
 export type ConditionalFieldProps = FieldConfig & {
+    anyChain: AnyChain;
     buildStage: number;
     comparisonMode?: 'equals' | 'notEquals';
     comparisonField: Field;
@@ -25,18 +26,13 @@ export type ConditionalFieldCtorParams = FieldCtorParams
         targetPathStr: string;
     };
 
-export type ConditionalFieldCloneParams =
-    FieldCloneParams<ConditionalFieldProps> & {
-        targetPathStr?: string;
-    };
-
-
 class ConditionalField extends Field<ConditionalFieldProps> {
 
     constructor(args: ConditionalFieldCtorParams) {
         super(args);
 
         const {
+            anyChain,
             buildStage = 0,
             comparisonMode = 'equals',
             comparisonField,
@@ -46,17 +42,22 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             thenField = null,
         } = args;
 
+        if (!anyChain || !(anyChain instanceof AnyChain)) {
+            throw new Error('ConditionalField requires a valid AnyChain instance');
+        }
+
         const { _config } = this;
+        _config.anyChain = anyChain.clearChain();
+        _config.buildStage = buildStage;
         _config.comparisonMode = comparisonMode;
         _config.comparisonField = comparisonField;
         _config.conditionalChain = conditionalChain;
         _config.otherwiseField = otherwiseField;
-        _config.buildStage = buildStage;
         _config.targetPath = new Path(targetPathStr);
         _config.thenField = thenField;
     }
 
-    public override clone(args: ConditionalFieldCloneParams = {}): this {
+    public override clone(args: Partial<ConditionalFieldCtorParams> = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
             clone._config.targetPath = new Path(args.targetPathStr);
@@ -91,31 +92,27 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     then(thenResult: unknown | Field) {
-        if (this._config.buildStage !== 0) {
+        const { buildStage, anyChain } = this._config;
+        if (buildStage !== 0) {
             throw new Error('Illegal placement of "then" in condition chain');
         }
         return this.clone({
             thenField: thenResult instanceof Field
                 ? thenResult
-                : new ValueField({ 
-                    errorMessages: this._config.errorMessages, 
-                    value: thenResult 
-                }),
+                : anyChain.clearChain().default(thenResult),
             buildStage: 1
         });
     }
 
     otherwise(otherwiseResult: unknown | Field) {
-        if (this._config.buildStage !== 1) {
+        const { buildStage, anyChain } = this._config;
+        if (buildStage !== 1) {
             throw new Error('Illegal placement of "otherwise" in condition chain');
         }
         return this.clone({
             otherwiseField: otherwiseResult instanceof Field
                 ? otherwiseResult
-                : new ValueField({ 
-                    errorMessages: this._config.errorMessages, 
-                    value: otherwiseResult 
-                }),
+                : anyChain.clearChain().default(otherwiseResult),
             buildStage: 2
         });
     }

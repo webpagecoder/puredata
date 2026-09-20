@@ -127,10 +127,10 @@ class ObjectHandler extends AnyHandler {
      * @param keyCount Required recursive key count.
      * @returns Returns the original object when recursive key count matches exactly; otherwise returns a validation error.
      */
-    public keyCountRecursive(obj: object, keyCount: number): ObjectHandlerResult {
-        const actualKeyCount = Utils.getKeyCountRecursive(obj, keyCount);
+    public nestedKeyCount(obj: object, keyCount: number): ObjectHandlerResult {
+        const actualKeyCount = Utils.getNestedKeyCount(obj, keyCount);
         return actualKeyCount !== keyCount
-            ? fail(obj, 'object/keyCountRecursive', { actualKeyCount, keyCount })
+            ? fail(obj, 'object/nestedKeyCount', { actualKeyCount, keyCount })
             : pass(obj);
     }
 
@@ -166,10 +166,10 @@ class ObjectHandler extends AnyHandler {
      * @param maxKeyCount Maximum allowed recursive key count.
      * @returns Returns the original object when recursive key count is within the maximum; otherwise returns a validation error.
      */
-    public maxKeyCountRecursive(obj: object, maxKeyCount: number): ObjectHandlerResult {
-        const actualKeyCount = Utils.getKeyCountRecursive(obj, maxKeyCount);
+    public maxNestedKeyCount(obj: object, maxKeyCount: number): ObjectHandlerResult {
+        const actualKeyCount = Utils.getNestedKeyCount(obj, maxKeyCount);
         return actualKeyCount === false
-            ? fail(obj, 'object/maxKeyCountRecursive', { actualKeyCount, maxKeyCount })
+            ? fail(obj, 'object/maxNestedKeyCount', { actualKeyCount, maxKeyCount })
             : pass(obj);
     }
 
@@ -205,11 +205,11 @@ class ObjectHandler extends AnyHandler {
      * @param minKeyCount Minimum required recursive key count.
      * @returns Returns the original object when recursive key count is at least the minimum; otherwise returns a validation error.
      */
-    public minKeyCountRecursive(obj: object, minKeyCount: number): ObjectHandlerResult {
-        const actualKeyCount = Utils.getKeyCountRecursive(obj, minKeyCount);
+    public minNestedKeyCount(obj: object, minKeyCount: number): ObjectHandlerResult {
+        const actualKeyCount = Utils.getNestedKeyCount(obj, minKeyCount);
         return actualKeyCount === false || actualKeyCount === minKeyCount
             ? pass(obj)
-            : fail(obj, 'object/minKeyCountRecursive', { actualKeyCount, minKeyCount });
+            : fail(obj, 'object/minNestedKeyCount', { actualKeyCount, minKeyCount });
     }
 
     /**
@@ -351,7 +351,7 @@ class ObjectHandler extends AnyHandler {
      * @returns Returns a new object with top-level keys removed when their values are considered empty.
      */
     public stripEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
-        return this.removeValues(obj, emptyValues);
+        return this.stripValues(obj, emptyValues);
     }
 
     /**
@@ -360,8 +360,8 @@ class ObjectHandler extends AnyHandler {
      * @param emptyValues Values that should be removed.
      * @returns Returns a new object with empty values removed recursively through nested plain objects.
      */
-    public stripEmptiesRecursive(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
-        return this.removeValuesRecursive(obj, emptyValues);
+    public stripNestedEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+        return this.stripNestedValues(obj, emptyValues);
     }
 
     /**
@@ -370,7 +370,7 @@ class ObjectHandler extends AnyHandler {
      * @param exceptFor Keys to keep.
      * @returns Returns a new object containing only the keys listed in exceptFor.
      */
-    public removeKeys(obj: object, exceptFor: PropertyKey[] = []): ObjectHandlerResult {
+    public stripKeys(obj: object, exceptFor: PropertyKey[] = []): ObjectHandlerResult {
         const newObj: Record<PropertyKey, unknown> = {};
         for (const key of exceptFor) {
             newObj[key] = (obj as Record<PropertyKey, unknown>)[key];
@@ -384,9 +384,9 @@ class ObjectHandler extends AnyHandler {
      * @param paths Paths to remove.
      * @returns Returns the same object after attempting to remove each provided path.
      */
-    public removePaths(obj: object, paths: (string | Path)[] = []): ObjectHandlerResult {
+    public stripPaths(obj: object, paths: (string | Path)[] = []): ObjectHandlerResult {
         for (const path of paths) {
-            Utils.removePath(obj, new Path(path));
+            Utils.stripPath(obj, new Path(path));
         }
         return pass(obj);
     }
@@ -397,34 +397,11 @@ class ObjectHandler extends AnyHandler {
      * @param values Values that should be removed.
      * @returns Returns a new object with top-level keys removed when their values are in the provided list.
      */
-    public removeValues(obj: object, values: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+    public stripValues(obj: object, values: unknown[] = [null, undefined, '']): ObjectHandlerResult {
         const newObj: Record<PropertyKey, unknown> = {};
         for (const key of Object.keys(obj)) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
             if (values.indexOf(value) === -1) {
-                newObj[key] = value;
-            }
-        }
-        return pass(newObj);
-    }
-
-    /**
-     * Recursively removes keys whose values are in the provided values list.
-     * @param obj Source object.
-     * @param values Values that should be removed.
-     * @returns Returns a new object with empty values removed recursively through nested plain objects.
-     */
-    public removeValuesRecursive(obj: object, values: unknown[] = [null, undefined, '']): ObjectHandlerResult {
-        const newObj: Record<PropertyKey, unknown> = {};
-        for (const key of Object.keys(obj)) {
-            const value = (obj as Record<PropertyKey, unknown>)[key];
-            if (Utils.isPlainObject(value)) {
-                const cleaned = this.removeValuesRecursive(value as object, values);
-                if (Object.keys(cleaned).length > 0) {
-                    newObj[key] = cleaned;
-                }
-            }
-            else if (values.indexOf(value) === -1) {
                 newObj[key] = value;
             }
         }
@@ -476,6 +453,28 @@ class ObjectHandler extends AnyHandler {
         return pass(obj);
     }
 
+    /**
+     * Recursively removes keys whose values are in the provided values list.
+     * @param obj Source object.
+     * @param values Values that should be removed.
+     * @returns Returns a new object with empty values removed recursively through nested plain objects.
+     */
+    public stripNestedValues(obj: object, values: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+        const newObj: Record<PropertyKey, unknown> = {};
+        for (const key of Object.keys(obj)) {
+            const value = (obj as Record<PropertyKey, unknown>)[key];
+            if (Utils.isPlainObject(value)) {
+                const cleaned = this.stripNestedValues(value as object, values);
+                if (Object.keys(cleaned).length > 0) {
+                    newObj[key] = cleaned;
+                }
+            }
+            else if (values.indexOf(value) === -1) {
+                newObj[key] = value;
+            }
+        }
+        return pass(newObj);
+    }
 
 }
 
