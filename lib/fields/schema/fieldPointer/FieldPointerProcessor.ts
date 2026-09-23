@@ -26,7 +26,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
         const { ancestors, parent, absolutePath } = context;
         const { fieldPath } = this._field.config;
     
-        const referencedProcessor = parent.resolvePath(fieldPath, this, ancestors);
+        const referencedProcessor = parent.resolveSchemaPath(fieldPath, this, ancestors);
 
         if(referencedProcessor === this) {
             throw new Error('At key ' + absolutePath + ' - field pointer cannot point to self');
@@ -59,13 +59,13 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
 
         const { minDepth, maxDepth } = this._field.config;
 
-        tracker.setNestDepth(tracker.parent!.nestDepth + 1);
+        tracker.setNestDepth(tracker.parent.nestDepth + 1);
 
         if (tracker.nestDepth === 1) {
             tracker.setNestRoot(tracker);
         }
         else {
-            tracker.setNestRoot(tracker.parent!.nestRoot);
+            tracker.setNestRoot(tracker.parent.nestRoot);
         }
 
         const value = tracker.getValue();

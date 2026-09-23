@@ -115,10 +115,8 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                         rootTracker
                     } = context as ReferenceResolverContext;
 
-                    const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative());
+                    const subTracker = rootTracker.resolveTrackerPath(absoluteSubPath.toRelative());
 
-                    // const { tracker, failOnFirstError } = context;
-                    // const subTracker = (tracker as ValueTracker).resolvePath(absoluteSubPath.toRelative());
                     if (subTracker) {
                         resolvedChildProcessor.process(subTracker);
                     }
@@ -277,7 +275,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
     }
 
-    public resolvePath(path: Path, self: Processor, ancestors: SchemaProcessor[] = []): null | Processor {
+    public resolveSchemaPath(path: Path, self: Processor, ancestors: SchemaProcessor[] = []): null | Processor {
         if (path.isSelf) {
             return self;
         }

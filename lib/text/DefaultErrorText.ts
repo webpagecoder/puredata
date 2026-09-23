@@ -2,10 +2,12 @@
 
 const DefaultErrorText: Record<string, string> = {
     'any/anyOf': 'Must be one of: {allowedValues}',
+    'any/base': 'Invalid value',
     'any/defined': 'Must be defined',
     'any/empty': 'Must be empty',
     'any/equals': 'Must equal {comparison}',
     'any/falsy': 'Must be falsy',
+    'any/forbidden': 'Is forbidden',
     'any/instanceOf': 'Must be an instance of {constructor}',
     'any/noneOf': 'Cannot be one of: {forbiddenValues}',
     'any/notEmpty': 'Must not be empty',
@@ -15,6 +17,7 @@ const DefaultErrorText: Record<string, string> = {
     'any/null': 'Must be null',
     'any/nullish': 'Must be null or undefined',
     'any/primitive': 'Must be a primitive type (actual type: {actualType})',
+    'any/required': 'Is required',
     'any/truthy': 'Must be truthy',
     'any/undefined': 'Must be undefined',
 
@@ -126,8 +129,8 @@ const DefaultErrorText: Record<string, string> = {
     'object/pathsOtherThan': 'Must contain paths other than: {paths}',
     'object/plain': 'Must be a plain object',
     'object/property': 'Must include property {property}',
-    'object/nest/tooDeep': 'Recursive structure exceeds maximum depth',
-    'object/nest/tooShallow': 'Recursive structure does not meet minimum depth',
+    'object/nest/tooDeep': 'Nested data exceeds maximum depth of {maxDepth}',
+    'object/nest/tooShallow': 'Nested data does not meet minimum depth of {minDepth}',
     'object/someOfPaths': 'Must contain at least one of these paths: {paths}',
     'object/tooComplex': 'Object is too complex (max depth: {maxDepth}, max keys: {maxKeyCount})',
     'object/xOfPaths': 'Must contain exactly {count} of these paths: {paths}',

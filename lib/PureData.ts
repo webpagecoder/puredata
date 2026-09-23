@@ -124,8 +124,8 @@ class PureData {
         return new AnyChain(this._composeFieldProps({ value, mutable: true }));
     }
 
-    public value(pathStr: string, defaultOrCallback: unknown = undefined) {
-        return new PathValueField(this._composeFieldProps({ pathStr, defaultOrCallback }));
+    public value<T = unknown>(pathStr: string, defaultOrCallback: unknown = undefined): T {
+        return new PathValueField(this._composeFieldProps({ pathStr, defaultOrCallback })) as T;
     }
 
     // Field pointer

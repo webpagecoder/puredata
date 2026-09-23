@@ -25,7 +25,7 @@ class ValueTracker {
     // Navigation
     protected _nestDepth: number;
     protected _nestRoot: ValueTracker | null;
-    protected _parent: this | null;
+    protected _parent: this;
     protected _path: Path;
     protected _root: this;
 
@@ -38,7 +38,7 @@ class ValueTracker {
     public constructor(field: Field, value?: unknown) {
         this._nestDepth = 0;
         this._nestRoot = null;
-        this._parent = null;
+        this._parent = this;
         this._path = new Path('/');
         this._root = this;
 
@@ -181,13 +181,14 @@ class ValueTracker {
         this._errorCollection = [];
     }
 
-    public setFail(errorKey: string = 'generic/base', args?: Record<string, unknown>) {
+    public setFail(errorKey: string = 'any/base', args?: Record<string, unknown>) {
         this._errorCollection = [];
         this.addError(errorKey, args);
     }
 
     public getErrors(): ErrorTree {
         const obj: ErrorTree = {
+            depth: this._nestDepth,
             errors: this._errorCollection,
             children: {}
         };
@@ -201,7 +202,7 @@ class ValueTracker {
     }
 
     public getLocalErrors(path?: Path): TrackerError[] {
-        const tracker = path ? this.resolvePath(path) : this;
+        const tracker = path ? this.parent.resolveTrackerPath(path) : this;
         return tracker ? (tracker as ValueTracker)._errorCollection : [];
     }
 
@@ -213,12 +214,12 @@ class ValueTracker {
         return formatter.format(this);
     }
 
-    public resolvePath(path: Path): ValueTracker | null {
+    public resolveTrackerPath(path: Path): ValueTracker | null {
         if (path.isSelf) {
             return this;
         }
 
-        let tracker: ValueTracker | null = this;
+        let tracker = this;
 
         // Determine starting point based on abs/relative positioning
         if (path.isAbsolute) {
@@ -285,7 +286,7 @@ class ValueTracker {
         return this._nestRoot;
     }
 
-    public get parent(): this | null {
+    public get parent(): this {
         return this._parent;
     }
 

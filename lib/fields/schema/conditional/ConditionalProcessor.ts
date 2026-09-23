@@ -72,7 +72,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
         let targetTracker = targetPath.isSelf
             ? tracker
-            : tracker.resolvePath(targetPath);
+            : tracker.parent.resolveTrackerPath(targetPath);
 
         if (!targetTracker) {
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);

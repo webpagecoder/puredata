@@ -245,19 +245,6 @@ class NumberHandler extends AnyHandler {
     }
 
     /**
-     * Validates that a value is a number and not NaN.
-     * @param num Value being validated.
-     * @returns Returns the original value if it is a valid number; otherwise returns a validation error.
-     */
-    //todo: should this be here??????
-    public number(num: number): NumberHandlerResult {
-        return typeof num === 'number' && !Number.isNaN(num)
-            ? pass(num)
-            : fail(num, 'number/base');
-    }
-
-
-    /**
      * Validates that a number is odd.
      * @param num Number being validated.
      * @returns Returns the original number if it is odd; otherwise returns a validation error.

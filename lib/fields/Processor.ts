@@ -42,10 +42,10 @@ abstract class Processor<F extends Field = Field> {
         const isDefined = tracker.getValue() !== undefined;
 
         if (_field.isRequired() && !isDefined) {
-            tracker.addError('generic/required');
+            tracker.addError('any/required');
         }
         else if (_field.isForbidden() && isDefined) {
-            tracker.addError('generic/forbidden');
+            tracker.addError('any/forbidden');
         }
         else if (!isDefined) {
             const { _defaultValuePathValueProcessor } = this;

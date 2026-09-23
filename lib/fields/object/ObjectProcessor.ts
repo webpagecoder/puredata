@@ -51,13 +51,15 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
         }
 
         if (stripNestedEmpties) {
+            const val = chainHandler.stripNestedEmpties(tracker.getValue() as object).value;
             tracker.setValue(
-                chainHandler.stripNestedEmpties(tracker.getValue() as object).value
+                val
             );
         }
         else if (stripEmpties) {
+            const val = chainHandler.stripEmpties(tracker.getValue() as object).value;
             tracker.setValue(
-                chainHandler.stripEmpties(tracker.getValue() as object).value
+                val
             );
         }
     }

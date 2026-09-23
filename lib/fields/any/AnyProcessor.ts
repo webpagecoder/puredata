@@ -75,7 +75,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
             // a regular chain cant really refer to itself
             for (const arg of args) {
                 if (arg instanceof PathValueField) {
-                    const refValueTracker = tracker.resolvePath(arg.config.path);
+                    const refValueTracker = tracker.parent.resolveTrackerPath(arg.config.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {
