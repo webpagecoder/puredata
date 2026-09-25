@@ -23,7 +23,7 @@ export type ErrorTree = {
 class ValueTracker {
 
     // Navigation
-    protected _nestDepth: number;
+    protected _nestDepth: number | null;
     protected _nestRoot: ValueTracker | null;
     protected _parent: this;
     protected _path: Path;
@@ -36,7 +36,7 @@ class ValueTracker {
     protected _rawValue: unknown;
 
     public constructor(field: Field, value?: unknown) {
-        this._nestDepth = 0;
+        this._nestDepth = null;
         this._nestRoot = null;
         this._parent = this;
         this._path = new Path('/');

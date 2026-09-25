@@ -3,7 +3,7 @@
 import { FieldPointerField } from './FieldPointerField.ts';
 import { Path } from '../../../Path.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
-import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
+import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } from '../../Processor.ts';
 import { SchemaProcessor } from '../SchemaProcessor.ts';
 
 export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
@@ -54,20 +54,9 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
         }
     }
 
-    // Note: this will only be called if the reference is a nest (i.e. it has a parent)
-    public override process(tracker: ValueTracker): void {
-
+    // This processor will only be called for a nested schema
+    public override process(tracker: ValueTracker, state: State): void {
         const { minDepth, maxDepth } = this._field.config;
-
-        tracker.setNestDepth(tracker.parent.nestDepth + 1);
-
-        if (tracker.nestDepth === 1) {
-            tracker.setNestRoot(tracker);
-        }
-        else {
-            tracker.setNestRoot(tracker.parent.nestRoot);
-        }
-
         const value = tracker.getValue();
 
         if (value === undefined && tracker.nestDepth - 1 < minDepth) {
@@ -78,7 +67,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
                 tracker.nestRoot!.addError('object/nest/tooDeep', { minDepth, maxDepth });
             }
             else {
-                this._innerNestedProcessor!.process(tracker);
+                this._innerNestedProcessor!.process(tracker, state);
             }
         }
     }

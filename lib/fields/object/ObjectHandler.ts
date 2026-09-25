@@ -464,10 +464,7 @@ class ObjectHandler extends AnyHandler {
         for (const key of Object.keys(obj)) {
             const value = (obj as Record<PropertyKey, unknown>)[key];
             if (Utils.isPlainObject(value)) {
-                const cleaned = this.stripNestedValues(value as object, values).value;
-                if (Object.keys(cleaned).length > 0) {
-                    newObj[key] = cleaned;
-                }
+                newObj[key] = this.stripNestedValues(value as object, values).value;
             }
             else if (values.indexOf(value) === -1) {
                 newObj[key] = value;

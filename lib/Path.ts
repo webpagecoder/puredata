@@ -54,8 +54,9 @@ class Path {
         this._delims = { self, separator, up };
         this._isAbsolute = isAbsolute;
         this._keys = keys;
-        this._string = this.toString();
         this._upCount = upCount;
+
+        this._string = this.toString();
     }
 
     public get delims(): PathDelimTypes {
