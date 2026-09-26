@@ -293,28 +293,22 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
     }
 
-    public resolveSchemaPath(path: Path, self: Processor, ancestors: SchemaProcessor[] = []): null | Processor {
+    public resolveSchemaPath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {
         if (path.isSelf) {
-            return self;
+            throw new Error('Cannot resolve self path');
         }
-
-        let processor: Processor | null;
-        if (path.isAbsolute) {
+        
+        let processor: SchemaProcessor;
+        if(path.isAbsolute || path.upCount > ancestors.length) {
             processor = ancestors[0];
-        }
+        } 
         else {
-            ancestors = ancestors.slice(0, -1);
-            processor = this;
-            let upCount = path.upCount ;
-            while (upCount > 0) {
-                if (ancestors.length === 0) {
-                    return null;
-                }
-                processor = ancestors.pop() as Processor;
-                --upCount;
-            }
+            processor = ancestors.slice(0, -path.upCount).pop() as SchemaProcessor;
         }
 
+        if(!processor) {
+            return null;
+        }
         for (const key of path.keys) {
             if (!processor || !(processor instanceof SchemaProcessor)) {
                 return null;

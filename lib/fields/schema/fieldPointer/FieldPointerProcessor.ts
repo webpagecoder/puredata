@@ -26,11 +26,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
         const { ancestors, parent, absolutePath } = context;
         const { fieldPath } = this._field.config;
     
-        const referencedProcessor = parent.resolveSchemaPath(fieldPath, this, ancestors);
-
-        if(referencedProcessor === this) {
-            throw new Error('At key ' + absolutePath + ' - field pointer cannot point to self');
-        }
+        const referencedProcessor = parent.resolveSchemaPath(fieldPath, ancestors);
 
         if (!referencedProcessor) {
             throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);
@@ -40,7 +36,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
             throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
         }
 
-        const resolvedRefPath = absolutePath.move(fieldPath);
+        const resolvedRefPath = absolutePath.parent().move(fieldPath);
         const { separator } = absolutePath.delims;
         const isNest = resolvedRefPath.isRoot
             || (absolutePath.toString() + separator).startsWith(resolvedRefPath.toString() + separator);
