@@ -23,7 +23,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
     public override compile(context: FieldPointerProcessorCompilationContext): Processor {
 
         const { parent, absolutePath } = context;
-        const { fieldPath } = this._field.config;
+        const { fieldPath } = this.field.config;
 
         const referencedProcessor = parent.resolvePath(fieldPath);
 
@@ -51,7 +51,7 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
 
     // This processor will only be called for a nested schema
     public override process(tracker: ValueTracker, state: State): void {
-        const { minDepth, maxDepth } = this._field.config;
+        const { minDepth, maxDepth } = this.field.config;
         const value = tracker.getValue();
 
         if (value === undefined && tracker.nestDepth - 1 < minDepth) {

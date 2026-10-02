@@ -20,7 +20,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     constructor(args: ConditionalProcessorCtorParams) {
         super(args);
 
-        const { comparisonField, conditionalChain, otherwiseField, thenField } = this._field.config;
+        const { comparisonField, conditionalChain, otherwiseField, thenField } = this.field.config;
 
         this._comparisonProcessor = comparisonField.createProcessor().compile() as Processor;
         this._otherwiseProcessor = otherwiseField
@@ -41,7 +41,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     }
 
     public override compile({ isNested = false }: ConditionalProcessorCompilationContext = {}): this {
-        const { _field: { config: { buildStage } } } = this;
+        const { field: { config: { buildStage } } } = this;
 
         if (isNested && buildStage !== 0) {
             throw new Error('Nested conditionals may NOT contain then/otherwise');

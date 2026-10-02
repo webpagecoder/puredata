@@ -28,7 +28,7 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
                 stripEmpties,
                 stripNestedEmpties,
             }
-        } = this._field as ObjectChain;
+        } = this.field as ObjectChain;
 
         if (ensurePlain && !Utils.isPlainObject(value)) {
             tracker.addError('object/plain');

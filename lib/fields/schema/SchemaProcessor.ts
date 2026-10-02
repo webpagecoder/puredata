@@ -38,9 +38,7 @@ export type ReferenceResolverContext = PubSubContext & {
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(BoundObjectProcessor) {
-
-    declare public children: Record<string, Processor>;
+class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectProcessor>(BoundObjectProcessor) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
     private _nests: CompiledSchema<FieldPointerProcessor>;
@@ -116,7 +114,7 @@ class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(Bou
                         rootTracker
                     } = context as ReferenceResolverContext;
 
-                    const subTracker = rootTracker.resolvePath<ValueTracker>(absoluteSubPath.toRelative());
+                    const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative());
 
                     if (subTracker) {
                         resolvedChildProcessor.process(subTracker);
@@ -189,7 +187,7 @@ class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(Bou
         }
 
         const {
-            _field,
+            field,
             children,
             _conditionals,
             _nests,
@@ -202,7 +200,7 @@ class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(Bou
             config: {
                 renameKeysArgs, stripExtraKeys, failOnFirstError
             }
-        } = _field;
+        } = field;
 
         // Do any required key renaming
         if (renameKeysArgs) {
@@ -213,7 +211,7 @@ class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(Bou
         if (stripExtraKeys) {
             tracker.setValue(chainHandler.stripKeys(
                 tracker.getValue() as object,
-                Array.from(_field.config.schemaMap.keys())
+                Array.from(field.config.schemaMap.keys())
             ).value);
         }
 

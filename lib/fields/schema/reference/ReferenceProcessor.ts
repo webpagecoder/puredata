@@ -7,7 +7,7 @@ import { Processor } from '../../Processor.ts';
 class ReferenceProcessor extends Processor<ReferenceField> {
 
     public override process(tracker: ValueTracker): void {
-        const { path, defaultOrCallback } = this._field.config;
+        const { path, defaultOrCallback } = this.field.config;
         const isCallback = typeof defaultOrCallback === 'function';
 
         if(path.isSelf) {

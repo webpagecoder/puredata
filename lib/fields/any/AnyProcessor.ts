@@ -33,7 +33,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     }
 
     public override compile(context?: ProcessorCompilationContext): Processor {
-        const { defaultValue } = this._field.config;
+        const { defaultValue } = this.field.config;
         if (defaultValue instanceof ReferenceField) {
             this._defaultValueReferenceProcessor = defaultValue.createProcessor().compile(context) as ReferenceProcessor;
         }
@@ -43,7 +43,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     public postProcess(tracker: ValueTracker): void {}
 
     public override process(tracker: ValueTracker): void {
-        const { defaultValue, mutable } = this._field.config;
+        const { defaultValue, mutable } = this.field.config;
         if(!mutable) {
             tracker.setValue(defaultValue);
             return;
@@ -58,13 +58,13 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
     public resolveStepArgs(args: PipelineStep['args']): unknown[] {
         if (typeof args === 'function') {
-            return args.call(this._field);
+            return args.call(this.field);
         }
         return args || [];
     }
 
     public executePipeline(tracker: ValueTracker): void {
-        const pipeline = this._field.pipeline || [];
+        const pipeline = this.field.pipeline || [];
 
         for (const step of pipeline) {
             let { fn, argsOrCallback: args } = step;
@@ -96,7 +96,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
         }
     }
 
-    private _copyResultToTracker(tracker: ValueTracker, result: HandlerResult): void {
+    protected _copyResultToTracker(tracker: ValueTracker, result: HandlerResult): void {
         tracker.setValue(result.value);
         if (result.fail) {
             for (const key of Object.keys(result.errors)) {

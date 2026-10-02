@@ -16,16 +16,18 @@ abstract class Processor<F extends Field = Field> {
 
     private static id: number = 0
 
+    public field: F;
+
     protected _id: number;
     protected _defaultValueReferenceProcessor: ReferenceProcessor | null;
-    protected _field: F;
 
     constructor(args: ProcessorCtorParams<F>) {
         const { field } = args;
 
         this._id = ++Processor.id;
         this._defaultValueReferenceProcessor = null;
-        this._field = Object.seal(field);
+
+        this.field = field;
     }
 
     public compile(context?: ProcessorCompilationContext): Processor {
@@ -35,14 +37,14 @@ abstract class Processor<F extends Field = Field> {
     public abstract process(tracker: ValueTracker, state?: State): void;
 
     public preProcess(tracker: ValueTracker): void {
-        const { _field } = this;
+        const { field } = this;
 
         const isDefined = tracker.getValue() !== undefined;
 
-        if (_field.isRequired() && !isDefined) {
+        if (field.isRequired() && !isDefined) {
             tracker.addError('any/required');
         }
-        else if (_field.isForbidden() && isDefined) {
+        else if (field.isForbidden() && isDefined) {
             tracker.addError('any/forbidden');
         }
         else if (!isDefined) {
@@ -51,13 +53,9 @@ abstract class Processor<F extends Field = Field> {
                 _defaultValueReferenceProcessor.process(tracker);
             }
             else {
-                tracker.setValue(_field.defaultValue);
+                tracker.setValue(field.default);
             }
         }
-    }
-
-    public get field(): F {
-        return this._field;
     }
 
 }

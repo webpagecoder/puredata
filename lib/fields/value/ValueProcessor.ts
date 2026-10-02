@@ -8,7 +8,7 @@
 
 //     public override process(tracker: ValueTracker): void {
 //         this.preProcess(tracker);
-//         const { mutable, value } = this._field.configuration;
+//         const { mutable, value } = this.field.configuration;
 //         if (!mutable || tracker.getValue() === undefined) {
 //             tracker.setValue(value);
 //         }

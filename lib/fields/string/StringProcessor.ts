@@ -14,7 +14,7 @@ class StringProcessor extends AnyProcessor<StringChain> {
                 trim,
                 truncate
             }
-        } = this._field;
+        } = this.field;
 
         if (typeof tracker.getValue() !== 'string') {
             if (!autoConvert) {

@@ -4,33 +4,33 @@ import { Path } from "./Path.ts";
 
 type Constructor = new (...args: any[]) => any;
 
-function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: TBase) {
+function PathTreeNodeMixin<CType = unknown, TBase extends Constructor = Constructor>(BaseClass: TBase) {
     const SYM_IS_NODE = Symbol('isNode');
     const SYM_CHILDREN = Symbol('children');
     const SYM_PARENT = Symbol('parent');
 
-    return class Node extends BaseClass {
+    return class extends BaseClass {
 
         constructor(...args: any[]) {
             super(...args);
             (this as any)[SYM_IS_NODE] = true;
-            (this as any)[SYM_CHILDREN] = {} as Record<string, unknown>;
+            (this as any)[SYM_CHILDREN] = {} as Record<string, CType>;
             (this as any)[SYM_PARENT] = this;
         }
 
-        public resolvePath<T = Node>(path: Path): T | null {
+        public resolvePath(path: Path): CType | null {
             if (path.isSelf) {
-                return this as unknown as T;
+                return this as unknown as CType;
             }
 
-            let node: Node;
+            let node: CType;
 
             // Determine starting point based on abs/relative positioning
             if (path.isAbsolute) {
                 node = this.root;
             }
             else {
-                node = this;
+                node = this as unknown as CType;
                 let i = path.upCount;
                 while (i > 0) {
                     node = (node as any)[SYM_PARENT];
@@ -50,23 +50,23 @@ function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: T
                 }
                 node = child;
             }
-            return node as T;
+            return node as CType;
         }
 
-        public get children() {
-            return (this as any)[SYM_CHILDREN] as Record<string, unknown>;
+        public get children(): Record<string, CType> {
+            return (this as any)[SYM_CHILDREN];
         }
 
-        public get parent() {
-            return (this as any)[SYM_PARENT] as unknown;
+        public get parent(): CType {
+            return (this as any)[SYM_PARENT];
         }
 
-        public get root() {
-            let node: Node = this;
+        public get root(): CType {
+            let node = this;
             while ((node as any)[SYM_PARENT] !== node) {
                 node = (node as any)[SYM_PARENT];
             }
-            return node;
+            return node as unknown as CType;
         }
 
         public addChild(key: string, value: unknown) {
@@ -76,7 +76,7 @@ function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: T
             (this as any)[SYM_CHILDREN][key] = value;
         }
 
-        public setChildren(children: Record<string, unknown>) {
+        public setChildren(children: Record<string, CType>) {
             (this as any)[SYM_CHILDREN] = children;
         }
 
