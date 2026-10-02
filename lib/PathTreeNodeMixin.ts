@@ -1,0 +1,86 @@
+'use strict';
+
+import { Path } from "./Path.ts";
+
+type Constructor = new (...args: any[]) => any;
+
+function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: TBase) {
+    const SYM_IS_NODE = Symbol('isNode');
+    const SYM_CHILDREN = Symbol('children');
+    const SYM_PARENT = Symbol('parent');
+
+    return class Node extends BaseClass {
+
+        constructor(...args: any[]) {
+            super(...args);
+            (this as any)[SYM_IS_NODE] = true;
+            (this as any)[SYM_CHILDREN] = {} as Record<string, unknown>;
+            (this as any)[SYM_PARENT] = this;
+        }
+
+        public resolvePath<T = Node>(path: Path): T | null {
+            if (path.isSelf) {
+                return this as unknown as T;
+            }
+
+            let node: Node;
+
+            // Determine starting point based on abs/relative positioning
+            if (path.isAbsolute) {
+                node = this.root;
+            }
+            else {
+                node = this;
+                let i = path.upCount;
+                while (i > 0) {
+                    node = (node as any)[SYM_PARENT];
+                    --i;
+                }
+            }
+
+            if (!node) {
+                return null;
+            }
+
+            // Dive into path keys
+            for (const key of path.keys) {
+                const child = (node as any)[SYM_CHILDREN][key];
+                if (!(child && (child as any)[SYM_IS_NODE])) {
+                    return null;
+                }
+                node = child;
+            }
+            return node as T;
+        }
+
+        public get children() {
+            return (this as any)[SYM_CHILDREN] as Record<string, unknown>;
+        }
+
+        public get parent() {
+            return (this as any)[SYM_PARENT] as unknown;
+        }
+
+        public get root() {
+            let node: Node = this;
+            while ((node as any)[SYM_PARENT] !== node) {
+                node = (node as any)[SYM_PARENT];
+            }
+            return node;
+        }
+
+        public addChild(key: string, value: unknown) {
+            if (value && (value as any)[SYM_IS_NODE]) {
+                (value as any)[SYM_PARENT] = this;
+            }
+            (this as any)[SYM_CHILDREN][key] = value;
+        }
+
+        public setChildren(children: Record<string, unknown>) {
+            (this as any)[SYM_CHILDREN] = children;
+        }
+
+    }
+};
+
+export { PathTreeNodeMixin };

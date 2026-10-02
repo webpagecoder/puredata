@@ -23,10 +23,10 @@ class FieldPointerField extends Field<FieldPointerFieldProps> {
             maxDepth = -1,
         } = args;
 
-        const { _config } = this;
-        _config.fieldPath = fieldPath;
-        _config.minDepth = minDepth;
-        _config.maxDepth = maxDepth;
+        const { config } = this;
+        config.fieldPath = fieldPath;
+        config.minDepth = minDepth;
+        config.maxDepth = maxDepth;
     }
 
     public override createProcessor(): FieldPointerProcessor {

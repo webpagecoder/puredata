@@ -6,9 +6,9 @@ export type NodeCallback = (context?: PubSubContext) => boolean;
 
 class Node {
 
-    protected _key: unknown;
-    protected _callback: NodeCallback;
-    protected _children: Set<Node>;
+    private _key: unknown;
+    private _callback: NodeCallback;
+    private _children: Set<Node>;
 
     public constructor(key: unknown, callback: NodeCallback = (_context?: PubSubContext) => true) {
         this._key = key;

@@ -29,9 +29,9 @@ export type AnyChainCtorParams<
 
 class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<P> {
 
-    protected _chainHandler: P['chainHandler'];
-    protected _chainHandlerCtor: new (...args: unknown[]) => P['chainHandler'];
-    protected _pipeline: ChainStep[];
+    private _chainHandler: P['chainHandler'];
+    private _chainHandlerCtor: new (...args: unknown[]) => P['chainHandler'];
+    private _pipeline: ChainStep[];
 
     public constructor(args: Partial<P> = {}) {
         super(args);
@@ -47,8 +47,8 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         this._chainHandlerCtor = chainHandlerCtor as new (...args: unknown[]) => P['chainHandler'];
         this._pipeline = pipeline;
 
-        this._config.emptyValues = emptyValues;
-        this._config.mutable = mutable;
+        this.config.emptyValues = emptyValues;
+        this.config.mutable = mutable;
 
         return new Proxy(this, this as ProxyHandler<this>);
     }
@@ -84,8 +84,8 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         clone._chainHandlerCtor = this._chainHandlerCtor;
         clone._pipeline = [...this._pipeline];
 
-        clone._config.emptyValues = this._config.emptyValues;
-        clone._config.mutable = this._config.mutable;
+        clone.config.emptyValues = this.config.emptyValues;
+        clone.config.mutable = this.config.mutable;
 
         if (stepToAdd) {
             clone._pipeline.push(stepToAdd);
@@ -129,13 +129,13 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
 
     public empty(): this {
         return this.addStepToChain('empty', () => {
-            return [this._config.emptyValues];
+            return [this.config.emptyValues];
         });
     }
 
     public notEmpty(): this {
         return this.addStepToChain('notEmpty', () => {
-            return [this._config.emptyValues];
+            return [this.config.emptyValues];
         });
     }
 

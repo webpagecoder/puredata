@@ -1,12 +1,12 @@
 'use strict';
 
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
-import { PathValueField } from '../schema/pathValue/PathValueField.ts';
+import { ReferenceField } from '../schema/reference/ReferenceField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Field } from '../Field.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { AnyChain } from './AnyChain.ts';
-import { PathValueProcessor } from '../schema/pathValue/PathValueProcessor.ts';
+import { ReferenceProcessor } from '../schema/reference/ReferenceProcessor.ts';
 
 export type PipelineError = {
     key: string;
@@ -34,8 +34,8 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
     public override compile(context?: ProcessorCompilationContext): Processor {
         const { defaultValue } = this._field.config;
-        if (defaultValue instanceof PathValueField) {
-            this._defaultValuePathValueProcessor = defaultValue.createProcessor().compile(context) as PathValueProcessor;
+        if (defaultValue instanceof ReferenceField) {
+            this._defaultValueReferenceProcessor = defaultValue.createProcessor().compile(context) as ReferenceProcessor;
         }
         return this;
     }
@@ -74,8 +74,8 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
             // todo: this should be moved to object child executePipeline.
             // a regular chain cant really refer to itself
             for (const arg of args) {
-                if (arg instanceof PathValueField) {
-                    const refValueTracker = tracker.parent.resolveTrackerPath(arg.config.path);
+                if (arg instanceof ReferenceField) {
+                    const refValueTracker = tracker.parent.resolvePath(arg.config.path);
                     finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
                 }
                 else if (args != null) {
@@ -96,7 +96,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
         }
     }
 
-    protected _copyResultToTracker(tracker: ValueTracker, result: HandlerResult): void {
+    private _copyResultToTracker(tracker: ValueTracker, result: HandlerResult): void {
         tracker.setValue(result.value);
         if (result.fail) {
             for (const key of Object.keys(result.errors)) {

@@ -26,8 +26,9 @@ export type ConfigFromParams<P extends FieldCtorParams> =
 
 abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
-    protected _cachedProcessor: Processor | null;
-    protected _config: ConfigFromParams<P>;
+    public config: ConfigFromParams<P>;
+    
+    private _cachedProcessor: Processor | null;
 
     public constructor(args: Partial<P> = {}) {
         const {
@@ -41,7 +42,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         } = args;
 
         this._cachedProcessor = null;
-        this._config = {
+        this.config = {
             autoConvert,
             defaultValue,
             errorMessages: errorMessages.clone(),
@@ -50,10 +51,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
             presence,
             strip
         } as ConfigFromParams<P>;
-    }
-
-    public get config(): ConfigFromParams<P> {
-        return this._config;
     }
 
     public get processor(): Processor {
@@ -65,19 +62,19 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
     public clone(args: Partial<P> = {}): this {
 
-        const { _config } = this;
+        const { config } = this;
         const {
-            autoConvert = _config.autoConvert,
-            defaultValue = _config.defaultValue,
-            errorMessages = _config.errorMessages.override(),
-            label = _config.label,
-            pathDelims = _config.pathDelims,
-            presence = _config.presence,
-            strip = _config.strip
+            autoConvert = config.autoConvert,
+            defaultValue = config.defaultValue,
+            errorMessages = config.errorMessages.override(),
+            label = config.label,
+            pathDelims = config.pathDelims,
+            presence = config.presence,
+            strip = config.strip
         } = args;
 
         const allProps = Object.assign(
-            this._config,
+            this.config,
             {
                 autoConvert,
                 defaultValue,
@@ -104,15 +101,15 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
     }
 
     public isForbidden(): boolean {
-        return this._config.presence === 'forbidden';
+        return this.config.presence === 'forbidden';
     }
 
     public isOptional(): boolean {
-        return this._config.presence === 'optional';
+        return this.config.presence === 'optional';
     }
 
     public isRequired(): boolean {
-        return this._config.presence === 'required';
+        return this.config.presence === 'required';
     }
 
 
@@ -130,12 +127,12 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         const clone = this.clone();
         const errorOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {
-            const internalPathStyle = new Path(pathStr, this._config.pathDelims)
+            const internalPathStyle = new Path(pathStr, this.config.pathDelims)
                 .toRelative()
                 .toString({ self: '.', separator: '/', up: '..' });
             errorOverrides[internalPathStyle] = overrides[pathStr];
         }
-        clone._config.errorMessages.setText(errorOverrides);
+        clone.config.errorMessages.setText(errorOverrides);
         return clone;
     }
 

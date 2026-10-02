@@ -1,25 +1,24 @@
 'use strict';
 
-import { SchemaChain } from './SchemaChain.ts';
 import { Path } from '../../Path.ts';
+import { PathTreeNodeMixin } from '../../PathTreeNodeMixin.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
+import { Utils } from '../../Utils.ts';
+import { AnyChain } from '../any/AnyChain.ts';
 import { AnyProcessor, AnyProcessorCtorParams } from '../any/AnyProcessor.ts';
 import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
 import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
 import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
-import { Utils } from '../../Utils.ts';
-import { PathValueField } from './pathValue/PathValueField.ts';
-import { AnyChain } from '../any/AnyChain.ts';
-import { FieldPointerField } from './fieldPointer/FieldPointerField.ts';
+import { ReferenceField } from './reference/ReferenceField.ts';
+import { SchemaChain } from './SchemaChain.ts';
 
-export type CompiledSchema<P = Processor> = Map<string, P>;
+export type CompiledSchema<P = Processor> = Record<string, P>;
 
 export type SchemaProcessorCtorParams = AnyProcessorCtorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
-    ancestors?: SchemaProcessor[] | null;
     parent?: SchemaProcessor;
     absolutePath?: Path;
     referenceResolver?: PubSub;
@@ -37,13 +36,16 @@ export type ReferenceResolverContext = PubSubContext & {
     failOnFirstError?: boolean;
 };
 
-class SchemaProcessor extends ObjectProcessor<SchemaChain> {
+class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-    protected _localBasicProcessors: CompiledSchema;
-    protected _localConditionalProcessors: CompiledSchema<ConditionalProcessor>;
-    protected _localNestProcessors: CompiledSchema<FieldPointerProcessor>;
-    protected _localValueFieldProcessors: CompiledSchema;
-    protected _referenceResolver: PubSub | null;
+class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(BoundObjectProcessor) {
+
+    declare public children: Record<string, Processor>;
+
+    private _conditionals: CompiledSchema<ConditionalProcessor>;
+    private _nests: CompiledSchema<FieldPointerProcessor>;
+    private _references: CompiledSchema;
+    private _referenceResolver: PubSub | null;
 
     constructor(args: SchemaProcessorCtorParams) {
         super(args);
@@ -52,15 +54,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             field,
         } = args;
 
-        this._localBasicProcessors = new Map();
-        this._localConditionalProcessors = new Map();
-        this._localNestProcessors = new Map();
-        this._localValueFieldProcessors = new Map();
+        this._conditionals = {};
+        this._nests = {};
+        this._references = {};
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.config.schemaMap) {
-            this._localBasicProcessors.set(key, childField.createProcessor());
+            this.addChild(key, childField.createProcessor());
         }
     }
 
@@ -70,7 +71,6 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         let {
             absolutePath = new Path('/'),
-            ancestors = [],
             referenceResolver,
         } = context;
 
@@ -79,32 +79,32 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
 
         const {
-            _localConditionalProcessors,
-            _localNestProcessors,
-            _localValueFieldProcessors,
-            _localBasicProcessors,
+            _conditionals,
+            _nests,
+            _references,
+            children,
         } = this;
 
-        const localBasicProcessors: CompiledSchema = new Map();
-        for (let [key, childProcessor] of _localBasicProcessors) {
+        const finalChildren = {} as Record<string, Processor>;
+        for (const key of Object.keys(children)) {
+            const childProcessor = this.children[key];
             const absoluteSubPath = absolutePath.addSegment(key);
 
             const resolvedChildProcessor = childProcessor.compile({
                 absolutePath: absoluteSubPath,
-                ancestors: [...ancestors!, this],
                 parent: this,
                 referenceResolver
             });
 
             let references = this.getReferencesWithinProcessor(resolvedChildProcessor);
             if (resolvedChildProcessor instanceof ConditionalProcessor) {
-                _localConditionalProcessors.set(key, resolvedChildProcessor);
+                _conditionals[key] = resolvedChildProcessor;
             }
             else if (resolvedChildProcessor instanceof FieldPointerProcessor) {
-                _localNestProcessors.set(key, resolvedChildProcessor); // guaranteed nest
+                _nests[key] = resolvedChildProcessor; // guaranteed nest
             }
             else if (references.size > 0) {
-                _localValueFieldProcessors.set(key, resolvedChildProcessor);
+                _references[key] = resolvedChildProcessor;
 
                 const subNodeId = absoluteSubPath.toString();
                 const subNode = referenceResolver.getNode(subNodeId) ||
@@ -116,7 +116,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                         rootTracker
                     } = context as ReferenceResolverContext;
 
-                    const subTracker = rootTracker.resolveTrackerPath(absoluteSubPath.toRelative());
+                    const subTracker = rootTracker.resolvePath<ValueTracker>(absoluteSubPath.toRelative());
 
                     if (subTracker) {
                         resolvedChildProcessor.process(subTracker);
@@ -132,29 +132,29 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
                 }
             }
             else {
-                localBasicProcessors.set(key, resolvedChildProcessor);
+                finalChildren[key] = resolvedChildProcessor;
             }
         }
 
-        this._localBasicProcessors = localBasicProcessors;
+        this.setChildren(finalChildren);
         return this;
     }
 
-    public getReferencesWithinProcessor(processor: Processor): Set<PathValueField> {
+    public getReferencesWithinProcessor(processor: Processor): Set<ReferenceField> {
         const { field } = processor;
-        if (field instanceof PathValueField) {
+        if (field instanceof ReferenceField) {
             return new Set([field]);
         }
-        const references = new Set<PathValueField>();
+        const references = new Set<ReferenceField>();
         const { defaultValue } = field.config;
-        if (defaultValue instanceof PathValueField) {
+        if (defaultValue instanceof ReferenceField) {
             references.add(defaultValue);
         }
 
         if (processor instanceof AnyProcessor) {
             for (const step of (field as AnyChain).pipeline || []) {
                 for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsOrCallback)) {
-                    if (arg instanceof PathValueField) {
+                    if (arg instanceof ReferenceField) {
                         references.add(arg);
                     }
                 }
@@ -190,10 +190,10 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const {
             _field,
-            _localBasicProcessors,
-            _localConditionalProcessors,
-            _localNestProcessors,
-            _localValueFieldProcessors,
+            children,
+            _conditionals,
+            _nests,
+            _references,
             _referenceResolver,
         } = this;
 
@@ -222,27 +222,23 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
         const value = tracker.getValue() as Record<string, any>;
 
-        for (let [key, processor] of _localBasicProcessors) {
+        for (const key of Object.keys(children)) {
+            const processor = children[key];
             const childTracker = tracker.createChild(processor.field, key, value[key]);
             processor.process(childTracker, state);
         }
 
-        if (_localConditionalProcessors.size > 0) {
-            for (const [key, processor] of _localConditionalProcessors) {
-                deferredConditionals.push([key, processor, tracker]);
-            }
+
+        for (const key of Object.keys(_conditionals)) {
+            deferredConditionals.push([key, _conditionals[key], tracker]);
         }
 
-        if (_localNestProcessors.size > 0) {
-            for (const [key, processor] of _localNestProcessors) {
-                deferredNests.push([key, processor, tracker]);
-            }
+        for (const key of Object.keys(_nests)) {
+            deferredNests.push([key, _nests[key], tracker]);
         }
 
-        if (_localValueFieldProcessors.size > 0) {
-            for (const [key, processor] of _localValueFieldProcessors) {
-                tracker.createChild(processor.field, key, value[key]);
-            }
+        for (const key of Object.keys(_references)) {
+            tracker.createChild(_references[key].field, key, value[key]);
         }
 
         if (_referenceResolver) {
@@ -265,7 +261,7 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
             if (deferredNests.length > 0) {
                 if (tracker.nestDepth == null) {
                     // The tracker that contains nests is at level 0
-                    tracker.setNestDepth(0);
+                    tracker.nestDepth = 0;
                 }
 
                 for (const [key, processor, nestTracker] of deferredNests) {
@@ -276,14 +272,14 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
 
                     const childTracker = nestTracker.createChild(processor.field, key);
                     childTracker.setValue(value);
-                    childTracker.setNestDepth(tracker.nestDepth + 1);
+                    childTracker.nestDepth = tracker.nestDepth + 1;
 
                     if (childTracker.nestDepth === 1) {
                         // The first nest level is the root of the nest, so we set the nest root to itself
-                        childTracker.setNestRoot(childTracker);
+                        childTracker.nestRoot = childTracker;
                     }
                     else {
-                        childTracker.setNestRoot(tracker.nestRoot);
+                        childTracker.nestRoot = tracker.nestRoot;
                     }
 
                     processor.process(childTracker);
@@ -293,30 +289,6 @@ class SchemaProcessor extends ObjectProcessor<SchemaChain> {
         }
     }
 
-    public resolveSchemaPath(path: Path, ancestors: SchemaProcessor[] = []): null | Processor {
-        if (path.isSelf) {
-            throw new Error('Cannot resolve self path');
-        }
-        
-        let processor: SchemaProcessor;
-        if(path.isAbsolute || path.upCount > ancestors.length) {
-            processor = ancestors[0];
-        } 
-        else {
-            processor = ancestors.slice(0, -path.upCount).pop() as SchemaProcessor;
-        }
-
-        if(!processor) {
-            return null;
-        }
-        for (const key of path.keys) {
-            if (!processor || !(processor instanceof SchemaProcessor)) {
-                return null;
-            }
-            processor = processor._localBasicProcessors.get(key) || null;
-        }
-        return processor;
-    }
 }
 
 export { SchemaProcessor };

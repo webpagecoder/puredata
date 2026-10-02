@@ -8,11 +8,12 @@ export type PathDelimTypes = {
 
 class Path {
 
-    protected _delims!: PathDelimTypes;
-    protected _isAbsolute!: boolean;
-    protected _keys!: string[];
-    protected _string!: string;
-    protected _upCount!: number;
+    public delims: PathDelimTypes;
+
+    private _isAbsolute: boolean;
+    private _keys: string[];
+    private _string: string;
+    private _upCount: number;
 
     public constructor(pathString: string | string[] | Path = '', {
         self,
@@ -23,6 +24,13 @@ class Path {
             separator: '/',
             up: '..',
         }) {
+
+        this.delims = { self, separator, up };
+
+        this._isAbsolute = false;
+        this._keys = [];
+        this._string = '';
+        this._upCount = 0;
 
         if (pathString instanceof Path) {
             return new Path(pathString.toString(), pathString.delims);
@@ -51,16 +59,10 @@ class Path {
             }
         }
 
-        this._delims = { self, separator, up };
         this._isAbsolute = isAbsolute;
         this._keys = keys;
-        this._upCount = upCount;
-
         this._string = this.toString();
-    }
-
-    public get delims(): PathDelimTypes {
-        return this._delims;
+        this._upCount = upCount;
     }
 
     public get keys(): string[] {
@@ -72,11 +74,11 @@ class Path {
     }
 
     public get isRoot(): boolean {
-        return this._string === this._delims.separator;
+        return this._string === this.delims.separator;
     }
 
     public get isSelf(): boolean {
-        return this._string === this._delims.self && this.upCount === 0;
+        return this._string === this.delims.self && this.upCount === 0;
     }
 
     public get upCount(): number {
@@ -84,24 +86,24 @@ class Path {
     }
 
     public parent(): Path {
-        const { separator, up } = this._delims;
-        return new Path(this._string + separator + up, this._delims);
+        const { separator, up } = this.delims;
+        return new Path(this._string + separator + up, this.delims);
     }
 
     public move(targetPath: Path): Path {
         if (targetPath.isAbsolute) {
             return new Path(targetPath);
         }
-        const delims = targetPath._delims;
+        const delims = targetPath.delims;
         const { separator } = delims;
         return new Path(
-            this.toString(targetPath._delims) + separator + targetPath._string,
+            this.toString(targetPath.delims) + separator + targetPath._string,
             delims
         );
     }
 
     public addSegment(key: string): Path {
-        return new Path(this.toString() + this._delims.separator + key, this._delims);
+        return new Path(this.toString() + this.delims.separator + key, this.delims);
     }
 
     public equals(otherPath: Path): boolean {
@@ -122,18 +124,18 @@ class Path {
     }
 
     public toAbsolute(): Path {
-        return new Path(this._delims.separator + this._string, this._delims);
+        return new Path(this.delims.separator + this._string, this.delims);
     }
 
     public toRelative(): Path {
-        const { separator, self } = this._delims;
-        return new Path(self + separator + this._string, this._delims);
+        const { separator, self } = this.delims;
+        return new Path(self + separator + this._string, this.delims);
     }
 
     public toString({
-        self = this._delims.self,
-        separator = this._delims.separator,
-        up = this._delims.up
+        self = this.delims.self,
+        separator = this.delims.separator,
+        up = this.delims.up
     } = {}): string {
         return (
             this._isAbsolute

@@ -4,13 +4,13 @@ import { AnyChain, AnyChainCtorParams } from './fields/any/AnyChain.ts';
 import { ArrayChain, ArrayChainCtorParams } from './fields/array/ArrayChain.ts';
 import { BooleanChain, BooleanChainCtorParams } from './fields/boolean/BooleanChain.ts';
 import { DateChain, DateChainCtorParams } from './fields/date/DateChain.ts';
-import { EnumField, EnumFieldCtorParams, EnumStructure } from './fields/enum/EnumField.ts';
-import { Field, FieldCtorParams } from './fields/Field.ts';
+import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
+import { Field } from './fields/Field.ts';
 import { NumberChain, NumberChainCtorParams } from './fields/number/NumberChain.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
 import { FieldPointerField } from './fields/schema/fieldPointer/FieldPointerField.ts';
-import { PathValueField, PathValueFieldCtorParams } from './fields/schema/pathValue/PathValueField.ts';
+import { ReferenceField } from './fields/schema/reference/ReferenceField.ts';
 import { SchemaChain, SchemaChainCtorParams, SchemaObject } from './fields/schema/SchemaChain.ts';
 import { StringChain, StringChainCtorParams } from './fields/string/StringChain.ts';
 import { GlobalConfig } from './GlobalConfig.ts';
@@ -22,10 +22,10 @@ import { Utils } from './Utils.ts';
 
 class PureData {
 
-    protected _calendarText: Translation;
-    protected _errorMessages: Translation;
-    protected _globalConfig: GlobalConfig;
-    protected _pathDelims: PathDelimTypes;
+    private _calendarText: Translation;
+    private _errorMessages: Translation;
+    private _globalConfig: GlobalConfig;
+    private _pathDelims: PathDelimTypes;
 
     constructor({
         calendarText = new Translation(DefaultCalendarText),
@@ -43,7 +43,7 @@ class PureData {
         return PureData;
     }
 
-    protected _composeChainProps<T extends AnyChainCtorParams>(
+    private _composeChainProps<T extends AnyChainCtorParams>(
         chainType: string,
         props: Record<string, unknown> = {}
     ) {
@@ -59,7 +59,7 @@ class PureData {
         ) as T;
     }
 
-    protected _composeFieldProps(
+    private _composeFieldProps(
         props: Record<string, unknown> = {}
     ) {
         return Object.assign(
@@ -125,7 +125,7 @@ class PureData {
     }
 
     public value<T = unknown>(pathStr: string, defaultOrCallback: unknown = undefined): T {
-        return new PathValueField(this._composeFieldProps({ pathStr, defaultOrCallback })) as T;
+        return new ReferenceField(this._composeFieldProps({ pathStr, defaultOrCallback })) as T;
     }
 
     // Field pointer

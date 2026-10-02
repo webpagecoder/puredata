@@ -320,8 +320,8 @@ export const TO_DELIMITED_DEFAULTS: ToDelimitedOptions = {
 
 class StringHandler extends AnyHandler {
 
-    protected _matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> | undefined;
-    protected _numberHandler: NumberHandler;
+    private _matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> | undefined;
+    private _numberHandler: NumberHandler;
 
     constructor() {
         super();

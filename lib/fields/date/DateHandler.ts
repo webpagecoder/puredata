@@ -11,7 +11,7 @@ const { pass, fail } = HandlerResult;
  * Handles date parsing, validation, comparison, and mutation operations.
  */
 class DateHandler extends AnyHandler {
-    protected _dateConverter: DateConverter | undefined;
+    private _dateConverter: DateConverter | undefined;
 
     public configDateConverter(calendarText: Translation, utcOffsetMinutes: number = 0) {
         this._dateConverter = new DateConverter(calendarText, utcOffsetMinutes);

@@ -2,7 +2,7 @@
 
 import { Field } from './Field.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
-import { PathValueProcessor } from './schema/pathValue/PathValueProcessor.ts';
+import { ReferenceProcessor } from './schema/reference/ReferenceProcessor.ts';
 
 export type ProcessorCtorParams<F extends Field = Field> = {
     field: F;
@@ -17,16 +17,14 @@ abstract class Processor<F extends Field = Field> {
     private static id: number = 0
 
     protected _id: number;
-    protected _cachedReferences: Set<any> | null;
-    protected _defaultValuePathValueProcessor: PathValueProcessor | null;
+    protected _defaultValueReferenceProcessor: ReferenceProcessor | null;
     protected _field: F;
 
     constructor(args: ProcessorCtorParams<F>) {
         const { field } = args;
 
         this._id = ++Processor.id;
-        this._cachedReferences = null;
-        this._defaultValuePathValueProcessor = null;
+        this._defaultValueReferenceProcessor = null;
         this._field = Object.seal(field);
     }
 
@@ -48,9 +46,9 @@ abstract class Processor<F extends Field = Field> {
             tracker.addError('any/forbidden');
         }
         else if (!isDefined) {
-            const { _defaultValuePathValueProcessor } = this;
-            if (_defaultValuePathValueProcessor) {
-                _defaultValuePathValueProcessor.process(tracker);
+            const { _defaultValueReferenceProcessor } = this;
+            if (_defaultValueReferenceProcessor) {
+                _defaultValueReferenceProcessor.process(tracker);
             }
             else {
                 tracker.setValue(_field.defaultValue);

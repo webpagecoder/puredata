@@ -1,12 +1,10 @@
 'use strict';
 
 import { Utils } from '../../Utils.ts';
-import { AnyChain, AnyChainCtorParams } from '../any/AnyChain.ts';
-import { AnyHandler } from '../any/AnyHandler.ts';
-import { ArrayChain, ArrayChainCtorParams } from '../array/ArrayChain.ts';
-import { ArrayHandler } from '../array/ArrayHandler.ts';
+import { AnyChain } from '../any/AnyChain.ts';
+import { ArrayChain } from '../array/ArrayChain.ts';
 import { Field } from '../Field.ts';
-import { ObjectChain, ObjectChainCtorParams, ObjectChainConfig } from '../object/ObjectChain.ts';
+import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object/ObjectChain.ts';
 import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 
@@ -50,25 +48,31 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
             throw new Error('SchemaChain requires a valid ArrayChain instance');
         }
 
-        const { _config } = this;
-        _config.anyChain = anyChain.clearChain();
-        _config.arrayChain = arrayChain.clearChain();
-        _config.cloneObject = true;
-        _config.ensurePlain = true;
-        _config.failOnFirstError = failOnFirstError;
-        _config.stripExtraKeys = stripExtraKeys;
-        _config.renameKeysArgs = renameKeysArgs;
-        _config.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
+        const { config } = this;
+        config.anyChain = anyChain.clearChain();
+        config.arrayChain = arrayChain.clearChain();
+        config.cloneObject = true;
+        config.ensurePlain = true;
+        config.failOnFirstError = failOnFirstError;
+        config.stripExtraKeys = stripExtraKeys;
+        config.renameKeysArgs = renameKeysArgs;
+        config.schemaMap = this._createSchemaMap(schema) || new Map() as SchemaMap;
     }
 
     public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
         const clone = super.clone(args);
         const { schema = null } = args;
         if (schema) {
-            clone._config.schemaMap = this._createSchemaMap(schema);
+            clone.config.schemaMap = this._createSchemaMap(schema);
         }
         return clone;
     }
+
+    // public override createProcessor() {
+    //     return new SchemaProcessor({
+    //         field: this,
+    //     });
+    // }
 
     public override createProcessor(): SchemaProcessor {
         return new SchemaProcessor({
@@ -76,7 +80,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         });
     }
 
-    protected _createSchemaMap(schema: SchemaObject): SchemaMap {
+    private _createSchemaMap(schema: SchemaObject): SchemaMap {
         const schemaMap = new Map<string, Field>();
         for (const key of Object.keys(schema)) {
             let value = schema[key];
@@ -91,10 +95,10 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
                 });
             }
             else if (Array.isArray(value)) {
-                field = this._config.arrayChain.tuple(value);
+                field = this.config.arrayChain.tuple(value);
             }
             else {
-                field = this._config.anyChain.clone().default(value);
+                field = this.config.anyChain.clone().default(value);
             }
             schemaMap.set(key, field);
         }

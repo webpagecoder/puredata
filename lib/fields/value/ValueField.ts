@@ -19,9 +19,9 @@
 //             value = null,
 //         } = args;
 
-//         const { _config } = this;
-//         _config.mutable = mutable;
-//         _config.value = value;
+//         const { config } = this;
+//         config.mutable = mutable;
+//         config.value = value;
 //     }
 
 //     public override createProcessor(): ValueProcessor {

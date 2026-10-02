@@ -36,15 +36,15 @@ class DateChain extends AnyChain<DateChainCtorParams> {
             utcOffsetMinutes = 0,
         } = args;
 
-        const { _config } = this;
-        _config.calendarText = calendarText.override();
-        _config.dateOrder = dateOrder;
-        _config.outputStringFormat = outputStringFormat;
-        _config.outputTimeMode = outputTimeMode;
-        _config.utcOffsetMinutes = utcOffsetMinutes;
-        _config.skipGenericParse = skipGenericParse;
+        const { config } = this;
+        config.calendarText = calendarText.override();
+        config.dateOrder = dateOrder;
+        config.outputStringFormat = outputStringFormat;
+        config.outputTimeMode = outputTimeMode;
+        config.utcOffsetMinutes = utcOffsetMinutes;
+        config.skipGenericParse = skipGenericParse;
 
-        this._config.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
+        this.config.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
     }
 
     public override createProcessor(): DateProcessor {
@@ -54,7 +54,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
     }
 
     public assertEmptyPipeline(dateSubType: string): void {
-        if (this._config.pipeline.length > 0) {
+        if (this.config.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
     }
@@ -65,12 +65,12 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         const clone = this.clone();
         const calendarOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {
-            const internalPathStyle = new Path(pathStr, this._config.pathDelims)
+            const internalPathStyle = new Path(pathStr, this.config.pathDelims)
                 .toRelative()
                 .toString({ self: '.', separator: '/', up: '..' });
             calendarOverrides[internalPathStyle] = overrides[pathStr];
         }
-        clone._config.calendarText.setText(calendarOverrides);
+        clone.config.calendarText.setText(calendarOverrides);
         return clone;
     }
 
@@ -100,7 +100,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         return this
             .clone({ skipGenericParse: true })
             .addStepToChain('human', () => {
-                return [Object.assign({ dateOrder: this._config.dateOrder }, options)];
+                return [Object.assign({ dateOrder: this.config.dateOrder }, options)];
             });
     }
 
@@ -171,7 +171,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
     public today(): this {
         return this.addStepToChain('today', () => {
             const now = new Date();
-            now.setUTCMinutes(now.getUTCMinutes() + this._config.utcOffsetMinutes);
+            now.setUTCMinutes(now.getUTCMinutes() + this.config.utcOffsetMinutes);
             return [now];
         });
     }

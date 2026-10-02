@@ -35,17 +35,17 @@ class StringChain extends AnyChain<StringChainCtorParams> {
             stripDelims = ''
         } = args;
 
-        const { _config } = this;
-        _config.maxLength = maxLength;
-        _config.trim = trim;
-        _config.truncate = truncate;
+        const { config } = this;
+        config.maxLength = maxLength;
+        config.trim = trim;
+        config.truncate = truncate;
 
-        _config.ignoreCase = ignoreCase;
-        _config.mode = mode;
-        _config.normalize = normalize;
-        _config.stripDelims = stripDelims;
+        config.ignoreCase = ignoreCase;
+        config.mode = mode;
+        config.normalize = normalize;
+        config.stripDelims = stripDelims;
 
-        this._config.chainHandler.configMatchingDefaults({
+        this.config.chainHandler.configMatchingDefaults({
             ignoreCase,
             mode,
             normalize,

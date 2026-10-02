@@ -276,7 +276,7 @@ interface ObjectChainGeneratedMethods {
 
     /**
     * Sets multiple object paths to corresponding values.
-    * @param pathValues Mapping of path strings to values.
+    * @param references Mapping of path strings to values.
     * @param overwrite Whether existing values may be overwritten.
     * @param create Whether missing path segments may be created.
     * @returns Returns the same object after attempting to set each provided path/value pair.

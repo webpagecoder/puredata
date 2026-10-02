@@ -7,14 +7,13 @@ import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } fr
 import { SchemaProcessor } from '../SchemaProcessor.ts';
 
 export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
-    ancestors: SchemaProcessor[];
     parent: SchemaProcessor;
     absolutePath: Path;
 }
 
 class FieldPointerProcessor extends Processor<FieldPointerField> {
 
-    protected _innerNestedProcessor: Processor | null;
+    private _innerNestedProcessor: Processor | null;
 
     public constructor(args: ProcessorCtorParams<FieldPointerField>) {
         super(args);
@@ -22,11 +21,11 @@ class FieldPointerProcessor extends Processor<FieldPointerField> {
     }
 
     public override compile(context: FieldPointerProcessorCompilationContext): Processor {
-        
-        const { ancestors, parent, absolutePath } = context;
+
+        const { parent, absolutePath } = context;
         const { fieldPath } = this._field.config;
-    
-        const referencedProcessor = parent.resolveSchemaPath(fieldPath, ancestors);
+
+        const referencedProcessor = parent.resolvePath(fieldPath);
 
         if (!referencedProcessor) {
             throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);

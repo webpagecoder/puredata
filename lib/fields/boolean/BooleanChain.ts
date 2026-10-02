@@ -25,10 +25,10 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
             transformer = x => typeof x === 'string' ? x.toLowerCase() : x
         } = args;
 
-        const { _config } = this;
-        _config.boolishPairs = boolishPairs;
-        _config.postConvert = postConvert;
-        _config.transformer = transformer;
+        const { config } = this;
+        config.boolishPairs = boolishPairs;
+        config.postConvert = postConvert;
+        config.transformer = transformer;
     }
 
     public override createProcessor(): BooleanProcessor {
@@ -63,7 +63,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      */
     public override truthy(): this {
         return this.addStepToChain('truthy', () => {
-            return [this._config.boolishPairs.map(([truthy,]) => truthy)];
+            return [this.config.boolishPairs.map(([truthy,]) => truthy)];
         });
     }
 
@@ -77,7 +77,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      */
     public override falsy(): this {
         return this.addStepToChain('falsy', () => {
-            return [this._config.boolishPairs.map(([, falsy]) => falsy)];
+            return [this.config.boolishPairs.map(([, falsy]) => falsy)];
         });
     }
 
@@ -94,7 +94,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      */
     public invert(): this {
         return this.addStepToChain('invert', () => {
-            return [this._config.boolishPairs];
+            return [this.config.boolishPairs];
         });
     }
 

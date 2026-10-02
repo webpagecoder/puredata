@@ -23,10 +23,10 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
             preservePrecision = false,
         } = args;
 
-        const { _config } = this;
-        _config.ensureSafe = ensureSafe;
-        _config.ensureFinite = ensureFinite;
-        _config.preservePrecision = preservePrecision;
+        const { config } = this;
+        config.ensureSafe = ensureSafe;
+        config.ensureFinite = ensureFinite;
+        config.preservePrecision = preservePrecision;
     }
 
     public override createProcessor(): NumberProcessor {

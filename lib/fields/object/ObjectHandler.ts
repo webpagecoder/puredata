@@ -441,13 +441,13 @@ class ObjectHandler extends AnyHandler {
     /**
      * Sets multiple object paths to corresponding values.
      * @param obj Object to modify.
-     * @param pathValues Mapping of path strings to values.
+     * @param references Mapping of path strings to values.
      * @param overwrite Whether existing values may be overwritten.
      * @param create Whether missing path segments may be created.
      * @returns Returns the same object after attempting to set each provided path/value pair.
      */
-    public setValues(obj: object, pathValues: [string | Path, unknown][], overwrite = true, create = true): ObjectHandlerResult {
-        for (const [path, value] of pathValues) {
+    public setValues(obj: object, references: [string | Path, unknown][], overwrite = true, create = true): ObjectHandlerResult {
+        for (const [path, value] of references) {
             Utils.setPathValue(obj, new Path(path), value, overwrite, create);
         }
         return pass(obj);

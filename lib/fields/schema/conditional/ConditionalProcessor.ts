@@ -12,11 +12,10 @@ export type ConditionalProcessorCompilationContext = ProcessorCompilationContext
 
 class ConditionalProcessor extends Processor<ConditionalField> {
 
-    protected _comparisonProcessor: Processor;
-    protected _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
-    protected _otherwiseProcessor: Processor | null;
-    protected _thenProcessor: Processor | null;
-    protected _isNested: boolean;
+    private _comparisonProcessor: Processor;
+    private _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
+    private _otherwiseProcessor: Processor | null;
+    private _thenProcessor: Processor | null;
 
     constructor(args: ConditionalProcessorCtorParams) {
         super(args);
@@ -24,7 +23,6 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         const { comparisonField, conditionalChain, otherwiseField, thenField } = this._field.config;
 
         this._comparisonProcessor = comparisonField.createProcessor().compile() as Processor;
-        this._isNested = false;
         this._otherwiseProcessor = otherwiseField
             ? otherwiseField.createProcessor().compile() as Processor
             : null;
@@ -45,8 +43,6 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     public override compile({ isNested = false }: ConditionalProcessorCompilationContext = {}): this {
         const { _field: { config: { buildStage } } } = this;
 
-        this._isNested = isNested;
-
         if (isNested && buildStage !== 0) {
             throw new Error('Nested conditionals may NOT contain then/otherwise');
         }
@@ -57,7 +53,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         return this;
     }
 
-    protected _nestedProcess(tracker: ValueTracker): void {
+    private _nestedProcess(tracker: ValueTracker): void {
 
         const {
             _comparisonProcessor,
@@ -72,7 +68,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
         let targetTracker = targetPath.isSelf
             ? tracker
-            : tracker.parent.resolveTrackerPath(targetPath);
+            : tracker.parent.resolvePath(targetPath);
 
         if (!targetTracker) {
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);

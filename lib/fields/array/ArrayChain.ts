@@ -23,9 +23,9 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
             stripEmpties = true,
         } = args;
 
-        const { _config } = this;
-        _config.castSingle = castSingle;
-        _config.stripEmpties = stripEmpties;
+        const { config } = this;
+        config.castSingle = castSingle;
+        config.stripEmpties = stripEmpties;
     }
 
     public override createProcessor(): ArrayProcessor {
@@ -58,7 +58,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     public unique(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             //todo: check this out...create
-            ? new Path(pathStringOrComparator, this._config.pathDelims)
+            ? new Path(pathStringOrComparator, this.config.pathDelims)
             : pathStringOrComparator;
         return this.addStepToChain('unique', [pathOrComparator]);
     }
@@ -74,7 +74,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
      */
     public group(pathString: string | null): this {
         const path = typeof pathString === 'string'
-            ? new Path(pathString, this._config.pathDelims)
+            ? new Path(pathString, this.config.pathDelims)
             : null;
         return this.addStepToChain('group', [path]);
     }
@@ -89,7 +89,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
      */
     public stripDuplicates(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
-            ? new Path(pathStringOrComparator, this._config.pathDelims)
+            ? new Path(pathStringOrComparator, this.config.pathDelims)
             : pathStringOrComparator;
         return this.addStepToChain('stripDuplicates', [pathOrComparator]);
     }
@@ -102,7 +102,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     //  */
     // public stripEmpties(): this {
     //     return this.addHandlerStep('stripEmpties', () => {
-    //         return [this._config.emptyValues];
+    //         return [this.config.emptyValues];
     //     });
     // }
 

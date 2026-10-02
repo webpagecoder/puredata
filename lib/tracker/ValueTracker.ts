@@ -5,6 +5,7 @@ import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Field } from '../fields/Field.ts';
+import { PathTreeNodeMixin } from '../PathTreeNodeMixin.ts';
 
 export type TrackerError = {
     args: Record<string, unknown>;
@@ -20,44 +21,38 @@ export type ErrorTree = {
     children: Record<string, ErrorTree>;
 };
 
-class ValueTracker {
+class ValueTracker extends PathTreeNodeMixin(Object) {
 
-    // Navigation
-    protected _nestDepth: number | null;
-    protected _nestRoot: ValueTracker | null;
-    protected _parent: this;
-    protected _path: Path;
-    protected _root: this;
+    declare public children: Record<string, ValueTracker>;
 
-    // Data
-    protected _children: Record<string, ValueTracker>;
-    protected _errorCollection: TrackerError[];
-    protected _field: Field;
-    protected _rawValue: unknown;
+    public field: Field;
+    public nestDepth: number | null;
+    public nestRoot: ValueTracker | null;
+    public path: Path;
+
+    private _errorCollection: TrackerError[];
+    private _rawValue: unknown;
 
     public constructor(field: Field, value?: unknown) {
-        this._nestDepth = null;
-        this._nestRoot = null;
-        this._parent = this;
-        this._path = new Path('/');
-        this._root = this;
+        super();
+        this.nestDepth = null;
+        this.nestRoot = null;
+        this.path = new Path('/');
+        this.field = field;
 
-        this._children = {};
         this._errorCollection = [];
-        this._field = field;
         this.setValue(value);
     }
 
     public cloneWithoutErrors(): ValueTracker {
-        const clone = new ValueTracker(this._field);
-        clone._nestDepth = this._nestDepth;
-        clone._nestRoot = this._nestRoot;
-        clone._parent = this._parent;
-        clone._path = this._path;
-        clone._root = this._root;
+        const clone = new ValueTracker(this.field);
+        clone.nestDepth = this.nestDepth;
+        clone.nestRoot = this.nestRoot;
+        clone.parent = this.parent;
+        clone.path = this.path;
 
-        for (const key of Object.keys(this._children)) {
-            clone._children[key] = this._children[key].cloneWithoutErrors();
+        for (const key of Object.keys(this.children)) {
+            clone.children[key] = this.children[key].cloneWithoutErrors();
         }
 
         clone.setValue(this._rawValue);
@@ -66,23 +61,16 @@ class ValueTracker {
 
     public createChild(field: Field, key: string, value?: unknown): ValueTracker {
         const child = new ValueTracker(field);
-        this._children[key] = child;
-
-        child._parent = this;
-        child._path = this._path.addSegment(key);
-        child._root = this._root;
+        this.addChild(key, child);
+        child.path = this.path.addSegment(key);
 
         child.setValue(value);
         return child;
     }
 
-    public hasChildren(): boolean {
-        return Object.keys(this._children).length > 0;
-    }
-
     public setValue(value: unknown = undefined): void {
         this._rawValue = value;
-        const children = this._children;
+        const { children } = this;
         if (!Utils.isPlainObject(value)) {
             for (const key of Object.keys(children)) {
                 children[key].setValue(undefined);
@@ -96,10 +84,10 @@ class ValueTracker {
     }
 
     public getValue(): unknown {
-        if (!this.hasChildren()) {
+        if (!this.children.length) {
             return this._rawValue;
         }
-        const children = this._children;
+        const children = this.children;
         const final = Object.assign({}, this._rawValue as Record<string, unknown>);
         for (const key of Object.keys(children)) {
             const value = children[key].getValue();
@@ -114,10 +102,10 @@ class ValueTracker {
     }
 
     public hasValue(): boolean {
-        if (!this.hasChildren()) {
+        if (!this.children.length) {
             return this._rawValue !== undefined;
         }
-        const children = this._children;
+        const { children } = this;
         for (const key of Object.keys(children)) {
             if (children[key].hasValue()) {
                 return true;
@@ -128,13 +116,13 @@ class ValueTracker {
     }
 
     public addError(errorKey: string, args?: Record<string, unknown>): this {
-        if (!this._field) {
+        if (!this.field) {
             throw new Error('ValueTracker compiled field is not configured');
         }
 
         const {
-            _field: { config: { errorMessages } },
-            _path: path,
+            field: { config: { errorMessages } },
+            path,
         } = this;
         let text = errorMessages.getText(errorKey) as string;
         if (args) {
@@ -158,7 +146,7 @@ class ValueTracker {
         if (this._errorCollection.length > 0) {
             return true;
         }
-        const children = this._children;
+        const { children } = this;
         const keys = Object.keys(children);
         for (const key of keys) {
             if (children[key].hasErrors()) {
@@ -188,12 +176,11 @@ class ValueTracker {
 
     public getErrors(): ErrorTree {
         const obj: ErrorTree = {
-            depth: this._nestDepth,
             errors: this._errorCollection,
             children: {}
         };
 
-        const children = this._children;
+        const { children } = this;
         for (const key of Object.keys(children)) {
             obj.children[key] = children[key].getErrors();
         }
@@ -202,7 +189,7 @@ class ValueTracker {
     }
 
     public getLocalErrors(path?: Path): TrackerError[] {
-        const tracker = path ? this.parent.resolveTrackerPath(path) : this;
+        const tracker = path ? this.parent.resolvePath(path) : this;
         return tracker ? (tracker as ValueTracker)._errorCollection : [];
     }
 
@@ -212,48 +199,6 @@ class ValueTracker {
 
     public formatLocalErrors(formatter: Formatter = new HtmlFormatter()): string {
         return formatter.format(this);
-    }
-
-    public resolveTrackerPath(path: Path): ValueTracker | null {
-        if (path.isSelf) {
-            return this;
-        }
-
-        let tracker = this;
-
-        // Determine starting point based on abs/relative positioning
-        if (path.isAbsolute) {
-            tracker = this._root;
-        }
-        else {
-            let i = path.upCount;
-            while (tracker._parent && i > 0) {
-                tracker = tracker._parent;
-                --i;
-            }
-        }
-
-        if (!tracker) {
-            return null;
-        }
-
-        // Dive into path keys
-        for (const key of path.keys) {
-            const child: ValueTracker | undefined = tracker._children[key];
-            if (!child) {
-                return null;
-            }
-            tracker = child;
-        }
-        return tracker;
-    }
-
-    public setNestRoot(root: ValueTracker | null): void {
-        this._nestRoot = root;
-    }
-
-    public setNestDepth(depth: number): void {
-        this._nestDepth = depth;
     }
 
     // Convenience getters
@@ -266,39 +211,20 @@ class ValueTracker {
         return this._rawValue;
     }
 
-    public get errors(): ErrorTree {
+    public get errors() {
         return this.getErrors();
     }
 
-    public get fail(): boolean {
+    public get fail() {
         return this.hasErrors();
     }
 
-    public get pass(): boolean {
+    public get pass() {
         return !this.fail;
     }
 
-    public get nestDepth(): number {
-        return this._nestDepth;
-    }
-
-    public get nestRoot(): ValueTracker | null {
-        return this._nestRoot;
-    }
-
-    public get parent(): this {
-        return this._parent;
-    }
-
-    public get path(): Path {
-        return this._path;
-    }
-
-    public get root(): this {
-        return this._root;
-    }
-
 }
+
 
 export { ValueTracker };
 

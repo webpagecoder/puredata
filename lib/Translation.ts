@@ -4,8 +4,8 @@ export type TranslationStringRecord = Record<string, string | string[]>;
 
 class Translation {
 
-    protected _translation: TranslationStringRecord;
-    protected _fallback: null | Translation;
+    private _translation: TranslationStringRecord;
+    private _fallback: null | Translation;
 
     constructor(translation?: TranslationStringRecord) {
         this._fallback = null;

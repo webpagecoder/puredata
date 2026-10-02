@@ -46,21 +46,21 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             throw new Error('ConditionalField requires a valid AnyChain instance');
         }
 
-        const { _config } = this;
-        _config.anyChain = anyChain.clearChain();
-        _config.buildStage = buildStage;
-        _config.comparisonMode = comparisonMode;
-        _config.comparisonField = comparisonField;
-        _config.conditionalChain = conditionalChain;
-        _config.otherwiseField = otherwiseField;
-        _config.targetPath = new Path(targetPathStr);
-        _config.thenField = thenField;
+        const { config } = this;
+        config.anyChain = anyChain.clearChain();
+        config.buildStage = buildStage;
+        config.comparisonMode = comparisonMode;
+        config.comparisonField = comparisonField;
+        config.conditionalChain = conditionalChain;
+        config.otherwiseField = otherwiseField;
+        config.targetPath = new Path(targetPathStr);
+        config.thenField = thenField;
     }
 
     public override clone(args: Partial<ConditionalFieldCtorParams> = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
-            clone._config.targetPath = new Path(args.targetPathStr);
+            clone.config.targetPath = new Path(args.targetPathStr);
         }
         return clone;
     }
@@ -72,7 +72,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     or(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this._config;
+        const { buildStage, conditionalChain } = this.config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "or" in condition chain');
         }
@@ -82,7 +82,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     and(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this._config;
+        const { buildStage, conditionalChain } = this.config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "and" in condition chain');
         }
@@ -92,7 +92,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     then(thenResult: unknown | Field) {
-        const { buildStage, anyChain } = this._config;
+        const { buildStage, anyChain } = this.config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "then" in condition chain');
         }
@@ -105,7 +105,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     otherwise(otherwiseResult: unknown | Field) {
-        const { buildStage, anyChain } = this._config;
+        const { buildStage, anyChain } = this.config;
         if (buildStage !== 1) {
             throw new Error('Illegal placement of "otherwise" in condition chain');
         }

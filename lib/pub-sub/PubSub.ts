@@ -6,9 +6,9 @@ export type PubSubContext = Record<string, unknown>;
 
 class PubSub {
 
-    protected _nodes: Map<unknown, Node>;
-    protected _roots: Set<Node>;
-    protected _cachedExecutionOrder: Set<Node> | null;
+    private _nodes: Map<unknown, Node>;
+    private _roots: Set<Node>;
+    private _cachedExecutionOrder: Set<Node> | null;
 
     constructor() {
         this._nodes = new Map<unknown, Node>();

@@ -30,13 +30,13 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
             stripNestedEmpties = false
         } = args;
 
-        const { _config } = this;
-        _config.cloneObject = cloneObject;
-        _config.ensurePlain = ensurePlain;
-        _config.maxDepth = maxDepth;
-        _config.maxKeyCount = maxKeyCount;
-        _config.stripEmpties = stripEmpties;
-        _config.stripNestedEmpties = stripNestedEmpties;
+        const { config } = this;
+        config.cloneObject = cloneObject;
+        config.ensurePlain = ensurePlain;
+        config.maxDepth = maxDepth;
+        config.maxKeyCount = maxKeyCount;
+        config.stripEmpties = stripEmpties;
+        config.stripNestedEmpties = stripNestedEmpties;
     }
 
     public override createProcessor(): ObjectProcessor {

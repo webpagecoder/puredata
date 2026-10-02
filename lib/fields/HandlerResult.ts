@@ -2,10 +2,10 @@
 
 class HandlerResult<T = unknown> {
 
-    protected _value: T;
-    protected _pass: boolean;
-    protected _fail: boolean;
-    protected _errors: Record<string, Record<string, unknown>>;
+    private _value: T;
+    private _pass: boolean;
+    private _fail: boolean;
+    private _errors: Record<string, Record<string, unknown>>;
 
     public static pass<T = unknown>(value: T): HandlerResult<T> {
         return new HandlerResult({ value, pass: true });
