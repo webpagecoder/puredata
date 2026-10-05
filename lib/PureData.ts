@@ -59,9 +59,7 @@ class PureData {
         ) as T;
     }
 
-    private _composeFieldProps(
-        props: Record<string, unknown> = {}
-    ) {
+    private _composeFieldProps(props: Record<string, unknown> = {}) {
         return Object.assign(
             {},
             this._globalConfig['any'],
@@ -142,17 +140,19 @@ class PureData {
 
     public satisfies(targetPathStr: string, comparisonField: Field) {
         return new ConditionalField(this._composeFieldProps({
-            areEqual: true,
-            targetPathStr,
+            anyChain: this.any(),
             comparisonField,
+            comparisonMode: 'equals',
+            targetPathStr,
         }));
     }
 
     public violates(targetPathStr: string, comparisonField: Field) {
         return new ConditionalField(this._composeFieldProps({
-            areEqual: false,
-            targetPathStr,
+            anyChain: this.any(),
             comparisonField,
+            comparisonMode: 'notEquals',
+            targetPathStr,
         }));
     }
 
@@ -185,9 +185,6 @@ class PureData {
         this._errorMessages.setText(errorOverrides);
     }
 
-    // public pathDelims(delims: PathDelimTypes) {
-    //     this._pathDelims = delims;
-    // }
 }
 
 const PureDataInstance = new PureData();

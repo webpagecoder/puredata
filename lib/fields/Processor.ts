@@ -18,16 +18,20 @@ abstract class Processor<F extends Field = Field> {
 
     public field: F;
 
-    protected _id: number;
-    protected _defaultValueReferenceProcessor: ReferenceProcessor | null;
+    private _id: number;
+    private _defaultValueReferenceProcessor: ReferenceProcessor | null;
 
-    constructor(args: ProcessorCtorParams<F>) {
+    public constructor(args: ProcessorCtorParams<F>) {
         const { field } = args;
 
         this._id = ++Processor.id;
         this._defaultValueReferenceProcessor = null;
 
         this.field = field;
+    }
+
+    public get id() {
+        return this._id;
     }
 
     public compile(context?: ProcessorCompilationContext): Processor {

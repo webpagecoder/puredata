@@ -11,7 +11,7 @@ function PathTreeNodeMixin<CType = unknown, TBase extends Constructor = Construc
 
     return class extends BaseClass {
 
-        constructor(...args: any[]) {
+        public constructor(...args: any[]) {
             super(...args);
             (this as any)[SYM_IS_NODE] = true;
             (this as any)[SYM_CHILDREN] = {} as Record<string, CType>;

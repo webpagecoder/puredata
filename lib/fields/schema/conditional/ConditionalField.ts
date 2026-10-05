@@ -11,24 +11,24 @@ export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 export type ConditionalFieldProps = FieldConfig & {
     anyChain: AnyChain;
     buildStage: number;
-    comparisonMode?: 'equals' | 'notEquals';
+    comparisonMode: 'equals' | 'notEquals';
     comparisonField: Field;
     conditionalChain: ConditionalChainEntry[];
     otherwiseField: null | Field;
-    targetPath: Path;
     thenField: null | Field;
-};
+} & ({
+    targetPath: Path;
+    targetPathStr: never,
+} | {
+    targetPath: never;
+    targetPathStr: string,
+});
 
-export type ConditionalFieldCtorParams = FieldCtorParams
-    & Partial<Omit<ConditionalFieldProps, 'targetPath'>>
-    & Pick<ConditionalFieldProps, 'comparisonField' | 'thenField'>
-    & {
-        targetPathStr: string;
-    };
+export type ConditionalFieldCtorParams = FieldCtorParams & Partial<ConditionalFieldProps>;
 
 class ConditionalField extends Field<ConditionalFieldProps> {
 
-    constructor(args: ConditionalFieldCtorParams) {
+    constructor(args: ConditionalFieldCtorParams = {}) {
         super(args);
 
         const {
@@ -38,12 +38,16 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             comparisonField,
             conditionalChain = [],
             otherwiseField = null,
+            targetPath,
             targetPathStr,
             thenField = null,
         } = args;
 
         if (!anyChain || !(anyChain instanceof AnyChain)) {
-            throw new Error('ConditionalField requires a valid AnyChain instance');
+            throw new Error('anyChain value required');
+        }
+        if (!comparisonField || !(comparisonField instanceof Field)) {
+            throw new Error('comparisonField value required');
         }
 
         const { config } = this;
@@ -53,7 +57,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         config.comparisonField = comparisonField;
         config.conditionalChain = conditionalChain;
         config.otherwiseField = otherwiseField;
-        config.targetPath = new Path(targetPathStr);
+        config.targetPath = new Path(targetPathStr || targetPath || '');
         config.thenField = thenField;
     }
 

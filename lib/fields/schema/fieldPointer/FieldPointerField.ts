@@ -10,12 +10,11 @@ export type FieldPointerFieldProps = FieldConfig & {
     maxDepth: number;
 };
 
-export type FieldPointerFieldCtorParams = FieldCtorParams
-    & Partial<FieldPointerFieldProps>
+export type FieldPointerFieldCtorParams = FieldCtorParams & Partial<FieldPointerFieldProps>
 
 class FieldPointerField extends Field<FieldPointerFieldProps> {
 
-    constructor(args: FieldPointerFieldCtorParams) {
+    public constructor(args: FieldPointerFieldCtorParams = {}) {
         super(args);
         const {
             fieldPath = new Path(),

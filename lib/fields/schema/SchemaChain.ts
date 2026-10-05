@@ -33,7 +33,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         super(args);
 
         const {
-            anyChain = new AnyChain(),
+            anyChain,
             arrayChain,
             failOnFirstError = false,
             renameKeysArgs = null,
@@ -42,10 +42,10 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         } = args;
 
         if(!anyChain || !(anyChain instanceof AnyChain)) {
-            throw new Error('SchemaChain requires a valid AnyChain instance');
+            throw new Error('anyChain value required');
         }
         if(!arrayChain || !(arrayChain instanceof ArrayChain)) {
-            throw new Error('SchemaChain requires a valid ArrayChain instance');
+            throw new Error('arrayChain value required');
         }
 
         const { config } = this;

@@ -43,12 +43,12 @@ class ConditionalProcessor extends Processor<ConditionalField> {
     public override compile({ isNested = false }: ConditionalProcessorCompilationContext = {}): this {
         const { field: { config: { buildStage } } } = this;
 
-        if (isNested && buildStage !== 0) {
-            throw new Error('Nested conditionals may NOT contain then/otherwise');
-        }
-        else if (buildStage !== 2) {
-            throw new Error('Conditionals must contain a complete then/otherwise pair');
-        }
+        // if (isNested && buildStage !== 0) {
+        //     throw new Error('Nested conditionals may NOT contain then/otherwise');
+        // }
+        // else if (buildStage !== 2) {
+        //     throw new Error('Conditionals must contain a complete then/otherwise pair');
+        // }
 
         return this;
     }
