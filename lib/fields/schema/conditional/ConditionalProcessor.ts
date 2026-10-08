@@ -6,9 +6,9 @@ import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../
 
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
-export type ConditionalProcessorCompilationContext = ProcessorCompilationContext & {
-    isNested?: boolean
-}
+// export type ConditionalProcessorCompilationContext = ProcessorCompilationContext & {
+//     isNested?: boolean
+// }
 
 class ConditionalProcessor extends Processor<ConditionalField> {
 
@@ -22,34 +22,29 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
         const { comparisonField, conditionalChain, otherwiseField, thenField } = this.field.config;
 
-        this._comparisonProcessor = comparisonField.createProcessor().compile() as Processor;
-        this._otherwiseProcessor = otherwiseField
-            ? otherwiseField.createProcessor().compile() as Processor
-            : null;
-        this._thenProcessor = thenField
-            ? thenField.createProcessor().compile() as Processor
-            : null;
+        this._comparisonProcessor = comparisonField.createProcessor();
+        this._otherwiseProcessor = otherwiseField ? otherwiseField.createProcessor() : null;
+        this._thenProcessor = thenField ? thenField.createProcessor() : null;
 
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
             this._conditionalProcessorChain.push([
                 type,
-                (conditionalField.createProcessor() as ConditionalProcessor)
-                    .compile({ isNested: true }) as ConditionalProcessor
+                conditionalField.createProcessor()
             ]);
         }
     }
 
-    public override compile({ isNested = false }: ConditionalProcessorCompilationContext = {}): this {
-        const { field: { config: { buildStage } } } = this;
+    public override compile(context: ProcessorCompilationContext = {}): this {
+        const { _comparisonProcessor, _conditionalProcessorChain, _otherwiseProcessor, _thenProcessor } = this;
+        this._comparisonProcessor = _comparisonProcessor.compile();
+        this._otherwiseProcessor = _otherwiseProcessor ?  _otherwiseProcessor.compile() : null;
+        this._thenProcessor = _thenProcessor ? _thenProcessor.compile() : null;
 
-        // if (isNested && buildStage !== 0) {
-        //     throw new Error('Nested conditionals may NOT contain then/otherwise');
-        // }
-        // else if (buildStage !== 2) {
-        //     throw new Error('Conditionals must contain a complete then/otherwise pair');
-        // }
-
+        
+        for(let i = 0, max = _conditionalProcessorChain.length; i < max; i++) {
+            this._conditionalProcessorChain[i][1] = this._conditionalProcessorChain[i][1].compile();
+        }
         return this;
     }
 
@@ -68,7 +63,7 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
         let targetTracker = targetPath.isSelf
             ? tracker
-            : tracker.parent.resolvePath(targetPath);
+            : tracker.parent.resolvePath(targetPath) as ValueTracker;
 
         if (!targetTracker) {
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);
@@ -99,12 +94,13 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
     public override process(tracker: ValueTracker): void {
         const trackerClone = tracker.cloneWithoutErrors();
+        const { _thenProcessor, _otherwiseProcessor } = this;
         this._nestedProcess(trackerClone);
-        if (trackerClone.pass) {
-            this._thenProcessor!.process(tracker);
+        if (trackerClone.pass && _thenProcessor) {
+            _thenProcessor.process(tracker);
         }
-        else {
-            this._otherwiseProcessor!.process(tracker);
+        else if (trackerClone.fail && _otherwiseProcessor) {
+            _otherwiseProcessor.process(tracker);
         }
     }
 }

@@ -38,7 +38,7 @@ export type ReferenceResolverContext = PubSubContext & {
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectProcessor>(BoundObjectProcessor) {
+class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(BoundObjectProcessor) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
     private _nests: CompiledSchema<FieldPointerProcessor>;
@@ -83,9 +83,12 @@ class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectPro
             children,
         } = this;
 
-        const finalChildren = {} as Record<string, Processor>;
-        for (const key of Object.keys(children)) {
-            const childProcessor = this.children[key];
+        // Backup and remove current children - to be replaced with compiled children
+        const preCompiledChildren = Object.assign({}, children);
+        this.clearChildren();
+
+        for (const key of Object.keys(preCompiledChildren)) {
+            const childProcessor = preCompiledChildren[key] as Processor;
             const absoluteSubPath = absolutePath.addSegment(key);
 
             const resolvedChildProcessor = childProcessor.compile({
@@ -114,7 +117,7 @@ class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectPro
                         rootTracker
                     } = context as ReferenceResolverContext;
 
-                    const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative());
+                    const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative()) as ValueTracker;
 
                     if (subTracker) {
                         resolvedChildProcessor.process(subTracker);
@@ -130,11 +133,9 @@ class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectPro
                 }
             }
             else {
-                finalChildren[key] = resolvedChildProcessor;
+                this.addChild(key, resolvedChildProcessor);
             }
         }
-
-        this.setChildren(finalChildren);
         return this;
     }
 
@@ -221,7 +222,7 @@ class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectPro
         const value = tracker.getValue() as Record<string, any>;
 
         for (const key of Object.keys(children)) {
-            const processor = children[key];
+            const processor = children[key] as Processor;
             const childTracker = tracker.createChild(processor.field, key, value[key]);
             processor.process(childTracker, state);
         }
@@ -245,9 +246,9 @@ class SchemaProcessor extends PathTreeNodeMixin<Processor, typeof BoundObjectPro
             _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failOnFirstError });
 
             if (deferredConditionals.length > 0) {
-                for (const [key, processor, conditionalTracker] of deferredConditionals) {
-                    const childTracker = conditionalTracker.createChild(processor.field, key);
-                    const rawValue = conditionalTracker.rawValue;
+                for (const [key, processor, parentTracker] of deferredConditionals) {
+                    const childTracker = parentTracker.createChild(processor.field, key);
+                    const rawValue = parentTracker.rawValue;
                     const value = Utils.isPlainObject(rawValue)
                         ? (rawValue as Record<PropertyKey, unknown>)[key]
                         : undefined;

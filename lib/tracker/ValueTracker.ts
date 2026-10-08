@@ -21,7 +21,7 @@ export type ErrorTree = {
     children: Record<string, ErrorTree>;
 };
 
-class ValueTracker extends PathTreeNodeMixin<ValueTracker>(Object) {
+class ValueTracker extends PathTreeNodeMixin(Object) {
 
     public field: Field;
     public nestDepth: number;
@@ -47,9 +47,10 @@ class ValueTracker extends PathTreeNodeMixin<ValueTracker>(Object) {
         clone.nestDepth = this.nestDepth;
         clone.nestRoot = this.nestRoot;
         clone.path = this.path;
+        clone.setParent(this.parent);
 
         for (const key of Object.keys(this.children)) {
-            clone.children[key] = (this.children[key] as ValueTracker).cloneWithoutErrors();
+            clone.addChild(key, (this.children[key] as this).cloneWithoutErrors());
         }
 
         clone.setValue(this._rawValue);
@@ -70,23 +71,24 @@ class ValueTracker extends PathTreeNodeMixin<ValueTracker>(Object) {
         const { children } = this;
         if (!Utils.isPlainObject(value)) {
             for (const key of Object.keys(children)) {
-                children[key].setValue(undefined);
+                (children[key] as this).setValue(undefined);
             }
         }
         else {
             for (const key of Object.keys(children)) {
-                children[key].setValue((value as Record<PropertyKey, unknown>)[key]);
+                (children[key] as this).setValue((value as Record<PropertyKey, unknown>)[key]);
             }
         }
     }
 
     public getValue(): unknown {
-        if (!this.children.length) {
+        const { children } = this;
+        const keys = Object.keys(children);
+        if (keys.length === 0) {
             return this._rawValue;
         }
-        const children = this.children;
         const final = Object.assign({}, this._rawValue as Record<string, unknown>);
-        for (const key of Object.keys(children)) {
+        for (const key of keys) {
             const value = (children[key] as ValueTracker).getValue();
             if (value !== undefined) {
                 final[key] = value;
@@ -99,12 +101,13 @@ class ValueTracker extends PathTreeNodeMixin<ValueTracker>(Object) {
     }
 
     public hasValue(): boolean {
-        if (!this.children.length) {
+        const { children } = this;
+        const keys = Object.keys(children);
+        if (keys.length === 0) {
             return this._rawValue !== undefined;
         }
-        const { children } = this;
-        for (const key of Object.keys(children)) {
-            if (children[key].hasValue()) {
+        for (const key of keys) {
+            if ((children[key] as ValueTracker).hasValue()) {
                 return true;
             }
         }
@@ -146,7 +149,7 @@ class ValueTracker extends PathTreeNodeMixin<ValueTracker>(Object) {
         const { children } = this;
         const keys = Object.keys(children);
         for (const key of keys) {
-            if (children[key].hasErrors()) {
+            if ((children[key] as ValueTracker).hasErrors()) {
                 return true;
             }
         }
@@ -179,7 +182,7 @@ class ValueTracker extends PathTreeNodeMixin<ValueTracker>(Object) {
 
         const { children } = this;
         for (const key of Object.keys(children)) {
-            obj.children[key] = children[key].getErrors();
+            obj.children[key] = (children[key] as ValueTracker).getErrors();
         }
 
         return obj;

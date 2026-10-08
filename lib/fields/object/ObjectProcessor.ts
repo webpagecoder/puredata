@@ -1,10 +1,9 @@
 'use strict';
 
-import { ObjectChain } from './ObjectChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
 import { AnyProcessor } from '../any/AnyProcessor.ts';
-import { AnyChain } from '../any/AnyChain.ts';
+import { ObjectChain } from './ObjectChain.ts';
 
 class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<C> {
 

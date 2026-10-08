@@ -55,7 +55,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         config.buildStage = buildStage;
         config.comparisonMode = comparisonMode;
         config.comparisonField = comparisonField;
-        config.conditionalChain = conditionalChain;
+        config.conditionalChain = [...conditionalChain];
         config.otherwiseField = otherwiseField;
         config.targetPath = new Path(targetPathStr || targetPath || '');
         config.thenField = thenField;
@@ -75,27 +75,47 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         });
     }
 
-    or(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this.config;
+    public or(targetPathStr: string, comparisonField: Field): this;
+    public or(conditionalField: ConditionalField | string, comparisonField: Field | null): this;
+    public or(conditionalFieldOrTargetPathStr: ConditionalField | string, comparisonField: Field | null = null) {
+        return this._addToConditionalChain('or', conditionalFieldOrTargetPathStr, comparisonField);
+    }
+
+    public and(targetPathStr: string, comparisonField: Field): this;
+    public and(conditionalField: ConditionalField | string, comparisonField: Field | null): this;
+    public and(conditionalFieldOrTargetPathStr: ConditionalField | string, comparisonField: Field | null = null) {
+        return this._addToConditionalChain('and', conditionalFieldOrTargetPathStr, comparisonField);
+    }
+
+    private _addToConditionalChain(
+        type: 'and' | 'or',
+        conditionalFieldOrTargetPathStr: ConditionalField | string,
+        comparisonField: Field | null = null
+    ) {
+        const { anyChain, buildStage, comparisonMode,conditionalChain } = this.config;
         if (buildStage !== 0) {
-            throw new Error('Illegal placement of "or" in condition chain');
+            throw new Error(`Illegal placement of "${type}" in condition chain`);
         }
+        const isConditionalField = conditionalFieldOrTargetPathStr instanceof ConditionalField;
+        if (!isConditionalField && !(comparisonField instanceof Field)) {
+            throw new Error('Must supply a comparison field along with the path string');
+        }
+
+        const newEntry = isConditionalField
+            ? conditionalFieldOrTargetPathStr
+            : new ConditionalField({
+                anyChain,
+                comparisonField: comparisonField!,
+                comparisonMode,
+                targetPathStr: conditionalFieldOrTargetPathStr,
+            });
+
         return this.clone({
-            conditionalChain: conditionalChain.concat([['or', conditionalField]])
+            conditionalChain: conditionalChain.concat([[type, newEntry]])
         });
     }
 
-    and(conditionalField: ConditionalField) {
-        const { buildStage, conditionalChain } = this.config;
-        if (buildStage !== 0) {
-            throw new Error('Illegal placement of "and" in condition chain');
-        }
-        return this.clone({
-            conditionalChain: conditionalChain.concat([['and', conditionalField]])
-        });
-    }
-
-    then(thenResult: unknown | Field) {
+    public then(thenResult: unknown | Field) {
         const { buildStage, anyChain } = this.config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "then" in condition chain');
@@ -108,7 +128,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         });
     }
 
-    otherwise(otherwiseResult: unknown | Field) {
+    public otherwise(otherwiseResult: unknown | Field) {
         const { buildStage, anyChain } = this.config;
         if (buildStage !== 1) {
             throw new Error('Illegal placement of "otherwise" in condition chain');
