@@ -37,13 +37,13 @@ class ConditionalProcessor extends Processor<ConditionalField> {
 
     public override compile(context: ProcessorCompilationContext = {}): this {
         const { _comparisonProcessor, _conditionalProcessorChain, _otherwiseProcessor, _thenProcessor } = this;
-        this._comparisonProcessor = _comparisonProcessor.compile();
-        this._otherwiseProcessor = _otherwiseProcessor ?  _otherwiseProcessor.compile() : null;
-        this._thenProcessor = _thenProcessor ? _thenProcessor.compile() : null;
-
-        
-        for(let i = 0, max = _conditionalProcessorChain.length; i < max; i++) {
-            this._conditionalProcessorChain[i][1] = this._conditionalProcessorChain[i][1].compile();
+        const { absolutePath } = context;
+        const subContext = { absolutePath };
+        this._comparisonProcessor = _comparisonProcessor.compile(subContext);
+        this._otherwiseProcessor = _otherwiseProcessor ? _otherwiseProcessor.compile(subContext) : null;
+        this._thenProcessor = _thenProcessor ? _thenProcessor.compile(subContext) : null;
+        for (let i = 0, max = _conditionalProcessorChain.length; i < max; i++) {
+            this._conditionalProcessorChain[i][1] = this._conditionalProcessorChain[i][1].compile(subContext) as ConditionalProcessor;
         }
         return this;
     }
