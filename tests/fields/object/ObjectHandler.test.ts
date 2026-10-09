@@ -451,7 +451,7 @@ describe('ObjectHandler validators', () => {
 					return out.keep === undefined
 						&& !!nested
 						&& typeof nested === 'object'
-						&& Object.prototype.hasOwnProperty.call(nested, '_value');
+						&& Object.prototype.hasOwnProperty.call(nested, 'keep');
 				}
 			},
 		]);

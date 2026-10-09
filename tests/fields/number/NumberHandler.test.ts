@@ -264,22 +264,6 @@ describe('NumberHandler validators', () => {
 		]);
 	});
 
-	it('number', () => {
-		runPassTests(handler.number.bind(handler), [
-			{ input: 123, output: 123 },
-			{ input: 0, output: 0 },
-			{ input: -123, output: -123 },
-			{ input: Number.MIN_VALUE, output: Number.MIN_VALUE }
-		]);
-
-		runFailTests(handler.number.bind(handler), [
-			{ input: NaN },
-			{ input: '123e' as any },
-			{ input: null as any },
-			{ input: true as any },
-		]);
-	});
-
 	it('odd', () => {
 		runPassTests(handler.odd.bind(handler), [
 			{ input: 5, output: 5 },

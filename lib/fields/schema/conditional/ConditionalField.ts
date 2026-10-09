@@ -76,13 +76,13 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     public or(targetPathStr: string, comparisonField: Field): this;
-    public or(conditionalField: ConditionalField | string, comparisonField: Field | null): this;
+    public or(conditionalField: ConditionalField): this;
     public or(conditionalFieldOrTargetPathStr: ConditionalField | string, comparisonField: Field | null = null) {
         return this._addToConditionalChain('or', conditionalFieldOrTargetPathStr, comparisonField);
     }
 
     public and(targetPathStr: string, comparisonField: Field): this;
-    public and(conditionalField: ConditionalField | string, comparisonField: Field | null): this;
+    public and(conditionalField: ConditionalField): this;
     public and(conditionalFieldOrTargetPathStr: ConditionalField | string, comparisonField: Field | null = null) {
         return this._addToConditionalChain('and', conditionalFieldOrTargetPathStr, comparisonField);
     }
