@@ -1,21 +1,17 @@
 'use strict';
 
-import { Path } from "./Path.ts";
+import { Path } from "../Path.ts";
+import { SYM_IS_NODE, SYM_CHILDREN, SYM_PARENT } from './sharedSymbols.ts';
 
-type Constructor = new (...args: any[]) => any;
+export type Constructor = new (...args: any[]) => any;
 
-function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: TBase) {
-    const SYM_IS_NODE = Symbol('isNode');
-    const SYM_CHILDREN = Symbol('children');
-    const SYM_PARENT = Symbol('parent');
+const TreeMixin = <TBase extends Constructor = Constructor>(BaseClass: TBase) => {
 
     return class extends BaseClass {
-
         public constructor(...args: any[]) {
             super(...args);
             (this as any)[SYM_IS_NODE] = true;
-            (this as any)[SYM_CHILDREN] = {} as Record<string, unknown>;
-            (this as any)[SYM_PARENT] = this;
+            (this as any)[SYM_PARENT] = null;
         }
 
         public resolvePath(path: Path): unknown {
@@ -78,8 +74,8 @@ function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: T
 
         public clearChildren() {
             const children = (this as any)[SYM_CHILDREN];
-            for(const key of Object.keys(children)) {
-                if(children[key][SYM_IS_NODE]) {
+            for (const key of Object.keys(children)) {
+                if (children[key][SYM_IS_NODE]) {
                     children[key][SYM_PARENT] = null;
                 }
             }
@@ -93,4 +89,10 @@ function PathTreeNodeMixin<TBase extends Constructor = Constructor>(BaseClass: T
     }
 };
 
-export { PathTreeNodeMixin };
+Object.defineProperty(TreeMixin, Symbol.hasInstance, {
+    value(instance: unknown) {
+        return instance != null && instance.hasOwnProperty(SYM_IS_NODE);
+    }
+})
+
+export { TreeMixin };

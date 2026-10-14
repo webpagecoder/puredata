@@ -5,8 +5,8 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { Field, FieldConfig } from '../Field.ts';
 import { AnyProcessor } from './AnyProcessor.ts';
 
-type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
-type ChainStep = {
+export type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
+export type ChainStep = {
     fn: (value: unknown, ...args: unknown[]) => HandlerResult;
     argsOrCallback?: StepArgsOrCallback;
 };

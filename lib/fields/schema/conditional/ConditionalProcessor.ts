@@ -3,6 +3,7 @@
 import { ConditionalField } from './ConditionalField.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
+import { TreeMixin } from '../../../node/TreeMixin.ts';
 
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
@@ -10,7 +11,11 @@ export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalFiel
 //     isNested?: boolean
 // }
 
-class ConditionalProcessor extends Processor<ConditionalField> {
+class BoundConditionalProcessor extends Processor<ConditionalField> {
+    public override process(tracker: ValueTracker): void { }
+}
+
+class ConditionalProcessor extends TreeMixin(BoundConditionalProcessor) {
 
     private _comparisonProcessor: Processor;
     private _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
@@ -25,6 +30,10 @@ class ConditionalProcessor extends Processor<ConditionalField> {
         this._comparisonProcessor = comparisonField.createProcessor();
         this._otherwiseProcessor = otherwiseField ? otherwiseField.createProcessor() : null;
         this._thenProcessor = thenField ? thenField.createProcessor() : null;
+
+        if(this._comparisonProcessor instanceof TreeMixin) {
+            this._comparisonProcessor.parent = this.parent;
+        }
 
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {

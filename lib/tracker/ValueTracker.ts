@@ -5,7 +5,7 @@ import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Field } from '../fields/Field.ts';
-import { PathTreeNodeMixin } from '../PathTreeNodeMixin.ts';
+import { TreeMixin } from '../node/TreeMixin.ts';
 
 export type TrackerError = {
     args: Record<string, unknown>;
@@ -21,7 +21,7 @@ export type ErrorTree = {
     children: Record<string, ErrorTree>;
 };
 
-class ValueTracker extends PathTreeNodeMixin(Object) {
+class ValueTracker extends TreeMixin(Object) {
 
     public field: Field;
     public nestDepth: number;

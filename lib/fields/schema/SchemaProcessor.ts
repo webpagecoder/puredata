@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
-import { PathTreeNodeMixin } from '../../PathTreeNodeMixin.ts';
+import { TreeMixin } from '../../node/TreeMixin.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
@@ -38,7 +38,7 @@ export type ReferenceResolverContext = PubSubContext & {
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(BoundObjectProcessor) {
+class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
     private _nests: CompiledSchema<FieldPointerProcessor>;
@@ -67,12 +67,15 @@ class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(Bou
 
         super.compile(context);
 
+        let isRoot = false;
+
         let {
             absolutePath = new Path('/'),
             referenceResolver,
         } = context;
 
         if (!referenceResolver) {
+            isRoot = true;
             this._referenceResolver = referenceResolver = new PubSub();
         }
 
@@ -135,6 +138,10 @@ class SchemaProcessor extends PathTreeNodeMixin<typeof BoundObjectProcessor>(Bou
             else {
                 this.addChild(key, resolvedChildProcessor);
             }
+        }
+
+        if(isRoot) {
+            console.log('Executing reference resolver');
         }
         return this;
     }
