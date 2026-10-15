@@ -3,7 +3,8 @@
 import { ConditionalField } from './ConditionalField.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
-import { TreeMixin } from '../../../node/TreeMixin.ts';
+import { NamedNodeMixin } from '../../../node/NamedNodeMixin.ts';
+import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
 
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
@@ -15,7 +16,7 @@ class BoundConditionalProcessor extends Processor<ConditionalField> {
     public override process(tracker: ValueTracker): void { }
 }
 
-class ConditionalProcessor extends TreeMixin(BoundConditionalProcessor) {
+class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
 
     private _comparisonProcessor: Processor;
     private _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
@@ -31,16 +32,18 @@ class ConditionalProcessor extends TreeMixin(BoundConditionalProcessor) {
         this._otherwiseProcessor = otherwiseField ? otherwiseField.createProcessor() : null;
         this._thenProcessor = thenField ? thenField.createProcessor() : null;
 
-        if(this._comparisonProcessor instanceof TreeMixin) {
-            this._comparisonProcessor.parent = this.parent;
-        }
+        // If any of the processors are nodes, they need to have their parent set to be
+        // the same as this processor's parent, so that they can resolve paths correctly
+        this.addIndexedChild(this._comparisonProcessor);
+        this.addIndexedChild(this._otherwiseProcessor);
+        this.addIndexedChild(this._thenProcessor);
 
+        // Figure out the chain, and also set the parent of each processor if needed
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
-            this._conditionalProcessorChain.push([
-                type,
-                conditionalField.createProcessor()
-            ]);
+            const processor = conditionalField.createProcessor();
+            this.addIndexedChild(processor);
+            this._conditionalProcessorChain.push([type, processor]);
         }
     }
 

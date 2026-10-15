@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
-import { TreeMixin } from '../../node/TreeMixin.ts';
+import { NodeMixin } from '../../NodeMixin.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';

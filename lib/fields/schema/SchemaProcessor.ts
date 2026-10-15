@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
-import { TreeMixin } from '../../node/TreeMixin.ts';
+import { NamedNodeMixin } from '../../node/NamedNodeMixin.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
@@ -38,7 +38,7 @@ export type ReferenceResolverContext = PubSubContext & {
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
+class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
     private _nests: CompiledSchema<FieldPointerProcessor>;
@@ -59,7 +59,7 @@ class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
 
         // Create the entire tree before compilation (to establish full path structure)
         for (let [key, childField] of field.config.schemaMap) {
-            this.addChild(key, childField.createProcessor());
+            this.addNamedChild(key, childField.createProcessor());
         }
     }
 
@@ -83,12 +83,12 @@ class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
             _conditionals,
             _nests,
             _references,
-            children,
+            namedChildren: children,
         } = this;
 
         // Backup and remove current children - to be replaced with compiled children
         const preCompiledChildren = Object.assign({}, children);
-        this.clearChildren();
+        this.clearNamedChildren();
 
         for (const key of Object.keys(preCompiledChildren)) {
             const childProcessor = preCompiledChildren[key] as Processor;
@@ -100,7 +100,7 @@ class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
                 referenceResolver
             });
 
-            let references = this.getReferencesWithinProcessor(resolvedChildProcessor);
+            let references = this._getReferencesWithinProcessor(resolvedChildProcessor);
             if (resolvedChildProcessor instanceof ConditionalProcessor) {
                 _conditionals[key] = resolvedChildProcessor;
             }
@@ -136,7 +136,7 @@ class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
                 }
             }
             else {
-                this.addChild(key, resolvedChildProcessor);
+                this.addNamedChild(key, resolvedChildProcessor);
             }
         }
 
@@ -146,7 +146,7 @@ class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
         return this;
     }
 
-    public getReferencesWithinProcessor(processor: Processor): Set<ReferenceField> {
+    private _getReferencesWithinProcessor(processor: Processor): Set<ReferenceField> {
         const { field } = processor;
         if (field instanceof ReferenceField) {
             return new Set([field]);
@@ -196,7 +196,7 @@ class SchemaProcessor extends TreeMixin(BoundObjectProcessor) {
 
         const {
             field,
-            children,
+            namedChildren: children,
             _conditionals,
             _nests,
             _references,

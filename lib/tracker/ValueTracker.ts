@@ -5,7 +5,7 @@ import { Utils } from '../Utils.ts';
 import { Formatter } from './formatters/Formatter.ts';
 import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Field } from '../fields/Field.ts';
-import { TreeMixin } from '../node/TreeMixin.ts';
+import { NamedNodeMixin } from '../node/NamedNodeMixin.ts';
 
 export type TrackerError = {
     args: Record<string, unknown>;
@@ -21,7 +21,7 @@ export type ErrorTree = {
     children: Record<string, ErrorTree>;
 };
 
-class ValueTracker extends TreeMixin(Object) {
+class ValueTracker extends NamedNodeMixin(Object) {
 
     public field: Field;
     public nestDepth: number;
@@ -49,8 +49,8 @@ class ValueTracker extends TreeMixin(Object) {
         clone.path = this.path;
         clone.setParent(this.parent);
 
-        for (const key of Object.keys(this.children)) {
-            clone.addChild(key, (this.children[key] as this).cloneWithoutErrors());
+        for (const key of Object.keys(this.namedChildren)) {
+            clone.addNamedChild(key, (this.namedChildren[key] as this).cloneWithoutErrors());
         }
 
         clone.setValue(this._rawValue);
@@ -59,7 +59,7 @@ class ValueTracker extends TreeMixin(Object) {
 
     public createChild(field: Field, key: string, value?: unknown): ValueTracker {
         const child = new ValueTracker(field);
-        this.addChild(key, child);
+        this.addNamedChild(key, child);
         child.path = this.path.addSegment(key);
 
         child.setValue(value);
@@ -68,7 +68,7 @@ class ValueTracker extends TreeMixin(Object) {
 
     public setValue(value: unknown = undefined): void {
         this._rawValue = value;
-        const { children } = this;
+        const { namedChildren: children } = this;
         if (!Utils.isPlainObject(value)) {
             for (const key of Object.keys(children)) {
                 (children[key] as this).setValue(undefined);
@@ -82,7 +82,7 @@ class ValueTracker extends TreeMixin(Object) {
     }
 
     public getValue(): unknown {
-        const { children } = this;
+        const { namedChildren: children } = this;
         const keys = Object.keys(children);
         if (keys.length === 0) {
             return this._rawValue;
@@ -101,7 +101,7 @@ class ValueTracker extends TreeMixin(Object) {
     }
 
     public hasValue(): boolean {
-        const { children } = this;
+        const { namedChildren: children } = this;
         const keys = Object.keys(children);
         if (keys.length === 0) {
             return this._rawValue !== undefined;
@@ -146,7 +146,7 @@ class ValueTracker extends TreeMixin(Object) {
         if (this._errorCollection.length > 0) {
             return true;
         }
-        const { children } = this;
+        const { namedChildren: children } = this;
         const keys = Object.keys(children);
         for (const key of keys) {
             if ((children[key] as ValueTracker).hasErrors()) {
@@ -180,7 +180,7 @@ class ValueTracker extends TreeMixin(Object) {
             children: {}
         };
 
-        const { children } = this;
+        const { namedChildren: children } = this;
         for (const key of Object.keys(children)) {
             obj.children[key] = (children[key] as ValueTracker).getErrors();
         }

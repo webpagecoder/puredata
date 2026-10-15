@@ -5,13 +5,19 @@ import { Path } from '../../../Path.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } from '../../Processor.ts';
 import { SchemaProcessor } from '../SchemaProcessor.ts';
+import { NamedNodeMixin } from '../../../node/NamedNodeMixin.ts';
+import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
 
 export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
     parent: SchemaProcessor;
     absolutePath: Path;
 }
 
-class FieldPointerProcessor extends Processor<FieldPointerField> {
+class BoundFieldPointerProcessor extends Processor<FieldPointerField>{ 
+    override process(tracker: ValueTracker, state: State): void { }
+}
+
+class FieldPointerProcessor extends NamedNodeMixin(IndexedNodeMixin(BoundFieldPointerProcessor)) {
 
     private _innerNestedProcessor: Processor | null;
 
