@@ -47,7 +47,7 @@ class ValueTracker extends NamedNodeMixin(Object) {
         clone.nestDepth = this.nestDepth;
         clone.nestRoot = this.nestRoot;
         clone.path = this.path;
-        clone.setParent(this.parent);
+        clone.pointToParent(this.parent);
 
         for (const key of Object.keys(this.namedChildren)) {
             clone.addNamedChild(key, (this.namedChildren[key] as this).cloneWithoutErrors());

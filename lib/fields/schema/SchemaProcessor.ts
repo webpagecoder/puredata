@@ -13,13 +13,14 @@ import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
 import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
 import { ReferenceField } from './reference/ReferenceField.ts';
 import { SchemaChain } from './SchemaChain.ts';
+import { IndexedNodeMixin } from '../../node/IndexedNodeMixin.ts';
 
 export type CompiledSchema<P = Processor> = Record<string, P>;
 
 export type SchemaProcessorCtorParams = AnyProcessorCtorParams<SchemaChain>;
 
 export type SchemaCompilationContext = ProcessorCompilationContext & {
-    parent?: SchemaProcessor;
+    // parent?: SchemaProcessor;
     absolutePath?: Path;
     referenceResolver?: PubSub;
 };
@@ -38,7 +39,7 @@ export type ReferenceResolverContext = PubSubContext & {
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
+class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcessor)) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
     private _nests: CompiledSchema<FieldPointerProcessor>;
@@ -58,24 +59,25 @@ class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
-        for (let [key, childField] of field.config.schemaMap) {
-            this.addNamedChild(key, childField.createProcessor());
+        const {schemaFields} = field.config;
+        for (let key of Object.keys(schemaFields)) {
+            this.addNamedChild(key, schemaFields[key].createProcessor());
         }
     }
 
     public override compile(context: SchemaCompilationContext = {}): this {
 
+        //todo: put the rootmost processor into a node too and return that.
+        // SchemaNode should be SchemaNodeProcessor maybe and it should pass through to inner processor
         super.compile(context);
-
-        let isRoot = false;
 
         let {
             absolutePath = new Path('/'),
+            absoluteRoot = this,
             referenceResolver,
         } = context;
 
         if (!referenceResolver) {
-            isRoot = true;
             this._referenceResolver = referenceResolver = new PubSub();
         }
 
@@ -83,32 +85,31 @@ class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
             _conditionals,
             _nests,
             _references,
-            namedChildren: children,
+            namedChildren,
         } = this;
 
-        // Backup and remove current children - to be replaced with compiled children
-        const preCompiledChildren = Object.assign({}, children);
-        this.clearNamedChildren();
-
-        for (const key of Object.keys(preCompiledChildren)) {
-            const childProcessor = preCompiledChildren[key] as Processor;
+        for (const key of Object.keys(namedChildren)) {
+            const childProcessor = namedChildren[key] as Processor;
             const absoluteSubPath = absolutePath.addSegment(key);
 
             const resolvedChildProcessor = childProcessor.compile({
                 absolutePath: absoluteSubPath,
-                parent: this,
+                absoluteRoot,
                 referenceResolver
             });
 
             let references = this._getReferencesWithinProcessor(resolvedChildProcessor);
             if (resolvedChildProcessor instanceof ConditionalProcessor) {
                 _conditionals[key] = resolvedChildProcessor;
+                this.removeNamedChild(key);
             }
             else if (resolvedChildProcessor instanceof FieldPointerProcessor) {
                 _nests[key] = resolvedChildProcessor; // guaranteed nest
+                this.removeNamedChild(key);
             }
             else if (references.size > 0) {
                 _references[key] = resolvedChildProcessor;
+                this.removeNamedChild(key);
 
                 const subNodeId = absoluteSubPath.toString();
                 const subNode = referenceResolver.getNode(subNodeId) ||
@@ -135,14 +136,12 @@ class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
                     referenceResolver.linkNodes(pubNode, subNode);
                 }
             }
-            else {
-                this.addNamedChild(key, resolvedChildProcessor);
-            }
         }
 
-        if(isRoot) {
-            console.log('Executing reference resolver');
+        if (absoluteRoot === this) {
+            console.log("EEEE")
         }
+
         return this;
     }
 
@@ -196,7 +195,7 @@ class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
 
         const {
             field,
-            namedChildren: children,
+            namedChildren,
             _conditionals,
             _nests,
             _references,
@@ -219,7 +218,7 @@ class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
         if (stripExtraKeys) {
             tracker.setValue(chainHandler.stripKeys(
                 tracker.getValue() as object,
-                Array.from(field.config.schemaMap.keys())
+                Object.keys(field.config.schemaFields)
             ).value);
         }
 
@@ -228,8 +227,8 @@ class SchemaProcessor extends NamedNodeMixin(BoundObjectProcessor) {
 
         const value = tracker.getValue() as Record<string, any>;
 
-        for (const key of Object.keys(children)) {
-            const processor = children[key] as Processor;
+        for (const key of Object.keys(namedChildren)) {
+            const processor = namedChildren[key] as Processor;
             const childTracker = tracker.createChild(processor.field, key, value[key]);
             processor.process(childTracker, state);
         }

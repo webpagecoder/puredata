@@ -6,12 +6,13 @@ import { BooleanChain, BooleanChainCtorParams } from './fields/boolean/BooleanCh
 import { DateChain, DateChainCtorParams } from './fields/date/DateChain.ts';
 import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
 import { Field } from './fields/Field.ts';
+import { FieldCoercer } from './fields/FieldCoercer.ts';
 import { NumberChain, NumberChainCtorParams } from './fields/number/NumberChain.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
 import { FieldPointerField } from './fields/schema/fieldPointer/FieldPointerField.ts';
 import { ReferenceField } from './fields/schema/reference/ReferenceField.ts';
-import { SchemaChain, SchemaChainCtorParams, SchemaObject } from './fields/schema/SchemaChain.ts';
+import { Schema, SchemaChain, SchemaChainCtorParams } from './fields/schema/SchemaChain.ts';
 import { StringChain, StringChainCtorParams } from './fields/string/StringChain.ts';
 import { GlobalConfig } from './GlobalConfig.ts';
 import { Path, PathDelimTypes } from './Path.ts';
@@ -71,6 +72,16 @@ class PureData {
         );
     }
 
+    // Specialized 
+    public auto(value: unknown) {
+        return FieldCoercer.coerce({
+            value,
+            anyChain: this.any(),
+            arrayChain: this.array(),
+            schemaChain: this.schema(),
+        });
+    }
+
     // Chains
 
     public any() {
@@ -96,7 +107,7 @@ class PureData {
         return new ObjectChain(this._composeChainProps<ObjectChainCtorParams>('object'));
     }
 
-    public schema(schema: SchemaObject = {}) {
+    public schema(schema: Schema = {}) {
         return new SchemaChain(this._composeChainProps<SchemaChainCtorParams>('object', {
             schema,
             anyChain: this.any(),
@@ -141,6 +152,8 @@ class PureData {
     public satisfies(targetPathStr: string, comparisonField: Field) {
         return new ConditionalField(this._composeFieldProps({
             anyChain: this.any(),
+            arrayChain: this.array(),
+            schemaChain: this.schema(),
             comparisonField,
             comparisonMode: 'equals',
             targetPathStr,
@@ -150,6 +163,8 @@ class PureData {
     public violates(targetPathStr: string, comparisonField: Field) {
         return new ConditionalField(this._composeFieldProps({
             anyChain: this.any(),
+            arrayChain: this.array(),
+            schemaChain: this.schema(),
             comparisonField,
             comparisonMode: 'notEquals',
             targetPathStr,

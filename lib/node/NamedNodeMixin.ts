@@ -12,41 +12,6 @@ export const NamedNodeMixin = <TBase extends Constructor = Constructor>(BaseClas
             (this as any)[SYM_NAMED_CHILDREN] = {};
         }
 
-        public resolvePath(path: Path): unknown {
-            if (path.isSelf) {
-                return this;
-            }
-
-            let node: this;
-
-            // Determine starting point based on abs/relative positioning
-            if (path.isAbsolute) {
-                node = this.root;
-            }
-            else {
-                node = this;
-                let i = path.upCount;
-                while (i > 0) {
-                    node = (node as any)[SYM_PARENT];
-                    --i;
-                }
-            }
-
-            if (!node) {
-                return null;
-            }
-
-            // Dive into path keys
-            for (const key of path.keys) {
-                const child = (node as any)[SYM_IS_NODE] && (node as any)[SYM_NAMED_CHILDREN][key];
-                if (child === undefined) {
-                    return null;
-                }
-                node = child;
-            }
-            return node;
-        }
-
         public get namedChildren(): Record<string, unknown> {
             return (this as any)[SYM_NAMED_CHILDREN];
         }
@@ -58,14 +23,12 @@ export const NamedNodeMixin = <TBase extends Constructor = Constructor>(BaseClas
             (this as any)[SYM_NAMED_CHILDREN][key] = value;
         }
 
-        public clearNamedChildren() {
-            const children = (this as any)[SYM_NAMED_CHILDREN];
-            for (const key of Object.keys(children)) {
-                if (children[key][SYM_IS_NODE]) {
-                    children[key][SYM_PARENT] = null;
-                }
+        public removeNamedChild(key: string) {
+            const child = (this as any)[SYM_NAMED_CHILDREN][key];
+            if (child && (child as any)[SYM_IS_NODE]) {
+                (child as any)[SYM_PARENT] = null;
             }
-            (this as any)[SYM_NAMED_CHILDREN] = {};
+            delete (this as any)[SYM_NAMED_CHILDREN][key];
         }
 
     }

@@ -7,6 +7,7 @@ import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } fr
 import { SchemaProcessor } from '../SchemaProcessor.ts';
 import { NamedNodeMixin } from '../../../node/NamedNodeMixin.ts';
 import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
+import { NodeMixin } from '../../../node/NodeMixin.ts';
 
 export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
     parent: SchemaProcessor;
@@ -17,7 +18,7 @@ class BoundFieldPointerProcessor extends Processor<FieldPointerField>{
     override process(tracker: ValueTracker, state: State): void { }
 }
 
-class FieldPointerProcessor extends NamedNodeMixin(IndexedNodeMixin(BoundFieldPointerProcessor)) {
+class FieldPointerProcessor extends NodeMixin(BoundFieldPointerProcessor) {
 
     private _innerNestedProcessor: Processor | null;
 
@@ -27,11 +28,14 @@ class FieldPointerProcessor extends NamedNodeMixin(IndexedNodeMixin(BoundFieldPo
     }
 
     public override compile(context: FieldPointerProcessorCompilationContext): Processor {
-
-        const { parent, absolutePath } = context;
+// return this;
+        const { absolutePath } = context;
         const { fieldPath } = this.field.config;
 
-        const referencedProcessor = parent.resolvePath(fieldPath);
+        if(fieldPath.isAbsolute) {
+            throw new Error('At key ' + absolutePath + ' - path must be relative and not cross conditional boundaries: ' + fieldPath);
+        }
+        const referencedProcessor = this.parent.resolvePath(fieldPath);
 
         if (!referencedProcessor) {
             throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);

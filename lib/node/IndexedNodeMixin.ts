@@ -22,14 +22,12 @@ export const IndexedNodeMixin = <TBase extends Constructor = Constructor>(BaseCl
             (this as any)[SYM_INDEXED_CHILDREN].push(value);
         }
 
-        public clearIndexedChildren() {
-            const children = (this as any)[SYM_INDEXED_CHILDREN];
-            for (const child of children) {
-                if (child[SYM_IS_NODE]) {
-                    child[SYM_PARENT] = null;
-                }
+        public removeIndexedChild(index: number) {
+            const child = (this as any)[SYM_INDEXED_CHILDREN][index];
+            if (child && (child as any)[SYM_IS_NODE]) {
+                (child as any)[SYM_PARENT] = null;
             }
-            (this as any)[SYM_INDEXED_CHILDREN] = [];
+            (this as any)[SYM_INDEXED_CHILDREN].splice(index, 1);
         }
 
     }

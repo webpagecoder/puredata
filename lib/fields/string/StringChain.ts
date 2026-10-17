@@ -45,7 +45,7 @@ class StringChain extends AnyChain<StringChainCtorParams> {
         config.normalize = normalize;
         config.stripDelims = stripDelims;
 
-        this.config.chainHandler.configMatchingDefaults({
+        this.chainHandler.configMatchingDefaults({
             ignoreCase,
             mode,
             normalize,

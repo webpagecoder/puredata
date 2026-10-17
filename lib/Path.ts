@@ -61,8 +61,9 @@ class Path {
 
         this._isAbsolute = isAbsolute;
         this._keys = keys;
-        this._string = this.toString();
         this._upCount = upCount;
+        
+        this._string = this.toString();
     }
 
     public get keys(): string[] {
@@ -94,10 +95,9 @@ class Path {
         if (targetPath.isAbsolute) {
             return new Path(targetPath);
         }
-        const delims = targetPath.delims;
-        const { separator } = delims;
+        const { delims } = targetPath;
         return new Path(
-            this.toString(targetPath.delims) + separator + targetPath._string,
+            this.toString(targetPath.delims) + delims.separator + targetPath._string,
             delims
         );
     }
