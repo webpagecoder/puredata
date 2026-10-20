@@ -18,6 +18,8 @@ export type SchemaFields = {
 };
 
 export type SchemaChainConfig = ObjectChainConfig & {
+    anyChain: AnyChain,
+    arrayChain: ArrayChain,
     failOnFirstError: boolean;
     fieldCoercer: FieldCoercer;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
@@ -26,40 +28,34 @@ export type SchemaChainConfig = ObjectChainConfig & {
 };
 
 export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainConfig> & {
-    anyChain: AnyChain,
-    arrayChain: ArrayChain,
     schema?: Schema;
 };
 
 class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
-
-    constructor(args: Partial<SchemaChainCtorParams> = {}) {
+    
+    public constructor(args: Partial<SchemaChainCtorParams> = {}) {
         super(args);
 
         const {
-            anyChain,
-            arrayChain,
+            anyChain = new AnyChain(),
+            arrayChain = new ArrayChain(),
             failOnFirstError = false,
             renameKeysArgs = null,
             schema = {},
             stripExtraKeys = true,
         } = args;
 
-        if (!anyChain || !(anyChain instanceof AnyChain)) {
-            throw new Error('anyChain value required');
-        }
-        if (!arrayChain || !(arrayChain instanceof ArrayChain)) {
-            throw new Error('arrayChain value required');
-        }
-
         const { config } = this;
-        config.anyChain = anyChain;
-        config.arrayChain = arrayChain;
         config.cloneObject = true;
         config.ensurePlain = true;
+
+        config.anyChain = anyChain;
+        config.arrayChain = arrayChain;
+
         config.failOnFirstError = failOnFirstError;
-        config.stripExtraKeys = stripExtraKeys;
         config.renameKeysArgs = renameKeysArgs;
+        config.stripExtraKeys = stripExtraKeys;
+        
         config.schemaFields = this._processSchema(schema) || {};
     }
 
@@ -80,11 +76,12 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
     private _processSchema(schema: Schema): SchemaFields {
         const schemaFields: SchemaFields = {};
+        const { anyChain, arrayChain } = this.config;
         for (const key of Object.keys(schema)) {
             schemaFields[key] = FieldCoercer.coerce({
                 value: schema[key],
-                anyChain: this.config.anyChain,
-                arrayChain: this.config.arrayChain,
+                anyChain,
+                arrayChain,
                 schemaChain: this,
             });
         }
@@ -93,13 +90,13 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
     // Configurators
 
-    public configStripUnknownKeys(stripExtraKeys: boolean = true): this {
-        return this.clone({ stripExtraKeys });
-    }
+    // public configStripUnknownKeys(stripExtraKeys: boolean = true): this {
+    //     return this.clone({ stripExtraKeys });
+    // }
 
-    public configRenameKeys(renameKeysArgs: Parameters<ObjectHandler['renameKeys']>): this {
-        return this.clone({ renameKeysArgs });
-    }
+    // public configRenameKeys(renameKeysArgs: Parameters<ObjectHandler['renameKeys']>): this {
+    //     return this.clone({ renameKeysArgs });
+    // }
 
 }
 

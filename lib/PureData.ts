@@ -21,6 +21,8 @@ import { DefaultErrorText } from './text/DefaultErrorText.ts';
 import { Translation } from './Translation.ts';
 import { Utils } from './Utils.ts';
 
+//TODO puredata should also be immutable. when they config, you need to make a new instance
+
 class PureData {
 
     private _calendarText: Translation;
@@ -28,7 +30,7 @@ class PureData {
     private _globalConfig: GlobalConfig;
     private _pathDelims: PathDelimTypes;
 
-    constructor({
+    public constructor({
         calendarText = new Translation(DefaultCalendarText),
         errorMessages = new Translation(DefaultErrorText),
         globalConfig = GlobalConfig,
@@ -37,7 +39,6 @@ class PureData {
         this._errorMessages = errorMessages;
         this._globalConfig = Utils.clone(globalConfig);
         this._pathDelims = this._globalConfig.any.pathDelims;
-
     }
 
     public get instance() {

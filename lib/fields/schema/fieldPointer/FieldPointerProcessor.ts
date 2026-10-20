@@ -1,13 +1,11 @@
 'use strict';
 
-import { FieldPointerField } from './FieldPointerField.ts';
+import { NodeMixin } from '../../../node/NodeMixin.ts';
 import { Path } from '../../../Path.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } from '../../Processor.ts';
 import { SchemaProcessor } from '../SchemaProcessor.ts';
-import { NamedNodeMixin } from '../../../node/NamedNodeMixin.ts';
-import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
-import { NodeMixin } from '../../../node/NodeMixin.ts';
+import { FieldPointerField } from './FieldPointerField.ts';
 
 export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
     parent: SchemaProcessor;
