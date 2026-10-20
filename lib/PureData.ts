@@ -1,12 +1,12 @@
 'use strict';
 
+import { FieldFactory } from './fields/FieldFactory.ts';
 import { AnyChain, AnyChainCtorParams } from './fields/any/AnyChain.ts';
 import { ArrayChain, ArrayChainCtorParams } from './fields/array/ArrayChain.ts';
 import { BooleanChain, BooleanChainCtorParams } from './fields/boolean/BooleanChain.ts';
 import { DateChain, DateChainCtorParams } from './fields/date/DateChain.ts';
 import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
 import { Field } from './fields/Field.ts';
-import { FieldCoercer } from './fields/FieldCoercer.ts';
 import { NumberChain, NumberChainCtorParams } from './fields/number/NumberChain.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
 import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
@@ -23,7 +23,9 @@ import { Utils } from './Utils.ts';
 
 //TODO puredata should also be immutable. when they config, you need to make a new instance
 
-class PureData {
+
+
+class PureData extends FieldFactory {
 
     private _calendarText: Translation;
     private _errorMessages: Translation;
@@ -35,6 +37,7 @@ class PureData {
         errorMessages = new Translation(DefaultErrorText),
         globalConfig = GlobalConfig,
     } = {}) {
+        super();
         this._calendarText = calendarText;
         this._errorMessages = errorMessages;
         this._globalConfig = Utils.clone(globalConfig);
@@ -75,12 +78,7 @@ class PureData {
 
     // Specialized 
     public auto(value: unknown) {
-        return FieldCoercer.coerce({
-            value,
-            anyChain: this.any(),
-            arrayChain: this.array(),
-            schemaChain: this.schema(),
-        });
+        return this.coerce(value);
     }
 
     // Chains
@@ -111,8 +109,7 @@ class PureData {
     public schema(schema: Schema = {}) {
         return new SchemaChain(this._composeChainProps<SchemaChainCtorParams>('object', {
             schema,
-            anyChain: this.any(),
-            arrayChain: this.array(),
+            fieldFactory: this,
         }));
     }
 
@@ -152,9 +149,7 @@ class PureData {
 
     public satisfies(targetPathStr: string, comparisonField: Field) {
         return new ConditionalField(this._composeFieldProps({
-            anyChain: this.any(),
-            arrayChain: this.array(),
-            schemaChain: this.schema(),
+            fieldFactory: this,
             comparisonField,
             comparisonMode: 'equals',
             targetPathStr,
@@ -163,9 +158,7 @@ class PureData {
 
     public violates(targetPathStr: string, comparisonField: Field) {
         return new ConditionalField(this._composeFieldProps({
-            anyChain: this.any(),
-            arrayChain: this.array(),
-            schemaChain: this.schema(),
+            fieldFactory: this,
             comparisonField,
             comparisonMode: 'notEquals',
             targetPathStr,

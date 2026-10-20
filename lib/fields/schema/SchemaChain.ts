@@ -1,10 +1,9 @@
 'use strict';
 
-import { Utils } from '../../Utils.ts';
+import { FieldFactory } from '../FieldFactory.ts';
 import { AnyChain } from '../any/AnyChain.ts';
 import { ArrayChain } from '../array/ArrayChain.ts';
 import { Field } from '../Field.ts';
-import { FieldCoercer } from '../FieldCoercer.ts';
 import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object/ObjectChain.ts';
 import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
@@ -21,7 +20,7 @@ export type SchemaChainConfig = ObjectChainConfig & {
     anyChain: AnyChain,
     arrayChain: ArrayChain,
     failOnFirstError: boolean;
-    fieldCoercer: FieldCoercer;
+    fieldFactory: FieldFactory;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     schemaFields: SchemaFields;
     stripExtraKeys: boolean;
@@ -37,25 +36,24 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         super(args);
 
         const {
-            anyChain = new AnyChain(),
-            arrayChain = new ArrayChain(),
+            fieldFactory,
             failOnFirstError = false,
             renameKeysArgs = null,
             schema = {},
             stripExtraKeys = true,
         } = args;
 
+        if(!fieldFactory) {
+            throw new Error('SchemaChain requires a fieldFactory to be provided in the constructor arguments');
+        }
+
         const { config } = this;
         config.cloneObject = true;
         config.ensurePlain = true;
-
-        config.anyChain = anyChain;
-        config.arrayChain = arrayChain;
-
         config.failOnFirstError = failOnFirstError;
+        config.fieldFactory = fieldFactory;
         config.renameKeysArgs = renameKeysArgs;
         config.stripExtraKeys = stripExtraKeys;
-        
         config.schemaFields = this._processSchema(schema) || {};
     }
 
@@ -76,14 +74,8 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
     private _processSchema(schema: Schema): SchemaFields {
         const schemaFields: SchemaFields = {};
-        const { anyChain, arrayChain } = this.config;
         for (const key of Object.keys(schema)) {
-            schemaFields[key] = FieldCoercer.coerce({
-                value: schema[key],
-                anyChain,
-                arrayChain,
-                schemaChain: this,
-            });
+            schemaFields[key] = this.config.fieldFactory.coerce(schema[key]);
         }
         return schemaFields;
     }

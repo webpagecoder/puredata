@@ -5,15 +5,14 @@ import { Path } from '../../../Path.ts';
 import { AnyChain } from '../../any/AnyChain.ts';
 import { ArrayChain } from '../../array/ArrayChain.ts';
 import { Field, FieldCtorParams, FieldConfig } from '../../Field.ts';
-import { FieldCoercer } from '../../FieldCoercer.ts';
+import { FieldFactory } from '../../FieldFactory.ts';
 import { SchemaChain } from '../SchemaChain.ts';
 import { ConditionalProcessor } from './ConditionalProcessor.ts';
 
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 
 export type ConditionalFieldProps = FieldConfig & {
-    anyChain: AnyChain;
-    arrayChain: ArrayChain;
+    fieldFactory: FieldFactory;
     schemaChain: SchemaChain;
     buildStage: number;
     comparisonMode: 'equals' | 'notEquals';
@@ -36,9 +35,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         super(args);
 
         const {
-            anyChain = new AnyChain(),
-            arrayChain = new ArrayChain(),
-            schemaChain = new SchemaChain(),
+            fieldFactory,
             buildStage = 0,
             comparisonMode = 'equals',
             comparisonField,
@@ -49,6 +46,9 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             targetPathStr,
         } = args;
 
+        if (!fieldFactory || !(fieldFactory instanceof FieldFactory)) {
+            throw new Error('ConditionalField requires a fieldFactory to be provided in the constructor arguments');
+        }
         if (!comparisonField || !(comparisonField instanceof Field)) {
             throw new Error('comparisonField value required');
         }
@@ -57,32 +57,15 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         }
 
         const { config } = this;
-        config.anyChain = anyChain;
-        config.arrayChain = arrayChain;
-        config.schemaChain = schemaChain;
+        config.fieldFactory = fieldFactory;
         config.buildStage = buildStage;
         config.comparisonMode = comparisonMode;
-        config.comparisonField = FieldCoercer.coerce({
-            value: comparisonField,
-            anyChain,
-            arrayChain,
-            schemaChain,
-        });
+        config.comparisonField = fieldFactory.coerce(comparisonField);
         config.thenField = thenField
-            ? FieldCoercer.coerce({
-                value: thenField,
-                anyChain,
-                arrayChain,
-                schemaChain,
-            })
+            ? fieldFactory.coerce(thenField)
             : null;
         config.otherwiseField = otherwiseField
-            ? FieldCoercer.coerce({
-                value: otherwiseField,
-                anyChain,
-                arrayChain,
-                schemaChain,
-            })
+            ? fieldFactory.coerce(otherwiseField)
             : null;
         config.conditionalChain = [...conditionalChain];
         config.targetPath = new Path(targetPathStr || targetPath || '');
@@ -121,7 +104,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         conditionalFieldOrTargetPathStr: ConditionalField | string,
         comparisonField: Field | null = null
     ) {
-        const { anyChain, arrayChain, schemaChain, buildStage, comparisonMode, conditionalChain } = this.config;
+        const { buildStage, comparisonMode, conditionalChain, fieldFactory } = this.config;
         if (buildStage !== 0) {
             throw new Error(`Illegal placement of "${type}" in condition chain`);
         }
@@ -133,9 +116,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         const newEntry = isConditionalField
             ? conditionalFieldOrTargetPathStr
             : new ConditionalField({
-                anyChain,
-                arrayChain,
-                schemaChain,
+                fieldFactory,
                 comparisonField: comparisonField!,
                 comparisonMode,
                 targetPathStr: conditionalFieldOrTargetPathStr,
@@ -147,33 +128,23 @@ class ConditionalField extends Field<ConditionalFieldProps> {
     }
 
     public then(thenResult: unknown | Field) {
-        const { buildStage, anyChain, arrayChain, schemaChain } = this.config;
+        const { buildStage, fieldFactory } = this.config;
         if (buildStage !== 0) {
             throw new Error('Illegal placement of "then" in condition chain');
         }
         return this.clone({
-            thenField: FieldCoercer.coerce({
-                value: thenResult,
-                anyChain,
-                arrayChain,
-                schemaChain,
-            }),
+            thenField: fieldFactory.coerce(thenResult),
             buildStage: 1
         });
     }
 
     public otherwise(otherwiseResult: unknown | Field) {
-        const { buildStage, anyChain, arrayChain, schemaChain } = this.config;
+        const { buildStage, fieldFactory } = this.config;
         if (buildStage !== 1) {
             throw new Error('Illegal placement of "otherwise" in condition chain');
         }
         return this.clone({
-            otherwiseField: FieldCoercer.coerce({
-                value: otherwiseResult,
-                anyChain,
-                arrayChain,
-                schemaChain,
-            }),
+            otherwiseField: fieldFactory.coerce(otherwiseResult),
             buildStage: 2
         });
     }

@@ -45,6 +45,8 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
         });
     }
 
+    //todo: need object configs here
+
 }
 
 export { ObjectChain };
