@@ -88,16 +88,6 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         return schemaFields;
     }
 
-    // Configurators
-
-    // public configStripUnknownKeys(stripExtraKeys: boolean = true): this {
-    //     return this.clone({ stripExtraKeys });
-    // }
-
-    // public configRenameKeys(renameKeysArgs: Parameters<ObjectHandler['renameKeys']>): this {
-    //     return this.clone({ renameKeysArgs });
-    // }
-
 }
 
 export { SchemaChain };

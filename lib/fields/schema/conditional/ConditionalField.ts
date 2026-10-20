@@ -86,6 +86,8 @@ class ConditionalField extends Field<ConditionalFieldProps> {
             : null;
         config.conditionalChain = [...conditionalChain];
         config.targetPath = new Path(targetPathStr || targetPath || '');
+
+        this.config.presence = 'optional';
     }
 
     public override clone(args: Partial<ConditionalFieldCtorParams> = {}): this {
