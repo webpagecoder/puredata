@@ -5,13 +5,13 @@ import { AnyChain, AnyChainCtorParams } from './fields/any/AnyChain.ts';
 import { ArrayChain, ArrayChainCtorParams } from './fields/array/ArrayChain.ts';
 import { BooleanChain, BooleanChainCtorParams } from './fields/boolean/BooleanChain.ts';
 import { DateChain, DateChainCtorParams } from './fields/date/DateChain.ts';
-import { EnumField, EnumStructure } from './fields/enum/EnumField.ts';
-import { Field } from './fields/Field.ts';
+import { EnumField, EnumFieldCtorParams, EnumStructure } from './fields/enum/EnumField.ts';
+import { Field, FieldCtorParams } from './fields/Field.ts';
 import { NumberChain, NumberChainCtorParams } from './fields/number/NumberChain.ts';
 import { ObjectChain, ObjectChainCtorParams } from './fields/object/ObjectChain.ts';
-import { ConditionalField } from './fields/schema/conditional/ConditionalField.ts';
-import { FieldPointerField } from './fields/schema/fieldPointer/FieldPointerField.ts';
-import { ReferenceField } from './fields/schema/reference/ReferenceField.ts';
+import { ConditionalField, ConditionalFieldCtorParams } from './fields/schema/conditional/ConditionalField.ts';
+import { PointerField, PointerFieldCtorParams } from './fields/schema/pointer/PointerField.ts';
+import { ReferenceField, ReferenceFieldCtorParams } from './fields/schema/reference/ReferenceField.ts';
 import { Schema, SchemaChain, SchemaChainCtorParams } from './fields/schema/SchemaChain.ts';
 import { StringChain, StringChainCtorParams } from './fields/string/StringChain.ts';
 import { GlobalConfig } from './GlobalConfig.ts';
@@ -50,7 +50,7 @@ class PureData extends FieldFactory {
 
     private _composeChainProps<T extends AnyChainCtorParams>(
         chainType: string,
-        props: Record<string, unknown> = {}
+        props: Partial<T> = {}
     ) {
         return Object.assign(
             {},
@@ -64,7 +64,7 @@ class PureData extends FieldFactory {
         ) as T;
     }
 
-    private _composeFieldProps(props: Record<string, unknown> = {}) {
+    private _composeFieldProps<T extends FieldCtorParams>(props: Partial<T> = {}) {
         return Object.assign(
             {},
             this._globalConfig['any'],
@@ -120,27 +120,37 @@ class PureData extends FieldFactory {
     // Fields
 
     public enum(structure: EnumStructure) {
-        return new EnumField(this._composeFieldProps({ structure }));
+        return new EnumField(this._composeFieldProps<EnumFieldCtorParams>({ structure }));
     }
 
     public immutable(value: unknown) {
-        return new AnyChain(this._composeFieldProps({ value, mutable: false }));
+        return new AnyChain(this._composeFieldProps<AnyChainCtorParams>({ 
+            defaultValue: value, 
+            mutable: false
+         }));
     }
 
     public mutable(value: unknown) {
-        return new AnyChain(this._composeFieldProps({ value, mutable: true }));
+        return new AnyChain(this._composeFieldProps<AnyChainCtorParams>({ 
+            defaultValue: value, 
+            mutable: true 
+        }));
     }
 
     public value<T = unknown>(pathStr: string, defaultOrCallback: unknown = undefined): T {
-        return new ReferenceField(this._composeFieldProps({ pathStr, defaultOrCallback })) as T;
+        return new ReferenceField(this._composeFieldProps<ReferenceFieldCtorParams>({ pathStr, defaultOrCallback })) as T;
     }
 
-    // Field pointer
+    // Field pointers
 
-    public field(pathStr: string, minDepth?: number, maxDepth?: number) {
-        return new FieldPointerField(this._composeFieldProps({
-            minDepth,
-            maxDepth,
+    public field(
+        pathStr: string,
+        nestMinDepth: number | null = null,
+        nestMaxDepth: number | null = null
+    ) {
+        return new PointerField(this._composeFieldProps<PointerFieldCtorParams>({
+            nestMinDepth,
+            nestMaxDepth,
             fieldPath: new Path(pathStr, this._pathDelims)
         }));
     }
@@ -148,7 +158,7 @@ class PureData extends FieldFactory {
     // Conditionals
 
     public satisfies(targetPathStr: string, comparisonField: Field) {
-        return new ConditionalField(this._composeFieldProps({
+        return new ConditionalField(this._composeFieldProps<ConditionalFieldCtorParams>({
             fieldFactory: this,
             comparisonField,
             comparisonMode: 'equals',

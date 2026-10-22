@@ -2,9 +2,7 @@
 'use strict';
 
 import { Path } from '../../../Path.ts';
-import { AnyChain } from '../../any/AnyChain.ts';
-import { ArrayChain } from '../../array/ArrayChain.ts';
-import { Field, FieldCtorParams, FieldConfig } from '../../Field.ts';
+import { Field, FieldConfig, FieldCtorParams } from '../../Field.ts';
 import { FieldFactory } from '../../FieldFactory.ts';
 import { SchemaChain } from '../SchemaChain.ts';
 import { ConditionalProcessor } from './ConditionalProcessor.ts';

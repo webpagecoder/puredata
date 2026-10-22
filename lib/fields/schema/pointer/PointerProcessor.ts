@@ -5,32 +5,41 @@ import { Path } from '../../../Path.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } from '../../Processor.ts';
 import { SchemaProcessor } from '../SchemaProcessor.ts';
-import { FieldPointerField } from './FieldPointerField.ts';
+import { PointerField } from './PointerField.ts';
 
-export type FieldPointerProcessorCompilationContext = ProcessorCompilationContext & {
-    parent: SchemaProcessor;
+export type PointerProcessorCompilationContext = ProcessorCompilationContext & {
     absolutePath: Path;
 }
 
-class BoundFieldPointerProcessor extends Processor<FieldPointerField>{ 
+class BoundPointerProcessor extends Processor<PointerField> {
     override process(tracker: ValueTracker, state: State): void { }
 }
 
-class FieldPointerProcessor extends NodeMixin(BoundFieldPointerProcessor) {
+class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
 
-    private _innerNestedProcessor: Processor | null;
+    private _nestedSchemaProcessor: SchemaProcessor | null;
 
-    public constructor(args: ProcessorCtorParams<FieldPointerField>) {
+    public constructor(args: ProcessorCtorParams<PointerField>) {
         super(args);
-        this._innerNestedProcessor = null;
+        this._nestedSchemaProcessor = null;
     }
 
-    public override compile(context: FieldPointerProcessorCompilationContext): Processor {
-// return this;
+    public override compile(context: PointerProcessorCompilationContext): Processor {
         const { absolutePath } = context;
+
         const { fieldPath } = this.field.config;
 
         if(fieldPath.isAbsolute) {
+            const trimmedFieldPath = absolutePath.toNormalizedString().replace(
+                new RegExp('^' + fieldPath.toNormalizedString() + '/'), 
+                ''
+            );
+            console.log(trimmedFieldPath);
+        }
+
+
+
+        if (fieldPath.isAbsolute) {
             throw new Error('At key ' + absolutePath + ' - path must be relative and not cross conditional boundaries: ' + fieldPath);
         }
         const referencedProcessor = this.parent.resolvePath(fieldPath);
@@ -39,7 +48,7 @@ class FieldPointerProcessor extends NodeMixin(BoundFieldPointerProcessor) {
             throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);
         }
 
-        if (referencedProcessor instanceof FieldPointerProcessor) {
+        if (referencedProcessor instanceof PointerProcessor) {
             throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
         }
 
@@ -49,32 +58,32 @@ class FieldPointerProcessor extends NodeMixin(BoundFieldPointerProcessor) {
             || (absolutePath.toString() + separator).startsWith(resolvedRefPath.toString() + separator);
 
         if (isNest) {
-            this._innerNestedProcessor = referencedProcessor;
+            this._nestedSchemaProcessor = referencedProcessor as SchemaProcessor;
             return this;
         }
         else {
-            return referencedProcessor.field.createProcessor().compile(context);
+            return (referencedProcessor as Processor).field.createProcessor().compile(context);
         }
     }
 
     // This processor will only be called for a nested schema
     public override process(tracker: ValueTracker, state: State): void {
-        const { minDepth, maxDepth } = this.field.config;
+        const { nestMinDepth, nestMaxDepth } = this.field.config;
         const value = tracker.getValue();
 
-        if (value === undefined && tracker.nestDepth - 1 < minDepth) {
-            tracker.nestRoot!.addError('object/nest/tooShallow', { minDepth, maxDepth });
+        if (value === undefined && nestMinDepth != null && tracker.nestDepth - 1 < nestMinDepth) {
+            tracker.nestRoot!.addError('object/nest/tooShallow', { minDepth: nestMinDepth, maxDepth: nestMaxDepth });
         }
         else if (value !== undefined) {
-            if (tracker.nestDepth > maxDepth) {
-                tracker.nestRoot!.addError('object/nest/tooDeep', { minDepth, maxDepth });
+            if (nestMaxDepth != null && tracker.nestDepth > nestMaxDepth) {
+                tracker.nestRoot!.addError('object/nest/tooDeep', { minDepth: nestMinDepth, maxDepth: nestMaxDepth });
             }
             else {
-                this._innerNestedProcessor!.process(tracker, state);
+                this._nestedSchemaProcessor!.process(tracker, state);
             }
         }
     }
 }
 
-export { FieldPointerProcessor };
+export { PointerProcessor };
 

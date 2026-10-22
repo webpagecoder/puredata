@@ -1,10 +1,9 @@
 'use strict';
 
-import { ConditionalField } from './ConditionalField.ts';
+import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
-import { NamedNodeMixin } from '../../../node/NamedNodeMixin.ts';
-import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
+import { ConditionalField } from './ConditionalField.ts';
 
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
@@ -34,15 +33,15 @@ class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
 
         // If any of the processors are nodes, they need to have their parent set to be
         // the same as this processor's parent, so that they can resolve paths correctly
-        this.addIndexedChild(this._comparisonProcessor);
-        this.addIndexedChild(this._otherwiseProcessor);
-        this.addIndexedChild(this._thenProcessor);
+        // this.addIndexedChild(this._comparisonProcessor);
+        // this.addIndexedChild(this._otherwiseProcessor);
+        // this.addIndexedChild(this._thenProcessor);
 
         // Figure out the chain, and also set the parent of each processor if needed
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
             const processor = conditionalField.createProcessor();
-            this.addIndexedChild(processor);
+            // this.addIndexedChild(processor);
             this._conditionalProcessorChain.push([type, processor]);
         }
     }
@@ -108,6 +107,7 @@ class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
         const trackerClone = tracker.cloneWithoutErrors();
         const { _thenProcessor, _otherwiseProcessor } = this;
         this._nestedProcess(trackerClone);
+        
         if (trackerClone.pass && _thenProcessor) {
             _thenProcessor.process(tracker);
         }
@@ -118,3 +118,4 @@ class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
 }
 
 export { ConditionalProcessor };
+

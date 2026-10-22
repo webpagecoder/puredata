@@ -119,7 +119,10 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return this.clone({ emptyValues: values } as Partial<P>);
     }
 
-    public immutable() {
+    /**
+     * Make the value immutable (unchangeable by user input)
+     */
+    public immutable() : this{
         return this.clone({ mutable: false } as Partial<P>);
     }
 

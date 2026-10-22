@@ -10,7 +10,7 @@ import { AnyProcessor, AnyProcessorCtorParams } from '../any/AnyProcessor.ts';
 import { ObjectProcessor } from '../object/ObjectProcessor.ts';
 import { Processor, ProcessorCompilationContext, State } from '../Processor.ts';
 import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
-import { FieldPointerProcessor } from './fieldPointer/FieldPointerProcessor.ts';
+import { PointerProcessor } from './pointer/PointerProcessor.ts';
 import { ReferenceField } from './reference/ReferenceField.ts';
 import { SchemaChain } from './SchemaChain.ts';
 import { IndexedNodeMixin } from '../../node/IndexedNodeMixin.ts';
@@ -42,7 +42,7 @@ class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcessor)) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
-    private _nests: CompiledSchema<FieldPointerProcessor>;
+    private _nests: CompiledSchema<PointerProcessor>;
     private _references: CompiledSchema;
     private _referenceResolver: PubSub | null;
 
@@ -103,7 +103,7 @@ class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcess
                 _conditionals[key] = resolvedChildProcessor;
                 this.removeNamedChild(key);
             }
-            else if (resolvedChildProcessor instanceof FieldPointerProcessor) {
+            else if (resolvedChildProcessor instanceof PointerProcessor) {
                 _nests[key] = resolvedChildProcessor; // guaranteed nest
                 this.removeNamedChild(key);
             }

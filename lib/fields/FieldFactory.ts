@@ -10,6 +10,7 @@ import { ObjectChain } from "./object/ObjectChain.ts";
 import { Schema, SchemaChain } from "./schema/SchemaChain.ts";
 import { StringChain } from "./string/StringChain.ts";
 import { Utils } from "../Utils.ts";
+import { EnumField } from "./enum/EnumField.ts";
 
 export abstract class FieldFactory {
     public abstract any(): AnyChain;
@@ -21,20 +22,24 @@ export abstract class FieldFactory {
     public abstract schema(schema: Schema): SchemaChain;
     public abstract string(): StringChain;
 
+    public abstract enum(structure: Record<string, unknown>): EnumField;
+    public abstract immutable(value: unknown): AnyChain;
+    public abstract mutable(value: unknown): AnyChain;
+
+    //todo: add all other methods?
+
     public coerce(value: unknown): Field {
         if (value instanceof Field) {
             return value;
         }
         else if (Utils.isPlainObject(value)) {
-            return this.schema({}).clearChain().clone({
-                schema: value as Schema
-            });
+            return this.schema(value as Schema);
         }
         else if (Array.isArray(value)) {
-            return this.array().clearChain().tuple(value);
+            return this.array().tuple(value);
         }
         else {
-            return this.any().clearChain().default(value);
+            return this.immutable(value);
         }
     }
 }
