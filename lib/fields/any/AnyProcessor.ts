@@ -91,7 +91,8 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
             this._copyResultToTracker(tracker, result);
 
             if (tracker.hasErrors()) {
-                return;
+                //todo: check fail on first error
+                // return;
             }
         }
     }

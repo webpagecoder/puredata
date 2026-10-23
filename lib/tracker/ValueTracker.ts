@@ -2,94 +2,75 @@
 
 import { Path } from '../Path.ts';
 import { Utils } from '../Utils.ts';
-import { Formatter } from './formatters/Formatter.ts';
-import { HtmlFormatter } from './formatters/HtmlFormatter.ts';
 import { Field } from '../fields/Field.ts';
-import { NamedNodeMixin } from '../node/NamedNodeMixin.ts';
+import { NodeMixin } from '../NodeMixin.ts';
+import { ErrorMessages } from './ErrorMessages.ts';
 
-export type TrackerError = {
+export type ErrorData = {
     args: Record<string, unknown>;
     errorKey: string;
     key: string;
     path: string;
-    text: string;
+    message: string;
     value: unknown;
 };
 
-export type ErrorTree = {
-    errors: TrackerError[];
-    children: Record<string, ErrorTree>;
-};
+class ValueTracker extends NodeMixin<ValueTracker>(Object) {
 
-class ValueTracker extends NamedNodeMixin(Object) {
+    private _rawValue: unknown;
 
+    public children: Record<string, ValueTracker>;
     public field: Field;
     public nestDepth: number;
     public nestRoot: ValueTracker | null;
+    public ownErrors: ErrorData[];
     public path: Path;
-
-    private _errorCollection: TrackerError[];
-    private _rawValue: unknown;
 
     public constructor(field: Field, value?: unknown) {
         super();
+        this.children = {};
+        this.field = field;
         this.nestDepth = 0;
         this.nestRoot = null;
+        this.ownErrors = [];
         this.path = new Path('/');
-        this.field = field;
-
-        this._errorCollection = [];
         this.setValue(value);
     }
 
-    public cloneWithoutErrors(): ValueTracker {
-        const clone = new ValueTracker(this.field);
-        clone.nestDepth = this.nestDepth;
-        clone.nestRoot = this.nestRoot;
-        clone.path = this.path;
-        clone.pointToParent(this.parent);
-
-        for (const key of Object.keys(this.namedChildren)) {
-            clone.addNamedChild(key, (this.namedChildren[key] as this).cloneWithoutErrors());
-        }
-
-        clone.setValue(this._rawValue);
-        return clone;
-    }
+    // Value handling
 
     public createChild(field: Field, key: string, value?: unknown): ValueTracker {
         const child = new ValueTracker(field);
-        this.addNamedChild(key, child);
         child.path = this.path.addSegment(key);
-
         child.setValue(value);
+        this.children[key] = child;
         return child;
     }
 
     public setValue(value: unknown = undefined): void {
         this._rawValue = value;
-        const { namedChildren: children } = this;
+        const { children } = this;
         if (!Utils.isPlainObject(value)) {
             for (const key of Object.keys(children)) {
-                (children[key] as this).setValue(undefined);
+                children[key].setValue(undefined);
             }
         }
         else {
             for (const key of Object.keys(children)) {
-                (children[key] as this).setValue((value as Record<PropertyKey, unknown>)[key]);
+                children[key].setValue((value as Record<PropertyKey, unknown>)[key]);
             }
         }
     }
 
     public getValue(): unknown {
-        const { namedChildren: children } = this;
+        const { children } = this;
         const keys = Object.keys(children);
         if (keys.length === 0) {
             return this._rawValue;
         }
         const final = Object.assign({}, this._rawValue as Record<string, unknown>);
         for (const key of keys) {
-            const value = (children[key] as ValueTracker).getValue();
+            const value = children[key].getValue();
             if (value !== undefined) {
                 final[key] = value;
             }
@@ -101,19 +82,21 @@ class ValueTracker extends NamedNodeMixin(Object) {
     }
 
     public hasValue(): boolean {
-        const { namedChildren: children } = this;
+        const { children } = this;
         const keys = Object.keys(children);
         if (keys.length === 0) {
             return this._rawValue !== undefined;
         }
         for (const key of keys) {
-            if ((children[key] as ValueTracker).hasValue()) {
+            if (children[key].hasValue()) {
                 return true;
             }
         }
 
         return false;
     }
+
+    // Error handling
 
     public addError(errorKey: string, args?: Record<string, unknown>): this {
         if (!this.field) {
@@ -124,32 +107,32 @@ class ValueTracker extends NamedNodeMixin(Object) {
             field: { config: { errorMessages } },
             path,
         } = this;
-        let text = errorMessages.getText(errorKey) as string;
+        let message = errorMessages.getText(errorKey) as string;
         if (args) {
             for (const argKey of Object.keys(args)) {
                 const arg = args[argKey];
-                text = text.replace(`{${argKey}}`, Array.isArray(arg) ? arg.join(', ') : arg as string);
+                message = message.replace(`{${argKey}}`, Array.isArray(arg) ? arg.join(', ') : arg as string);
             }
         }
-        this._errorCollection.push({
+        this.ownErrors.push({
             args: args || {},
             errorKey,
             key: String(path.keys[path.keys.length - 1] || ''),
             path: path.toString(),
-            text,
+            message,
             value: this._rawValue
         });
         return this;
     }
 
     public hasErrors(): boolean {
-        if (this._errorCollection.length > 0) {
+        if (this.ownErrors.length > 0) {
             return true;
         }
-        const { namedChildren: children } = this;
+        const { children } = this;
         const keys = Object.keys(children);
         for (const key of keys) {
-            if ((children[key] as ValueTracker).hasErrors()) {
+            if (children[key].hasErrors()) {
                 return true;
             }
         }
@@ -166,39 +149,34 @@ class ValueTracker extends NamedNodeMixin(Object) {
     }
 
     public setPass() {
-        this._errorCollection = [];
+        this.ownErrors = [];
     }
 
     public setFail(errorKey: string = 'any/base', args?: Record<string, unknown>) {
-        this._errorCollection = [];
+        this.ownErrors = [];
         this.addError(errorKey, args);
     }
 
-    public getErrors(): ErrorTree {
-        const obj: ErrorTree = {
-            errors: this._errorCollection,
-            children: {}
-        };
+    public getOwnErrors(path?: Path): ErrorData[] {
+        const tracker = path ? this.parent.resolvePath(path) : this;
+        return tracker ? (tracker as ValueTracker).ownErrors : [];
+    }
 
-        const { namedChildren: children } = this;
-        for (const key of Object.keys(children)) {
-            obj.children[key] = (children[key] as ValueTracker).getErrors();
+    // Misc
+
+    public cloneWithoutErrors(): ValueTracker {
+        const clone = new ValueTracker(this.field);
+        clone.nestDepth = this.nestDepth;
+        clone.nestRoot = this.nestRoot;
+        clone.path = this.path;
+        clone.parent = this.parent;
+
+        for (const key of Object.keys(this.children)) {
+            clone.addChild(key, (this.children[key] as this).cloneWithoutErrors());
         }
 
-        return obj;
-    }
-
-    public getLocalErrors(path?: Path): TrackerError[] {
-        const tracker = path ? this.parent.resolvePath(path) : this;
-        return tracker ? (tracker as ValueTracker)._errorCollection : [];
-    }
-
-    public formatErrors(formatter: Formatter = new HtmlFormatter()): string {
-        return formatter.format(this);
-    }
-
-    public formatLocalErrors(formatter: Formatter = new HtmlFormatter()): string {
-        return formatter.format(this);
+        clone.setValue(this._rawValue);
+        return clone;
     }
 
     // Convenience getters
@@ -212,7 +190,7 @@ class ValueTracker extends NamedNodeMixin(Object) {
     }
 
     public get errors() {
-        return this.getErrors();
+        return new ErrorMessages(this);
     }
 
     public get fail() {
@@ -230,3 +208,10 @@ export { ValueTracker };
 
 
 
+// public formatErrors(formatter: Formatter = new HtmlFormatter()): string {
+//     return formatter.format(this);
+// }
+
+// public formatLocalErrors(formatter: Formatter = new HtmlFormatter()): string {
+//     return formatter.format(this);
+// }

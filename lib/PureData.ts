@@ -21,7 +21,6 @@ import { DefaultErrorText } from './text/DefaultErrorText.ts';
 import { Translation } from './Translation.ts';
 import { Utils } from './Utils.ts';
 
-//TODO puredata should also be immutable. when they config, you need to make a new instance
 
 
 
@@ -124,16 +123,16 @@ class PureData extends FieldFactory {
     }
 
     public immutable(value: unknown) {
-        return new AnyChain(this._composeFieldProps<AnyChainCtorParams>({ 
-            defaultValue: value, 
+        return new AnyChain(this._composeFieldProps<AnyChainCtorParams>({
+            defaultValue: value,
             mutable: false
-         }));
+        }));
     }
 
     public mutable(value: unknown) {
-        return new AnyChain(this._composeFieldProps<AnyChainCtorParams>({ 
-            defaultValue: value, 
-            mutable: true 
+        return new AnyChain(this._composeFieldProps<AnyChainCtorParams>({
+            defaultValue: value,
+            mutable: true
         }));
     }
 
@@ -167,7 +166,7 @@ class PureData extends FieldFactory {
     }
 
     public violates(targetPathStr: string, comparisonField: Field) {
-        return new ConditionalField(this._composeFieldProps({
+        return new ConditionalField(this._composeFieldProps<ConditionalFieldCtorParams>({
             fieldFactory: this,
             comparisonField,
             comparisonMode: 'notEquals',
@@ -178,8 +177,11 @@ class PureData extends FieldFactory {
     // Settings 
 
     public config(config: Partial<GlobalConfig> = {}) {
-        this._globalConfig = Utils.mergeObjects(this._globalConfig, config) as GlobalConfig;
-        this._pathDelims = this._globalConfig.any.pathDelims;
+        return new PureData({
+            globalConfig: Utils.mergeObjects(this._globalConfig, config) as GlobalConfig,
+            calendarText: this._calendarText,
+            errorMessages: this._errorMessages
+        })
     }
 
     public calendarText(overrides: Record<string, string>) {
@@ -190,7 +192,15 @@ class PureData extends FieldFactory {
                 .toNormalizedString();
             calendarOverrides[internalPathStyle] = overrides[pathStr];
         }
-        this._calendarText.setText(calendarOverrides);
+
+        const calendarText = this._calendarText.clone();
+        calendarText.setText(calendarOverrides);
+
+        return new PureData({
+            globalConfig: this._globalConfig,
+            calendarText,
+            errorMessages: this._errorMessages
+        })
     }
 
     public errorText(overrides: Record<string, string>) {
@@ -201,7 +211,15 @@ class PureData extends FieldFactory {
                 .toNormalizedString();
             errorOverrides[internalPathStyle] = overrides[pathStr];
         }
-        this._errorMessages.setText(errorOverrides);
+
+        const errorMessages = this._errorMessages.clone();
+        errorMessages.setText(errorOverrides);
+
+        return new PureData({
+            globalConfig: this._globalConfig,
+            calendarText: this._calendarText,
+            errorMessages
+        })
     }
 
 }

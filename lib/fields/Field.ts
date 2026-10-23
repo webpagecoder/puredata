@@ -123,7 +123,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return this.clone({ defaultValue } as Partial<P>);
     }
 
-    public errorMessages(overrides: Record<string, string>): this {
+    public errors(overrides: Record<string, string>): this {
         const clone = this.clone();
         const errorOverrides: TranslationStringRecord = {};
         for (const pathStr of Object.keys(overrides)) {

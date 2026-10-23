@@ -1,21 +1,12 @@
 'use strict';
 
-import { IndexedNodeMixin } from '../../../node/IndexedNodeMixin.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
 import { ConditionalField } from './ConditionalField.ts';
 
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
-// export type ConditionalProcessorCompilationContext = ProcessorCompilationContext & {
-//     isNested?: boolean
-// }
-
-class BoundConditionalProcessor extends Processor<ConditionalField> {
-    public override process(tracker: ValueTracker): void { }
-}
-
-class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
+class ConditionalProcessor extends  Processor<ConditionalField> {
 
     private _comparisonProcessor: Processor;
     private _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
@@ -31,17 +22,10 @@ class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
         this._otherwiseProcessor = otherwiseField ? otherwiseField.createProcessor() : null;
         this._thenProcessor = thenField ? thenField.createProcessor() : null;
 
-        // If any of the processors are nodes, they need to have their parent set to be
-        // the same as this processor's parent, so that they can resolve paths correctly
-        // this.addIndexedChild(this._comparisonProcessor);
-        // this.addIndexedChild(this._otherwiseProcessor);
-        // this.addIndexedChild(this._thenProcessor);
-
         // Figure out the chain, and also set the parent of each processor if needed
         this._conditionalProcessorChain = [];
         for (let [type, conditionalField] of conditionalChain) {
             const processor = conditionalField.createProcessor();
-            // this.addIndexedChild(processor);
             this._conditionalProcessorChain.push([type, processor]);
         }
     }
@@ -77,6 +61,7 @@ class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
             : tracker.parent.resolvePath(targetPath) as ValueTracker;
 
         if (!targetTracker) {
+            //todo: should we get rid of this
             throw new Error('Cannot find referenced tracker in conditional: ' + targetPath);
         }
 
@@ -108,11 +93,21 @@ class ConditionalProcessor extends IndexedNodeMixin(BoundConditionalProcessor) {
         const { _thenProcessor, _otherwiseProcessor } = this;
         this._nestedProcess(trackerClone);
         
-        if (trackerClone.pass && _thenProcessor) {
-            _thenProcessor.process(tracker);
+        if (trackerClone.pass) {
+            if(_thenProcessor) {
+                _thenProcessor.process(tracker);
+            }
+            else {
+                tracker.setValue(true);
+            }
         }
-        else if (trackerClone.fail && _otherwiseProcessor) {
-            _otherwiseProcessor.process(tracker);
+        else if (trackerClone.fail) {
+            if(_otherwiseProcessor) {
+                _otherwiseProcessor.process(tracker);
+            }
+            else {
+                tracker.setValue(false);
+            }
         }
     }
 }

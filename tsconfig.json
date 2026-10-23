@@ -20,7 +20,8 @@
     "noEmit": true,
     "noErrorTruncation": true,
     "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "stripInternal": true
   },
   "include": [
     "lib/**/*.ts",

@@ -1,6 +1,6 @@
 'use strict';
 
-import { NodeMixin } from '../../../node/NodeMixin.ts';
+import { NodeMixin } from '../../../NodeMixin.ts';
 import { Path } from '../../../Path.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } from '../../Processor.ts';
@@ -26,30 +26,18 @@ class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
 
     public override compile(context: PointerProcessorCompilationContext): Processor {
         const { absolutePath } = context;
-
         const { fieldPath } = this.field.config;
 
-        if(fieldPath.isAbsolute) {
-            const trimmedFieldPath = absolutePath.toNormalizedString().replace(
-                new RegExp('^' + fieldPath.toNormalizedString() + '/'), 
-                ''
-            );
-            console.log(trimmedFieldPath);
-        }
-
-
-
         if (fieldPath.isAbsolute) {
-            throw new Error('At key ' + absolutePath + ' - path must be relative and not cross conditional boundaries: ' + fieldPath);
+            throw new Error('At key ' + absolutePath + ' - field reference path must be relative (not absolute) and not cross conditional boundaries: ' + fieldPath);
         }
+        
         const referencedProcessor = this.parent.resolvePath(fieldPath);
-
         if (!referencedProcessor) {
-            throw new Error('At key ' + absolutePath + ' - unable to resolve referenced path: ' + fieldPath);
+            throw new Error('At key ' + absolutePath + ' - unable to resolve referenced field path: ' + fieldPath);
         }
-
         if (referencedProcessor instanceof PointerProcessor) {
-            throw new Error('At key ' + absolutePath + ' - cannot point to another reference: ' + fieldPath);
+            throw new Error('At key ' + absolutePath + ' - a field reference cannot point to another field reference: ' + fieldPath);
         }
 
         const resolvedRefPath = absolutePath.parent().move(fieldPath);

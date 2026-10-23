@@ -1,7 +1,7 @@
 'use strict';
 
 import { Path } from '../../Path.ts';
-import { NamedNodeMixin } from '../../node/NamedNodeMixin.ts';
+import { NodeMixin } from '../../NodeMixin.ts';
 import { PubSub, PubSubContext } from '../../pub-sub/PubSub.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { Utils } from '../../Utils.ts';
@@ -13,7 +13,6 @@ import { ConditionalProcessor } from './conditional/ConditionalProcessor.ts';
 import { PointerProcessor } from './pointer/PointerProcessor.ts';
 import { ReferenceField } from './reference/ReferenceField.ts';
 import { SchemaChain } from './SchemaChain.ts';
-import { IndexedNodeMixin } from '../../node/IndexedNodeMixin.ts';
 
 export type CompiledSchema<P = Processor> = Record<string, P>;
 
@@ -39,7 +38,7 @@ export type ReferenceResolverContext = PubSubContext & {
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
-class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcessor)) {
+class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 
     private _conditionals: CompiledSchema<ConditionalProcessor>;
     private _nests: CompiledSchema<PointerProcessor>;
@@ -61,7 +60,7 @@ class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcess
         // Create the entire tree before compilation (to establish full path structure)
         const {schemaFields} = field.config;
         for (let key of Object.keys(schemaFields)) {
-            this.addNamedChild(key, schemaFields[key].createProcessor());
+            this.addChild(key, schemaFields[key].createProcessor());
         }
     }
 
@@ -85,11 +84,11 @@ class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcess
             _conditionals,
             _nests,
             _references,
-            namedChildren,
+            children,
         } = this;
 
-        for (const key of Object.keys(namedChildren)) {
-            const childProcessor = namedChildren[key] as Processor;
+        for (const key of Object.keys(children)) {
+            const childProcessor = children[key] as Processor;
             const absoluteSubPath = absolutePath.addSegment(key);
 
             const resolvedChildProcessor = childProcessor.compile({
@@ -101,15 +100,15 @@ class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcess
             let references = this._getReferencesWithinProcessor(resolvedChildProcessor);
             if (resolvedChildProcessor instanceof ConditionalProcessor) {
                 _conditionals[key] = resolvedChildProcessor;
-                this.removeNamedChild(key);
+                this.removeChild(key);
             }
             else if (resolvedChildProcessor instanceof PointerProcessor) {
                 _nests[key] = resolvedChildProcessor; // guaranteed nest
-                this.removeNamedChild(key);
+                this.removeChild(key);
             }
             else if (references.size > 0) {
                 _references[key] = resolvedChildProcessor;
-                this.removeNamedChild(key);
+                this.removeChild(key);
 
                 const subNodeId = absoluteSubPath.toString();
                 const subNode = referenceResolver.getNode(subNodeId) ||
@@ -195,7 +194,7 @@ class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcess
 
         const {
             field,
-            namedChildren,
+            children,
             _conditionals,
             _nests,
             _references,
@@ -227,8 +226,8 @@ class SchemaProcessor extends IndexedNodeMixin(NamedNodeMixin(BoundObjectProcess
 
         const value = tracker.getValue() as Record<string, any>;
 
-        for (const key of Object.keys(namedChildren)) {
-            const processor = namedChildren[key] as Processor;
+        for (const key of Object.keys(children)) {
+            const processor = children[key] as Processor;
             const childTracker = tracker.createChild(processor.field, key, value[key]);
             processor.process(childTracker, state);
         }
