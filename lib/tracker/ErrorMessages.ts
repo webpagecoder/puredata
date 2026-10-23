@@ -69,9 +69,9 @@ class ErrorMessages extends NodeMixin(Object) {
         ] || [];
     }
 
-    public get toJson(): Record<string, unknown> {
-        const json: Record<string, unknown> = {};
-    }
+    // public get toJson(): Record<string, unknown> {
+    //     const json: Record<string, unknown> = {};
+    // }
 }
 
 export { ErrorMessages };

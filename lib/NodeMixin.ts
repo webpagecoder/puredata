@@ -10,7 +10,7 @@ export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(
 
     return class NodeMixinClass extends BaseClass {
         public parent: NodeMixinClass;
-        public children: Record<string, T|NodeMixinClass>;
+        public children: Record<string, T | NodeMixinClass>;
 
         public constructor(...args: any[]) {
             super(...args);
@@ -35,7 +35,8 @@ export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(
             delete this.children[key];
         }
 
-        public resolvePath(path: Path): unknown {
+        public resolvePath(path: Path | string): unknown {
+            path = new Path(path);
             if (path.isSelf) {
                 return this;
             }
@@ -71,7 +72,7 @@ export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(
         }
 
         public get root(): NodeMixinClass {
-            let node:NodeMixinClass = this;
+            let node: NodeMixinClass = this;
             do {
                 node = node.parent;
             }
