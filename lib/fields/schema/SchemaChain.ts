@@ -7,6 +7,7 @@ import { Field } from '../Field.ts';
 import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object/ObjectChain.ts';
 import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
+import { Utils } from '../../Utils.ts';
 
 export type Schema = {
     [key: string]: unknown;
@@ -31,7 +32,7 @@ export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainConfig> & {
 };
 
 class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
-    
+
     public constructor(args: Partial<SchemaChainCtorParams> = {}) {
         super(args);
 
@@ -43,7 +44,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
             stripExtraKeys = true,
         } = args;
 
-        if(!fieldFactory) {
+        if (!fieldFactory) {
             throw new Error('SchemaChain requires a fieldFactory to be provided in the constructor arguments');
         }
 
@@ -75,7 +76,15 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
     private _processSchema(schema: Schema): SchemaFields {
         const schemaFields: SchemaFields = {};
         for (const key of Object.keys(schema)) {
-            schemaFields[key] = this.config.fieldFactory.coerce(schema[key]);
+            const value = schema[key];
+            if (Utils.isPlainObject(value)) {
+                schemaFields[key] = this.clone({
+                    schema: value as Schema,
+                });
+            }
+            else {
+                schemaFields[key] = this.config.fieldFactory.coerce(value);
+            }
         }
         return schemaFields;
     }

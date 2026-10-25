@@ -6,24 +6,21 @@ import { ErrorData, ValueTracker } from "./ValueTracker.ts";
 
 export type FlattenedErrors = Record<string, ErrorData[]>;
 
-class ErrorMessages extends NodeMixin(Object) {
+class ErrorMessages extends NodeMixin<ErrorMessages>(Object) {
     public ownErrors: ErrorData[];
     public hasOwnErrors: boolean;
     public hasChildErrors: boolean;
-
-    private _flattenedErrorsCached: FlattenedErrors | null;
 
     public constructor(tracker: ValueTracker) {
         super();
         this.ownErrors = tracker.getOwnErrors();
         this.hasOwnErrors = this.ownErrors.length > 0;
-        this._flattenedErrorsCached = null;
 
         const { children } = tracker;
 
         let hasChildErrors = false;
         for (const key of Object.keys(children)) {
-            const childError = new ErrorMessages(children[key] as ValueTracker);
+            const childError = new ErrorMessages(children[key]);
             if (childError.hasOwnErrors || Object.keys(childError.children).length > 0) {
                 this.addChild(key, childError);
                 hasChildErrors = true;
@@ -53,13 +50,8 @@ class ErrorMessages extends NodeMixin(Object) {
     }
 
     public get flattenedErrors(): FlattenedErrors {
-        if (this._flattenedErrorsCached) {
-            return this._flattenedErrorsCached;
-        }
-
         const errors: FlattenedErrors = {};
         this._collectErrors(errors);
-        this._flattenedErrorsCached = errors;
         return errors;
     }
 
