@@ -6,15 +6,25 @@ import { AnyHandler } from '../any/AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
+/** Result returned by array validation and transformation methods. */
 export type ArrayHandlerResult = HandlerResult<unknown[]>;
 
+/** Callback used to filter, map, or group array values. */
 export type Filter = (a: unknown) => unknown;
+
+/** Path lookup or callback used to select values from an array. */
 export type PathOrFilter = Path | Filter;
 
+/** Comparator used to order array values. */
 export type SortComparator = (a: unknown, b: unknown) => number;
+
+/** Comparator used to test equality between array values. */
 export type EqualityComparator = (a: unknown, b: unknown) => boolean;
 
+/** Path lookup or comparator used for sorting. */
 export type PathOrSortComparator = Path | SortComparator;
+
+/** Path lookup or comparator used for uniqueness checks. */
 export type PathOrEqualityComparator = Path | EqualityComparator;
 
 /**
@@ -115,6 +125,7 @@ function getDimensionsInternal(arr: unknown[], dimensions: number[], index: numb
     return pass(arr);
 }
 
+/** Validation and transformation methods for array values. */
 class ArrayHandler extends AnyHandler {
 
 
@@ -300,10 +311,10 @@ class ArrayHandler extends AnyHandler {
      * @param max Maximum allowed length.
      * @returns Returns the original array when the array length is at most the maximum.
      */
-    public maxLength(arr: unknown[], max: number): ArrayHandlerResult {
+    public maxLen(arr: unknown[], max: number): ArrayHandlerResult {
         return arr.length <= max
             ? pass(arr)
-            : fail(arr, 'array/maxLength', {
+            : fail(arr, 'array/maxLen', {
                 length: arr.length,
                 max
             });
@@ -315,10 +326,10 @@ class ArrayHandler extends AnyHandler {
      * @param min Minimum allowed length.
      * @returns Returns the original array when the array length is at least the minimum.
      */
-    public minLength(arr: unknown[], min: number): ArrayHandlerResult {
+    public minLen(arr: unknown[], min: number): ArrayHandlerResult {
         return arr.length >= min
             ? pass(arr)
-            : fail(arr, 'array/minLength', {
+            : fail(arr, 'array/minLen', {
                 length: arr.length,
                 min
             });
@@ -677,11 +688,11 @@ class ArrayHandler extends AnyHandler {
     /**
      * Removes empty values from the array.
      * @param arr Source array.
-     * @param emptyValues Values treated as empty.
+     * @param empties Values treated as empty.
      * @returns Returns the filtered array.
      */
-    public stripEmpties(arr: unknown[], emptyValues: unknown[] = [null, undefined, '']): ArrayHandlerResult {
-        return this.strip(arr, emptyValues);
+    public stripEmpties(arr: unknown[], empties: unknown[] = [null, undefined, '']): ArrayHandlerResult {
+        return this.strip(arr, empties);
     }
 
     /**
@@ -795,5 +806,4 @@ class ArrayHandler extends AnyHandler {
 }
 
 export { ArrayHandler };
-
 

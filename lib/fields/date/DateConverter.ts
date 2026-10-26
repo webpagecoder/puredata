@@ -5,7 +5,7 @@ import { RegexCache } from "../../RegexCache.ts";
 import { Translation } from "../../Translation.ts";
 import { Utils } from "../../Utils.ts";
 import { DateHelpers } from "./DateHelpers.ts";
-import { UtcDate } from "./UtcDate.ts";
+import { OffsetDate } from "./OffsetDate.ts";
 const padLeft = Utils.padLeft;
 
 // Date building blocks/keys
@@ -79,55 +79,95 @@ type HumanDateCache = null | {
     allDayNamesLower: string[];
 }
 
+/** Supported date input formats. */
 export type DateType = 'human' | 'iso' | 'isoWeek' | 'isoOrdinal' | 'instance' | 'timestamp';
+
+/** Ordering of month, day, and year in human-readable dates. */
 export type DateOrder = 'MDY' | 'DMY' | 'YMD';
-export type GenericDateInput = UtcDate | Date | string | number;
+
+/** Values accepted by automatic date parsing. */
+export type GenericDateInput = OffsetDate | Date | string | number;
+
+/** UTC weekday numbering, where Sunday is zero. */
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/** Output time interpretation used when formatting dates. */
 export type TimeMode = 'utc' | 'local';
 
+/** Precision levels available when parsing human-readable dates. */
 export type HumanPrecision = 'date' | 'time' | 'timezone';
+
+/** Precision levels available when parsing ISO dates. */
 export type IsoPrecision = 'date' | 'year' | 'month' | 'day' | 'time' | 'hour' | 'minute' | 'second' | 'millisecond' | 'timezone';
+
+/** Precision levels available when parsing ISO week dates. */
 export type IsoWeekPrecision = 'date' | 'week' | 'dayOfWeek' | 'time' | 'hour' | 'minute' | 'second' | 'millisecond' | 'timezone';
+
+/** Precision levels available when parsing ISO ordinal dates. */
 export type IsoOrdinalPrecision = 'date' | 'dayOfYear' | 'time' | 'hour' | 'minute' | 'second' | 'millisecond' | 'timezone';
 
+/** Constraints for parsing human-readable dates. */
 export type HumanParseOptions = {
-    dateOrder?: DateOrder;
+    order?: DateOrder;
     minPrecision?: HumanPrecision;
     maxPrecision?: HumanPrecision;
 };
+
+/** Constraints for parsing ISO calendar dates. */
 export type IsoParseOptions = {
     minPrecision?: IsoPrecision;
     maxPrecision?: IsoPrecision;
     expanded?: Presence
 };
+
+/** Constraints for parsing ISO ordinal dates. */
 export type IsoOrdinalParseOptions = {
     minPrecision?: IsoOrdinalPrecision;
     maxPrecision?: IsoOrdinalPrecision;
     expanded?: Presence
 };
+
+/** Constraints for parsing ISO week dates. */
 export type IsoWeekParseOptions = {
     minPrecision?: IsoWeekPrecision;
     maxPrecision?: IsoWeekPrecision;
     expanded?: Presence
 };
+
+/** Options controlling timestamp units. */
 export type TimestampOptions = {
     isMilliseconds?: boolean;
 };
+
+/** Options accepted by automatic date parsing. */
 export type AutoParseOptions = HumanParseOptions | IsoParseOptions | IsoOrdinalParseOptions | IsoWeekParseOptions | TimestampOptions;
 
 
+/** Parses supported date representations and formats wrapped dates. */
 class DateConverter {
 
+    /** Localized names and suffixes used when parsing and formatting dates. */
     private _calendarText: Translation;
+
+    /** Default UTC offset applied to parsed dates. */
     private _defaultUtcOffsetMinutes: number;
+
+    /** Lazily initialized locale-specific parsing and formatting data. */
     private _cache: HumanDateCache;
 
+    /**
+     * Creates a converter with calendar text and a default UTC offset.
+     *
+     * @param calendarText Localized day, month, and suffix strings.
+     * @param defaultOffsetMinutes Default offset in minutes from UTC.
+     */
     constructor(calendarText: Translation, defaultOffsetMinutes: number = 0) {
         this._calendarText = calendarText;
         this._cache = null;
         this._defaultUtcOffsetMinutes = defaultOffsetMinutes;
     }
 
+    /** Loads locale-specific names and builds cached human-date parsing patterns. */
     private _loadCache() {
         if (this._cache) {
             return;
@@ -162,14 +202,21 @@ class DateConverter {
         };
     }
 
-    public parseAuto(value: unknown, options: AutoParseOptions = {}): UtcDate | null {
+    /**
+     * Attempts supported date formats in sequence and returns the first match.
+     *
+     * @param value Value to parse.
+     * @param options Format-specific parsing options.
+     * @returns Parsed date, or `null` if no supported format matches.
+     */
+    public parseAuto(value: unknown, options: AutoParseOptions = {}): OffsetDate | null {
 
-        if(value instanceof UtcDate) {
+        if(value instanceof OffsetDate) {
             return value.clone();
         }
 
         if (value instanceof Date && !isNaN(value.getTime())) {
-            return new UtcDate(value, this._defaultUtcOffsetMinutes);
+            return new OffsetDate(value, this._defaultUtcOffsetMinutes);
         }
 
         let normalizedDate = this.parseTimestamp(value, options as TimestampOptions);
@@ -200,7 +247,14 @@ class DateConverter {
         return null;
     }
 
-    public parseHuman(dateString: unknown, options: HumanParseOptions = {}): UtcDate | null {
+    /**
+     * Parses a localized, human-readable date string.
+     *
+     * @param dateString Value to parse.
+     * @param options Date order and precision constraints.
+     * @returns Parsed date, or `null` if the value is not a valid match.
+     */
+    public parseHuman(dateString: unknown, options: HumanParseOptions = {}): OffsetDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -212,9 +266,9 @@ class DateConverter {
         this._loadCache();
         const { humanIndexes, humanRegexes, allMonthNamesLower } = this._cache!;
 
-        const { dateOrder = 'MDY' } = options;
+        const { order = 'MDY' } = options;
         let matchResult, dateIndexes;
-        switch (dateOrder) {
+        switch (order) {
             case 'DMY':
                 matchResult = RegexCache.get(humanRegexes.DMY).exec(normalizedDateString);
                 dateIndexes = humanIndexes.DMY;
@@ -310,7 +364,7 @@ class DateConverter {
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate(
+        return new OffsetDate(
             new Date(Date.UTC(
                 year,
                 month - 1,
@@ -323,7 +377,14 @@ class DateConverter {
         );
     }
 
-    public parseIso(dateString: unknown, options: IsoParseOptions = {}): UtcDate | null {
+    /**
+     * Parses an ISO 8601 calendar date and optional time.
+     *
+     * @param dateString Value to parse.
+     * @param options Precision and expanded-format constraints.
+     * @returns Parsed date, or `null` if the value is not a valid match.
+     */
+    public parseIso(dateString: unknown, options: IsoParseOptions = {}): OffsetDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -468,7 +529,7 @@ class DateConverter {
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate(
+        return new OffsetDate(
             new Date(Date.UTC(
                 yearNum,
                 monthNum - 1,
@@ -482,7 +543,14 @@ class DateConverter {
         );
     }
 
-    public parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): UtcDate | null {
+    /**
+     * Parses an ISO 8601 ordinal date.
+     *
+     * @param dateString Value to parse.
+     * @param options Precision and expanded-format constraints.
+     * @returns Parsed date, or `null` if the value is not a valid match.
+     */
+    public parseIsoOrdinal(dateString: unknown, options: IsoOrdinalParseOptions = {}): OffsetDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -601,7 +669,7 @@ class DateConverter {
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate(
+        return new OffsetDate(
             new Date(Date.UTC(
                 yearNum,
                 0,
@@ -615,7 +683,14 @@ class DateConverter {
         );
     }
 
-    public parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): UtcDate | null {
+    /**
+     * Parses an ISO 8601 week date.
+     *
+     * @param dateString Value to parse.
+     * @param options Precision and expanded-format constraints.
+     * @returns Parsed date, or `null` if the value is not a valid match.
+     */
+    public parseIsoWeek(dateString: unknown, options: IsoWeekParseOptions = {}): OffsetDate | null {
         if (typeof dateString !== 'string') {
             return null;
         }
@@ -747,7 +822,7 @@ class DateConverter {
             totalOffsetMinutes = Math.sign(offsetHoursNum) * (Math.abs(offsetHoursNum) * 60 + offsetMinutesNum);
         }
 
-        return new UtcDate(
+        return new OffsetDate(
             new Date(Date.UTC(
                 date.getUTCFullYear(),
                 date.getUTCMonth(),
@@ -761,7 +836,14 @@ class DateConverter {
         );
     }
 
-    public parseTimestamp(value: unknown, options: TimestampOptions = {}): UtcDate | null {
+    /**
+     * Parses an integer timestamp.
+     *
+     * @param value Timestamp value as a number or numeric string.
+     * @param options Whether the timestamp is in milliseconds; defaults to seconds.
+     * @returns Parsed date, or `null` if the timestamp is invalid.
+     */
+    public parseTimestamp(value: unknown, options: TimestampOptions = {}): OffsetDate | null {
         const { isMilliseconds = false } = options;
         const valueType = typeof value;
         if (valueType !== 'number' && (valueType !== 'string' || !/^\d+$/.test(value as string))) {
@@ -776,19 +858,27 @@ class DateConverter {
             return null;
         }
 
-        return new UtcDate(date, this._defaultUtcOffsetMinutes);
+        return new OffsetDate(date, this._defaultUtcOffsetMinutes);
     }
 
-    public format(utcDate: UtcDate, formatString: string, mode: TimeMode = 'utc'): string {
+    /**
+     * Formats a wrapped date using date tokens such as `YYYY`, `MM`, and `DD`.
+     *
+     * @param offsetDate Date to format.
+     * @param formatString Pattern containing date-format tokens.
+     * @param mode Whether to format using UTC or the wrapped local offset.
+     * @returns Formatted date string.
+     */
+    public format(offsetDate: OffsetDate, formatString: string, mode: TimeMode = 'utc'): string {
 
         let offsetMinutes, date;
         if (mode === 'utc') {
             offsetMinutes = 0;
-            date = utcDate.globalDate;
+            date = offsetDate.offsetDate;
         }
         else {
-            offsetMinutes = utcDate.offsetMinutes;
-            date = utcDate.localDate;
+            offsetMinutes = offsetDate.offsetMinutes;
+            date = offsetDate.localDate;
         }
 
         this._loadCache();
@@ -852,4 +942,3 @@ class DateConverter {
 }
 
 export { DateConverter };
-

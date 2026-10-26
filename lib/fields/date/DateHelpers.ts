@@ -1,7 +1,9 @@
 'use strict';
 
+/** Calendar calculations used by date parsing and formatting. */
 class DateHelpers {
 
+    /** Checks the supplied month and day using Gregorian calendar month lengths. */
     static isValidDate(year: number, month: number, day: number): boolean {
         year = Number(year) || 0;
         month = Number(month) || 1;
@@ -22,10 +24,12 @@ class DateHelpers {
         return day <= numDaysInMonth;
     }
 
+    /** Whether a year is a leap year in the Gregorian calendar. */
     static isLeapYear(year: number): boolean {
         return (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0));
     }
 
+    /** Whether an ISO week-numbering year contains 53 weeks. */
     static has53IsoWeeks(year: number): boolean {
         // ISO years have 53 weeks if Jan 1 is a Thursday, or it's a leap year starting on Wednesday,
         // or Dec 31 is a Thursday (or a leap year ending on Thursday/Friday)
@@ -34,6 +38,7 @@ class DateHelpers {
             (new Date(Date.UTC(year, 11, 31))).getUTCDay() === 4;
     }
 
+    /** Converts an ISO week date to a UTC date. */
     static isoWeekToDate(year: number, week: number, day: number = 1): Date {
         // ISO weeks: week 1 is the week with the first Thursday of the year (Jan 4th always in week 1)
         const simple = new Date(Date.UTC(year, 0, 4));
@@ -45,6 +50,7 @@ class DateHelpers {
         return new Date(mondayOfWeek1.getTime() + ((week - 1) * 7 + (day - 1)) * 86400000);
     }
 
+    /** Gets the ISO week number for a date. */
     static getIsoWeek(date: Date): number {
         // Calculate ISO week number
         const target = new Date(date);
@@ -54,6 +60,7 @@ class DateHelpers {
         return Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     }
 
+    /** Gets the one-based day of the year for a date. */
     static getDayOfYear(date: Date): number {
         const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
         const diff = date.getTime() - startOfYear.getTime();

@@ -7,6 +7,7 @@ import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } fr
 import { SchemaProcessor } from '../SchemaProcessor.ts';
 import { PointerField } from './PointerField.ts';
 
+/** Compilation context containing the pointer's absolute schema path. */
 export type PointerProcessorCompilationContext = ProcessorCompilationContext & {
     absolutePath: Path;
 }
@@ -15,15 +16,25 @@ class BoundPointerProcessor extends Processor<PointerField> {
     override process(tracker: ValueTracker, state: State): void { }
 }
 
+/** Resolves field pointers and processes recursive schema nesting. */
 class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
 
+    /** Referenced schema processor when the pointer represents a recursive nest. */
     private _nestedSchemaProcessor: SchemaProcessor | null;
 
+    /** Creates a pointer processor for a pointer field. */
     public constructor(args: ProcessorCtorParams<PointerField>) {
         super(args);
         this._nestedSchemaProcessor = null;
     }
 
+    /**
+     * Resolves the pointer target during schema compilation.
+     *
+     * @param context Compilation context with this field's absolute path.
+     * @returns This processor for recursive nesting, or the resolved target processor.
+     * @throws {@link Error} If the target path is invalid or cannot be resolved.
+     */
     public override compile(context: PointerProcessorCompilationContext): Processor {
         const { absolutePath } = context;
         const { fieldPath } = this.field.config;
@@ -55,9 +66,10 @@ class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
     }
 
     // This processor will only be called for a nested schema
+    /** Processes a nested schema and enforces configured nesting-depth limits. */
     public override process(tracker: ValueTracker, state: State): void {
         const { nestMinDepth, nestMaxDepth } = this.field.config;
-        const value = tracker.getValue();
+        const value = tracker.value;
 
         if (value === undefined && nestMinDepth != null && tracker.nestDepth - 1 < nestMinDepth) {
             tracker.nestRoot!.addError('object/nest/tooShallow', { minDepth: nestMinDepth, maxDepth: nestMaxDepth });
@@ -74,4 +86,3 @@ class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
 }
 
 export { PointerProcessor };
-

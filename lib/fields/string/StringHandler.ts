@@ -10,13 +10,18 @@ import { NumberHandler } from '../number/NumberHandler.ts';
 
 const { pass, fail } = HandlerResult;
 
+/** Options shared by normalized, delimiter-aware string validators. */
 export type GenericMatchOptions = NormalizeOption & RegexMatchOptions;
+
+/** Case-sensitivity option for string validators. */
 export type IgnoreCaseOption = {
     ignoreCase: boolean;
 };
+/** Whether a validated string should be normalized. */
 export type NormalizeOption = {
     normalize: boolean;
 };
+/** Result returned by string validation and transformation methods. */
 export type StringHandlerResult = HandlerResult<string>;
 
 
@@ -25,9 +30,10 @@ export type StringHandlerResult = HandlerResult<string>;
 //    COMPLEX TYPES AND DEFAULT ARGS FOR STRING METHODS
 // *******************************************************
 
+/** Constraints for complex strings such as passwords. */
 export type ComplexOptions = {
-    minLength: number;
-    maxLength: number;
+    minLen: number;
+    maxLen: number;
     minLowercase: number;
     minUppercase: number;
     minDigits: number;
@@ -35,8 +41,8 @@ export type ComplexOptions = {
     maxRepeats: number;
 };
 export const COMPLEX_DEFAULTS: ComplexOptions = {
-    minLength: 8,
-    maxLength: 100,
+    minLen: 8,
+    maxLen: 100,
     minLowercase: 1,
     minUppercase: 1,
     minDigits: 1,
@@ -44,11 +50,13 @@ export const COMPLEX_DEFAULTS: ComplexOptions = {
     maxRepeats: 2
 };
 
+/** Options for substring containment checks. */
 export type ContainsOptions = IgnoreCaseOption;
 export const CONTAINS_DEFAULTS: ContainsOptions = {
     ignoreCase: false
 };
 
+/** Options for credit-card number validation. */
 export type CreditCardOptions = GenericMatchOptions & {
     types: string[] | null;
 };
@@ -59,12 +67,14 @@ export const CREDIT_CARD_DEFAULTS: CreditCardOptions = {
     types: []
 };
 
+/** Options for currency-code validation. */
 export type CurrencyCodeOptions = NormalizeOption & IgnoreCaseOption;
 export const CURRENCY_CODE_DEFAULTS: CurrencyCodeOptions = {
     ignoreCase: false,
     normalize: true,
 };
 
+/** Options for data URL validation. */
 export type DataUrlOptions = {
     allowedTypes: ('image' | 'video' | 'audio' | 'text')[];
 };
@@ -72,6 +82,7 @@ export const DATA_URL_DEFAULTS: DataUrlOptions = {
     allowedTypes: ['image', 'video', 'audio', 'text']
 };
 
+/** Options for domain-name validation. */
 export type DomainOptions = NormalizeOption & {
     extensions: string[];
     subdomains: Presence;
@@ -84,6 +95,7 @@ export const DOMAIN_DEFAULTS: DomainOptions = {
     wildcards: 'forbidden',
 };
 
+/** Options for E.123 phone-number validation. */
 export type E123Options = GenericMatchOptions;
 export const E123_DEFAULTS: E123Options = {
     acceptableDelims: ' -./',
@@ -91,6 +103,7 @@ export const E123_DEFAULTS: E123Options = {
     normalizedDelim: ' ',
 };
 
+/** Options for E.164 phone-number validation. */
 export type E164Options = GenericMatchOptions;
 export const E164_DEFAULTS: E164Options = {
     acceptableDelims: ' -./',
@@ -98,21 +111,25 @@ export const E164_DEFAULTS: E164Options = {
     normalizedDelim: '',
 };
 
+/** Options for email-address validation. */
 export type EmailOptions = NormalizeOption;
 export const EMAIL_DEFAULTS: EmailOptions = {
     normalize: true
 };
 
+/** Options for suffix checks. */
 export type EndsWithOptions = IgnoreCaseOption;
 export const ENDS_WITH_DEFAULTS: EndsWithOptions = {
     ignoreCase: false
 };
 
+/** Options for checks that exclude characters. */
 export type ExcludesCharsOptions = IgnoreCaseOption;
 export const EXCLUDES_CHARS_DEFAULTS: ExcludesCharsOptions = {
     ignoreCase: false
 };
 
+/** Options for GTIN validation. */
 export type GtinOptions = GenericMatchOptions & {
     lengths: number[];
 };
@@ -123,11 +140,13 @@ export const GTIN_DEFAULTS: GtinOptions = {
     lengths: [8, 12, 13, 14]
 };
 
+/** Options for hexadecimal string validation. */
 export type HexOptions = NormalizeOption;
 export const HEX_DEFAULTS: HexOptions = {
     normalize: true
 };
 
+/** Options for IMEI validation. */
 export type ImeiOptions = GenericMatchOptions;
 export const IMEI_DEFAULTS: ImeiOptions = {
     acceptableDelims: ' -_./',
@@ -135,16 +154,19 @@ export const IMEI_DEFAULTS: ImeiOptions = {
     normalizedDelim: '',
 };
 
+/** Options for IP-address validation. */
 export type IpOptions = NormalizeOption;
 export const IP_DEFAULTS: IpOptions = {
     normalize: true
 };
 
+/** Options for label validation. */
 export type LabelOptions = NormalizeOption;
 export const LABEL_DEFAULTS: LabelOptions = {
     normalize: true
 };
 
+/** Options for MAC-address validation. */
 export type MacOptions = GenericMatchOptions;
 export const MAC_DEFAULTS: MacOptions = {
     acceptableDelims: ': -_./',
@@ -152,6 +174,7 @@ export const MAC_DEFAULTS: MacOptions = {
     normalizedDelim: ':',
 };
 
+/** Options for measurement strings with configured units. */
 export type MeasurementOptions = NumericOptions & {
     units: string[];
 };
@@ -159,6 +182,7 @@ export const MEASUREMENT_DEFAULTS: Partial<MeasurementOptions> = {
     units: ['cm']
 };
 
+/** Options for monetary-value validation. */
 export type MoneyOptions = NumericOptions & {
     parens: Presence;
     leadingSymbols: string[];
@@ -170,6 +194,7 @@ export const MONEY_DEFAULTS: Partial<MoneyOptions> = {
     trailingSymbols: [],
 };
 
+/** Formatting and range constraints for numeric strings. */
 export type NumericOptions = {
     plus: Presence;
     minus: Presence;
@@ -205,11 +230,13 @@ export const NUMERIC_DEFAULTS: NumericOptions = {
     looseSpacing: false,
 };
 
+/** Options for allowed-character checks. */
 export type OnlyCharsOptions = IgnoreCaseOption;
 export const ONLY_CHARS_DEFAULTS: OnlyCharsOptions = {
     ignoreCase: false,
 };
 
+/** Options for path-string validation. */
 export type PathOptions = {
     absolute: Presence;
     extensions: string[];
@@ -225,6 +252,7 @@ export const PATH_DEFAULTS: PathOptions = {
     style: 'unix',
 };
 
+/** Options for phone-number validation. */
 export type PhoneOptions = GenericMatchOptions;
 export const PHONE_DEFAULTS: PhoneOptions = {
     acceptableDelims: ' -_./',
@@ -232,6 +260,7 @@ export const PHONE_DEFAULTS: PhoneOptions = {
     normalizedDelim: '-',
 };
 
+/** Options for repeated-character checks. */
 export type RepeatOptions = IgnoreCaseOption & {
     otherText: boolean;
 };
@@ -240,6 +269,7 @@ export const REPEAT_DEFAULTS: RepeatOptions = {
     otherText: true,
 };
 
+/** Options for Social Security number validation. */
 export type SsnOptions = GenericMatchOptions;
 export const SSN_DEFAULTS: SsnOptions = {
     acceptableDelims: ' -_./',
@@ -247,17 +277,20 @@ export const SSN_DEFAULTS: SsnOptions = {
     normalizedDelim: '-',
 };
 
+/** Options for prefix checks. */
 export type StartsWithOptions = IgnoreCaseOption;
 export const STARTS_WITH_DEFAULTS: StartsWithOptions = {
     ignoreCase: false
 };
 
+/** Options for US state-name or abbreviation validation. */
 export type StateOptions = NormalizeOption & IgnoreCaseOption;
 export const STATE_DEFAULTS: StateOptions = {
     ignoreCase: false,
     normalize: true,
 };
 
+/** Options for URL validation. */
 export type UrlOptions = NormalizeOption & {
     rootRelative: boolean;
     allowedProtocols: string[];
@@ -282,6 +315,7 @@ export const URL_DEFAULTS: UrlOptions = {
     rootRelative: false
 };
 
+/** Options for UUID validation. */
 export type UuidOptions = GenericMatchOptions & {
     version: string | number | null;
 };
@@ -292,6 +326,7 @@ export const UUID_DEFAULTS: UuidOptions = {
     version: null
 };
 
+/** Options for ZIP/postal-code validation. */
 export type ZipOptions = GenericMatchOptions & {
     zip4: Presence;
 };
@@ -302,22 +337,24 @@ export const ZIP_DEFAULTS: ZipOptions = {
     zip4: 'optional'
 };
 
+/** Options for converting a string between delimiter styles. */
 export type ToDelimitedOptions = {
     fromDelims: string | null;
     toDelim: string;
-    transformer1: (x: string) => string;
-    transformer2?: (x: string) => string;
-    transformerSwitchIndex?: number | null;
+    transform1: (x: string) => string;
+    transform2?: (x: string) => string;
+    transformSwitchIndex?: number | null;
 };
 export const TO_DELIMITED_DEFAULTS: ToDelimitedOptions = {
     fromDelims: null,
     toDelim: '',
-    transformer1: (x: string): string => x,
-    transformer2: (x: string): string => x,
-    transformerSwitchIndex: null
+    transform1: (x: string): string => x,
+    transform2: (x: string): string => x,
+    transformSwitchIndex: null
 };
 
 
+/** Validation and transformation methods for string values. */
 class StringHandler extends AnyHandler {
 
     private _matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> | undefined;
@@ -1230,8 +1267,8 @@ class StringHandler extends AnyHandler {
      * Validates password-style complexity requirements.
      * @param str The input string.
      * @param options Complexity thresholds and limits.
-     * @param options.minLength Minimum allowed length. Default: 8.
-     * @param options.maxLength Maximum allowed length. Default: 100.
+     * @param options.minLen Minimum allowed length. Default: 8.
+     * @param options.maxLen Maximum allowed length. Default: 100.
      * @param options.minLowercase Minimum lowercase letters required. Default: 1.
      * @param options.minUppercase Minimum uppercase letters required. Default: 1.
      * @param options.minDigits Minimum digits required. Default: 1.
@@ -1243,8 +1280,8 @@ class StringHandler extends AnyHandler {
         const resolvedOptions: ComplexOptions = Object.assign({}, COMPLEX_DEFAULTS, options);
 
         const {
-            minLength,
-            maxLength,
+            minLen,
+            maxLen,
             minLowercase,
             minUppercase,
             minDigits,
@@ -1253,7 +1290,7 @@ class StringHandler extends AnyHandler {
         } = resolvedOptions;
 
         let length = str.length, numLowerCase = 0, numUppercase = 0, numDigits = 0, numSpecials = 0;
-        if (length < minLength || length > maxLength) {
+        if (length < minLen || length > maxLen) {
             return fail(str, 'string/complex/length', resolvedOptions);
         }
 
@@ -1410,10 +1447,10 @@ class StringHandler extends AnyHandler {
      * @param str The input string.
      * @param max Maximum allowed length.
      */
-    public maxLength(str: string, max: number): StringHandlerResult {
+    public maxLen(str: string, max: number): StringHandlerResult {
         return str.length <= max
             ? pass(str)
-            : fail(str, 'string/maxLength', { max });
+            : fail(str, 'string/maxLen', { max });
     }
 
     /**
@@ -1438,10 +1475,10 @@ class StringHandler extends AnyHandler {
      * @param str The input string.
      * @param min Minimum allowed length.
      */
-    public minLength(str: string, min: number): StringHandlerResult {
+    public minLen(str: string, min: number): StringHandlerResult {
         return str.length >= min
             ? pass(str)
-            : fail(str, 'string/minLength', { min });
+            : fail(str, 'string/minLen', { min });
     }
 
     /**
@@ -2508,24 +2545,24 @@ class StringHandler extends AnyHandler {
         return this.toDelimited(str, {
             fromDelims: delims,
             toDelim: '',
-            transformer1: (word: string): string => word.toLowerCase(),
-            transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-            transformerSwitchIndex: 1
+            transform1: (word: string): string => word.toLowerCase(),
+            transform2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+            transformSwitchIndex: 1
         });
     }
 
     /**
      * Splits a string on delimiters, transforms each segment, and joins it with a new delimiter.
-     * `transformer1` is applied before `transformerSwitchIndex` and `transformer2` after.
+     * `transform1` is applied before `transformSwitchIndex` and `transform2` after.
      * @param str The input string.
      * @param options Delimiter and transformation options.
      * Default: {} (merged with {@link TO_DELIMITED_DEFAULTS}).
      * @param options.fromDelims Delimiter characters to split on. Use null to skip splitting and transform the whole input as one token.
      * Default: null.
      * @param options.toDelim Delimiter used when joining transformed tokens. Default: ''.
-     * @param options.transformer1 Transformer applied to tokens before switch index. Default: identity function.
-     * @param options.transformer2 Transformer applied at and after switch index. Default: identity function.
-     * @param options.transformerSwitchIndex Index where transformer2 begins; null keeps transformer1 for all tokens.
+     * @param options.transform1 Transformer applied to tokens before switch index. Default: identity function.
+     * @param options.transform2 Transformer applied at and after switch index. Default: identity function.
+     * @param options.transformSwitchIndex Index where transform2 begins; null keeps transform1 for all tokens.
      * Default: null.
      */
     public toDelimited(str: string, options: Partial<ToDelimitedOptions> = {}): StringHandlerResult {
@@ -2534,18 +2571,18 @@ class StringHandler extends AnyHandler {
         const {
             fromDelims,
             toDelim,
-            transformer1,
-            transformer2,
-            transformerSwitchIndex
+            transform1,
+            transform2,
+            transformSwitchIndex
         } = resolvedOptions;
 
         return pass(
             (fromDelims == null ? [str] : Utils.splitOnDelims(str, fromDelims))
                 .reduce((acc: string[], current: string, index: number): string[] => {
                     acc.push(
-                        transformerSwitchIndex == null || index < transformerSwitchIndex
-                            ? transformer1(current)
-                            : transformer2!(current)
+                        transformSwitchIndex == null || index < transformSwitchIndex
+                            ? transform1(current)
+                            : transform2!(current)
                     );
                     return acc;
                 }, [] as string[])
@@ -2562,7 +2599,7 @@ class StringHandler extends AnyHandler {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: '-',
-            transformer1: (word: string): string => word.toLowerCase(),
+            transform1: (word: string): string => word.toLowerCase(),
         });
     }
 
@@ -2583,9 +2620,9 @@ class StringHandler extends AnyHandler {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: '',
-            transformer1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-            transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-            transformerSwitchIndex: 1
+            transform1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+            transform2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+            transformSwitchIndex: 1
         });
     }
 
@@ -2598,9 +2635,9 @@ class StringHandler extends AnyHandler {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: ' ',
-            transformer1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-            transformer2: (word: string): string => word.toLowerCase(),
-            transformerSwitchIndex: 1
+            transform1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+            transform2: (word: string): string => word.toLowerCase(),
+            transformSwitchIndex: 1
         });
     }
 
@@ -2613,7 +2650,7 @@ class StringHandler extends AnyHandler {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: '_',
-            transformer1: (word: string): string => word.toLowerCase()
+            transform1: (word: string): string => word.toLowerCase()
         });
     }
 
@@ -2626,7 +2663,7 @@ class StringHandler extends AnyHandler {
         return this.toDelimited(str, {
             fromDelims,
             toDelim: ' ',
-            transformer1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+            transform1: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
         });
     }
 
@@ -2675,6 +2712,15 @@ class StringHandler extends AnyHandler {
     }
 
     /**
+     * Keeps at most the first `maxLen` UTF-16 code units.
+     * @param str The input string.
+     * @param maxLen Maximum output length.
+     */
+    public truncate(str: string, maxLen: number): StringHandlerResult {
+        return pass(str.slice(0, maxLen));
+    }
+
+    /**
      * URL-decodes a percent-encoded string.
      * @param str The encoded input string.
      */
@@ -2694,4 +2740,3 @@ class StringHandler extends AnyHandler {
 
 
 export { StringHandler };
-

@@ -4,9 +4,9 @@ import { AnyChain } from '../../../lib/fields/any/AnyChain.ts';
 import { AnyHandler } from '../../../lib/fields/any/AnyHandler.ts';
 
 describe('AnyChain', () => {
-    it('uses default emptyValues and starts with an empty pipeline', () => {
+    it('uses default empties and starts with an empty pipeline', () => {
         const chain = new AnyChain();
-        const emptyChain = chain.emptyValues([1]).empty();
+        const emptyChain = chain.empties([1]).empty();
         const tracker = emptyChain.process(1);
 
         expect(tracker.value).toBe(1);
@@ -22,8 +22,8 @@ describe('AnyChain', () => {
         expect(addUnknownStep).toThrow("Method 'missingMethod'(...) not found in chain handler");
     });
 
-    it('uses configured emptyValues for empty and notEmpty checks', () => {
-        const chain = new AnyChain().emptyValues([1,2,3]);
+    it('uses configured empties for empty and notEmpty checks', () => {
+        const chain = new AnyChain().empties([1,2,3]);
 
         const emptyTracker = chain.empty().process(3);
         const notEmptyTracker = chain.notEmpty().process(3);

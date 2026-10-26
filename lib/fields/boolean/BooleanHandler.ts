@@ -5,10 +5,13 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { AnyHandler } from '../any/AnyHandler.ts';
 const { pass, fail } = HandlerResult;
 
+/** Result returned by boolean validation and transformation methods. */
 export type BooleanHandlerResult = HandlerResult<unknown>;
 
+/** Pair of values treated as truthy and falsy equivalents. */
 type BoolishPair = [truthy: unknown, falsy: unknown];
 
+/** Validation and transformation methods for boolean-like values. */
 class BooleanHandler extends AnyHandler {
 
     // ***************************************
@@ -86,4 +89,3 @@ class BooleanHandler extends AnyHandler {
 }
 
 export { BooleanHandler };
-

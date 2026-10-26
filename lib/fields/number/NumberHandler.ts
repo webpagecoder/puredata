@@ -4,8 +4,10 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { AnyHandler } from '../any/AnyHandler.ts';
 const { pass, fail } = HandlerResult;
 
+/** Result returned by numeric validation and transformation methods. */
 export type NumberHandlerResult = HandlerResult<number>;
 
+/** Validation and transformation methods for numeric values. */
 class NumberHandler extends AnyHandler {
 
     // ****************************************
@@ -545,5 +547,4 @@ class NumberHandler extends AnyHandler {
 }
 
 export { NumberHandler };
-
 

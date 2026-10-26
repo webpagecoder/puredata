@@ -4,55 +4,63 @@ import { Path } from '../../Path.ts';
 import { DefaultCalendarText } from '../../text/DefaultCalendarText.ts';
 import { Translation, TranslationStringRecord } from '../../Translation.ts';
 import { AnyChain, AnyChainCtorParams, AnyChainConfig } from '../any/AnyChain.ts';
-import { DateOrder, DateType, HumanParseOptions, HumanPrecision, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
+import { DateOrder, DateType, HumanParseOptions, IsoOrdinalParseOptions, IsoOrdinalPrecision, IsoParseOptions, IsoPrecision, IsoWeekParseOptions, IsoWeekPrecision, TimeMode } from './DateConverter.ts';
 import { DateHandler } from './DateHandler.ts';
 import { DateProcessor } from './DateProcessor.ts';
 
-type OutputFormat = DateType | string;
-type OutputPrecision = HumanPrecision | IsoPrecision | IsoOrdinalPrecision | IsoWeekPrecision;
-
+/** Configuration options for date chains. */
 export type DateChainConfig = AnyChainConfig & {
     calendarText: Translation;
-    dateOrder: DateOrder;
-    outputStringFormat: OutputFormat | null;
+    order: DateOrder;
+    outputFormat: DateType | string;
     outputTimeMode: TimeMode;
     skipGenericParse: boolean;
-    utcOffsetMinutes: number;
+    utcOffsetMins: number;
 };
 
+/** Constructor options for a date chain. */
 export type DateChainCtorParams = AnyChainCtorParams<DateChainConfig, DateHandler>;
 
+/** Chain of validators, parsers, and formatters for date values. */
 class DateChain extends AnyChain<DateChainCtorParams> {
 
+    /** Creates a date chain with the supplied parsing and output settings. */
     constructor(args: Partial<DateChainCtorParams> = {}) {
         super(Object.assign({ chainHandlerCtor: DateHandler }, args));
 
         const {
             calendarText = new Translation(DefaultCalendarText),
-            dateOrder = 'MDY',
-            outputStringFormat = null,
+            order = 'MDY',
+            outputFormat = 'iso',
             outputTimeMode = 'utc',
             skipGenericParse = false,
-            utcOffsetMinutes = 0,
+            utcOffsetMins = 0,
         } = args;
 
         const { config } = this;
         config.calendarText = calendarText.override();
-        config.dateOrder = dateOrder;
-        config.outputStringFormat = outputStringFormat;
+        config.order = order;
+        config.outputFormat = outputFormat;
         config.outputTimeMode = outputTimeMode;
-        config.utcOffsetMinutes = utcOffsetMinutes;
+        config.utcOffsetMins = utcOffsetMins;
         config.skipGenericParse = skipGenericParse;
 
-        this.config.chainHandler.configDateConverter(calendarText, utcOffsetMinutes);
+        this.config.chainHandler.configDateConverter(calendarText, utcOffsetMins);
     }
 
+    /** Creates the processor that handles this date chain. */
     public override createProcessor(): DateProcessor {
         return new DateProcessor({
             field: this,
         });
     }
 
+    /**
+     * Ensures a date parser is the first processor in the chain.
+     *
+     * @param dateSubType Name of the date parser being added.
+     * @throws {@link Error} If another processor is already configured.
+     */
     public assertEmptyPipeline(dateSubType: string): void {
         if (this.config.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
@@ -61,6 +69,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
 
     // Configurators
 
+    /** Returns a chain with calendar text overrides. */
     public calendarText(overrides: Record<string, string>): this {
         const clone = this.clone();
         const calendarOverrides: TranslationStringRecord = {};
@@ -74,12 +83,14 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         return clone;
     }
 
-    public dateOrder(dateOrder: DateOrder): this {
-        return this.clone({ dateOrder });
+    /** Configures the order used to parse ambiguous human-readable dates. */
+    public order(order: DateOrder): this {
+        return this.clone({ order });
     }
 
-    public utcOffsetMinutes(utcOffsetMinutes: number): this {
-        return this.clone({ utcOffsetMinutes });
+    /** Configures the UTC offset used when parsing and formatting dates. */
+    public utcOffsetMins(utcOffsetMins: number): this {
+        return this.clone({ utcOffsetMins });
     }
 
     // Validators
@@ -90,7 +101,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * @param {Object} [options={}] - Parsing options
      * @param {string[]} [options.required] - Required date components
      * @param {string[]} [options.forbidden] - Forbidden date components
-     * @param {'MDY' | 'DMY' | 'YMD'} [options.dateOrder] - The order of date components
+     * @param {'MDY' | 'DMY' | 'YMD'} [options.order] - The order of date components
      * @returns {DateChain} Returns the chain for method chaining
      * @example
      * date.human() // Accepts "Jan 1, 2023", "1/1/2023", etc.
@@ -100,7 +111,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         return this
             .clone({ skipGenericParse: true })
             .addStepToChain('human', () => {
-                return [Object.assign({ dateOrder: this.config.dateOrder }, options)];
+                return [Object.assign({ order: this.config.order }, options)];
             });
     }
 
@@ -171,7 +182,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
     public today(): this {
         return this.addStepToChain('today', () => {
             const now = new Date();
-            now.setUTCMinutes(now.getUTCMinutes() + this.config.utcOffsetMinutes);
+            now.setUTCMinutes(now.getUTCMinutes() + this.config.utcOffsetMins);
             return [now];
         });
     }
@@ -183,17 +194,18 @@ class DateChain extends AnyChain<DateChainCtorParams> {
 
     /**
      * Configures the output format for the date.
-     * @param outputStringFormat Format string for the date
+     * @param outputFormat Format string for the date
      * @param outputTimeMode UTC or local time mode
      * @returns {DateChain} Returns the chain for method chaining
      * date.toFormat('YYYY-MM-DDTHH:mm:ssZ', 'utc') // Output: "2023-01-01T12:00:00Z" 
      */
-    public toFormat(outputStringFormat: string, outputTimeMode: TimeMode = 'utc'): this {
-        return this.clone({ outputStringFormat, outputTimeMode });
+    public toFormat(outputFormat: DateType | string, outputTimeMode: TimeMode = 'utc'): this {
+        return this.clone({ outputFormat, outputTimeMode });
     }
 
+    /** Configures output as a `Date` object. */
     public toDate(): this {
-        return this.clone({ outputStringFormat: 'object' });
+        return this.clone({ outputFormat: 'instance' });
     }
 
     /**
@@ -203,30 +215,30 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.toIso() // Output: "2023-01-01T12:00:00.000Z"
      */
     public toIso(outputPrecision: IsoPrecision = 'timezone', expanded = true): this {
-        let outputStringFormat = '';
+        let outputFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
         switch (outputPrecision) {
             case 'timezone':
-                outputStringFormat = dash ? 'ZZ' : 'Z';
+                outputFormat = dash ? 'ZZ' : 'Z';
             case 'time':
             case 'millisecond':
-                outputStringFormat = '.SSS' + outputStringFormat;
+                outputFormat = '.SSS' + outputFormat;
             case 'second':
-                outputStringFormat = `${colon}ss` + outputStringFormat;
+                outputFormat = `${colon}ss` + outputFormat;
             case 'minute':
-                outputStringFormat = `${colon}mm` + outputStringFormat;
+                outputFormat = `${colon}mm` + outputFormat;
             case 'hour':
-                outputStringFormat = 'THH' + outputStringFormat;
+                outputFormat = 'THH' + outputFormat;
             case 'date':
             case 'day':
-                outputStringFormat = `${dash}DD` + outputStringFormat;
+                outputFormat = `${dash}DD` + outputFormat;
             case 'month':
-                outputStringFormat = `${dash}MM` + outputStringFormat;
+                outputFormat = `${dash}MM` + outputFormat;
             case 'year':
-                outputStringFormat = 'YYYY' + outputStringFormat;
+                outputFormat = 'YYYY' + outputFormat;
         }
-        return this.clone({ outputStringFormat });
+        return this.clone({ outputFormat });
     }
 
     /**
@@ -236,26 +248,26 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.toIsoOrdinal() // Output: "2023-001" (first day of year)
      */
     public toIsoOrdinal(outputPrecision: IsoOrdinalPrecision = 'timezone', expanded = true): this {
-        let outputStringFormat = '';
+        let outputFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
         switch (outputPrecision) {
             case 'timezone':
-                outputStringFormat = dash ? 'ZZ' : 'Z';
+                outputFormat = dash ? 'ZZ' : 'Z';
             case 'time':
             case 'millisecond':
-                outputStringFormat = '.SSS' + outputStringFormat;
+                outputFormat = '.SSS' + outputFormat;
             case 'second':
-                outputStringFormat = `${colon}ss` + outputStringFormat;
+                outputFormat = `${colon}ss` + outputFormat;
             case 'minute':
-                outputStringFormat = `${colon}mm` + outputStringFormat;
+                outputFormat = `${colon}mm` + outputFormat;
             case 'hour':
-                outputStringFormat = 'THH' + outputStringFormat;
+                outputFormat = 'THH' + outputFormat;
             case 'date':
             case 'dayOfYear':
-                outputStringFormat = `YYYY${dash}DDD` + outputStringFormat;
+                outputFormat = `YYYY${dash}DDD` + outputFormat;
         }
-        return this.clone({ outputStringFormat });
+        return this.clone({ outputFormat });
     }
 
     /**
@@ -265,28 +277,28 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.toIsoWeek() // Output: "2023-W01-1" (first Monday of year)
      */
     public toIsoWeek(outputPrecision: IsoWeekPrecision = 'timezone', expanded = true): this {
-        let outputStringFormat = '';
+        let outputFormat = '';
         let dash = expanded ? '-' : '';
         let colon = expanded ? ':' : '';
         switch (outputPrecision) {
             case 'timezone':
-                outputStringFormat = dash ? 'ZZ' : 'Z';
+                outputFormat = dash ? 'ZZ' : 'Z';
             case 'time':
             case 'millisecond':
-                outputStringFormat = '.SSS' + outputStringFormat;
+                outputFormat = '.SSS' + outputFormat;
             case 'second':
-                outputStringFormat = `${colon}ss` + outputStringFormat;
+                outputFormat = `${colon}ss` + outputFormat;
             case 'minute':
-                outputStringFormat = `${colon}mm` + outputStringFormat;
+                outputFormat = `${colon}mm` + outputFormat;
             case 'hour':
-                outputStringFormat = 'THH' + outputStringFormat;
+                outputFormat = 'THH' + outputFormat;
             case 'date':
             case 'dayOfWeek':
-                outputStringFormat = `${dash}E` + outputStringFormat;
+                outputFormat = `${dash}E` + outputFormat;
             case 'week':
-                outputStringFormat = `YYYY${dash}Www` + outputStringFormat;
+                outputFormat = `YYYY${dash}Www` + outputFormat;
         }
-        return this.clone({ outputStringFormat });
+        return this.clone({ outputFormat });
     }
 
     /**
@@ -296,10 +308,9 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.toTimestamp() // Output: 1672531200000 (JavaScript timestamp)
      */
     public toTimestamp(): this {
-        return this.clone({ outputStringFormat: 'timestamp' });
+        return this.clone({ outputFormat: 'timestamp' });
     }
 
 }
 
 export { DateChain };
-

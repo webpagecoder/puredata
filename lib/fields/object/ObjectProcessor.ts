@@ -5,12 +5,14 @@ import { Utils } from '../../Utils.ts';
 import { AnyProcessor } from '../any/AnyProcessor.ts';
 import { ObjectChain } from './ObjectChain.ts';
 
+/** Validates object values and applies configured object transformations. */
 class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<C> {
 
+    /** Checks object constraints and applies configured cloning and stripping. */
     public override preProcess(tracker: ValueTracker): void {
         super.preProcess(tracker);
 
-        const value = tracker.getValue();
+        const value = tracker.value;
 
         if (!Utils.isObject(value)) {
             tracker.addError('object/base');
@@ -20,8 +22,8 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
         const {
             chainHandler,
             config: {
-                cloneObject,
-                ensurePlain,
+                clone,
+                plainOnly,
                 maxDepth,
                 maxKeyCount,
                 stripEmpties,
@@ -29,7 +31,7 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
             }
         } = this.field as ObjectChain;
 
-        if (ensurePlain && !Utils.isPlainObject(value)) {
+        if (plainOnly && !Utils.isPlainObject(value)) {
             tracker.addError('object/plain');
             return;
         }
@@ -45,18 +47,18 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
             }
         }
 
-        if (cloneObject) {
+        if (clone) {
             tracker.setValue(Utils.clone(value));
         }
 
         if (stripNestedEmpties) {
-            const val = chainHandler.stripNestedEmpties(tracker.getValue() as object).value;
+            const val = chainHandler.stripNestedEmpties(tracker.value as object).value;
             tracker.setValue(
                 val
             );
         }
         else if (stripEmpties) {
-            const val = chainHandler.stripEmpties(tracker.getValue() as object).value;
+            const val = chainHandler.stripEmpties(tracker.value as object).value;
             tracker.setValue(
                 val
             );

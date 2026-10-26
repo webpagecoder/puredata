@@ -7,8 +7,10 @@ import { FieldFactory } from '../../FieldFactory.ts';
 import { SchemaChain } from '../SchemaChain.ts';
 import { ConditionalProcessor } from './ConditionalProcessor.ts';
 
+/** A conditional field joined to the preceding condition with a boolean operator. */
 export type ConditionalChainEntry = ['and' | 'or', ConditionalField];
 
+/** Configuration for a conditional field and its result branches. */
 export type ConditionalFieldProps = FieldConfig & {
     fieldFactory: FieldFactory;
     schemaChain: SchemaChain;
@@ -26,9 +28,17 @@ export type ConditionalFieldProps = FieldConfig & {
     targetPathStr: string,
 });
 
+/** Constructor options for a conditional field. */
 export type ConditionalFieldCtorParams = FieldCtorParams & Partial<ConditionalFieldProps>;
 
+/** Field whose result depends on comparing values at a target path. */
 class ConditionalField extends Field<ConditionalFieldProps> {
+    /**
+     * Creates a conditional field from a target path and comparison field.
+     *
+     * @param args Target, comparison, result-branch, and factory settings.
+     * @throws {@link Error} If required conditional settings are missing.
+     */
     public constructor(args: Partial<ConditionalFieldCtorParams> = {}) {
         super(args);
 
@@ -71,6 +81,7 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         this.config.presence = 'optional';
     }
 
+    /** Clones the field and reparses a supplied target path. */
     public override clone(args: Partial<ConditionalFieldCtorParams> = {}): this {
         const clone = super.clone(args);
         if (args.targetPathStr !== undefined) {
@@ -79,18 +90,33 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         return clone;
     }
 
+    /** Creates the processor that evaluates the condition and its result branches. */
     public override createProcessor(): ConditionalProcessor {
         return new ConditionalProcessor({
             field: this,
         });
     }
 
+    /**
+     * Adds an OR condition to this conditional chain.
+     *
+     * @param targetPathStr Path to compare, or a conditional field to append.
+     * @param comparisonField Field used when a target path is supplied.
+     * @returns A cloned conditional field with the condition appended.
+     */
     public or(targetPathStr: string, comparisonField: Field): this;
     public or(conditionalField: ConditionalField): this;
     public or(conditionalFieldOrTargetPathStr: ConditionalField | string, comparisonField: Field | null = null) {
         return this._addToConditionalChain('or', conditionalFieldOrTargetPathStr, comparisonField);
     }
 
+    /**
+     * Adds an AND condition to this conditional chain.
+     *
+     * @param targetPathStr Path to compare, or a conditional field to append.
+     * @param comparisonField Field used when a target path is supplied.
+     * @returns A cloned conditional field with the condition appended.
+     */
     public and(targetPathStr: string, comparisonField: Field): this;
     public and(conditionalField: ConditionalField): this;
     public and(conditionalFieldOrTargetPathStr: ConditionalField | string, comparisonField: Field | null = null) {
@@ -125,6 +151,12 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         });
     }
 
+    /**
+     * Configures the field to use when the condition passes.
+     *
+     * @param thenResult Result value or field for the passing condition.
+     * @returns A cloned conditional field with the passing branch configured.
+     */
     public then(thenResult: unknown | Field) {
         const { buildStage, fieldFactory } = this.config;
         if (buildStage !== 0) {
@@ -136,6 +168,12 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         });
     }
 
+    /**
+     * Configures the field to use when the condition fails.
+     *
+     * @param otherwiseResult Result value or field for the failing condition.
+     * @returns A cloned conditional field with the failing branch configured.
+     */
     public otherwise(otherwiseResult: unknown | Field) {
         const { buildStage, fieldFactory } = this.config;
         if (buildStage !== 1) {

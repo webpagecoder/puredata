@@ -4,38 +4,26 @@ import { StringChain } from '../string/StringChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { AnyProcessor } from '../any/AnyProcessor.ts';
 
+/** Converts, trims, and length-checks string field values. */
 class StringProcessor extends AnyProcessor<StringChain> {
 
+    /** Converts supported values to strings and applies configured preprocessing. */
     public override preProcess(tracker: ValueTracker): void {
         const {
             autoConvert,
-            config: {
-                maxLength,
-                trim,
-                truncate
-            }
+            config: { trim }
         } = this.field;
 
-        if (typeof tracker.getValue() !== 'string') {
+        if (typeof tracker.value !== 'string') {
             if (!autoConvert) {
                 tracker.addError('string/base');
                 return;
             }
-            tracker.setValue(String(tracker.getValue()));
+            tracker.setValue(String(tracker.value));
         }
 
-        const value = tracker.getValue() as string;
         if (trim) {
-            tracker.setValue(value.trim());
-        }
-        if (maxLength != null && value.length > maxLength) {
-            if (truncate) {
-                tracker.setValue(value.slice(0, maxLength));
-            }
-            else {
-                tracker.addError('string/maxLength');
-                return;
-            }
+            tracker.setValue((tracker.value as string).trim());
         }
     }
 

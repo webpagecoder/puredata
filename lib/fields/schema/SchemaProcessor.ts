@@ -14,37 +14,51 @@ import { PointerProcessor } from './pointer/PointerProcessor.ts';
 import { ReferenceField } from './reference/ReferenceField.ts';
 import { SchemaChain } from './SchemaChain.ts';
 
+/** Schema entries mapped to their compiled processors. */
 export type CompiledSchema<P = Processor> = Record<string, P>;
 
+/** Constructor options for a schema processor. */
 export type SchemaProcessorCtorParams = AnyProcessorCtorParams<SchemaChain>;
 
+/** Context used while compiling schema processors. */
 export type SchemaCompilationContext = ProcessorCompilationContext & {
     // parent?: SchemaProcessor;
     absolutePath?: Path;
     referenceResolver?: PubSub;
 };
 
+/** Deferred processing entry for a child processor. */
 export type DeferredProcessorContext = [
     childKey: string,
     processor: Processor,
     parentTracker: ValueTracker,
 ];
 
+/** Data shared by callbacks that resolve schema references. */
 export type ReferenceResolverContext = PubSubContext & {
     deferredReferences: DeferredProcessorContext[];
     rootTracker: ValueTracker;
-    failOnFirstError?: boolean;
+    failFast?: boolean;
 };
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
+/** Compiles and runs processors for a nested schema, references, and conditions. */
 class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 
+    /** Conditional processors deferred until schema values are available. */
     private _conditionals: CompiledSchema<ConditionalProcessor>;
+
+    /** Nested-schema processors deferred until their parent values are processed. */
     private _nests: CompiledSchema<PointerProcessor>;
+
+    /** Processors containing references deferred to the reference resolver. */
     private _references: CompiledSchema;
+
+    /** Resolver used to execute referenced fields in dependency order. */
     private _referenceResolver: PubSub | null;
 
+    /** Creates a schema processor and builds its child processor tree. */
     constructor(args: SchemaProcessorCtorParams) {
         super(args);
 
@@ -64,6 +78,12 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         }
     }
 
+    /**
+     * Compiles child processors and registers deferred conditions and references.
+     *
+     * @param context Absolute-path and reference-resolution context.
+     * @returns This compiled processor.
+     */
     public override compile(context: SchemaCompilationContext = {}): this {
 
         //todo: put the rootmost processor into a node too and return that.
@@ -116,7 +136,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 
                 subNode.setCallback((context): boolean => {
                     const {
-                        failOnFirstError,
+                        failFast,
                         rootTracker
                     } = context as ReferenceResolverContext;
 
@@ -136,14 +156,11 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
                 }
             }
         }
-
-        if (absoluteRoot === this) {
-            console.log("EEEE")
-        }
-
+        
         return this;
     }
 
+    /** Finds reference fields used by a processor and its pipeline. */
     private _getReferencesWithinProcessor(processor: Processor): Set<ReferenceField> {
         const { field } = processor;
         if (field instanceof ReferenceField) {
@@ -167,6 +184,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         return references;
     }
 
+    /** Processes schema fields and then resolves deferred work at the root. */
     public override process(tracker: ValueTracker, state: State = {}): void {
 
         let deferredConditionals = state.deferredConditionals as DeferredProcessorContext[] | null;
@@ -188,7 +206,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         }
 
         this.preProcess(tracker);
-        if (tracker.hasErrors()) {
+        if (tracker.hasErrors) {
             return;
         }
 
@@ -204,7 +222,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         const {
             chainHandler,
             config: {
-                renameKeysArgs, stripExtraKeys, failOnFirstError
+                renameKeysArgs, stripExtraKeys, failFast
             }
         } = field;
 
@@ -216,7 +234,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         // Strip unknown keys if needed
         if (stripExtraKeys) {
             tracker.setValue(chainHandler.stripKeys(
-                tracker.getValue() as object,
+                tracker.value as object,
                 Object.keys(field.config.schemaFields)
             ).value);
         }
@@ -224,7 +242,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         this.executePipeline(tracker);
         //todo: check if error and exit here?
 
-        const value = tracker.getValue() as Record<string, any>;
+        const value = tracker.value as Record<string, any>;
 
         for (const key of Object.keys(children)) {
             const processor = children[key] as Processor;
@@ -248,7 +266,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         if (_referenceResolver) {
             // We are in the root of the schema
 
-            _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failOnFirstError });
+            _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failFast });
 
             if (deferredConditionals.length > 0) {
                 for (const [key, processor, parentTracker] of deferredConditionals) {
@@ -296,4 +314,3 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 }
 
 export { SchemaProcessor };
-

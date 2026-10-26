@@ -4,15 +4,25 @@ import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../../Processor.ts';
 import { ConditionalField } from './ConditionalField.ts';
 
+/** Constructor options for a conditional processor. */
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
+/** Evaluates a conditional field and processes its selected result branch. */
 class ConditionalProcessor extends  Processor<ConditionalField> {
 
+    /** Processor used to validate the comparison value. */
     private _comparisonProcessor: Processor;
+
+    /** Additional AND/OR conditions in the conditional chain. */
     private _conditionalProcessorChain: [type: 'and' | 'or', ConditionalProcessor][];
+
+    /** Processor for the failing branch, when configured. */
     private _otherwiseProcessor: Processor | null;
+
+    /** Processor for the passing branch, when configured. */
     private _thenProcessor: Processor | null;
 
+    /** Creates processors for the comparison and configured result branches. */
     constructor(args: ConditionalProcessorCtorParams) {
         super(args);
 
@@ -30,6 +40,7 @@ class ConditionalProcessor extends  Processor<ConditionalField> {
         }
     }
 
+    /** Compiles the comparison, condition-chain, and branch processors. */
     public override compile(context: ProcessorCompilationContext = {}): this {
         const { _comparisonProcessor, _conditionalProcessorChain, _otherwiseProcessor, _thenProcessor } = this;
         const { absolutePath } = context;
@@ -43,6 +54,7 @@ class ConditionalProcessor extends  Processor<ConditionalField> {
         return this;
     }
 
+    /** Evaluates this condition and any chained AND/OR conditions. */
     private _nestedProcess(tracker: ValueTracker): void {
 
         const {
@@ -88,6 +100,7 @@ class ConditionalProcessor extends  Processor<ConditionalField> {
         predicateResult ? tracker.setPass() : tracker.setFail();
     }
 
+    /** Evaluates the condition and processes its passing or failing branch. */
     public override process(tracker: ValueTracker): void {
         const trackerClone = tracker.cloneWithoutErrors();
         const { _thenProcessor, _otherwiseProcessor } = this;
@@ -113,4 +126,3 @@ class ConditionalProcessor extends  Processor<ConditionalField> {
 }
 
 export { ConditionalProcessor };
-

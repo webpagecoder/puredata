@@ -4,51 +4,43 @@ import { BooleanHandler } from './BooleanHandler.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { BooleanProcessor } from './BooleanProcessor.ts';
 
+/** Pair of equivalent truthy and falsy values. */
 export type BoolishPair = [truthy: unknown, falsy: unknown];
 
+/** Configuration options for boolean chains. */
 export type BooleanChainConfig = AnyChainConfig & {
     boolishPairs: BoolishPair[];
     postConvert: boolean;
-    transformer: (value: unknown) => unknown;
+    transform: (value: unknown) => unknown;
 };
 
+/** Constructor options for a boolean chain. */
 export type BooleanChainCtorParams = AnyChainCtorParams<BooleanChainConfig, BooleanHandler>;
 
+/** Chain of validators and transforms for boolean-like values. */
 class BooleanChain extends AnyChain<BooleanChainCtorParams> {
 
+    /** Creates a boolean chain with the supplied configuration. */
     public constructor(args: Partial<BooleanChainCtorParams> = {}) {
         super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));
 
         const {
             boolishPairs = [],
             postConvert = true,
-            transformer = x => typeof x === 'string' ? x.toLowerCase() : x
+            transform = x => typeof x === 'string' ? x.toLowerCase() : x
         } = args;
 
         const { config } = this;
         config.boolishPairs = boolishPairs;
         config.postConvert = postConvert;
-        config.transformer = transformer;
+        config.transform = transform;
     }
 
+    /** Creates the processor that handles this boolean chain. */
     public override createProcessor(): BooleanProcessor {
         return new BooleanProcessor({
             field: this,
         });
-    }
-
-    // Configurators
-
-    public boolishPairs(pairs: BoolishPair[]): this {
-        return this.clone({ boolishPairs: pairs });
-    }
-
-    public postConvert(postConvert: boolean = true): this {
-        return this.clone({ postConvert });
-    }
-
-    public transformer(transformer: (value: unknown) => unknown): this {
-        return this.clone({ transformer });
     }
 
     // Validators
@@ -97,6 +89,25 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
             return [this.config.boolishPairs];
         });
     }
+
+
+    // Configurators
+
+    /** Configures accepted truthy and falsy value pairs. */
+    public boolishPairs(pairs: BoolishPair[]): this {
+        return this.clone({ boolishPairs: pairs });
+    }
+
+    /** Configures whether recognized values are converted after the pipeline. */
+    public postConvert(postConvert: boolean = true): this {
+        return this.clone({ postConvert });
+    }
+
+    /** Configures a function that normalizes values before boolean parsing. */
+    public transform(transform: (value: unknown) => unknown): this {
+        return this.clone({ transform });
+    }
+
 
 }
 

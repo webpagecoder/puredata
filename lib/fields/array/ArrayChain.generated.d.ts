@@ -137,14 +137,14 @@ interface ArrayChainGeneratedMethods {
     * @param max Maximum allowed length.
     * @returns Returns the original array when the array length is at most the maximum.
     */
-    maxLength(...args: DropFirst<Parameters<ArrayHandler['maxLength']>>): ArrayChain;
+    maxLen(...args: DropFirst<Parameters<ArrayHandler['maxLen']>>): ArrayChain;
 
     /**
     * Validates that the array length meets the provided minimum.
     * @param min Minimum allowed length.
     * @returns Returns the original array when the array length is at least the minimum.
     */
-    minLength(...args: DropFirst<Parameters<ArrayHandler['minLength']>>): ArrayChain;
+    minLen(...args: DropFirst<Parameters<ArrayHandler['minLen']>>): ArrayChain;
 
     /**
     * Validates that the array contains none of the forbidden values.

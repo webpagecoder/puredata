@@ -1238,15 +1238,15 @@ describe('StringHandler content validators', () => {
 			]);
 		});
 
-		it('supports minLength and maxLength options', () => {
+		it('supports minLen and maxLen options', () => {
 			runPassTests(handler.complex.bind(handler), [
-				{ input: 'Ab1!xyZa', args: [{ minLength: 8 }] },
-				{ input: 'Ab1!xy', args: [{ minLength: 1, maxLength: 6 }] },
+				{ input: 'Ab1!xyZa', args: [{ minLen: 8 }] },
+				{ input: 'Ab1!xy', args: [{ minLen: 1, maxLen: 6 }] },
 			]);
 
 			runFailTests(handler.complex.bind(handler), [
-				{ input: 'Ab1!xy', args: [{ minLength: 8 }] },
-				{ input: 'Ab1!xyZa', args: [{ minLength: 1, maxLength: 6 }] },
+				{ input: 'Ab1!xy', args: [{ minLen: 8 }] },
+				{ input: 'Ab1!xyZa', args: [{ minLen: 1, maxLen: 6 }] },
 			]);
 		});
 
@@ -1361,14 +1361,14 @@ describe('StringHandler content validators', () => {
 		]);
 	});
 
-	it('maxLength', () => {
-		runPassTests(handler.maxLength.bind(handler), [
+	it('maxLen', () => {
+		runPassTests(handler.maxLen.bind(handler), [
 			{ input: '', args: [0] },
 			{ input: 'abc', args: [3] },
 			{ input: 'abc', args: [5] },
 		]);
 
-		runFailTests(handler.maxLength.bind(handler), [
+		runFailTests(handler.maxLen.bind(handler), [
 			{ input: 'abcd', args: [3] },
 		]);
 	});
@@ -1388,13 +1388,13 @@ describe('StringHandler content validators', () => {
 		]);
 	});
 
-	it('minLength', () => {
-		runPassTests(handler.minLength.bind(handler), [
+	it('minLen', () => {
+		runPassTests(handler.minLen.bind(handler), [
 			{ input: 'abc', args: [3] },
 			{ input: 'abcd', args: [3] },
 		]);
 
-		runFailTests(handler.minLength.bind(handler), [
+		runFailTests(handler.minLen.bind(handler), [
 			{ input: '', args: [1] },
 			{ input: 'ab', args: [3] },
 		]);
@@ -2169,6 +2169,15 @@ describe('StringHandler mutators', () => {
 		]);
 	});
 
+	it('truncate', () => {
+		runPassTests(handler.truncate.bind(handler), [
+			{ input: 'abcdef', args: [3], output: 'abc' },
+			{ input: 'abc', args: [3], output: 'abc' },
+			{ input: 'abc', args: [10], output: 'abc' },
+			{ input: 'abc', args: [0], output: '' },
+		]);
+	});
+
 	it('sliceFirst', () => {
 		runPassTests(handler.sliceFirst.bind(handler), [
 			{ input: 'abcdef', output: 'a' },
@@ -2218,7 +2227,7 @@ describe('StringHandler mutators', () => {
 				args: [{
 					fromDelims: '_-',
 					toDelim: '.',
-					transformer1: (word: string): string => word.toUpperCase(),
+					transform1: (word: string): string => word.toUpperCase(),
 				}],
 				output: 'ONE.TWO.THREE'
 			},
@@ -2227,9 +2236,9 @@ describe('StringHandler mutators', () => {
 				args: [{
 					fromDelims: '_',
 					toDelim: '-',
-					transformer1: (word: string): string => word.toLowerCase(),
-					transformer2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
-					transformerSwitchIndex: 1,
+					transform1: (word: string): string => word.toLowerCase(),
+					transform2: (word: string): string => word[0].toUpperCase() + word.slice(1).toLowerCase(),
+					transformSwitchIndex: 1,
 				}],
 				output: 'one-Two-Three'
 			},
@@ -2238,9 +2247,9 @@ describe('StringHandler mutators', () => {
 				args: [{
 					fromDelims: null,
 					toDelim: '',
-					transformer1: (word: string): string => word.toLowerCase(),
-					transformer2: (word: string): string => word.toUpperCase(),
-					transformerSwitchIndex: null,
+					transform1: (word: string): string => word.toLowerCase(),
+					transform2: (word: string): string => word.toUpperCase(),
+					transformSwitchIndex: null,
 				}],
 				output: 'mixed'
 			},
@@ -2249,7 +2258,7 @@ describe('StringHandler mutators', () => {
 				args: [{
 					fromDelims: '_',
 					toDelim: ':',
-					transformer1: (word: string): string => word,
+					transform1: (word: string): string => word,
 				}],
 				output: 'a:b'
 			}
@@ -2362,7 +2371,6 @@ describe('StringHandler mutators', () => {
 		expect(() => handler.urlDecode('%E0%A4%A')).toThrow();
 	});
 });
-
 
 
 

@@ -4,31 +4,36 @@ import { NumberHandler } from './NumberHandler.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { NumberProcessor } from './NumberProcessor.ts';
 
+/** Configuration options for number chains. */
 export type NumberChainConfig = AnyChainConfig & {
-    ensureSafe: boolean;
-    ensureFinite: boolean;
-    preservePrecision: boolean;
+    safe: boolean;
+    finite: boolean;
+    precision: boolean;
 };
 
+/** Constructor options for a number chain. */
 export type NumberChainCtorParams = AnyChainCtorParams<NumberChainConfig, NumberHandler>;
 
+/** Chain of validators and transforms for numeric values. */
 class NumberChain extends AnyChain<NumberChainCtorParams> {
 
+    /** Creates a number chain with the supplied configuration. */
     public constructor(args: Partial<NumberChainCtorParams> = {}) {
         super(Object.assign({ chainHandlerCtor: NumberHandler }, args));
         
         const {
-            ensureSafe = false,
-            ensureFinite = false,
-            preservePrecision = false,
+            safe = false,
+            finite = false,
+            precision = false,
         } = args;
 
         const { config } = this;
-        config.ensureSafe = ensureSafe;
-        config.ensureFinite = ensureFinite;
-        config.preservePrecision = preservePrecision;
+        config.safe = safe;
+        config.finite = finite;
+        config.precision = precision;
     }
 
+    /** Creates the processor that handles this number chain. */
     public override createProcessor(): NumberProcessor {
         return new NumberProcessor({
             field: this,
@@ -38,31 +43,19 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
     // Configurators
 
 
-    /**
-     * Configure whether to ensure numbers are within safe integer range
-     * @param  ensureSafe - Whether to ensure safe integer range
-     * @returns {NumberChain} The chain instance for method chaining
-     */
-    public safe(ensureSafe = true) {
-        return this.clone({ ensureSafe });
+    /** Configures whether converted numbers must fit the safe integer range. */
+    public safe(safe = true) {
+        return this.clone({ safe });
     }
 
-    /**
-     * Configure whether to ensure numbers are finite (not Infinity/-Infinity)
-     * @param {boolean} ensureFinite - Whether to ensure finite values
-     * @returns {NumberChain} The chain instance for method chaining
-     */
-    public finite(ensureFinite = true) {
-        return this.clone({ ensureFinite });
+    /** Configures whether converted numbers must be finite. */
+    public finite(finite = true) {
+        return this.clone({ finite });
     }
 
-    /**
-     * Configure whether to ensure string -> number conversion is precise
-     * @param {boolean} preservePrecision - Whether to preserve precision
-     * @returns {NumberChain} The chain instance for method chaining
-     */
-    public precision(preservePrecision = true) {
-        return this.clone({ preservePrecision });
+    /** Configures whether numeric conversion must preserve precision. */
+    public precision(precision = true) {
+        return this.clone({ precision });
     }
 
 }

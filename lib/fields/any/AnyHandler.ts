@@ -4,10 +4,16 @@ import { Utils } from '../../Utils.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
+/** Primitive JavaScript types supported by primitive-value validators. */
 export type PrimitiveTypeName = 'string' | 'number' | 'boolean' | 'undefined' | 'symbol' | 'bigint';
+
+/** Constructor type accepted by instance validators. */
 export type CtorLike = abstract new (...args: never[]) => object;
+
+/** Custom validation or transformation function. */
 export type CustomHandler = (value: unknown) => HandlerResult | unknown;
 
+/** Validation and transformation methods shared by field-specific handlers. */
 class AnyHandler {
 
     // *****************************************

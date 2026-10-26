@@ -4,12 +4,14 @@ import { BooleanChain } from './BooleanChain.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
 import { AnyProcessor } from '../any/AnyProcessor.ts';
 
+/** Parses, validates, and optionally converts boolean-like values. */
 class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
+    /** Converts configured boolean-like inputs and rejects unsupported values. */
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, boolishPairs, transformer } = this.field.config;
+        const { autoConvert, boolishPairs, transform } = this.field.config;
 
-        const value = transformer(tracker.getValue());
+        const value = transform(tracker.value);
 
         if (typeof value === 'boolean') {
             return;
@@ -33,10 +35,11 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
         tracker.addError('boolean/base');
     }
 
+    /** Converts configured truthy and falsy inputs after pipeline processing. */
     public override postProcess(tracker: ValueTracker): void {
         const { boolishPairs, postConvert } = this.field.config;
 
-        const value = tracker.getValue();
+        const value = tracker.value;
 
         if (typeof value === 'boolean') {
             return;

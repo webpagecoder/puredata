@@ -4,36 +4,37 @@ import { RegexCache } from './RegexCache.ts';
 import { Field } from './fields/Field.ts';
 import { Path } from './Path.ts';
 
+/** Nested object whose leaves are strings or `undefined`. */
 export type NestedStringRecord = {
     [key: string]: NestedStringRecord | string | undefined;
 };
 
-/**
- * @typedef RegexMatchOptions
- * @property {('loose' | 'strict')} mode - The mode in which the regex will be run.
- * @property {string} acceptableDelims - A string of characters that are considered acceptable delimiters in the string. 
- * These will be normalized to the normalizedDelim character if a match is made.
- * @property {string} normalizedDelim - The character that acceptable delimiters will be normalized to.
- * @property {string} stripDelims - Characters to clean up. Recommended to set this to any characters that are 
- * common delims - any {@link acceptableDelims}/{@link normalizedDelim} delimiters that appear in stripDelims will 
- * be ignored.
- */
+/** Options controlling strict or loose matching and delimiter normalization. */
 export type RegexMatchOptions = {
+    /** Delimiters accepted in the input. */
     acceptableDelims: string;
+    /** Matching mode; defaults to `strict`. */
     mode?: 'loose' | 'strict';
+    /** Delimiter used in the normalized result. */
     normalizedDelim: string;
+    /** Delimiters removed when loosely matching; defaults to spaces. */
     stripDelims?: string;
 };
 
+/** Normalized match and an optional remaining/suggestion string. */
 export type RegexMatchResult = [string | null, string | null];
 
+/** Options controlling which nested object paths are included. */
 export type GetPathOptions = {
+    /** Include paths for nested objects. */
     includeRoots?: boolean;
+    /** Include only paths that point to nested objects. */
     rootsOnly?: boolean
 };
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
+/** General-purpose object, path, string, and number utilities. */
 class Utils {
 
     /****************************************************
@@ -216,6 +217,13 @@ class Utils {
      * @param maxKeyCount The maximum key count to consider.
      * @returns The total key count, or false if it exceeds the maximum.
      */
+    /**
+     * Counts keys in an object and its nested plain objects.
+     *
+     * @param obj Object to inspect.
+     * @param maxKeyCount Optional maximum allowed key count.
+     * @returns The total count, or `false` when the maximum is exceeded.
+     */
     public static getNestedKeyCount(obj: object, maxKeyCount: number | null = null): number | boolean {
 
         const allKeys = Object.keys(obj);
@@ -301,10 +309,11 @@ class Utils {
      ***************************************************/
 
     /**
-     * Generates all paths in an object.
-     * @param obj 
-     * @param options 
-     * @returns 
+     * Iterates over paths to values in an object.
+     *
+     * @param obj Object whose paths are enumerated.
+     * @param options Controls whether nested object roots are included.
+     * @returns An iterator of paths in the object.
      */
     public static *getAllNestedPaths(obj: object, options: GetPathOptions = {}): Generator<Path> {
         yield* Utils.getAllNestedPathsInternal(obj, {
@@ -715,16 +724,16 @@ class Utils {
      */
     public static parseNumber(value: unknown, {
         autoConvert = true,
-        ensureSafe = true,
-        ensureFinite = true,
-        preservePrecision = true
-    }: { autoConvert?: boolean; ensureSafe?: boolean; ensureFinite?: boolean; preservePrecision?: boolean } = {}): number | null {
+        safe = true,
+        finite = true,
+        precision = true
+    }: { autoConvert?: boolean; safe?: boolean; finite?: boolean; precision?: boolean } = {}): number | null {
         const num = autoConvert ? Number(value) : value;
         return (
             (typeof num !== 'number' || Number.isNaN(num))
-            || (ensureFinite && !Number.isFinite(num))
-            || (ensureSafe && (num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER))
-            || (preservePrecision
+            || (finite && !Number.isFinite(num))
+            || (safe && (num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER))
+            || (precision
                 && typeof value === 'string'
                 && String(num) !== value
                 && String(num) !== value.replace(/\.0+$/, ''))

@@ -7,14 +7,18 @@ import { ArrayProcessor } from './ArrayProcessor.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
+/** Configuration options for array chains. */
 export type ArrayChainConfig = AnyChainConfig & {
     castSingle: boolean;
     stripEmpties: boolean;
 };
+/** Constructor options for an array chain. */
 export type ArrayChainCtorParams = AnyChainCtorParams<ArrayChainConfig, ArrayHandler>;
 
+/** Chain of validators and transforms for array values. */
 class ArrayChain extends AnyChain<ArrayChainCtorParams> {
 
+    /** Creates an array chain with the supplied configuration. */
     public constructor(args: Partial<ArrayChainCtorParams> = {}) {
         super(Object.assign({ chainHandlerCtor: ArrayHandler }, args));
         
@@ -28,6 +32,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         config.stripEmpties = stripEmpties;
     }
 
+    /** Creates the processor that handles this array chain. */
     public override createProcessor(): ArrayProcessor {
         return new ArrayProcessor({
             field: this,
@@ -36,10 +41,12 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
 
     // Configurators
 
+    /** Configures whether a non-array value is cast to a one-item array. */
     public castSingle(castSingle: boolean = true): this {
         return this.clone({ castSingle });
     }
 
+    /** Configures whether empty values are removed before validation. */
     public stripEmpties(stripEmpties: boolean = true): this {
         return this.clone({ stripEmpties });
     }
@@ -102,12 +109,11 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     //  */
     // public stripEmpties(): this {
     //     return this.addHandlerStep('stripEmpties', () => {
-    //         return [this.config.emptyValues];
+    //         return [this.config.empties];
     //     });
     // }
 
 }
 
 export { ArrayChain };
-
 

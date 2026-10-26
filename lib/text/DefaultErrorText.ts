@@ -1,5 +1,6 @@
 'use strict';
 
+/** Default validation error messages indexed by error key. */
 const DefaultErrorText: Record<string, string> = {
     'any/anyOf': 'Must be one of: {allowedValues}',
     'any/base': 'Invalid value',
@@ -28,8 +29,8 @@ const DefaultErrorText: Record<string, string> = {
     'array/exactly': 'Must contain exactly these values: {requiredValues}',
     'array/length': 'Must have a length of {requiredLength}, Current length: {length}',
     'array/lengthBetween': 'Must have a length between {min} and {max}, Current length: {length}',
-    'array/maxLength': 'Must contain at most {max} items, Current length: {length}',
-    'array/minLength': 'Must contain at least {min} items, Current length: {length}',
+    'array/maxLen': 'Must contain at most {max} items, Current length: {length}',
+    'array/minLen': 'Must contain at least {min} items, Current length: {length}',
     'array/noneOf': 'Cannot contain any of these values: {forbiddenValues}, found {invalidValue} at index {index}',
     'array/notEmpty': 'Must not be empty',
     'array/only': 'Can only contain values from: {allowedValues}. Invalid value {invalidValue} found at index {index}',
@@ -111,7 +112,7 @@ const DefaultErrorText: Record<string, string> = {
     'object/allOfPaths': 'Must contain all required paths, missing: {missingPaths}',
     'object/depth': 'Must have depth {depth}, actual depth: {actualDepth}',
     'object/empty': 'Must be an empty object',
-    'object/ensurePlain': 'Must be a plain object',
+    'object/plainOnly': 'Must be a plain object',
     'object/exactlyPaths': 'Must contain exactly these paths: {paths}',
     'object/instanceOf': 'Must be an instance of {constructor}',
     'object/isObject': 'Must be an object',
@@ -185,10 +186,10 @@ const DefaultErrorText: Record<string, string> = {
     'string/luhn': 'Must pass the Luhn check',
     'string/mac': 'Must be a valid MAC address',
     'string/matches': 'Must match regex {regex}',
-    'string/maxLength': 'Must have length at most {max}',
+    'string/maxLen': 'Must have length at most {max}',
     'string/maxWords': 'Must have at most {max} words, actual: {count}',
     'string/measurement': 'Must be a valid measurement',
-    'string/minLength': 'Must have length at least {min}',
+    'string/minLen': 'Must have length at least {min}',
     'string/minWords': 'Must have at least {min} words, actual: {count}',
     'string/money': 'Must be a valid monetary value',
     'string/notBlank': 'Must not be blank',

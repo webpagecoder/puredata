@@ -9,36 +9,47 @@ import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 import { Utils } from '../../Utils.ts';
 
+/** Object describing fields in a schema. */
 export type Schema = {
     [key: string]: unknown;
 };
 
+/** Schema keys mapped to their compiled field definitions. */
 export type SchemaFields = {
     [key: string]: Field;
 };
 
+/** Configuration for a schema chain. */
 export type SchemaChainConfig = ObjectChainConfig & {
     anyChain: AnyChain,
     arrayChain: ArrayChain,
-    failOnFirstError: boolean;
+    failFast: boolean;
     fieldFactory: FieldFactory;
     renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     schemaFields: SchemaFields;
     stripExtraKeys: boolean;
 };
 
+/** Constructor options for a schema chain. */
 export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainConfig> & {
     schema?: Schema;
 };
 
+/** Field chain that validates an object against a nested schema. */
 class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 
+    /**
+     * Creates a schema chain and converts schema entries to fields.
+     *
+     * @param args Schema and chain configuration.
+     * @throws {@link Error} If no field factory is supplied.
+     */
     public constructor(args: Partial<SchemaChainCtorParams> = {}) {
         super(args);
 
         const {
             fieldFactory,
-            failOnFirstError = false,
+            failFast = false,
             renameKeysArgs = null,
             schema = {},
             stripExtraKeys = true,
@@ -49,15 +60,16 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         }
 
         const { config } = this;
-        config.cloneObject = true;
-        config.ensurePlain = true;
-        config.failOnFirstError = failOnFirstError;
+        config.clone = true;
+        config.plainOnly = true;
+        config.failFast = failFast;
         config.fieldFactory = fieldFactory;
         config.renameKeysArgs = renameKeysArgs;
         config.stripExtraKeys = stripExtraKeys;
         config.schemaFields = this._processSchema(schema) || {};
     }
 
+    /** Clones this chain and optionally replaces its schema. */
     public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
         const clone = super.clone(args);
         const { schema = null } = args;
@@ -67,12 +79,14 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         return clone;
     }
 
+    /** Creates the processor that compiles and validates this schema. */
     public override createProcessor(): SchemaProcessor {
         return new SchemaProcessor({
             field: this,
         });
     }
 
+    /** Converts each schema entry into a field or nested schema chain. */
     private _processSchema(schema: Schema): SchemaFields {
         const schemaFields: SchemaFields = {};
         for (const key of Object.keys(schema)) {
@@ -89,7 +103,27 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         return schemaFields;
     }
 
+    // Configurators
+
+    /**
+     * Configures whether validation stops after the first error.
+     *
+     * @param failFast Whether to stop processing after the first error.
+     * @returns A cloned schema chain with the updated setting.
+     */
+    public failFast(failFast = true) {
+        return this.clone({ failFast });
+    }
+    
+    /**
+     * Configures whether keys not declared in the schema are removed.
+     *
+     * @param stripExtraKeys Whether to remove undeclared keys.
+     * @returns A cloned schema chain with the updated setting.
+     */
+    public stripExtraKeys(stripExtraKeys = true) {
+        return this.clone({ stripExtraKeys });
+    }
 }
 
 export { SchemaChain };
-

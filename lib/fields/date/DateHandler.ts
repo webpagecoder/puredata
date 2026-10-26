@@ -3,8 +3,8 @@
 import { Translation } from '../../Translation.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { AnyHandler } from '../any/AnyHandler.ts';
-import { AutoParseOptions, DateConverter, DayOfWeek, GenericDateInput, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimeMode, TimestampOptions } from './DateConverter.ts';
-import { UtcDate } from './UtcDate.ts';
+import { AutoParseOptions, DateConverter, DateType, DayOfWeek, GenericDateInput, HumanParseOptions, IsoOrdinalParseOptions, IsoParseOptions, IsoWeekParseOptions, TimeMode, TimestampOptions } from './DateConverter.ts';
+import { OffsetDate } from './OffsetDate.ts';
 const { pass, fail } = HandlerResult;
 
 /**
@@ -13,8 +13,9 @@ const { pass, fail } = HandlerResult;
 class DateHandler extends AnyHandler {
     private _dateConverter: DateConverter | undefined;
 
-    public configDateConverter(calendarText: Translation, utcOffsetMinutes: number = 0) {
-        this._dateConverter = new DateConverter(calendarText, utcOffsetMinutes);
+    /** Configures date parsing and formatting with localized text and a UTC offset. */
+    public configDateConverter(calendarText: Translation, utcOffsetMins: number = 0) {
+        this._dateConverter = new DateConverter(calendarText, utcOffsetMins);
     }
 
 
@@ -119,12 +120,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Date value to compare against.
      * @returns Input date or error.
      */
-    public override equals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public override equals(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.globalDate.getTime() === parsedReferenceDate.globalDate.getTime()
+        return inputDate.offsetDate.getTime() === parsedReferenceDate.offsetDate.getTime()
             ? pass(inputDate)
             : fail(inputDate, 'date/equals', { referenceDate });
     }
@@ -135,12 +136,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Date value to compare against.
      * @returns Input date or error.
      */
-    public override notEquals(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public override notEquals(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.globalDate.getTime() !== parsedReferenceDate.globalDate.getTime()
+        return inputDate.offsetDate.getTime() !== parsedReferenceDate.offsetDate.getTime()
             ? pass(inputDate)
             : fail(inputDate, 'date/notEquals', { referenceDate });
     }
@@ -155,12 +156,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Lower-bound date that the input must be after.
      * @returns Input date or error
      */
-    public after(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
+    public after(inputDate: OffsetDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.globalDate > parsedReferenceDate.globalDate
+        return inputDate.offsetDate > parsedReferenceDate.offsetDate
             ? pass(inputDate)
             : fail(inputDate, 'date/after', { referenceDate });
     }
@@ -171,12 +172,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Upper-bound date that the input must be before.
      * @returns Input date or error
      */
-    public before(inputDate: UtcDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
+    public before(inputDate: OffsetDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.globalDate < parsedReferenceDate.globalDate
+        return inputDate.offsetDate < parsedReferenceDate.offsetDate
             ? pass(inputDate)
             : fail(inputDate, 'date/before', { referenceDate });
     }
@@ -188,7 +189,7 @@ class DateHandler extends AnyHandler {
      * @param maxDate Inclusive upper-bound date.
      * @returns Input date or error
      */
-    public between(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
+    public between(inputDate: OffsetDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const parsedMinDate = this._dateConverter!.parseAuto(minDate);
         const parsedMaxDate = this._dateConverter!.parseAuto(maxDate);
         if (!parsedMinDate) {
@@ -197,7 +198,7 @@ class DateHandler extends AnyHandler {
         if (!parsedMaxDate) {
             return fail(maxDate, 'date/base');
         }
-        return inputDate.globalDate >= parsedMinDate.globalDate && inputDate.globalDate <= parsedMaxDate.globalDate
+        return inputDate.offsetDate >= parsedMinDate.offsetDate && inputDate.offsetDate <= parsedMaxDate.offsetDate
             ? pass(inputDate)
             : fail(inputDate, 'date/between', { minDate, maxDate });
     }
@@ -208,8 +209,8 @@ class DateHandler extends AnyHandler {
      * @param dayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
      * @returns Input date or error.
      */
-    public dayOfWeek(inputDate: UtcDate, dayOfWeek: number): HandlerResult {
-        const dayIndex = inputDate.globalDate.getUTCDay();
+    public dayOfWeek(inputDate: OffsetDate, dayOfWeek: number): HandlerResult {
+        const dayIndex = inputDate.offsetDate.getUTCDay();
         return dayIndex === dayOfWeek
             ? pass(inputDate)
             : fail(inputDate, 'date/dayOfWeek', { dayOfWeek });
@@ -221,8 +222,8 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value being validated.
      * @returns Input date or error.
      */
-    public leapYear(inputDate: UtcDate): HandlerResult {
-        const year = inputDate.globalDate.getUTCFullYear();
+    public leapYear(inputDate: OffsetDate): HandlerResult {
+        const year = inputDate.offsetDate.getUTCFullYear();
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)
             ? pass(inputDate)
             : fail(inputDate, 'date/leapYear');
@@ -234,12 +235,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Maximum allowed date.
      * @returns Input date or error.
      */
-    public max(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public max(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.globalDate <= parsedReferenceDate.globalDate
+        return inputDate.offsetDate <= parsedReferenceDate.offsetDate
             ? pass(inputDate)
             : fail(inputDate, 'date/max', { referenceDate });
     }
@@ -250,12 +251,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Minimum allowed date.
      * @returns Input date or error.
      */
-    public min(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public min(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        return inputDate.globalDate >= parsedReferenceDate.globalDate
+        return inputDate.offsetDate >= parsedReferenceDate.offsetDate
             ? pass(inputDate)
             : fail(inputDate, 'date/min', { referenceDate });
     }
@@ -267,13 +268,13 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Reference date used to calculate current age.
      * @returns Input date or error.
      */
-    public minAge(birthDate: UtcDate, minAge: number, referenceDate: GenericDateInput = new Date()): HandlerResult {
+    public minAge(birthDate: OffsetDate, minAge: number, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const date = birthDate.globalDate;
-        const refDate = parsedReferenceDate.globalDate;
+        const date = birthDate.offsetDate;
+        const refDate = parsedReferenceDate.offsetDate;
         let age = refDate.getUTCFullYear() - date.getUTCFullYear();
         const monthDiff = refDate.getUTCMonth() - date.getUTCMonth();
         if (monthDiff < 0 || (monthDiff === 0 && refDate.getUTCDate() < date.getUTCDate())) {
@@ -290,14 +291,14 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Date value to compare against.
      * @returns Input date or error.
      */
-    public sameDay(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public sameDay(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.globalDate);
+        const inputNormalized = new Date(inputDate.offsetDate);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
+        const referenceNormalized = new Date(parsedReferenceDate.offsetDate);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
         return inputNormalized.getTime() === referenceNormalized.getTime()
             ? pass(inputDate)
@@ -310,15 +311,15 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Date value to compare against.
      * @returns Input date or error.
      */
-    public sameMonth(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public sameMonth(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.globalDate);
+        const inputNormalized = new Date(inputDate.offsetDate);
         inputNormalized.setUTCDate(1);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
+        const referenceNormalized = new Date(parsedReferenceDate.offsetDate);
         referenceNormalized.setUTCDate(1);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
         return inputNormalized.getTime() === referenceNormalized.getTime()
@@ -333,16 +334,16 @@ class DateHandler extends AnyHandler {
      * @param firstDayOfWeek First weekday used to calculate week boundaries.
      * @returns Input date or error.
      */
-    public sameWeek(inputDate: UtcDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): HandlerResult {
+    public sameWeek(inputDate: OffsetDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.globalDate);
+        const inputNormalized = new Date(inputDate.offsetDate);
         const inputOffset = (inputNormalized.getUTCDay() - firstDayOfWeek + 7) % 7;
         inputNormalized.setUTCDate(inputNormalized.getUTCDate() - inputOffset);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
+        const referenceNormalized = new Date(parsedReferenceDate.offsetDate);
         const referenceOffset = (referenceNormalized.getUTCDay() - firstDayOfWeek + 7) % 7;
         referenceNormalized.setUTCDate(referenceNormalized.getUTCDate() - referenceOffset);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
@@ -357,15 +358,15 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Date value to compare against.
      * @returns Input date or error.
      */
-    public sameYear(inputDate: UtcDate, referenceDate: GenericDateInput): HandlerResult {
+    public sameYear(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const inputNormalized = new Date(inputDate.globalDate);
+        const inputNormalized = new Date(inputDate.offsetDate);
         inputNormalized.setUTCMonth(0, 1);
         inputNormalized.setUTCHours(0, 0, 0, 0);
-        const referenceNormalized = new Date(parsedReferenceDate.globalDate);
+        const referenceNormalized = new Date(parsedReferenceDate.offsetDate);
         referenceNormalized.setUTCMonth(0, 1);
         referenceNormalized.setUTCHours(0, 0, 0, 0);
         return inputNormalized.getTime() === referenceNormalized.getTime()
@@ -379,7 +380,7 @@ class DateHandler extends AnyHandler {
      * @param today Reference date representing "today".
      * @returns Input date or error.
      */
-    public today(inputDate: UtcDate, today: GenericDateInput = new Date()): HandlerResult {
+    public today(inputDate: OffsetDate, today: GenericDateInput = new Date()): HandlerResult {
         return this.sameDay(inputDate, today).pass
             ? pass(inputDate)
             : fail(inputDate, 'date/today', { referenceDate: today });
@@ -390,8 +391,8 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value being validated.
      * @returns Input date or error.
      */
-    public weekday(inputDate: UtcDate): HandlerResult {
-        const dayOfWeek = inputDate.globalDate.getUTCDay();
+    public weekday(inputDate: OffsetDate): HandlerResult {
+        const dayOfWeek = inputDate.offsetDate.getUTCDay();
         return dayOfWeek >= 1 && dayOfWeek <= 5
             ? pass(inputDate)
             : fail(inputDate, 'date/weekday', { dayOfWeek });
@@ -402,8 +403,8 @@ class DateHandler extends AnyHandler {
      * @param inputDate Date value being validated.
      * @returns Input date or error.
      */
-    public weekend(inputDate: UtcDate): HandlerResult {
-        const dayOfWeek = inputDate.globalDate.getUTCDay();
+    public weekend(inputDate: OffsetDate): HandlerResult {
+        const dayOfWeek = inputDate.offsetDate.getUTCDay();
         return dayOfWeek === 0 || dayOfWeek === 6
             ? pass(inputDate)
             : fail(inputDate, 'date/weekend', { dayOfWeek });
@@ -416,12 +417,12 @@ class DateHandler extends AnyHandler {
      * @param referenceDate Reference date used to compute elapsed days.
      * @returns Input date or error.
      */
-    public within(inputDate: UtcDate, numDays: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
+    public within(inputDate: OffsetDate, numDays: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
         const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
-        const actualDiff = (inputDate.globalDate.getTime() - parsedReferenceDate.globalDate.getTime()) / (1000 * 60 * 60 * 24);
+        const actualDiff = (inputDate.offsetDate.getTime() - parsedReferenceDate.offsetDate.getTime()) / (1000 * 60 * 60 * 24);
         return Math.abs(actualDiff) <= Math.abs(numDays)
             ? pass(inputDate)
             : fail(inputDate, 'date/within', { actualDiff, daysDiff: numDays });
@@ -442,17 +443,13 @@ class DateHandler extends AnyHandler {
      * @param timeMode Time mode for the output date, either 'utc' or 'local'.
      * @returns Date in requested format.
      */
-    public toFormat(inputDate: UtcDate, formatString: string | null, timeMode: TimeMode = 'utc'): HandlerResult<string> {
-        let finalForm: unknown;
-        if (formatString === null) {
-            // A raw date will only exist if the metadate was never modified
-            finalForm = inputDate.raw !== null ? inputDate.raw : inputDate.globalDate;
+    public toFormat(inputDate: OffsetDate, formatString: DateType | string, timeMode: TimeMode = 'utc'): HandlerResult<string | Date | number> {
+        let finalForm: string | Date | number;
+        if (formatString === 'timestamp') {
+            finalForm = inputDate.offsetDate.getTime();
         }
-        else if (formatString === 'timestamp') {
-            finalForm = inputDate.globalDate.getTime();
-        }
-        else if (formatString === 'object') {
-            finalForm = new Date(inputDate.globalDate);
+        else if (formatString === 'instance') {
+            finalForm = new Date(inputDate.offsetDate);
         }
         else {
             finalForm = this._dateConverter!.format(inputDate, formatString, timeMode);
@@ -473,7 +470,7 @@ class DateHandler extends AnyHandler {
      * @param numDays Whole number of days to add (or subtract if negative).
      * @returns Returns the date moved forward the amount of days specified.
      */
-    public addDays(inputDate: UtcDate, numDays: number): HandlerResult {
+    public addDays(inputDate: OffsetDate, numDays: number): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCDate(localDate.getUTCDate() + numDays);
         return pass(inputDate.setLocalDate(localDate));
@@ -485,7 +482,7 @@ class DateHandler extends AnyHandler {
      * @param numHours Whole number of hours to add (or subtract if negative).
      * @returns Returns the date moved forward the amount of hours specified.
      */
-    public addHours(inputDate: UtcDate, numHours: number): HandlerResult {
+    public addHours(inputDate: OffsetDate, numHours: number): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCHours(localDate.getUTCHours() + numHours);
         return pass(inputDate.setLocalDate(localDate));
@@ -497,7 +494,7 @@ class DateHandler extends AnyHandler {
      * @param numMinutes Whole number of minutes to add (or subtract if negative).
      * @returns Returns the date moved forward the amount of minutes specified.
      */
-    public addMinutes(inputDate: UtcDate, numMinutes: number): HandlerResult {
+    public addMinutes(inputDate: OffsetDate, numMinutes: number): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCMinutes(localDate.getUTCMinutes() + numMinutes);
         return pass(inputDate.setLocalDate(localDate));
@@ -509,7 +506,7 @@ class DateHandler extends AnyHandler {
      * @param numMonths Whole number of months to add (or subtract if negative).
      * @returns Returns the date moved forward the amount of months specified.
      */
-    public addMonths(inputDate: UtcDate, numMonths: number): HandlerResult {
+    public addMonths(inputDate: OffsetDate, numMonths: number): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCMonth(localDate.getUTCMonth() + numMonths);
         return pass(inputDate.setLocalDate(localDate));
@@ -521,7 +518,7 @@ class DateHandler extends AnyHandler {
      * @param numYears Whole number of years to add (or subtract if negative).
      * @returns Returns the date moved forward the amount of years specified.
      */
-    public addYears(inputDate: UtcDate, numYears: number): HandlerResult {
+    public addYears(inputDate: OffsetDate, numYears: number): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCFullYear(localDate.getUTCFullYear() + numYears);
         return pass(inputDate.setLocalDate(localDate));
@@ -534,7 +531,7 @@ class DateHandler extends AnyHandler {
      * @param maxDate Inclusive upper-bound date.
      * @returns Returns the date clamped to the min or max if outside the range, otherwise returns the input date.
      */
-    public clamp(inputDate: UtcDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
+    public clamp(inputDate: OffsetDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
         const minDateParsed = this._dateConverter!.parseAuto(minDate);
         const maxDateParsed = this._dateConverter!.parseAuto(maxDate);
         if (!minDateParsed) {
@@ -543,10 +540,10 @@ class DateHandler extends AnyHandler {
         if (!maxDateParsed) {
             return fail(maxDate, 'date/base');
         }
-        if (inputDate.globalDate < minDateParsed.globalDate) {
+        if (inputDate.offsetDate < minDateParsed.offsetDate) {
             return pass(minDateParsed);
         }
-        else if (inputDate.globalDate > maxDateParsed.globalDate) {
+        else if (inputDate.offsetDate > maxDateParsed.offsetDate) {
             return pass(maxDateParsed);
         }
         return pass(inputDate);
@@ -557,7 +554,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to normalize.
      * @returns Returns the date moved forward to the end of day.
      */
-    public toEndOfDay(inputDate: UtcDate): HandlerResult {
+    public toEndOfDay(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCHours(23, 59, 59, 999);
         return pass(inputDate.setLocalDate(localDate));
@@ -568,7 +565,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to normalize.
      * @returns Returns the date moved forward to the end of the month.
      */
-    public toEndOfMonth(inputDate: UtcDate): HandlerResult {
+    public toEndOfMonth(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCMonth(localDate.getUTCMonth() + 1, 0);
         return pass(inputDate.setLocalDate(localDate));
@@ -579,7 +576,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to normalize.
      * @returns Returns the date moved forward to the end of the year.
      */
-    public toEndOfYear(inputDate: UtcDate): HandlerResult {
+    public toEndOfYear(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCFullYear(localDate.getUTCFullYear() + 1, 0, 0);
         return pass(inputDate.setLocalDate(localDate));
@@ -591,7 +588,7 @@ class DateHandler extends AnyHandler {
      * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
      * @returns Returns the date moved forward to the next day of the week specified.
      */
-    public toNextDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): HandlerResult {
+    public toNextDayOfWeek(inputDate: OffsetDate, targetDayOfWeek: DayOfWeek): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         let daysToAdd = targetDayOfWeek - localDate.getUTCDay();
         if (daysToAdd <= 0) {
@@ -606,7 +603,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to adjust.
      * @returns Returns the date moved forward to the next weekday.
      */
-    public toNextWeekday(inputDate: UtcDate): HandlerResult {
+    public toNextWeekday(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         do {
             localDate.setUTCDate(localDate.getUTCDate() + 1);
@@ -621,7 +618,7 @@ class DateHandler extends AnyHandler {
      * @param targetDayOfWeek Target UTC day index where Sunday is 0 and Saturday is 6.
      * @returns Returns the date moved backward to the previous day of the week specified.
      */
-    public toPreviousDayOfWeek(inputDate: UtcDate, targetDayOfWeek: DayOfWeek): HandlerResult {
+    public toPreviousDayOfWeek(inputDate: OffsetDate, targetDayOfWeek: DayOfWeek): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         let daysToSubtract = localDate.getUTCDay() - targetDayOfWeek;
         if (daysToSubtract <= 0) {
@@ -636,7 +633,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to adjust.
      * @returns Returns the date moved backward to the previous weekday.
      */
-    public toPreviousWeekday(inputDate: UtcDate): HandlerResult {
+    public toPreviousWeekday(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         do {
             localDate.setUTCDate(localDate.getUTCDate() - 1);
@@ -650,7 +647,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to normalize.
      * @returns Returns the date moved to the first millisecond of its UTC day.
      */
-    public toStartOfDay(inputDate: UtcDate): HandlerResult {
+    public toStartOfDay(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCHours(0, 0, 0, 0);
         return pass(inputDate.setLocalDate(localDate));
@@ -661,7 +658,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to normalize.
      * @returns Returns the date moved to the first millisecond of its UTC month.
      */
-    public toStartOfMonth(inputDate: UtcDate): HandlerResult {
+    public toStartOfMonth(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCDate(1);
         return pass(inputDate.setLocalDate(localDate));
@@ -672,7 +669,7 @@ class DateHandler extends AnyHandler {
      * @param inputDate Base date to normalize.
      * @returns Returns the date moved to the first millisecond of its UTC year.
      */
-    public toStartOfYear(inputDate: UtcDate): HandlerResult {
+    public toStartOfYear(inputDate: OffsetDate): HandlerResult {
         const localDate = new Date(inputDate.localDate);
         localDate.setUTCMonth(0, 1);
         return pass(inputDate.setLocalDate(localDate));
@@ -682,4 +679,3 @@ class DateHandler extends AnyHandler {
 
 
 export { DateHandler };
-

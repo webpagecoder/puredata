@@ -178,15 +178,15 @@ describe('ArrayHandler validators', () => {
 		]);
 	});
 
-	it('maxLength', () => {
-		runPassTests(handler.maxLength.bind(handler), [
+	it('maxLen', () => {
+		runPassTests(handler.maxLen.bind(handler), [
 			{ input: [1, 2], args: [2] },
 			{ input: [1], args: [2] },
 			{ input: [], args: [0] },
 			{ input: [1, 2, 3], args: [3] },
 		]);
 
-		runFailTests(handler.maxLength.bind(handler), [
+		runFailTests(handler.maxLen.bind(handler), [
 			{ input: [1, 2, 3], args: [2] },
 			{ input: [1, 2], args: [0] },
 			{ input: [1], args: [0] },
@@ -194,15 +194,15 @@ describe('ArrayHandler validators', () => {
 		]);
 	});
 
-	it('minLength', () => {
-		runPassTests(handler.minLength.bind(handler), [
+	it('minLen', () => {
+		runPassTests(handler.minLen.bind(handler), [
 			{ input: [1, 2], args: [2] },
 			{ input: [1], args: [0] },
 			{ input: [], args: [0] },
 			{ input: [1, 2, 3], args: [1] },
 		]);
 
-		runFailTests(handler.minLength.bind(handler), [
+		runFailTests(handler.minLen.bind(handler), [
 			{ input: [], args: [1] },
 			{ input: [1, 2, 3], args: [4] },
 			{ input: [], args: [2] },

@@ -6,8 +6,10 @@ import { AnyHandler } from '../any/AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 const { pass, fail } = HandlerResult;
 
+/** Result returned by object validation and transformation methods. */
 export type ObjectHandlerResult = HandlerResult<object>;
 
+/** Validation and transformation methods for object values. */
 class ObjectHandler extends AnyHandler {
 
     // **********************************************
@@ -347,21 +349,21 @@ class ObjectHandler extends AnyHandler {
     /**
      * Removes top-level keys whose values are in the provided empty-values list.
      * @param obj Source object.
-     * @param emptyValues Values that should be removed.
+     * @param empties Values that should be removed.
      * @returns Returns a new object with top-level keys removed when their values are considered empty.
      */
-    public stripEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
-        return this.stripValues(obj, emptyValues);
+    public stripEmpties(obj: object, empties: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+        return this.stripValues(obj, empties);
     }
 
     /**
      * Recursively removes keys whose values are in the provided empty-values list.
      * @param obj Source object.
-     * @param emptyValues Values that should be removed.
+     * @param empties Values that should be removed.
      * @returns Returns a new object with empty values removed recursively through nested plain objects.
      */
-    public stripNestedEmpties(obj: object, emptyValues: unknown[] = [null, undefined, '']): ObjectHandlerResult {
-        return this.stripNestedValues(obj, emptyValues);
+    public stripNestedEmpties(obj: object, empties: unknown[] = [null, undefined, '']): ObjectHandlerResult {
+        return this.stripNestedValues(obj, empties);
     }
 
     /**
@@ -476,7 +478,6 @@ class ObjectHandler extends AnyHandler {
 }
 
 export { ObjectHandler };
-
 
 
 

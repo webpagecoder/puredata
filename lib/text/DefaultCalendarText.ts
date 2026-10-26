@@ -1,5 +1,6 @@
 'use strict';
 
+/** Default localized day, month, and ordinal suffix names. */
 const DefaultCalendarText: Record<string, string[]> = {
     'dayNames/full': [
         'Sunday',

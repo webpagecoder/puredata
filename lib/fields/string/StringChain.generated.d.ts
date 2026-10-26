@@ -81,8 +81,8 @@ interface StringChainGeneratedMethods {
     /**
     * Validates password-style complexity requirements.
     * @param options Complexity thresholds and limits.
-    * @param options.minLength Minimum allowed length. Default: 8.
-    * @param options.maxLength Maximum allowed length. Default: 100.
+    * @param options.minLen Minimum allowed length. Default: 8.
+    * @param options.maxLen Maximum allowed length. Default: 100.
     * @param options.minLowercase Minimum lowercase letters required. Default: 1.
     * @param options.minUppercase Minimum uppercase letters required. Default: 1.
     * @param options.minDigits Minimum digits required. Default: 1.
@@ -404,7 +404,7 @@ interface StringChainGeneratedMethods {
     * Validates that the input length does not exceed a maximum.
     * @param max Maximum allowed length.
     */
-    maxLength(...args: DropFirst<Parameters<StringHandler['maxLength']>>): StringChain;
+    maxLen(...args: DropFirst<Parameters<StringHandler['maxLen']>>): StringChain;
 
     /**
     * Validates that word count is not above a maximum.
@@ -440,7 +440,7 @@ interface StringChainGeneratedMethods {
     * Validates that the input length is at least a minimum.
     * @param min Minimum allowed length.
     */
-    minLength(...args: DropFirst<Parameters<StringHandler['minLength']>>): StringChain;
+    minLen(...args: DropFirst<Parameters<StringHandler['minLen']>>): StringChain;
 
     /**
     * Validates that word count is at least a minimum.
@@ -707,15 +707,15 @@ interface StringChainGeneratedMethods {
 
     /**
     * Splits a string on delimiters, transforms each segment, and joins it with a new delimiter.
-    * `transformer1` is applied before `transformerSwitchIndex` and `transformer2` after.
+    * `transform1` is applied before `transformSwitchIndex` and `transform2` after.
     * @param options Delimiter and transformation options.
     * Default: {} (merged with {@link TO_DELIMITED_DEFAULTS}).
     * @param options.fromDelims Delimiter characters to split on. Use null to skip splitting and transform the whole input as one token.
     * Default: null.
     * @param options.toDelim Delimiter used when joining transformed tokens. Default: ''.
-    * @param options.transformer1 Transformer applied to tokens before switch index. Default: identity function.
-    * @param options.transformer2 Transformer applied at and after switch index. Default: identity function.
-    * @param options.transformerSwitchIndex Index where transformer2 begins; null keeps transformer1 for all tokens.
+    * @param options.transform1 Transformer applied to tokens before switch index. Default: identity function.
+    * @param options.transform2 Transformer applied at and after switch index. Default: identity function.
+    * @param options.transformSwitchIndex Index where transform2 begins; null keeps transform1 for all tokens.
     * Default: null.
     */
     toDelimited(...args: DropFirst<Parameters<StringHandler['toDelimited']>>): StringChain;
