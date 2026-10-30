@@ -124,12 +124,6 @@ interface NumberChainGeneratedMethods {
     falsy(...args: DropFirst<Parameters<NumberHandler['falsy']>>): NumberChain;
 
     /**
-    * Validates that a number is finite.
-    * @returns Returns the original number if it is finite; otherwise returns a validation error.
-    */
-    finite(...args: DropFirst<Parameters<NumberHandler['finite']>>): NumberChain;
-
-    /**
     * Rounds a number down to the nearest integer.
     * @returns Returns the input number rounded down to the nearest integer.
     */
@@ -253,12 +247,6 @@ interface NumberChainGeneratedMethods {
     nullish(...args: DropFirst<Parameters<NumberHandler['nullish']>>): NumberChain;
 
     /**
-    * Validates that a value is a number and not NaN.
-    * @returns Returns the original value if it is a valid number; otherwise returns a validation error.
-    */
-    number(...args: DropFirst<Parameters<NumberHandler['number']>>): NumberChain;
-
-    /**
     * Validates that a number is odd.
     * @returns Returns the original number if it is odd; otherwise returns a validation error.
     */
@@ -282,13 +270,6 @@ interface NumberChainGeneratedMethods {
     * @returns Returns the base raised to the given exponent.
     */
     pow(...args: DropFirst<Parameters<NumberHandler['pow']>>): NumberChain;
-
-    /**
-    * Validates that a number has at most the specified decimal precision.
-    * @param precision Maximum decimal places allowed.
-    * @returns Returns the original number if it matches the requested precision; otherwise returns a validation error.
-    */
-    precision(...args: DropFirst<Parameters<NumberHandler['precision']>>): NumberChain;
 
     /**
     * Validates that a number is prime.
@@ -323,12 +304,6 @@ interface NumberChainGeneratedMethods {
     * @returns Returns the input number ceiled to the nearest integer.
     */
     roundUp(...args: DropFirst<Parameters<NumberHandler['roundUp']>>): NumberChain;
-
-    /**
-    * Validates that a number is within JavaScript's safe integer bounds.
-    * @returns Returns the original number if it is within safe integer bounds; otherwise returns a validation error.
-    */
-    safe(...args: DropFirst<Parameters<NumberHandler['safe']>>): NumberChain;
 
     /**
     * Validates that a number is a safe integer.

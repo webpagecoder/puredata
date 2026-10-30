@@ -132,21 +132,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return tracker;
     }
 
-    /** Whether this field is configured to forbid a value. */
-    public isForbidden(): boolean {
-        return this.config.presence === 'forbidden';
-    }
-
-    /** Whether this field may be omitted. */
-    public isOptional(): boolean {
-        return this.config.presence === 'optional';
-    }
-
-    /** Whether this field is required. */
-    public isRequired(): boolean {
-        return this.config.presence === 'required';
-    }
-
 
     // Configurators
 

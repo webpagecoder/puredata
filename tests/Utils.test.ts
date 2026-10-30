@@ -485,25 +485,6 @@ describe('String Utils', () => {
 
 
 
-describe('Number Utils', () => {
-    it('parseNumber', () => {
-        expect(Utils.parseNumber('42')).toBe(42);
-        expect(Utils.parseNumber('42.00')).toBe(42);
-        expect(Utils.parseNumber('abc')).toBeNull();
 
-        expect(Utils.parseNumber('3.14')).toBe(3.14);
-        expect(Utils.parseNumber('3.140', { precision: false })).toBe(3.14);
-        expect(Utils.parseNumber('3.140', { precision: true })).toBeNull();
-
-        expect(Utils.parseNumber('Infinity')).toBeNull();
-        expect(Utils.parseNumber('Infinity', { finite: false, safe: false })).toBe(Infinity);
-
-        expect(Utils.parseNumber(String(Number.MAX_SAFE_INTEGER + 1))).toBeNull();
-        expect(Utils.parseNumber(String(Number.MAX_SAFE_INTEGER + 1), { safe: false })).toBe(Number.MAX_SAFE_INTEGER + 1);
-
-        expect(Utils.parseNumber(12, { autoConvert: false })).toBe(12);
-        expect(Utils.parseNumber('12', { autoConvert: false })).toBeNull();
-    });
-});
 
 

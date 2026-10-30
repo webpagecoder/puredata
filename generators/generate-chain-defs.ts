@@ -53,7 +53,11 @@ function findClassDeclaration(sourceFile: ts.SourceFile, className: string): ts.
 }
 
 function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
-    return !!node.modifiers?.some((modifier): boolean => modifier.kind === kind);
+    if (!ts.canHaveModifiers(node)) {
+        return false;
+    }
+
+    return !!ts.getModifiers(node)?.some((modifier): boolean => modifier.kind === kind);
 }
 
 function getMethodJsDoc(sourceFile: ts.SourceFile, method: ts.MethodDeclaration): string | null {

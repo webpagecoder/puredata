@@ -46,4 +46,71 @@ describe('AnyChain', () => {
         expect(tracker2.pass).toBe(true);
     });
 
+    it('uses the inherited default configuration for undefined values', () => {
+        const tracker = new AnyChain()
+            .default('fallback')
+            .optional()
+            .process(undefined);
+
+        expect(tracker.value).toBe('fallback');
+        expect(tracker.pass).toBe(true);
+    });
+
+    it('preserves nested plain objects used as defaults', () => {
+        const defaultValue = {
+            account: {
+                preferences: {
+                    theme: 'dark',
+                    notifications: true,
+                },
+            },
+            status: 'active',
+        };
+        const tracker = new AnyChain()
+            .default(defaultValue)
+            .optional()
+            .process(undefined);
+
+        expect(tracker.value).toEqual(defaultValue);
+        expect(tracker.pass).toBe(true);
+    });
+
+    it('supports inherited field configuration methods', () => {
+        const chain = new AnyChain()
+            .autoConvert(false)
+            .default('fallback')
+            .label('Any value')
+            .strip()
+            .optional();
+
+        expect(chain.config.autoConvert).toBe(false);
+        expect(chain.config.defaultValue).toBe('fallback');
+        expect(chain.config.label).toBe('Any value');
+        expect(chain.config.strip).toBe(true);
+        expect(chain.config.presence).toBe('optional');
+    });
+
+    it('supports inherited presence and error configuration methods', () => {
+        const forbidden = new AnyChain().forbidden();
+        const required = new AnyChain().required();
+        const custom = new AnyChain()
+            .notEmpty()
+            .errors({ 'any/notEmpty': 'Value is required to contain something' });
+
+        expect(forbidden.config.presence).toBe('forbidden');
+        expect(forbidden.process('value').fail).toBe(true);
+        expect(required.config.presence).toBe('required');
+        expect(required.process(undefined).fail).toBe(true);
+        expect(custom.process(null).errors.errorMessages).toEqual({
+            '/': ['Value is required to contain something'],
+        });
+    });
+
+    it('exposes and caches the inherited processor', () => {
+        const chain = new AnyChain();
+
+        expect(chain.processor).toBe(chain.processor);
+        expect(chain.processor.field).toBe(chain);
+    });
+
 });

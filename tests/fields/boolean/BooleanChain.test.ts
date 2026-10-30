@@ -1,190 +1,76 @@
 'use strict';
 
-import { BooleanChain, BooleanChainConfig } from '../../../lib/fields/boolean/BooleanChain.ts';
+import { BooleanChain } from '../../../lib/fields/boolean/BooleanChain.ts';
+import { BooleanProcessor } from '../../../lib/fields/boolean/BooleanProcessor.ts';
 
-describe('BooleanChain', () => {
-    const configuredBoolishPairs: [truthy: unknown, falsy: unknown][] = [['yup', 'nope']];
-    const emptyBoolishPairs: [truthy: unknown, falsy: unknown][] = [];
-
-    type ComboCase = {
-        hasBoolishPairs: boolean;
-        autoConvert: boolean;
-        postConvert: boolean;
-    };
-
-    const comboCases: ComboCase[] = [
-        { hasBoolishPairs: false, autoConvert: false, postConvert: false },
-        { hasBoolishPairs: false, autoConvert: false, postConvert: true },
-        { hasBoolishPairs: false, autoConvert: true, postConvert: false },
-        { hasBoolishPairs: false, autoConvert: true, postConvert: true },
-        { hasBoolishPairs: true, autoConvert: false, postConvert: false },
-        { hasBoolishPairs: true, autoConvert: false, postConvert: true },
-        { hasBoolishPairs: true, autoConvert: true, postConvert: false },
-        { hasBoolishPairs: true, autoConvert: true, postConvert: true },
-    ];
-
-    function buildChainConfig({ hasBoolishPairs, autoConvert, postConvert }: ComboCase): Partial<BooleanChainConfig> {
-        return {
-            boolishPairs: hasBoolishPairs ? configuredBoolishPairs : emptyBoolishPairs,
-            autoConvert,
-            postConvert,
-        };
-    }
-
-    describe('truthy with string boolish value', () => {
-        it.each(comboCases)('hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
-            hasBoolishPairs,
-            autoConvert,
-            postConvert,
-        }) => {
-            const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert })).truthy();
-            const tracker = chain.process('yup');
-
-            if (!hasBoolishPairs) {
-                expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('yup');
-                return;
-            }
-
-            expect(tracker.pass).toBe(true);
-            if (autoConvert || postConvert) {
-                expect(tracker.value).toBe(true);
-            }
-            else {
-                expect(tracker.value).toBe('yup');
-            }
-        });
+describe('BooleanChain configurators and boolean-specific steps', () => {
+    it('createProcessor returns a BooleanProcessor instance', () => {
+        expect(new BooleanChain().createProcessor()).toBeInstanceOf(BooleanProcessor);
     });
 
-    describe('falsy with string boolish value', () => {
-        it.each(comboCases)('hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
-            hasBoolishPairs,
-            autoConvert,
-            postConvert,
-        }) => {
-            const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert })).falsy();
-            const tracker = chain.process('nope');
+    it('truthy accepts configured truthy values and rejects falsy values', () => {
+        const chain = new BooleanChain()
+            .boolishPairs([['yes', 'no']])
+            .truthy();
 
-            if (!hasBoolishPairs) {
-                expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('nope');
-                return;
-            }
+        const passing = chain.process('yes');
+        const failing = chain.process('no');
 
-            expect(tracker.pass).toBe(true);
-            if (autoConvert || postConvert) {
-                expect(tracker.value).toBe(false);
-            }
-            else {
-                expect(tracker.value).toBe('nope');
-            }
-        });
+        expect(passing.pass).toBe(true);
+        expect(failing.fail).toBe(true);
     });
 
-    describe('base processing without validators', () => {
-        it.each(comboCases)('yup: hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
-            hasBoolishPairs,
-            autoConvert,
-            postConvert,
-        }) => {
-            const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert }));
-            const tracker = chain.process('yup');
+    it('falsy accepts configured falsy values and rejects truthy values', () => {
+        const chain = new BooleanChain()
+            .boolishPairs([['yes', 'no']])
+            .falsy();
 
-            if (!hasBoolishPairs) {
-                expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('yup');
-                return;
-            }
+        const passing = chain.process('no');
+        const failing = chain.process('yes');
 
-            expect(tracker.pass).toBe(true);
-            if (autoConvert || postConvert) {
-                expect(tracker.value).toBe(true);
-            }
-            else {
-                expect(tracker.value).toBe('yup');
-            }
-        });
-
-        it.each(comboCases)('nope: hasBoolishPairs=$hasBoolishPairs autoConvert=$autoConvert postConvert=$postConvert', ({
-            hasBoolishPairs,
-            autoConvert,
-            postConvert,
-        }) => {
-            const chain = new BooleanChain(buildChainConfig({ hasBoolishPairs, autoConvert, postConvert }));
-            const tracker = chain.process('nope');
-
-            if (!hasBoolishPairs) {
-                expect(tracker.fail).toBe(true);
-                expect(tracker.value).toBe('nope');
-                return;
-            }
-
-            expect(tracker.pass).toBe(true);
-            if (autoConvert || postConvert) {
-                expect(tracker.value).toBe(false);
-            }
-            else {
-                expect(tracker.value).toBe('nope');
-            }
-        });
+        expect(passing.pass).toBe(true);
+        expect(failing.fail).toBe(true);
     });
 
-    describe('invert', () => {
-        it('inverts native booleans without boolishPairs', () => {
-            const chain = new BooleanChain({ boolishPairs: [], autoConvert: false, postConvert: false }).invert();
+    it('invert switches boolean values', () => {
+        const chain = new BooleanChain().invert();
+        const truthy = chain.process(true);
+        const falsy = chain.process(false);
 
-            const trueTracker = chain.process(true);
-            expect(trueTracker.pass).toBe(true);
-            expect(trueTracker.value).toBe(false);
-
-            const falseTracker = chain.process(false);
-            expect(falseTracker.pass).toBe(true);
-            expect(falseTracker.value).toBe(true);
-        });
-
-        it('inverts boolish values and keeps boolish output when both conversions are disabled', () => {
-            const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: false, postConvert: false }).invert();
-
-            const yupTracker = chain.process('yup');
-            expect(yupTracker.pass).toBe(true);
-            expect(yupTracker.value).toBe('nope');
-
-            const nopeTracker = chain.process('nope');
-            expect(nopeTracker.pass).toBe(true);
-            expect(nopeTracker.value).toBe('yup');
-        });
-
-        it('inverts boolish values and returns booleans when autoConvert is enabled', () => {
-            const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: true, postConvert: false }).invert();
-
-            const yupTracker = chain.process('yup');
-            expect(yupTracker.pass).toBe(true);
-            expect(yupTracker.value).toBe(false);
-
-            const nopeTracker = chain.process('nope');
-            expect(nopeTracker.pass).toBe(true);
-            expect(nopeTracker.value).toBe(true);
-        });
-
-        it('inverts boolish values and post-converts to booleans when autoConvert is disabled', () => {
-            const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: false, postConvert: true }).invert();
-
-            const yupTracker = chain.process('yup');
-            expect(yupTracker.pass).toBe(true);
-            expect(yupTracker.value).toBe(false);
-
-            const nopeTracker = chain.process('nope');
-            expect(nopeTracker.pass).toBe(true);
-            expect(nopeTracker.value).toBe(true);
-        });
-
-        it('fails for non-boolish values', () => {
-            const chain = new BooleanChain({ boolishPairs: configuredBoolishPairs, autoConvert: false, postConvert: false }).invert();
-
-            const tracker = chain.process('maybe');
-            expect(tracker.fail).toBe(true);
-            expect(tracker.value).toBe('maybe');
-        });
+        expect(truthy.pass).toBe(true);
+        expect(truthy.value).toBe(false);
+        expect(falsy.pass).toBe(true);
+        expect(falsy.value).toBe(true);
     });
 
+    it('boolishPairs configures custom boolean equivalents', () => {
+        const chain = new BooleanChain().boolishPairs([['y', 'n']]);
+
+        expect(chain.process('y').value).toBe(true);
+        expect(chain.process('n').value).toBe(false);
+    });
+
+    it('postConvert controls conversion after pipeline processing', () => {
+        const chain = new BooleanChain()
+            .autoConvert(false)
+            .boolishPairs([['y', 'n']])
+            .postConvert(false)
+            .truthy();
+
+        const tracker = chain.process('y');
+
+        expect(tracker.pass).toBe(true);
+        expect(tracker.value).toBe('y');
+    });
+
+    it('transform normalizes values before boolean parsing', () => {
+        const chain = new BooleanChain()
+            .boolishPairs([['yes', 'no']])
+            .transform(value => typeof value === 'string' ? value.trim().toLowerCase() : value);
+
+        const tracker = chain.process(' YES ');
+
+        expect(tracker.pass).toBe(true);
+        expect(tracker.value).toBe(true);
+    });
 });

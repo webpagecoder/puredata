@@ -761,14 +761,6 @@ interface StringChainGeneratedMethods {
     toUpperCase(...args: DropFirst<Parameters<StringHandler['toUpperCase']>>): StringChain;
 
     /**
-    * Trims matching characters from both ends of the string.
-    * Note: when `chars` is omitted, this method trims all whitespace
-    * characters via `\s` (for example spaces, tabs, and newlines), not only literal spaces.
-    * @param chars Characters to trim. Default: omitted (trims all whitespace).
-    */
-    trim(...args: DropFirst<Parameters<StringHandler['trim']>>): StringChain;
-
-    /**
     * Trims matching characters from the start of the string.
     * Note: when `chars` is omitted, this method trims all whitespace
     * characters via `\s` (for example spaces, tabs, and newlines), not only literal spaces.
@@ -783,6 +775,12 @@ interface StringChainGeneratedMethods {
     * @param chars Characters to trim. Default: omitted (trims all whitespace).
     */
     trimRight(...args: DropFirst<Parameters<StringHandler['trimRight']>>): StringChain;
+
+    /**
+    * Keeps at most the first `maxLen` UTF-16 code units.
+    * @param maxLen Maximum output length.
+    */
+    truncate(...args: DropFirst<Parameters<StringHandler['truncate']>>): StringChain;
 
     /**
     * Validates that a value is truthy.

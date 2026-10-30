@@ -16,22 +16,19 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
         if (typeof value === 'boolean') {
             return;
         }
+        else if(!autoConvert || typeof value !== 'string') {
+            tracker.addError('boolean/base');
+            return;
+        }
 
         for (const [truthy, falsy] of boolishPairs) {
-            if (truthy === value) {
-                if (autoConvert) {
-                    tracker.setValue(true);
-                }
-                return;
-            }
-            else if (falsy === value) {
-                if (autoConvert) {
-                    tracker.setValue(false);
-                }
+            if (truthy === value || falsy === value) {
                 return;
             }
         }
 
+        // Failure if we reach this point: the value is not a boolean, 
+        // does not match any configured truthy/falsy pair, and autoConvert is disabled.
         tracker.addError('boolean/base');
     }
 

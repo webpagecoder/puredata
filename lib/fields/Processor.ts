@@ -56,14 +56,14 @@ abstract class Processor<F extends Field = Field> {
 
     /** Applies required/forbidden checks and any configured default value. */
     public preProcess(tracker: ValueTracker): void {
-        const { field } = this;
+        const { defaultValue, presence } = this.field.config;
 
         const isDefined = tracker.value !== undefined;
 
-        if (field.isRequired() && !isDefined) {
+        if (presence === 'required' && !isDefined) {
             tracker.addError('any/required');
         }
-        else if (field.isForbidden() && isDefined) {
+        else if (presence === 'forbidden' && isDefined) {
             tracker.addError('any/forbidden');
         }
         else if (!isDefined) {
@@ -72,7 +72,7 @@ abstract class Processor<F extends Field = Field> {
                 _defaultValueReferenceProcessor.process(tracker);
             }
             else {
-                tracker.setValue(field.default);
+                tracker.setValue(defaultValue);
             }
         }
     }

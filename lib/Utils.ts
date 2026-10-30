@@ -710,35 +710,6 @@ class Utils {
     }
 
 
-
-
-    /****************************************************
-     * Number utilities
-     ***************************************************/
-
-    /**
-     * Parses a string into a number.
-     * @param value The value to parse.
-     * @param options The options for parsing.
-     * @returns The parsed number, or null if the value is not a valid number.
-     */
-    public static parseNumber(value: unknown, {
-        autoConvert = true,
-        safe = true,
-        finite = true,
-        precision = true
-    }: { autoConvert?: boolean; safe?: boolean; finite?: boolean; precision?: boolean } = {}): number | null {
-        const num = autoConvert ? Number(value) : value;
-        return (
-            (typeof num !== 'number' || Number.isNaN(num))
-            || (finite && !Number.isFinite(num))
-            || (safe && (num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER))
-            || (precision
-                && typeof value === 'string'
-                && String(num) !== value
-                && String(num) !== value.replace(/\.0+$/, ''))
-        ) ? null : num;
-    }
 }
 
 export { Utils };

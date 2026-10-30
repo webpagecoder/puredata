@@ -12,6 +12,7 @@ export type ArrayChainConfig = AnyChainConfig & {
     castSingle: boolean;
     stripEmpties: boolean;
 };
+
 /** Constructor options for an array chain. */
 export type ArrayChainCtorParams = AnyChainCtorParams<ArrayChainConfig, ArrayHandler>;
 
@@ -101,17 +102,6 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         return this.addStepToChain('stripDuplicates', [pathOrComparator]);
     }
 
-    // /**
-    //  * Removes empty values from array
-    //  * @returns {ArrayChain} Returns this chain for method chaining
-    //  * @example
-    //  * array([1, null, 2, '', 3]).stripEmpties() // [1, 2, 3]
-    //  */
-    // public stripEmpties(): this {
-    //     return this.addHandlerStep('stripEmpties', () => {
-    //         return [this.config.empties];
-    //     });
-    // }
 
 }
 

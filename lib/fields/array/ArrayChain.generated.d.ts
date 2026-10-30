@@ -229,19 +229,6 @@ interface ArrayChainGeneratedMethods {
     primitive(...args: DropFirst<Parameters<ArrayHandler['primitive']>>): ArrayChain;
 
     /**
-    * Removes all entries that match one of the forbidden values.
-    * @param forbiddenValues Values to remove.
-    * @returns Returns the filtered array.
-    */
-    strip(...args: DropFirst<Parameters<ArrayHandler['strip']>>): ArrayChain;
-
-    /**
-    * Removes undefined values from the array.
-    * @returns Returns the filtered array.
-    */
-    stripUndefined(...args: DropFirst<Parameters<ArrayHandler['stripUndefined']>>): ArrayChain;
-
-    /**
     * Reverses the order of the array.
     * @returns Returns the reversed array.
     */
@@ -313,6 +300,19 @@ interface ArrayChainGeneratedMethods {
     * @returns Returns the spliced array.
     */
     splice(...args: DropFirst<Parameters<ArrayHandler['splice']>>): ArrayChain;
+
+    /**
+    * Removes all entries that match one of the forbidden values.
+    * @param stripValues Values to remove.
+    * @returns Returns the filtered array.
+    */
+    strip(...args: DropFirst<Parameters<ArrayHandler['strip']>>): ArrayChain;
+
+    /**
+    * Removes undefined values from the array.
+    * @returns Returns the filtered array.
+    */
+    stripUndefined(...args: DropFirst<Parameters<ArrayHandler['stripUndefined']>>): ArrayChain;
 
     /**
     * Validates that a value is truthy.

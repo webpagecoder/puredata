@@ -30,13 +30,6 @@ interface AnyChainGeneratedMethods {
     defined(...args: DropFirst<Parameters<AnyHandler['defined']>>): AnyChain;
 
     /**
-    * Validates that a value is one of the configured empty values.
-    * @param empties Values treated as empty. Defaults to null and undefined.
-    * @returns A passing result when the value is considered empty; otherwise a failing result.
-    */
-    empty(...args: DropFirst<Parameters<AnyHandler['empty']>>): AnyChain;
-
-    /**
     * Validates that a value is deeply equal to the provided comparison value.
     * @param comparison Value to compare against.
     * @returns A passing result when values are equal; otherwise a failing result.
@@ -62,13 +55,6 @@ interface AnyChainGeneratedMethods {
     * @returns A passing result when the value is not found; otherwise a failing result.
     */
     noneOf(...args: DropFirst<Parameters<AnyHandler['noneOf']>>): AnyChain;
-
-    /**
-    * Validates that a value is not one of the configured empty values.
-    * @param empties Values treated as empty. Defaults to null and undefined.
-    * @returns A passing result when the value is not considered empty; otherwise a failing result.
-    */
-    notEmpty(...args: DropFirst<Parameters<AnyHandler['notEmpty']>>): AnyChain;
 
     /**
     * Validates that a value is not deeply equal to the provided comparison value.

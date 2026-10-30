@@ -807,11 +807,11 @@ class StringHandler extends AnyHandler {
      */
     public ipCidrV4(str: string): StringHandlerResult {
         const parts = str.split('/');
-        if (parts.length !== 2) {
+        if (parts.length !== 2 || !/^(?:[0-9]|[1-2][0-9]|3[0-2])$/.test(parts[1])) {
             return fail(str, 'string/ipCidrV4');
         }
-        const num = Utils.parseNumber(parts[1]);
-        return num !== null && this.ipV4(parts[0]).pass && this._numberHandler.between(num, 0, 32).pass
+        const cidrNum = Number(parts[1]);
+        return this.ipV4(parts[0]).pass && this._numberHandler.between(cidrNum, 0, 32).pass
             ? pass(str)
             : fail(str, 'string/ipCidrV4');
     }
@@ -822,11 +822,11 @@ class StringHandler extends AnyHandler {
      */
     public ipCidrV6(str: string): StringHandlerResult {
         const parts = str.split('/');
-        if (parts.length !== 2) {
+        if (parts.length !== 2 || !/^(?:[0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8])$/.test(parts[1])) {
             return fail(str, 'string/ipCidrV6');
         }
-        const num = Utils.parseNumber(parts[1]);
-        return num !== null && this.ipV6(parts[0]).pass && this._numberHandler.between(num, 0, 128).pass
+        const cidrNum = Number(parts[1]);
+        return this.ipV6(parts[0]).pass && this._numberHandler.between(cidrNum, 0, 128).pass
             ? pass(str)
             : fail(str, 'string/ipCidrV6');
     }
@@ -1130,7 +1130,7 @@ class StringHandler extends AnyHandler {
             , , protocolValue = '', hostValue = '', , ipv6Value = '', , portValue = '', , queryValue = '', fragmentValue = ''
         ] = matchResult;
 
-        const portValueNum = Utils.parseNumber(portValue);
+        const portValueNum = Number(portValue);
 
         const
             hasProto = protocolValue.length > 0,
