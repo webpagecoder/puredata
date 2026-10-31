@@ -8,7 +8,7 @@ import { ConditionalField } from './ConditionalField.ts';
 export type ConditionalProcessorCtorParams = ProcessorCtorParams<ConditionalField>;
 
 /** Evaluates a conditional field and processes its selected result branch. */
-class ConditionalProcessor extends  Processor<ConditionalField> {
+class ConditionalProcessor extends Processor<ConditionalField> {
 
     /** Processor used to validate the comparison value. */
     private _comparisonProcessor: Processor;
@@ -105,9 +105,9 @@ class ConditionalProcessor extends  Processor<ConditionalField> {
         const trackerClone = tracker.cloneWithoutErrors();
         const { _thenProcessor, _otherwiseProcessor } = this;
         this._nestedProcess(trackerClone);
-        
+
         if (trackerClone.pass) {
-            if(_thenProcessor) {
+            if (_thenProcessor) {
                 _thenProcessor.process(tracker);
             }
             else {
@@ -115,7 +115,7 @@ class ConditionalProcessor extends  Processor<ConditionalField> {
             }
         }
         else if (trackerClone.fail) {
-            if(_otherwiseProcessor) {
+            if (_otherwiseProcessor) {
                 _otherwiseProcessor.process(tracker);
             }
             else {

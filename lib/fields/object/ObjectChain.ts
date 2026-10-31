@@ -3,6 +3,7 @@
 import { ObjectHandler } from './ObjectHandler.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { ObjectProcessor } from './ObjectProcessor.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Configuration options for object chains. */
 export type ObjectChainConfig = AnyChainConfig & {
@@ -23,16 +24,24 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
 
     /** Creates an object chain with the supplied configuration. */
     constructor(args: Partial<P> = {}) {
-        super(Object.assign({ chainHandlerCtor: ObjectHandler }, args));
+
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.object,
+            args
+        ) as P;
+
+        super(finalArgs);
 
         const {
-            clone = false,
-            plainOnly = false,
-            maxDepth = null,
-            maxKeyCount = null,
-            stripEmpties = false,
-            stripNestedEmpties = false
-        } = args;
+            clone,
+            plainOnly,
+            maxDepth,
+            maxKeyCount,
+            stripEmpties,
+            stripNestedEmpties
+        } = finalArgs;
 
         const { config } = this;
         config.clone = clone;

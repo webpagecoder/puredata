@@ -48,17 +48,17 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     }
 
     /** Hook for subclasses to post-process a value after the chain pipeline. */
-    public postProcess(tracker: ValueTracker): void {}
+    public postProcess(tracker: ValueTracker): void { }
 
     /** Runs preprocessing, pipeline steps, and post-processing for a tracker. */
     public override process(tracker: ValueTracker): void {
         const { defaultValue, mutable } = this.field.config;
-        if(!mutable) {
+        if (!mutable) {
             tracker.setValue(defaultValue);
             return;
         }
         this.preProcess(tracker);
-        if (tracker.hasErrors) {
+        if (tracker.fail) {
             return;
         }
         this.executePipeline(tracker);
@@ -101,7 +101,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
             this._copyResultToTracker(tracker, result);
 
-            if (tracker.hasErrors) {
+            if (tracker.fail) {
                 //todo: check fail on first error
                 // return;
             }

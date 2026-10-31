@@ -1,5 +1,6 @@
 'use strict';
 
+import { GlobalConfig } from '../../GlobalConfig.ts';
 import { Path } from '../../Path.ts';
 import { DefaultCalendarText } from '../../text/DefaultCalendarText.ts';
 import { Translation, TranslationStringRecord } from '../../Translation.ts';
@@ -26,16 +27,23 @@ class DateChain extends AnyChain<DateChainCtorParams> {
 
     /** Creates a date chain with the supplied parsing and output settings. */
     constructor(args: Partial<DateChainCtorParams> = {}) {
-        super(Object.assign({ chainHandlerCtor: DateHandler }, args));
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.date,
+            args
+        ) as DateChainCtorParams;
+
+        super(finalArgs);
 
         const {
-            calendarText = new Translation(DefaultCalendarText),
-            order = 'MDY',
-            outputFormat = 'iso',
-            outputTimeMode = 'utc',
-            skipGenericParse = false,
-            utcOffsetMins = 0,
-        } = args;
+            calendarText,
+            order,
+            outputFormat,
+            outputTimeMode,
+            skipGenericParse,
+            utcOffsetMins,
+        } = finalArgs;
 
         const { config } = this;
         config.calendarText = calendarText.override();

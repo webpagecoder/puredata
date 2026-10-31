@@ -11,8 +11,11 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
     /** Checks object constraints and applies configured cloning and stripping. */
     public override preProcess(tracker: ValueTracker): void {
         super.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
 
-        const value = tracker.value;
+        const { value } = tracker;
 
         if (!Utils.isObject(value)) {
             tracker.addError('object/base');

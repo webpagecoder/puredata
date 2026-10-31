@@ -9,13 +9,17 @@ class StringProcessor extends AnyProcessor<StringChain> {
 
     /** Converts supported values to strings and applies configured preprocessing. */
     public override preProcess(tracker: ValueTracker): void {
+        super.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
+
         const {
-            autoConvert,
-            config: { trim }
+            config: { autoConvert, trim }
         } = this.field;
 
         if (typeof tracker.value !== 'string') {
-            if (!autoConvert) {
+            if (autoConvert === 'none') {
                 tracker.addError('string/base');
                 return;
             }

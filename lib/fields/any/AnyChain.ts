@@ -4,6 +4,7 @@ import { AnyHandler } from './AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { Field, FieldConfig } from '../Field.ts';
 import { AnyProcessor } from './AnyProcessor.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Static arguments or a callback that produces arguments for a chain step. */
 export type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
@@ -18,6 +19,7 @@ export type ChainStep = {
 export type AnyChainConfig =
     FieldConfig & {
         empties: unknown[];
+        mutable: boolean;
     };
 
 /** Constructor options for an any-value chain. */
@@ -27,7 +29,6 @@ export type AnyChainCtorParams<
 > =
     C & {
         chainHandler: H;
-        chainHandlerCtor?: new (...args: unknown[]) => H;
         pipeline: ChainStep[];
     };
 
@@ -35,24 +36,31 @@ export type AnyChainCtorParams<
 class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<P> {
 
     private _chainHandler: P['chainHandler'];
-    private _chainHandlerCtor: new (...args: unknown[]) => P['chainHandler'];
     private _pipeline: ChainStep[];
 
     /** Creates a chain from its configuration and exposes handler steps through a proxy. */
     public constructor(args: Partial<P> = {}) {
-        super(args);
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.any,
+            args
+        ) as P;
+
+        super(finalArgs);
 
         const {
-            chainHandlerCtor = AnyHandler,
-            empties = [null, undefined, ''],
+            chainHandler = new AnyHandler(),
+            empties,
+            mutable,
             pipeline = [],
-        } = args;
+        } = finalArgs;
 
-        this._chainHandler = new chainHandlerCtor() as P['chainHandler'];
-        this._chainHandlerCtor = chainHandlerCtor as new (...args: unknown[]) => P['chainHandler'];
+        this._chainHandler = chainHandler;
         this._pipeline = pipeline;
 
         this.config.empties = empties;
+        this.config.mutable = mutable;
 
         return new Proxy(this, this as ProxyHandler<this>);
     }
@@ -60,11 +68,6 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
     /** Gets the handler instance used to execute this chain's steps. */
     public get chainHandler(): P['chainHandler'] {
         return this._chainHandler;
-    }
-
-    /** Gets the constructor used to create handler instances. */
-    public get chainHandlerCtor(): new (...args: unknown[]) => P['chainHandler'] {
-        return this._chainHandlerCtor;
     }
 
     /** Gets the configured pipeline steps. */
@@ -96,11 +99,11 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
      */
     public override clone(args: Partial<P> = {}, stepToAdd?: ChainStep): this {
         const clone = super.clone(args);
-        clone._chainHandler = new this._chainHandlerCtor() as P['chainHandler'];
-        clone._chainHandlerCtor = this._chainHandlerCtor;
+        clone._chainHandler = this._chainHandler
         clone._pipeline = [...this._pipeline];
 
         clone.config.empties = this.config.empties;
+        clone.config.mutable = this.config.mutable;
 
         if (stepToAdd) {
             clone._pipeline.push(stepToAdd);
@@ -156,6 +159,16 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return this.addStepToChain('notEmpty', () => {
             return [this.config.empties];
         });
+    }
+
+    /** Returns a Field whose value cannot be changed by user input. */
+    public immutable(): this {
+        return this.clone({ mutable: false } as Partial<P>);
+    }
+
+    /** Returns a Field whose value can be changed by user input. */
+    public mutable() {
+        return this.clone({ mutable: true } as Partial<P>);
     }
 
 }

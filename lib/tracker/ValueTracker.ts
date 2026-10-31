@@ -197,7 +197,7 @@ class ValueTracker extends NodeMixin<ValueTracker>(Object) {
         const { children } = this;
         const keys = Object.keys(children);
         for (const key of keys) {
-            if (children[key].hasErrors) {
+            if (children[key].fail) {
                 return true;
             }
         }

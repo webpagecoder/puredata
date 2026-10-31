@@ -3,6 +3,7 @@
 import { NumberHandler } from './NumberHandler.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { NumberProcessor } from './NumberProcessor.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Configuration options for number chains. */
 export type NumberChainConfig = AnyChainConfig & {
@@ -19,13 +20,20 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
 
     /** Creates a number chain with the supplied configuration. */
     public constructor(args: Partial<NumberChainCtorParams> = {}) {
-        super(Object.assign({ chainHandlerCtor: NumberHandler }, args));
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.number,
+            args
+        ) as NumberChainCtorParams;
+
+        super(finalArgs);
         
         const {
-            safe = false,
-            finite = false,
-            precision = false,
-        } = args;
+            safe,
+            finite,
+            precision,
+        } = finalArgs;
 
         const { config } = this;
         config.safe = safe;

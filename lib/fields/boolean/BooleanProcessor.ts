@@ -9,26 +9,40 @@ class BooleanProcessor extends AnyProcessor<BooleanChain> {
 
     /** Converts configured boolean-like inputs and rejects unsupported values. */
     public override preProcess(tracker: ValueTracker): void {
-        const { autoConvert, boolishPairs, transform } = this.field.config;
+        super.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
 
-        const value = transform(tracker.value);
+        const { autoConvert, boolishPairs, boolishTransform } = this.field.config;
+
+        const { value } = tracker;
 
         if (typeof value === 'boolean') {
             return;
         }
-        else if(!autoConvert || typeof value !== 'string') {
+
+        // If autoConvert is disabled, we reject any non-boolean value.
+        if (autoConvert === 'none') {
             tracker.addError('boolean/base');
             return;
         }
 
+        // If autoConvert is forced, we convert the value to a boolean.
+        if (autoConvert === 'force') {
+            tracker.setValue(Boolean(value));
+            return;
+        }
+
+        // Check boolish pairs for a match, using the configured transform function.
+        const transformedValue = boolishTransform(value);
         for (const [truthy, falsy] of boolishPairs) {
-            if (truthy === value || falsy === value) {
+            if (truthy === transformedValue || falsy === transformedValue) {
+                tracker.setValue(transformedValue);
                 return;
             }
         }
 
-        // Failure if we reach this point: the value is not a boolean, 
-        // does not match any configured truthy/falsy pair, and autoConvert is disabled.
         tracker.addError('boolean/base');
     }
 

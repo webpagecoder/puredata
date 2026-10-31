@@ -3,6 +3,7 @@
 import { StringHandler } from './StringHandler.ts';
 import { AnyChain, AnyChainCtorParams, AnyChainConfig } from '../any/AnyChain.ts';
 import { StringProcessor } from './StringProcessor.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Configuration options for string chains. */
 export type StringChainConfig = AnyChainConfig & {
@@ -26,24 +27,30 @@ class StringChain extends AnyChain<StringChainCtorParams> {
 
     /** Creates a string chain with the supplied configuration. */
     constructor(args: Partial<StringChainCtorParams> = {}) {
-        super(Object.assign({ chainHandlerCtor: StringHandler }, args));
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.string,
+            args
+        ) as StringChainCtorParams;
+
+        super(finalArgs);
 
         const {
-            trim = true,
-            
-            ignoreCase = false,
-            mode = 'strict',
-            normalize = false,
-            stripDelims = ''
-        } = args;
+            ignoreCase,
+            mode,
+            normalize,
+            stripDelims,
+            trim
+        } = finalArgs;
 
         const { config } = this;
-        config.trim = trim;
 
         config.ignoreCase = ignoreCase;
         config.mode = mode;
         config.normalize = normalize;
         config.stripDelims = stripDelims;
+        config.trim = trim;
 
         this.chainHandler.configMatchingDefaults({
             ignoreCase,

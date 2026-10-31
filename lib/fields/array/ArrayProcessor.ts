@@ -9,9 +9,14 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> 
 
     /** Validates the array value and applies configured preprocessing. */
     public override preProcess(tracker: ValueTracker): void {
+        super.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
+
         const { chainHandler, config: { castSingle, empties, stripEmpties } } = this.field;
 
-        const value = tracker.value;
+        const { value } = tracker;
 
         if (!Array.isArray(value)) {
             if (castSingle && value !== undefined) {

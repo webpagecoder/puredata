@@ -186,6 +186,15 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 
     /** Processes schema fields and then resolves deferred work at the root. */
     public override process(tracker: ValueTracker, state: State = {}): void {
+        const { defaultValue, mutable } = this.field.config;
+        if (!mutable) {
+            tracker.setValue(defaultValue);
+            return;
+        }
+        this.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
 
         let deferredConditionals = state.deferredConditionals as DeferredProcessorContext[] | null;
         if (!deferredConditionals) {
@@ -203,11 +212,6 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         if (!deferredReferences) {
             deferredReferences = [];
             state.deferredReferences = deferredReferences;
-        }
-
-        this.preProcess(tracker);
-        if (tracker.hasErrors) {
-            return;
         }
 
         const {
@@ -309,6 +313,8 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
             }
 
         }
+
+        // No post-processing is needed for schema processors.
     }
 
 }

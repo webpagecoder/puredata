@@ -23,7 +23,6 @@ import { Utils } from './Utils.ts';
 
 
 
-
 /**
  * Factory for building field definitions with shared configuration and text.
  *
@@ -77,7 +76,7 @@ class PureData extends FieldFactory {
     ) {
         return Object.assign(
             {},
-            this._globalConfig['any'],
+            this._globalConfig['general'],
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,
@@ -90,7 +89,7 @@ class PureData extends FieldFactory {
     private _composeFieldProps<T extends FieldCtorParams>(props: Partial<T> = {}) {
         return Object.assign(
             {},
-            this._globalConfig['any'],
+            this._globalConfig['general'],
             {
                 errorMessages: this._errorMessages,
                 pathDelims: this._pathDelims,

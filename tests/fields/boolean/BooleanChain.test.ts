@@ -43,6 +43,17 @@ describe('BooleanChain configurators and boolean-specific steps', () => {
         expect(falsy.value).toBe(true);
     });
 
+    it('invert switches boolish values', () => {
+        const chain = new BooleanChain().invert();
+        const truthy = chain.process('yes');
+        const falsy = chain.process('no');
+
+        expect(truthy.pass).toBe(true);
+        expect(truthy.value).toBe('no');
+        expect(falsy.pass).toBe(true);
+        expect(falsy.value).toBe('yes');
+    });
+
     it('boolishPairs configures custom boolean equivalents', () => {
         const chain = new BooleanChain().boolishPairs([['y', 'n']]);
 
@@ -52,7 +63,6 @@ describe('BooleanChain configurators and boolean-specific steps', () => {
 
     it('postConvert controls conversion after pipeline processing', () => {
         const chain = new BooleanChain()
-            .autoConvert(false)
             .boolishPairs([['y', 'n']])
             .postConvert(false)
             .truthy();
@@ -66,7 +76,7 @@ describe('BooleanChain configurators and boolean-specific steps', () => {
     it('transform normalizes values before boolean parsing', () => {
         const chain = new BooleanChain()
             .boolishPairs([['yes', 'no']])
-            .transform(value => typeof value === 'string' ? value.trim().toLowerCase() : value);
+            .boolishTransform(value => typeof value === 'string' ? value.trim().toLowerCase() : value);
 
         const tracker = chain.process(' YES ');
 

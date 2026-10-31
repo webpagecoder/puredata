@@ -18,6 +18,11 @@ class DateProcessor extends AnyProcessor<DateChain> {
 
     /** Parses the tracker's input into a date unless generic parsing is disabled. */
     public override preProcess(tracker: ValueTracker): void {
+        super.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
+
         const { chainHandler, config: { skipGenericParse } } = this.field;
         if (skipGenericParse) {
             return;
@@ -28,12 +33,8 @@ class DateProcessor extends AnyProcessor<DateChain> {
         );
     }
 
-    /** Runs the chain and formats the resulting date using the chain settings. */
-    public override process(tracker: ValueTracker): void {
-        super.process(tracker);
-        if (tracker.fail) {
-            return;
-        }
+    /** Formats the resulting date using the chain settings. */
+    public override postProcess(tracker: ValueTracker): void {
         const { chainHandler, config: { outputFormat, outputTimeMode } } = this.field;
         this._copyResultToTracker(
             tracker,

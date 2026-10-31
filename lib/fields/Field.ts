@@ -7,15 +7,15 @@ import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Path } from '../Path.ts';
 import { PathDelimTypes } from '../Path.ts';
 import { DefaultErrorText } from '../text/DefaultErrorText.ts';
+import { GlobalConfig } from '../GlobalConfig.ts';
 
 
 /** Shared configuration options for field definitions. */
 export type FieldConfig = {
-    autoConvert: boolean;
+    autoConvert: GlobalConfig['general']['autoConvert'];
     defaultValue: unknown;
     errorMessages: Translation;
     label: string;
-    mutable: boolean;
     pathDelims: PathDelimTypes; //todo: put in chain only not sure...
     presence: Presence;
     strip: boolean; //todo: implement stripping of the field
@@ -39,11 +39,10 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
     /** Creates a field with the supplied configuration and defaults. */
     public constructor(args: Partial<P> = {}) {
         const {
-            autoConvert = true,
+            autoConvert = 'normal',
             defaultValue = undefined,
             errorMessages = new Translation(DefaultErrorText),
             label = 'Field',
-            mutable = true,
             pathDelims = { self: '.', separator: '/', up: '..' },
             presence = 'required',
             strip = false
@@ -55,7 +54,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
             defaultValue,
             errorMessages: errorMessages.clone(),
             label,
-            mutable,
             pathDelims,
             presence,
             strip
@@ -84,7 +82,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
             defaultValue = config.defaultValue,
             errorMessages = config.errorMessages.override(),
             label = config.label,
-            mutable = config.mutable,
             pathDelims = config.pathDelims,
             presence = config.presence,
             strip = config.strip
@@ -97,7 +94,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
                 defaultValue,
                 errorMessages,
                 label,
-                mutable,
                 pathDelims,
                 presence,
                 strip
@@ -136,7 +132,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
     // Configurators
 
     /** Returns a field configured to convert values automatically when possible. */
-    public autoConvert(autoConvert: boolean = true): this {
+    public autoConvert(autoConvert:GlobalConfig['general']['autoConvert'] = 'normal'): this {
         return this.clone({ autoConvert } as Partial<P>);
     }
 
@@ -162,16 +158,6 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
     /** Returns a Field with a custom display label. */
     public label(label: string): this {
         return this.clone({ label } as Partial<P>);
-    }
-
-    /** Returns a Field whose value cannot be changed by user input. */
-    public immutable() : this{
-        return this.clone({ mutable: false } as Partial<P>);
-    }
-
-    /** Returns a Field whose value can be changed by user input. */
-    public mutable() {
-        return this.clone({ mutable: true } as Partial<P>);
     }
 
     /** Returns a field configured to reject a present value. */

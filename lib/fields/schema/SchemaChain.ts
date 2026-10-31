@@ -8,6 +8,7 @@ import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object
 import { ObjectHandler } from '../object/ObjectHandler.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
 import { Utils } from '../../Utils.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Object describing fields in a schema. */
 export type Schema = {
@@ -45,15 +46,22 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
      * @throws {@link Error} If no field factory is supplied.
      */
     public constructor(args: Partial<SchemaChainCtorParams> = {}) {
-        super(args);
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.schema,
+            args
+        ) as SchemaChainCtorParams;
+
+        super(finalArgs);
 
         const {
             fieldFactory,
-            failFast = false,
-            renameKeysArgs = null,
+            failFast,
+            renameKeysArgs,
             schema = {},
-            stripExtraKeys = true,
-        } = args;
+            stripExtraKeys,
+        } = finalArgs;
 
         if (!fieldFactory) {
             throw new Error('SchemaChain requires a fieldFactory to be provided in the constructor arguments');
@@ -114,7 +122,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
     public failFast(failFast = true) {
         return this.clone({ failFast });
     }
-    
+
     /**
      * Configures whether keys not declared in the schema are removed.
      *

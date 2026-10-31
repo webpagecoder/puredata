@@ -3,6 +3,9 @@
 import { BooleanHandler } from './BooleanHandler.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { BooleanProcessor } from './BooleanProcessor.ts';
+import { GlobalConfig } from '../../GlobalConfig.ts';
+import { DefaultErrorText } from '../../text/DefaultErrorText.ts';
+import { Translation } from '../../Translation.ts';
 
 /** Pair of equivalent truthy and falsy values. */
 export type BoolishPair = [truthy: unknown, falsy: unknown];
@@ -11,7 +14,7 @@ export type BoolishPair = [truthy: unknown, falsy: unknown];
 export type BooleanChainConfig = AnyChainConfig & {
     boolishPairs: BoolishPair[];
     postConvert: boolean;
-    transform: (value: unknown) => unknown;
+    boolishTransform: (value: unknown) => unknown;
 };
 
 /** Constructor options for a boolean chain. */
@@ -22,18 +25,25 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
 
     /** Creates a boolean chain with the supplied configuration. */
     public constructor(args: Partial<BooleanChainCtorParams> = {}) {
-        super(Object.assign({ chainHandlerCtor: BooleanHandler }, args));
+        const finalArgs = Object.assign(
+            {},
+            GlobalConfig.general,
+            GlobalConfig.fields.boolean,
+            args
+        ) as BooleanChainCtorParams;
+
+        super(finalArgs);
 
         const {
-            boolishPairs = [],
-            postConvert = true,
-            transform = x => typeof x === 'string' ? x.toLowerCase() : x
-        } = args;
+            boolishPairs,
+            postConvert,
+            boolishTransform
+        } = finalArgs;
 
         const { config } = this;
         config.boolishPairs = boolishPairs;
         config.postConvert = postConvert;
-        config.transform = transform;
+        config.boolishTransform = boolishTransform;
     }
 
     /** Creates the processor that handles this boolean chain. */
@@ -104,8 +114,8 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
     }
 
     /** Configures a function that normalizes values before boolean parsing. */
-    public transform(transform: (value: unknown) => unknown): this {
-        return this.clone({ transform });
+    public boolishTransform(boolishTransform: (value: unknown) => unknown): this {
+        return this.clone({ boolishTransform });
     }
 
 

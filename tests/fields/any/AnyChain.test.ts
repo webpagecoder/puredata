@@ -77,13 +77,13 @@ describe('AnyChain', () => {
 
     it('supports inherited field configuration methods', () => {
         const chain = new AnyChain()
-            .autoConvert(false)
+            .autoConvert('none')
             .default('fallback')
             .label('Any value')
             .strip()
             .optional();
 
-        expect(chain.config.autoConvert).toBe(false);
+        expect(chain.config.autoConvert).toBe('none');
         expect(chain.config.defaultValue).toBe('fallback');
         expect(chain.config.label).toBe('Any value');
         expect(chain.config.strip).toBe(true);

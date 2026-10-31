@@ -9,12 +9,20 @@ class NumberProcessor extends AnyProcessor<NumberChain> {
 
     /** Converts a value to a number and records an error if parsing fails. */
     public override preProcess(tracker: ValueTracker): void {
-        let value = tracker.value;
+        super.preProcess(tracker);
+        if (tracker.fail) {
+            return;
+        }
+
+        let { value } = tracker;
         const { autoConvert, safe, finite, precision } = this.field.config;
         const valueType = typeof value;
 
         let num;
-        if (valueType === 'string' && autoConvert === 'normal') {
+        if (autoConvert === 'force') {
+            num = Number(value);
+        }
+        else if (valueType === 'string' && autoConvert === 'normal') {
             // Trim whitespace from the string and check if it's empty.
             value = (value as string).trim();
             if (value === '') {
@@ -40,6 +48,7 @@ class NumberProcessor extends AnyProcessor<NumberChain> {
             num = value as number;
         }
 
+
         // If the value is a number, check if it's NaN.
         if (Number.isNaN(num)) {
             tracker.addError('number/base');
@@ -64,6 +73,8 @@ class NumberProcessor extends AnyProcessor<NumberChain> {
             tracker.addError('number/base');
             return;
         }
+
+        tracker.setValue(num);
     }
 
 }
