@@ -3,6 +3,7 @@
 import { AnyHandler } from "./fields/any/AnyHandler.ts";
 import { ArrayHandler } from "./fields/array/ArrayHandler.ts";
 import { BooleanHandler } from "./fields/boolean/BooleanHandler.ts";
+import { DateType } from "./fields/date/DateConverter.ts";
 import { DateHandler } from "./fields/date/DateHandler.ts";
 import { NumberHandler } from "./fields/number/NumberHandler.ts";
 import { ObjectHandler } from "./fields/object/ObjectHandler.ts";
@@ -60,6 +61,10 @@ type GlobalConfigType = {
             chainHandler: DateHandler;
             /** Component order used when parsing date strings without an explicit format. */
             order: 'MDY' | 'DMY' | 'YMD';
+            /** Output format for date values. */
+            outputFormat: DateType | string;
+            /** Output time mode for date values. "local" means the local timezone, "utc" means UTC. */
+            outputTimeMode: 'local' | 'utc';
             /** Local offset, in minutes, used when parsing dates. */
             utcOffsetMins: number;
         };
@@ -83,9 +88,9 @@ type GlobalConfigType = {
             /** Restrict object values to plain objects. */
             plainOnly: boolean;
             /** Maximum depth to inspect; use -1 to disable this check. */
-            maxDepth: number;
+            maxDepth: number | null;
             /** Maximum number of keys to inspect recursively; use -1 to disable this check. */
-            maxKeyCount: number;
+            maxKeyCount: number | null;
             /** Remove empty values from objects. */
             stripEmpties: boolean;
             /** Remove empty values from nested objects. */
@@ -160,7 +165,9 @@ const GlobalConfig: GlobalConfigType = Object.seal({
             calendarText: new Translation(DefaultErrorText),
             chainHandler: new DateHandler(),
             order: 'MDY',
-            utcOffsetMins: -180
+            outputFormat: 'iso',
+            outputTimeMode: 'utc',
+            utcOffsetMins: 0
         },
         number: {
             chainHandler: new NumberHandler(),
@@ -172,8 +179,8 @@ const GlobalConfig: GlobalConfigType = Object.seal({
             chainHandler: new ObjectHandler(),
             clone: false,
             plainOnly: true,
-            maxDepth: 10,
-            maxKeyCount: 100,
+            maxDepth: null,
+            maxKeyCount: null,
             stripEmpties: true,
             stripNestedEmpties: true,
         },

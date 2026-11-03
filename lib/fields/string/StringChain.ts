@@ -27,22 +27,17 @@ class StringChain extends AnyChain<StringChainCtorParams> {
 
     /** Creates a string chain with the supplied configuration. */
     constructor(args: Partial<StringChainCtorParams> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.string,
-            args
-        ) as StringChainCtorParams;
-
-        super(finalArgs);
+        super(Object.assign({
+            chainHandler: new StringHandler(),
+        }, args));
 
         const {
-            ignoreCase,
-            mode,
-            normalize,
-            stripDelims,
-            trim
-        } = finalArgs;
+            ignoreCase = false,
+            mode = 'loose',
+            normalize = true,
+            stripDelims = ' ',
+            trim = true
+        } = args;
 
         const { config } = this;
 

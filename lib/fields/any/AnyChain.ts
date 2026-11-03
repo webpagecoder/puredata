@@ -4,7 +4,6 @@ import { AnyHandler } from './AnyHandler.ts';
 import { HandlerResult } from '../HandlerResult.ts';
 import { Field, FieldConfig } from '../Field.ts';
 import { AnyProcessor } from './AnyProcessor.ts';
-import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Static arguments or a callback that produces arguments for a chain step. */
 export type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
@@ -40,21 +39,14 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
 
     /** Creates a chain from its configuration and exposes handler steps through a proxy. */
     public constructor(args: Partial<P> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.any,
-            args
-        ) as P;
-
-        super(finalArgs);
+        super(args);
 
         const {
             chainHandler = new AnyHandler(),
-            empties,
-            mutable,
+            empties = [null, undefined, ''],
+            mutable = true,
             pipeline = [],
-        } = finalArgs;
+        } = args;
 
         this._chainHandler = chainHandler;
         this._pipeline = pipeline;

@@ -20,20 +20,15 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
 
     /** Creates a number chain with the supplied configuration. */
     public constructor(args: Partial<NumberChainCtorParams> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.number,
-            args
-        ) as NumberChainCtorParams;
-
-        super(finalArgs);
+        super(Object.assign({
+            chainHandler: new NumberHandler(),
+        }, args));
         
         const {
-            safe,
-            finite,
-            precision,
-        } = finalArgs;
+            finite = true,
+            precision = true,
+            safe = true,
+        } = args;
 
         const { config } = this;
         config.safe = safe;

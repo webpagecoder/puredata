@@ -46,22 +46,15 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
      * @throws {@link Error} If no field factory is supplied.
      */
     public constructor(args: Partial<SchemaChainCtorParams> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.schema,
-            args
-        ) as SchemaChainCtorParams;
-
-        super(finalArgs);
+        super(args);
 
         const {
             fieldFactory,
-            failFast,
-            renameKeysArgs,
+            failFast = false,
+            renameKeysArgs = null,
             schema = {},
-            stripExtraKeys,
-        } = finalArgs;
+            stripExtraKeys = true,
+        } = args;
 
         if (!fieldFactory) {
             throw new Error('SchemaChain requires a fieldFactory to be provided in the constructor arguments');

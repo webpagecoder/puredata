@@ -57,20 +57,47 @@ describe('BooleanChain configurators and boolean-specific steps', () => {
     it('boolishPairs configures custom boolean equivalents', () => {
         const chain = new BooleanChain().boolishPairs([['y', 'n']]);
 
-        expect(chain.process('y').value).toBe(true);
-        expect(chain.process('n').value).toBe(false);
+        expect(chain.process('y').value).toBe('y');
+        expect(chain.process('n').value).toBe('n');
+    });
+
+    it('addBoolishPairs appends custom pairs while retaining existing defaults', () => {
+        const chain = new BooleanChain()
+            .addBoolishPairs([['enabled', 'disabled']])
+            .invert();
+
+        const addedPairInverted = chain.process('enabled');
+        const defaultPairInverted = chain.process('yes');
+
+        expect(addedPairInverted.pass).toBe(true);
+        expect(addedPairInverted.value).toBe('disabled');
+        expect(defaultPairInverted.pass).toBe(true);
+        expect(defaultPairInverted.value).toBe('no');
+    });
+
+    it('addBoolishPairs does not mutate the original chain configuration', () => {
+        const baseChain = new BooleanChain().truthy();
+        const extendedChain = new BooleanChain()
+            .addBoolishPairs([['enabled', 'disabled']])
+            .truthy();
+
+        expect(baseChain.process('enabled').fail).toBe(true);
+        expect(extendedChain.process('enabled').pass).toBe(true);
     });
 
     it('postConvert controls conversion after pipeline processing', () => {
         const chain = new BooleanChain()
             .boolishPairs([['y', 'n']])
-            .postConvert(false)
-            .truthy();
+            .postConvert(true)
+            .invert();
 
-        const tracker = chain.process('y');
+        const truthy = chain.process('y');
+        const falsy = chain.process('n');
 
-        expect(tracker.pass).toBe(true);
-        expect(tracker.value).toBe('y');
+        expect(truthy.pass).toBe(true);
+        expect(truthy.value).toBe(false);
+        expect(falsy.pass).toBe(true);
+        expect(falsy.value).toBe(true);
     });
 
     it('transform normalizes values before boolean parsing', () => {
@@ -81,6 +108,6 @@ describe('BooleanChain configurators and boolean-specific steps', () => {
         const tracker = chain.process(' YES ');
 
         expect(tracker.pass).toBe(true);
-        expect(tracker.value).toBe(true);
+        expect(tracker.value).toBe('yes');
     });
 });

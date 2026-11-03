@@ -1,11 +1,8 @@
 'use strict';
 
-import { BooleanHandler } from './BooleanHandler.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
+import { BooleanHandler } from './BooleanHandler.ts';
 import { BooleanProcessor } from './BooleanProcessor.ts';
-import { GlobalConfig } from '../../GlobalConfig.ts';
-import { DefaultErrorText } from '../../text/DefaultErrorText.ts';
-import { Translation } from '../../Translation.ts';
 
 /** Pair of equivalent truthy and falsy values. */
 export type BoolishPair = [truthy: unknown, falsy: unknown];
@@ -25,25 +22,28 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
 
     /** Creates a boolean chain with the supplied configuration. */
     public constructor(args: Partial<BooleanChainCtorParams> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.boolean,
-            args
-        ) as BooleanChainCtorParams;
-
-        super(finalArgs);
+        super(Object.assign({
+            chainHandler: new BooleanHandler(),
+        }, args));
 
         const {
-            boolishPairs,
-            postConvert,
-            boolishTransform
-        } = finalArgs;
+            boolishPairs = [
+                [1, 0],
+                ['1', '0'],
+                ['yes', 'no'],
+                ['y', 'n'],
+                ['true', 'false'],
+                ['t', 'f'],
+                ['on', 'off'],
+            ],
+            boolishTransform = (x: unknown) => typeof x === 'string' ? x.toLowerCase() : x,
+            postConvert = false,
+        } = args;
 
         const { config } = this;
         config.boolishPairs = boolishPairs;
-        config.postConvert = postConvert;
         config.boolishTransform = boolishTransform;
+        config.postConvert = postConvert;
     }
 
     /** Creates the processor that handles this boolean chain. */
@@ -102,6 +102,11 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
 
 
     // Configurators
+
+    /** Configures accepted truthy and falsy value pairs. */
+    public addBoolishPairs(addedPairs: BoolishPair[]): this {
+        return this.clone({ boolishPairs: this.config.boolishPairs.concat(addedPairs) });
+    }
 
     /** Configures accepted truthy and falsy value pairs. */
     public boolishPairs(pairs: BoolishPair[]): this {

@@ -24,24 +24,18 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
 
     /** Creates an object chain with the supplied configuration. */
     constructor(args: Partial<P> = {}) {
-
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.object,
-            args
-        ) as P;
-
-        super(finalArgs);
+        super(Object.assign({
+            chainHandler: new ObjectHandler(),
+        }, args));
 
         const {
-            clone,
-            plainOnly,
-            maxDepth,
-            maxKeyCount,
-            stripEmpties,
-            stripNestedEmpties
-        } = finalArgs;
+            clone = false,
+            plainOnly = true,
+            maxDepth = null,
+            maxKeyCount = null,
+            stripEmpties = true,
+            stripNestedEmpties = true
+        } = args;
 
         const { config } = this;
         config.clone = clone;

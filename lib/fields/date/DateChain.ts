@@ -27,23 +27,18 @@ class DateChain extends AnyChain<DateChainCtorParams> {
 
     /** Creates a date chain with the supplied parsing and output settings. */
     constructor(args: Partial<DateChainCtorParams> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.date,
-            args
-        ) as DateChainCtorParams;
-
-        super(finalArgs);
+        super(Object.assign({
+            chainHandler: new DateHandler(),
+        }, args));
 
         const {
-            calendarText,
-            order,
-            outputFormat,
-            outputTimeMode,
-            skipGenericParse,
-            utcOffsetMins,
-        } = finalArgs;
+            calendarText = new Translation(DefaultCalendarText),
+            order = 'MDY',
+            outputFormat = 'iso',
+            outputTimeMode = 'utc',
+            skipGenericParse = false,
+            utcOffsetMins = 0,
+        } = args;
 
         const { config } = this;
         config.calendarText = calendarText.override();
@@ -53,7 +48,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         config.utcOffsetMins = utcOffsetMins;
         config.skipGenericParse = skipGenericParse;
 
-        this.config.chainHandler.configDateConverter(calendarText, utcOffsetMins);
+        this.chainHandler.configDateConverter(calendarText, utcOffsetMins);
     }
 
     /** Creates the processor that handles this date chain. */
@@ -70,7 +65,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * @throws {@link Error} If another processor is already configured.
      */
     public assertEmptyPipeline(dateSubType: string): void {
-        if (this.config.pipeline.length > 0) {
+        if (this.pipeline.length > 0) {
             throw new Error(dateSubType + '() processor must be the first processor in the chain, if used.');
         }
     }

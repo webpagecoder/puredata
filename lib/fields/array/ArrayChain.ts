@@ -4,7 +4,6 @@ import { ArrayHandler } from './ArrayHandler.ts';
 import { Path } from '../../Path.ts';
 import { AnyChain, AnyChainConfig, AnyChainCtorParams } from '../any/AnyChain.ts';
 import { ArrayProcessor } from './ArrayProcessor.ts';
-import { GlobalConfig } from '../../GlobalConfig.ts';
 
 type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 
@@ -22,19 +21,14 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
 
     /** Creates an array chain with the supplied configuration. */
     public constructor(args: Partial<ArrayChainCtorParams> = {}) {
-        const finalArgs = Object.assign(
-            {},
-            GlobalConfig.general,
-            GlobalConfig.fields.array,
-            args
-        ) as ArrayChainCtorParams;
-
-        super(finalArgs);
+        super(Object.assign({
+            chainHandler: new ArrayHandler(),
+        }, args));
         
         const {
             castSingle = true,
             stripEmpties = true,
-        } = finalArgs;
+        } = args;
 
         const { config } = this;
         config.castSingle = castSingle;
