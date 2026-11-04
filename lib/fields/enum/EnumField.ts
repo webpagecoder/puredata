@@ -28,10 +28,18 @@ class EnumField extends Field<EnumFieldConfig> {
         config.structure = structure;
     }
 
+    // ========================================
+    // Cloning
+    // ========================================
+
     /** Clones the field and recalculates whether the structure is a list. */
     public override clone(args: Partial<EnumFieldCtorParams> = {}): this {
         return super.clone(args);
     }
+
+    // ========================================
+    // Processor wiring
+    // ========================================
 
     /** Creates the processor that validates enum values. */
     public override createProcessor(): EnumProcessor {

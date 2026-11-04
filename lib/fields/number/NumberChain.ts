@@ -36,6 +36,10 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
         config.precision = precision;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that handles this number chain. */
     public override createProcessor(): NumberProcessor {
         return new NumberProcessor({
@@ -43,8 +47,9 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
         });
     }
 
+    // ========================================
     // Configurators
-
+    // ========================================
 
     /** Configures whether converted numbers must fit the safe integer range. */
     public safe(safe = true) {

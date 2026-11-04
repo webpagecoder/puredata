@@ -51,12 +51,20 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         this.chainHandler.configDateConverter(calendarText, utcOffsetMins);
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that handles this date chain. */
     public override createProcessor(): DateProcessor {
         return new DateProcessor({
             field: this,
         });
     }
+
+    // ========================================
+    // Pipeline mechanics
+    // ========================================
 
     /**
      * Ensures a date parser is the first processor in the chain.
@@ -70,7 +78,9 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         }
     }
 
+    // ========================================
     // Configurators
+    // ========================================
 
     /** Returns a chain with calendar text overrides. */
     public calendarText(overrides: Record<string, string>): this {
@@ -96,7 +106,9 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         return this.clone({ utcOffsetMins });
     }
 
+    // ========================================
     // Validators
+    // ========================================
 
     /**
      * Validates and parses human-readable date formats.
@@ -113,7 +125,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         this.assertEmptyPipeline('human');
         return this
             .clone({ skipGenericParse: true })
-            .addStepToChain('human', () => {
+            .appendToPipeline('human', () => {
                 return [Object.assign({ order: this.config.order }, options)];
             });
     }
@@ -131,7 +143,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public iso(options: IsoParseOptions = {}): this {
         this.assertEmptyPipeline('iso');
-        return this.clone({ skipGenericParse: true }).addStepToChain('iso', [options]);
+        return this.clone({ skipGenericParse: true }).appendToPipeline('iso', [options]);
     }
 
     /**
@@ -145,7 +157,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public isoOrdinal(options: IsoOrdinalParseOptions = {}): this {
         this.assertEmptyPipeline('isoOrdinal');
-        return this.clone({ skipGenericParse: true }).addStepToChain('isoOrdinal', [options]);
+        return this.clone({ skipGenericParse: true }).appendToPipeline('isoOrdinal', [options]);
     }
 
     /**
@@ -159,7 +171,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public isoWeek(options: IsoWeekParseOptions = {}): this {
         this.assertEmptyPipeline('isoWeek');
-        return this.clone({ skipGenericParse: true }).addStepToChain('isoWeek', [options]);
+        return this.clone({ skipGenericParse: true }).appendToPipeline('isoWeek', [options]);
     }
 
     /**
@@ -173,7 +185,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public timestamp(isMilliseconds: boolean = true): this {
         this.assertEmptyPipeline('timestamp');
-        return this.clone({ skipGenericParse: true }).addStepToChain('timestamp', [isMilliseconds]);
+        return this.clone({ skipGenericParse: true }).appendToPipeline('timestamp', [isMilliseconds]);
     }
 
     /**
@@ -183,17 +195,21 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.today() // Must be today's date
      */
     public today(): this {
-        return this.addStepToChain('today', () => {
+        return this.appendToPipeline('today', () => {
             const now = new Date();
             now.setUTCMinutes(now.getUTCMinutes() + this.config.utcOffsetMins);
             return [now];
         });
     }
 
+    // ========================================
     // Transformers
+    // ========================================
 
 
+    // ========================================
     // Exporters
+    // ========================================
 
     /**
      * Configures the output format for the date.

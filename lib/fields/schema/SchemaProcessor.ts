@@ -174,7 +174,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 
         if (processor instanceof AnyProcessor) {
             for (const step of (field as AnyChain).pipeline || []) {
-                for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsOrCallback)) {
+                for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsResolver)) {
                     if (arg instanceof ReferenceField) {
                         references.add(arg);
                     }

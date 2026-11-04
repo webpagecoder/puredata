@@ -70,6 +70,10 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         config.schemaFields = this._processSchema(schema) || {};
     }
 
+    // ========================================
+    // Cloning
+    // ========================================
+
     /** Clones this chain and optionally replaces its schema. */
     public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
         const clone = super.clone(args);
@@ -80,12 +84,20 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         return clone;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that compiles and validates this schema. */
     public override createProcessor(): SchemaProcessor {
         return new SchemaProcessor({
             field: this,
         });
     }
+
+    // ========================================
+    // Schema processing
+    // ========================================
 
     /** Converts each schema entry into a field or nested schema chain. */
     private _processSchema(schema: Schema): SchemaFields {
@@ -104,7 +116,9 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         return schemaFields;
     }
 
+    // ========================================
     // Configurators
+    // ========================================
 
     /**
      * Configures whether validation stops after the first error.

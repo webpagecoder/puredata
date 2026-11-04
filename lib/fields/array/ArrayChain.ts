@@ -35,6 +35,10 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         config.stripEmpties = stripEmpties;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that handles this array chain. */
     public override createProcessor(): ArrayProcessor {
         return new ArrayProcessor({
@@ -42,7 +46,9 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         });
     }
 
+    // ========================================
     // Configurators
+    // ========================================
 
     /** Configures whether a non-array value is cast to a one-item array. */
     public castSingle(castSingle: boolean = true): this {
@@ -55,7 +61,9 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     }
 
 
+    // ========================================
     // Validators
+    // ========================================
 
     /**
      * Validates that array elements are unique
@@ -70,10 +78,12 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
             //todo: check this out...create
             ? new Path(pathStringOrComparator, this.config.pathDelims)
             : pathStringOrComparator;
-        return this.addStepToChain('unique', [pathOrComparator]);
+        return this.appendToPipeline('unique', [pathOrComparator]);
     }
 
+    // ========================================
     // Transformers
+    // ========================================
 
     /**
      * Groups array elements by a property path or value
@@ -86,7 +96,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         const path = typeof pathString === 'string'
             ? new Path(pathString, this.config.pathDelims)
             : null;
-        return this.addStepToChain('group', [path]);
+        return this.appendToPipeline('group', [path]);
     }
 
     /**
@@ -101,11 +111,10 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             ? new Path(pathStringOrComparator, this.config.pathDelims)
             : pathStringOrComparator;
-        return this.addStepToChain('stripDuplicates', [pathOrComparator]);
+        return this.appendToPipeline('stripDuplicates', [pathOrComparator]);
     }
 
 
 }
 
 export { ArrayChain };
-

@@ -55,6 +55,10 @@ class StringChain extends AnyChain<StringChainCtorParams> {
         });
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that handles this string chain. */
     public override createProcessor(): StringProcessor {
         return new StringProcessor({
@@ -62,7 +66,9 @@ class StringChain extends AnyChain<StringChainCtorParams> {
         });
     }
 
+    // ========================================
     // Configurators
+    // ========================================
 
     /** Configures whether string values are trimmed before validation. */
     public trim(trim: boolean = true): this {

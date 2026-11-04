@@ -318,8 +318,8 @@ class Utils {
     public static *getAllNestedPaths(obj: object, options: GetPathOptions = {}): Generator<Path> {
         yield* Utils.getAllNestedPathsInternal(obj, {
             parentKeys: [],
-            includeRoots: options.includeRoots ?? false,
-            rootsOnly: options.rootsOnly ?? false
+            includeRoots: options.includeRoots || false,
+            rootsOnly: options.rootsOnly || false
         });
     }
 

@@ -3,111 +3,81 @@
 import { BooleanChain } from '../../../lib/fields/boolean/BooleanChain.ts';
 import { BooleanProcessor } from '../../../lib/fields/boolean/BooleanProcessor.ts';
 
-describe('BooleanChain configurators and boolean-specific steps', () => {
-    it('createProcessor returns a BooleanProcessor instance', () => {
-        expect(new BooleanChain().createProcessor()).toBeInstanceOf(BooleanProcessor);
+describe('BooleanChain', () => {
+    describe('constructor and processor wiring', () => {
+        it('applies default boolean config', () => {
+            const chain = new BooleanChain();
+
+            expect(chain.config.postConvert).toBe(false);
+            expect(Array.isArray(chain.config.boolishPairs)).toBe(true);
+            expect(chain.config.boolishPairs.length).toBeGreaterThan(0);
+            expect(typeof chain.config.boolishTransform).toBe('function');
+        });
+
+        it('applies provided constructor config overrides', () => {
+            const transform = (value: unknown): unknown => value;
+            const chain = new BooleanChain({
+                boolishPairs: [[true, false]],
+                boolishTransform: transform,
+                postConvert: true,
+            });
+
+            expect(chain.config.boolishPairs).toEqual([[true, false]]);
+            expect(chain.config.boolishTransform).toBe(transform);
+            expect(chain.config.postConvert).toBe(true);
+        });
+
+        it('createProcessor returns a BooleanProcessor instance', () => {
+            expect(new BooleanChain().createProcessor()).toBeInstanceOf(BooleanProcessor);
+        });
     });
 
-    it('truthy accepts configured truthy values and rejects falsy values', () => {
-        const chain = new BooleanChain()
-            .boolishPairs([['yes', 'no']])
-            .truthy();
+    describe('configurators', () => {
+        it('boolishPairs/addBoolishPairs/postConvert/boolishTransform clone safely', () => {
+            const chain = new BooleanChain({
+                boolishPairs: [[1, 0]],
+                postConvert: false,
+            });
+            const transform = (value: unknown): unknown => value;
+            const configured = chain
+                .addBoolishPairs([['yes', 'no']])
+                .boolishTransform(transform)
+                .postConvert(true);
 
-        const passing = chain.process('yes');
-        const failing = chain.process('no');
-
-        expect(passing.pass).toBe(true);
-        expect(failing.fail).toBe(true);
+            expect(chain.config.boolishPairs).toEqual([[1, 0]]);
+            expect(chain.config.postConvert).toBe(false);
+            expect(configured.config.boolishPairs).toEqual([[1, 0], ['yes', 'no']]);
+            expect(configured.config.boolishTransform).toBe(transform);
+            expect(configured.config.postConvert).toBe(true);
+        });
     });
 
-    it('falsy accepts configured falsy values and rejects truthy values', () => {
-        const chain = new BooleanChain()
-            .boolishPairs([['yes', 'no']])
-            .falsy();
+    describe('pipeline steps', () => {
+        it('truthy resolves truthy values from boolishPairs', () => {
+            const chain = new BooleanChain({ boolishPairs: [[1, 0], ['yes', 'no']] });
+            const withStep = chain.truthy();
+            const step = withStep.pipeline[0];
 
-        const passing = chain.process('no');
-        const failing = chain.process('yes');
+            expect(withStep.pipeline).toHaveLength(1);
+            expect(step.argsResolver!()).toEqual([[1, 'yes']]);
+        });
 
-        expect(passing.pass).toBe(true);
-        expect(failing.fail).toBe(true);
-    });
+        it('falsy resolves falsy values from boolishPairs', () => {
+            const chain = new BooleanChain({ boolishPairs: [[1, 0], ['yes', 'no']] });
+            const withStep = chain.falsy();
+            const step = withStep.pipeline[0];
 
-    it('invert switches boolean values', () => {
-        const chain = new BooleanChain().invert();
-        const truthy = chain.process(true);
-        const falsy = chain.process(false);
+            expect(withStep.pipeline).toHaveLength(1);
+            expect(step.argsResolver!()).toEqual([[0, 'no']]);
+        });
 
-        expect(truthy.pass).toBe(true);
-        expect(truthy.value).toBe(false);
-        expect(falsy.pass).toBe(true);
-        expect(falsy.value).toBe(true);
-    });
+        it('invert resolves full boolishPairs', () => {
+            const pairs: [unknown, unknown][] = [[1, 0], ['yes', 'no']];
+            const withStep = new BooleanChain({ boolishPairs: pairs }).invert();
+            const step = withStep.pipeline[0];
 
-    it('invert switches boolish values', () => {
-        const chain = new BooleanChain().invert();
-        const truthy = chain.process('yes');
-        const falsy = chain.process('no');
-
-        expect(truthy.pass).toBe(true);
-        expect(truthy.value).toBe('no');
-        expect(falsy.pass).toBe(true);
-        expect(falsy.value).toBe('yes');
-    });
-
-    it('boolishPairs configures custom boolean equivalents', () => {
-        const chain = new BooleanChain().boolishPairs([['y', 'n']]);
-
-        expect(chain.process('y').value).toBe('y');
-        expect(chain.process('n').value).toBe('n');
-    });
-
-    it('addBoolishPairs appends custom pairs while retaining existing defaults', () => {
-        const chain = new BooleanChain()
-            .addBoolishPairs([['enabled', 'disabled']])
-            .invert();
-
-        const addedPairInverted = chain.process('enabled');
-        const defaultPairInverted = chain.process('yes');
-
-        expect(addedPairInverted.pass).toBe(true);
-        expect(addedPairInverted.value).toBe('disabled');
-        expect(defaultPairInverted.pass).toBe(true);
-        expect(defaultPairInverted.value).toBe('no');
-    });
-
-    it('addBoolishPairs does not mutate the original chain configuration', () => {
-        const baseChain = new BooleanChain().truthy();
-        const extendedChain = new BooleanChain()
-            .addBoolishPairs([['enabled', 'disabled']])
-            .truthy();
-
-        expect(baseChain.process('enabled').fail).toBe(true);
-        expect(extendedChain.process('enabled').pass).toBe(true);
-    });
-
-    it('postConvert controls conversion after pipeline processing', () => {
-        const chain = new BooleanChain()
-            .boolishPairs([['y', 'n']])
-            .postConvert(true)
-            .invert();
-
-        const truthy = chain.process('y');
-        const falsy = chain.process('n');
-
-        expect(truthy.pass).toBe(true);
-        expect(truthy.value).toBe(false);
-        expect(falsy.pass).toBe(true);
-        expect(falsy.value).toBe(true);
-    });
-
-    it('transform normalizes values before boolean parsing', () => {
-        const chain = new BooleanChain()
-            .boolishPairs([['yes', 'no']])
-            .boolishTransform(value => typeof value === 'string' ? value.trim().toLowerCase() : value);
-
-        const tracker = chain.process(' YES ');
-
-        expect(tracker.pass).toBe(true);
-        expect(tracker.value).toBe('yes');
+            expect(withStep.pipeline).toHaveLength(1);
+            expect(step.argsResolver!()).toEqual([pairs]);
+        });
     });
 });

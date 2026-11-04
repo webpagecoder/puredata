@@ -5,13 +5,10 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { Field, FieldConfig } from '../Field.ts';
 import { AnyProcessor } from './AnyProcessor.ts';
 
-/** Static arguments or a callback that produces arguments for a chain step. */
-export type StepArgsOrCallback = unknown[] | ((...args: unknown[]) => unknown[]);
-
 /** Function and argument source stored for one chain step. */
-export type ChainStep = {
+export type PipelineStep = {
     fn: (value: unknown, ...args: unknown[]) => HandlerResult;
-    argsOrCallback?: StepArgsOrCallback;
+    argsResolver: null | ((...args: unknown[]) => unknown[]);
 };
 
 /** Configuration shared by any-value chains. */
@@ -28,14 +25,14 @@ export type AnyChainCtorParams<
 > =
     C & {
         chainHandler: H;
-        pipeline: ChainStep[];
+        pipeline: PipelineStep[];
     };
 
 /** Builds a field chain of validation and transformation steps. */
 class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<P> {
 
     private _chainHandler: P['chainHandler'];
-    private _pipeline: ChainStep[];
+    private _pipeline: PipelineStep[];
 
     /** Creates a chain from its configuration and exposes handler steps through a proxy. */
     public constructor(args: Partial<P> = {}) {
@@ -57,15 +54,23 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return new Proxy(this, this as ProxyHandler<this>);
     }
 
+    // ========================================
+    // Accessors
+    // ========================================
+
     /** Gets the handler instance used to execute this chain's steps. */
     public get chainHandler(): P['chainHandler'] {
         return this._chainHandler;
     }
 
     /** Gets the configured pipeline steps. */
-    public get pipeline(): ChainStep[] {
+    public get pipeline(): PipelineStep[] {
         return this._pipeline;
     }
+
+    // ========================================
+    // Processor wiring
+    // ========================================
 
     /** Creates the processor that executes this chain. */
     public override createProcessor(): AnyProcessor {
@@ -79,60 +84,87 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         if (key in target) {
             return Reflect.get(target, key, receiver);
         }
-        return (...args: unknown[]): this => this.addStepToChain(key, args);
+        return (...args: unknown[]): this => this.appendToPipeline(key, args);
     }
 
-    /**
-     * Clones this chain, optionally appending a step.
-     *
-     * @param args Configuration overrides.
-     * @param stepToAdd Optional step to append to the clone.
-     * @returns A cloned chain.
-     */
-    public override clone(args: Partial<P> = {}, stepToAdd?: ChainStep): this {
-        const clone = super.clone(args);
-        clone._chainHandler = this._chainHandler
-        clone._pipeline = [...this._pipeline];
-
-        clone.config.empties = this.config.empties;
-        clone.config.mutable = this.config.mutable;
-
-        if (stepToAdd) {
-            clone._pipeline.push(stepToAdd);
-        }
-
-        return clone;
-    }
+    // ========================================
+    // Pipeline mechanics
+    // ========================================
 
     /**
      * Adds a handler method to the chain by returning a cloned chain.
      *
      * @param fnKey Handler method to invoke.
-     * @param argsOrCallback Arguments or a callback that supplies them.
+     * @param argsOrCallback Array of arguments or a callback that supplies them.
      * @returns A cloned chain with the step appended.
      * @throws {@link Error} If the handler does not implement the method.
      */
-    public addStepToChain(fnKey: keyof P['chainHandler'], argsOrCallback: StepArgsOrCallback = []): this {
+    public appendToPipeline(
+        fnKey: keyof P['chainHandler'],
+        argsOrCallback?: unknown[] | ((...args: unknown[]) => unknown[])
+    ): this {
         const { _chainHandler } = this;
         const fn = _chainHandler[fnKey];
         if (typeof fn !== 'function') {
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }
 
-        return this.clone({}, {
+        let argsResolver;
+        if (typeof argsOrCallback === 'function') {
+            argsResolver = argsOrCallback.bind(this);
+        }
+        else if (Array.isArray(argsOrCallback)) {
+            argsResolver = () => argsOrCallback;
+        }
+        else {
+            argsResolver = null;
+        }
+
+        const clone = this.clone();
+        clone._pipeline.push({
             fn: fn.bind(_chainHandler),
-            argsOrCallback
+            argsResolver
         });
+
+        return clone;
     }
 
     /** Returns a clone with all configured chain steps removed. */
-    public clearChain(): this {
+    public clearPipeline(): this {
         const clone = this.clone();
         clone._pipeline = [];
         return clone;
     }
 
+    // ========================================
+    // Cloning
+    // ========================================
+
+    /**
+     * Clones this chain with optional configuration overrides.
+     *
+     * @param args Configuration overrides.
+     * @returns A cloned chain.
+     */
+    public override clone(args: Partial<P> = {}): this {
+        const clone = super.clone(args);
+        clone._chainHandler = this._chainHandler
+        clone._pipeline = [...this._pipeline];
+
+        const {
+            empties = this.config.empties,
+            mutable = this.config.mutable,
+        } = args;
+
+        clone.config.empties = empties;
+        clone.config.mutable = mutable;
+
+        return clone;
+    }
+
+    // ========================================
     // Configurators
+    // ========================================
 
     /** Returns a chain configured with values treated as empty. */
     public empties(values: unknown[]): this {
@@ -141,14 +173,14 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
 
     /** Adds a validation step requiring an empty value. */
     public empty(): this {
-        return this.addStepToChain('empty', () => {
+        return this.appendToPipeline('empty', () => {
             return [this.config.empties];
         });
     }
 
     /** Adds a validation step requiring a non-empty value. */
     public notEmpty(): this {
-        return this.addStepToChain('notEmpty', () => {
+        return this.appendToPipeline('notEmpty', () => {
             return [this.config.empties];
         });
     }

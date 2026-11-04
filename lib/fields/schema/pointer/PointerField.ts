@@ -32,6 +32,10 @@ class PointerField extends Field<PointerFieldProps> {
         config.nestMaxDepth = nestMaxDepth;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that resolves this field pointer. */
     public override createProcessor(): PointerProcessor {
         return new PointerProcessor({

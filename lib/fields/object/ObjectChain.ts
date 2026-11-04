@@ -46,6 +46,10 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
         config.stripNestedEmpties = stripNestedEmpties;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that handles this object chain. */
     public override createProcessor(): ObjectProcessor {
         return new ObjectProcessor({
@@ -54,7 +58,9 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
     }
 
 
+    // ========================================
     // Configurators
+    // ========================================
 
     /**
      * Configures whether object values are cloned before validation.

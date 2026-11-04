@@ -81,6 +81,10 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         this.config.presence = 'optional';
     }
 
+    // ========================================
+    // Cloning
+    // ========================================
+
     /** Clones the field and reparses a supplied target path. */
     public override clone(args: Partial<ConditionalFieldCtorParams> = {}): this {
         const clone = super.clone(args);
@@ -90,12 +94,20 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         return clone;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that evaluates the condition and its result branches. */
     public override createProcessor(): ConditionalProcessor {
         return new ConditionalProcessor({
             field: this,
         });
     }
+
+    // ========================================
+    // Conditional chain builders
+    // ========================================
 
     /**
      * Adds an OR condition to this conditional chain.
@@ -123,33 +135,9 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         return this._addToConditionalChain('and', conditionalFieldOrTargetPathStr, comparisonField);
     }
 
-    private _addToConditionalChain(
-        type: 'and' | 'or',
-        conditionalFieldOrTargetPathStr: ConditionalField | string,
-        comparisonField: Field | null = null
-    ) {
-        const { buildStage, comparisonMode, conditionalChain, fieldFactory } = this.config;
-        if (buildStage !== 0) {
-            throw new Error(`Illegal placement of "${type}" in condition chain`);
-        }
-        const isConditionalField = conditionalFieldOrTargetPathStr instanceof ConditionalField;
-        if (!isConditionalField && !(comparisonField instanceof Field)) {
-            throw new Error('Must supply a comparison field along with the path string');
-        }
-
-        const newEntry = isConditionalField
-            ? conditionalFieldOrTargetPathStr
-            : new ConditionalField({
-                fieldFactory,
-                comparisonField: comparisonField!,
-                comparisonMode,
-                targetPathStr: conditionalFieldOrTargetPathStr,
-            });
-
-        return this.clone({
-            conditionalChain: conditionalChain.concat([[type, newEntry]])
-        });
-    }
+    // ========================================
+    // Result branch configurators
+    // ========================================
 
     /**
      * Configures the field to use when the condition passes.
@@ -182,6 +170,38 @@ class ConditionalField extends Field<ConditionalFieldProps> {
         return this.clone({
             otherwiseField: fieldFactory.coerce(otherwiseResult),
             buildStage: 2
+        });
+    }
+
+    // ========================================
+    // Internal helpers
+    // ========================================
+
+    private _addToConditionalChain(
+        type: 'and' | 'or',
+        conditionalFieldOrTargetPathStr: ConditionalField | string,
+        comparisonField: Field | null = null
+    ) {
+        const { buildStage, comparisonMode, conditionalChain, fieldFactory } = this.config;
+        if (buildStage !== 0) {
+            throw new Error(`Illegal placement of "${type}" in condition chain`);
+        }
+        const isConditionalField = conditionalFieldOrTargetPathStr instanceof ConditionalField;
+        if (!isConditionalField && !(comparisonField instanceof Field)) {
+            throw new Error('Must supply a comparison field along with the path string');
+        }
+
+        const newEntry = isConditionalField
+            ? conditionalFieldOrTargetPathStr
+            : new ConditionalField({
+                fieldFactory,
+                comparisonField: comparisonField!,
+                comparisonMode,
+                targetPathStr: conditionalFieldOrTargetPathStr,
+            });
+
+        return this.clone({
+            conditionalChain: conditionalChain.concat([[type, newEntry]])
         });
     }
 

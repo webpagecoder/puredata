@@ -78,19 +78,18 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
         const pipeline = this.field.pipeline || [];
 
         for (const step of pipeline) {
-            let { fn, argsOrCallback: args } = step;
+            let { fn, argsResolver } = step;
             const finalArgs: unknown[] = [];
-            args = this.resolveStepArgs(args);
 
-            // todo: this should be moved to object child executePipeline.
-            // a regular chain cant really refer to itself
-            for (const arg of args) {
-                if (arg instanceof ReferenceField) {
-                    const refValueTracker = tracker.parent.resolvePath(arg.config.path);
-                    finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
-                }
-                else if (args != null) {
-                    finalArgs.push(arg);
+            if (argsResolver) {
+                for (const arg of argsResolver()) {
+                    if (arg instanceof ReferenceField) {
+                        const refValueTracker = tracker.parent.resolvePath(arg.config.path);
+                        finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
+                    }
+                    else {
+                        finalArgs.push(arg);
+                    }
                 }
             }
 

@@ -60,6 +60,10 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         } as ConfigFromParams<P>;
     }
 
+    // ========================================
+    // Accessors
+    // ========================================
+
     /** Gets the compiled processor for this field, compiling it on first access. */
     public get processor(): Processor {
         if (!this._cachedProcessor) {
@@ -67,6 +71,10 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         }
         return this._cachedProcessor;
     }
+
+    // ========================================
+    // Cloning
+    // ========================================
 
     /**
      * Creates a new field with this field's configuration and supplied overrides.
@@ -88,6 +96,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         } = args;
 
         const allProps = Object.assign(
+            {},
             this.config,
             {
                 autoConvert,
@@ -103,6 +112,10 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
         return new (this.constructor as new (props?: Partial<P>) => this)(allProps);
     }
+
+    // ========================================
+    // Processor wiring
+    // ========================================
 
     /**
      * Creates the processor used to validate this field.
@@ -128,8 +141,9 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
         return tracker;
     }
 
-
+    // ========================================
     // Configurators
+    // ========================================
 
     /** Returns a field configured to convert values automatically when possible. */
     public autoConvert(autoConvert:GlobalConfig['general']['autoConvert'] = 'normal'): this {

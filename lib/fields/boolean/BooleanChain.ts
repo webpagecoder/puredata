@@ -46,6 +46,10 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
         config.postConvert = postConvert;
     }
 
+    // ========================================
+    // Processor wiring
+    // ========================================
+
     /** Creates the processor that handles this boolean chain. */
     public override createProcessor(): BooleanProcessor {
         return new BooleanProcessor({
@@ -53,55 +57,9 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
         });
     }
 
-    // Validators
-
-    /**
-     * Validates that the value is true or a truthy equivalent.
-     * When boolish mode is enabled, accepts configured truthy values.
-     * @returns {BooleanChain} Returns this chain for method chaining
-     * @example
-     * schema.boolean().truthy()
-     * // With boolish: accepts 'yes', 1, 'true', etc.
-     */
-    public override truthy(): this {
-        return this.addStepToChain('truthy', () => {
-            return [this.config.boolishPairs.map(([truthy,]) => truthy)];
-        });
-    }
-
-    /**
-     * Validates that the value is false or a falsy equivalent.
-     * When boolish mode is enabled, accepts configured falsy values.
-     * @returns {BooleanChain} Returns this chain for method chaining
-     * @example
-     * schema.boolean().falsy()
-     * // With boolish: accepts 'no', 0, 'false', etc.
-     */
-    public override falsy(): this {
-        return this.addStepToChain('falsy', () => {
-            return [this.config.boolishPairs.map(([, falsy]) => falsy)];
-        });
-    }
-
-    // Transformers
-
-    /**
-     * Inverts the boolean value (true becomes false, false becomes true).
-     * When boolish mode is enabled, uses configured boolish pairs for conversion.
-     * @returns {BooleanChain} Returns this chain for method chaining
-     * @example
-     * schema.boolean().invert()
-     * // true -> false, false -> true
-     * // With boolish: 'yes' -> 'no', 1 -> 0, etc.
-     */
-    public invert(): this {
-        return this.addStepToChain('invert', () => {
-            return [this.config.boolishPairs];
-        });
-    }
-
-
+    // ========================================
     // Configurators
+    // ========================================
 
     /** Configures accepted truthy and falsy value pairs. */
     public addBoolishPairs(addedPairs: BoolishPair[]): this {
@@ -121,6 +79,57 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
     /** Configures a function that normalizes values before boolean parsing. */
     public boolishTransform(boolishTransform: (value: unknown) => unknown): this {
         return this.clone({ boolishTransform });
+    }
+
+    // ========================================
+    // Validators
+    // ========================================
+
+    /**
+     * Validates that the value is true or a truthy equivalent.
+     * When boolish mode is enabled, accepts configured truthy values.
+     * @returns {BooleanChain} Returns this chain for method chaining
+     * @example
+     * schema.boolean().truthy()
+     * // With boolish: accepts 'yes', 1, 'true', etc.
+     */
+    public override truthy(): this {
+        return this.appendToPipeline('truthy', () => {
+            return [this.config.boolishPairs.map(([truthy,]) => truthy)];
+        });
+    }
+
+    /**
+     * Validates that the value is false or a falsy equivalent.
+     * When boolish mode is enabled, accepts configured falsy values.
+     * @returns {BooleanChain} Returns this chain for method chaining
+     * @example
+     * schema.boolean().falsy()
+     * // With boolish: accepts 'no', 0, 'false', etc.
+     */
+    public override falsy(): this {
+        return this.appendToPipeline('falsy', () => {
+            return [this.config.boolishPairs.map(([, falsy]) => falsy)];
+        });
+    }
+
+    // ========================================
+    // Transformers
+    // ========================================
+
+    /**
+     * Inverts the boolean value (true becomes false, false becomes true).
+     * When boolish mode is enabled, uses configured boolish pairs for conversion.
+     * @returns {BooleanChain} Returns this chain for method chaining
+     * @example
+     * schema.boolean().invert()
+     * // true -> false, false -> true
+     * // With boolish: 'yes' -> 'no', 1 -> 0, etc.
+     */
+    public invert(): this {
+        return this.appendToPipeline('invert', () => {
+            return [this.config.boolishPairs];
+        });
     }
 
 

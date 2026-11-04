@@ -35,6 +35,10 @@ class ReferenceField extends Field<ReferenceFieldConfig> {
         config.defaultOrCallback = defaultOrCallback;
     }
 
+    // ========================================
+    // Cloning
+    // ========================================
+
     /** Clones this field and reparses a supplied path string. */
     public override clone(args: Partial<ReferenceFieldCtorParams> = {}): this {
         const clone = super.clone(args);
@@ -44,6 +48,10 @@ class ReferenceField extends Field<ReferenceFieldConfig> {
         }
         return clone;
     }
+
+    // ========================================
+    // Processor wiring
+    // ========================================
 
     /** Creates the processor that resolves this field's referenced value. */
     public override createProcessor(): ReferenceProcessor {
