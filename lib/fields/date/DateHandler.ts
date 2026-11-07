@@ -11,13 +11,12 @@ const { pass, fail } = HandlerResult;
  * Handles date parsing, validation, comparison, and mutation operations.
  */
 class DateHandler extends AnyHandler {
-    private _dateConverter: DateConverter | undefined;
+    private _dateConverter: DateConverter;
 
-    /** Configures date parsing and formatting with localized text and a UTC offset. */
-    public configDateConverter(calendarText: Translation, utcOffsetMins: number = 0) {
+    public constructor(calendarText: Translation, utcOffsetMins: number = 0) {
+        super();
         this._dateConverter = new DateConverter(calendarText, utcOffsetMins);
     }
-
 
     // ***********************************************
     //              FORMAT VALIDATORS 
@@ -30,7 +29,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public date(input: unknown, options: AutoParseOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter!.parseAuto(input, options);
+        const parsedDate = this._dateConverter.parseAuto(input, options);
         return !parsedDate
             ? fail(input, 'date/base')
             : pass(parsedDate);
@@ -43,7 +42,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public human(input: unknown, options: HumanParseOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter!.parseHuman(input, options);
+        const parsedDate = this._dateConverter.parseHuman(input, options);
         return !parsedDate
             ? fail(input, 'date/human', { options })
             : pass(parsedDate);
@@ -56,7 +55,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public iso(input: unknown, options: IsoParseOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter!.parseIso(input, options);
+        const parsedDate = this._dateConverter.parseIso(input, options);
         return !parsedDate
             ? fail(input, 'date/iso', { options })
             : pass(parsedDate);
@@ -69,7 +68,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public isoOrdinal(input: unknown, options: IsoOrdinalParseOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter!.parseIsoOrdinal(input, options);
+        const parsedDate = this._dateConverter.parseIsoOrdinal(input, options);
         return !parsedDate
             ? fail(input, 'date/isoOrdinal', { options })
             : pass(parsedDate);
@@ -82,7 +81,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public isoWeek(input: unknown, options: IsoWeekParseOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter!.parseIsoWeek(input, options);
+        const parsedDate = this._dateConverter.parseIsoWeek(input, options);
         return !parsedDate
             ? fail(input, 'date/isoWeek', { options })
             : pass(parsedDate);
@@ -95,7 +94,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public timestamp(input: unknown, options: TimestampOptions = {}): HandlerResult {
-        const parsedDate = this._dateConverter!.parseTimestamp(input, options);
+        const parsedDate = this._dateConverter.parseTimestamp(input, options);
         return !parsedDate
             ? fail(input, 'date/timestamp', { options })
             : pass(parsedDate);
@@ -119,7 +118,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public override equals(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -135,7 +134,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public override notEquals(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -155,7 +154,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public after(inputDate: OffsetDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -171,7 +170,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public before(inputDate: OffsetDate, referenceDate: GenericDateInput = new Date()): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -188,8 +187,8 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error
      */
     public between(inputDate: OffsetDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
-        const parsedMinDate = this._dateConverter!.parseAuto(minDate);
-        const parsedMaxDate = this._dateConverter!.parseAuto(maxDate);
+        const parsedMinDate = this._dateConverter.parseAuto(minDate);
+        const parsedMaxDate = this._dateConverter.parseAuto(maxDate);
         if (!parsedMinDate) {
             return fail(minDate, 'date/base');
         }
@@ -234,7 +233,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public max(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -250,7 +249,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public min(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -267,7 +266,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public minAge(birthDate: OffsetDate, minAge: number, referenceDate: GenericDateInput = new Date()): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -290,7 +289,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public sameDay(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -310,7 +309,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public sameMonth(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -333,7 +332,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public sameWeek(inputDate: OffsetDate, referenceDate: GenericDateInput, firstDayOfWeek: DayOfWeek = 1): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -357,7 +356,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public sameYear(inputDate: OffsetDate, referenceDate: GenericDateInput): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -416,7 +415,7 @@ class DateHandler extends AnyHandler {
      * @returns Input date or error.
      */
     public within(inputDate: OffsetDate, numDays: number = 30, referenceDate: GenericDateInput = new Date()): HandlerResult {
-        const parsedReferenceDate = this._dateConverter!.parseAuto(referenceDate);
+        const parsedReferenceDate = this._dateConverter.parseAuto(referenceDate);
         if (!parsedReferenceDate) {
             return fail(referenceDate, 'date/base');
         }
@@ -450,7 +449,7 @@ class DateHandler extends AnyHandler {
             finalForm = new Date(inputDate.offsetDate);
         }
         else {
-            finalForm = this._dateConverter!.format(inputDate, formatString, timeMode);
+            finalForm = this._dateConverter.format(inputDate, formatString, timeMode);
         }
         return pass(finalForm);
     }
@@ -530,8 +529,8 @@ class DateHandler extends AnyHandler {
      * @returns Returns the date clamped to the min or max if outside the range, otherwise returns the input date.
      */
     public clamp(inputDate: OffsetDate, minDate: GenericDateInput, maxDate: GenericDateInput): HandlerResult {
-        const minDateParsed = this._dateConverter!.parseAuto(minDate);
-        const maxDateParsed = this._dateConverter!.parseAuto(maxDate);
+        const minDateParsed = this._dateConverter.parseAuto(minDate);
+        const maxDateParsed = this._dateConverter.parseAuto(maxDate);
         if (!minDateParsed) {
             return fail(minDate, 'date/base');
         }

@@ -78,12 +78,33 @@ describe('ConditionalField', () => {
             expect(orChain.config.conditionalChain[0][0]).toBe('or');
         });
 
+        it('and accepts an existing ConditionalField entry', () => {
+            const entry = createBaseField();
+            const chain = createBaseField().and(entry);
+
+            expect(chain.config.conditionalChain).toHaveLength(1);
+            expect(chain.config.conditionalChain[0][0]).toBe('and');
+            expect(chain.config.conditionalChain[0][1]).toBe(entry);
+        });
+
         it('or accepts an existing ConditionalField entry', () => {
             const entry = createBaseField();
             const chain = createBaseField().or(entry);
 
             expect(chain.config.conditionalChain).toHaveLength(1);
             expect(chain.config.conditionalChain[0][1]).toBe(entry);
+        });
+
+        it('propagates comparisonMode to nested path-based conditions', () => {
+            const chain = new ConditionalField({
+                fieldFactory: PureData,
+                comparisonField: PureData.any(),
+                comparisonMode: 'notEquals',
+                targetPathStr: '/value',
+            }).and('/other', PureData.any());
+
+            const nestedField = chain.config.conditionalChain[0][1];
+            expect(nestedField.config.comparisonMode).toBe('notEquals');
         });
 
         it('and/or reject illegal placement and missing comparison field', () => {

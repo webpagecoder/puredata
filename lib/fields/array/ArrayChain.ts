@@ -19,7 +19,11 @@ export type ArrayChainCtorParams = AnyChainCtorParams<ArrayChainConfig, ArrayHan
 /** Chain of validators and transforms for array values. */
 class ArrayChain extends AnyChain<ArrayChainCtorParams> {
 
-    /** Creates an array chain with the supplied configuration. */
+    /**
+     * Creates an array chain with the supplied configuration.
+     *
+     * @param args Initial configuration overrides for the array chain.
+     */
     public constructor(args: Partial<ArrayChainCtorParams> = {}) {
         super(Object.assign({
             chainHandler: new ArrayHandler(),
@@ -39,7 +43,11 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     // Processor wiring
     // ========================================
 
-    /** Creates the processor that handles this array chain. */
+    /**
+     * Creates the processor that handles this array chain.
+     *
+     * @returns Processor configured for this array chain.
+     */
     public override createProcessor(): ArrayProcessor {
         return new ArrayProcessor({
             field: this,
@@ -50,12 +58,22 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     // Configurators
     // ========================================
 
-    /** Configures whether a non-array value is cast to a one-item array. */
+    /**
+     * Configures whether a non-array value is cast to a one-item array.
+     *
+     * @param castSingle Whether to cast non-array values to single-item arrays.
+     * @returns Cloned chain with updated cast behavior.
+     */
     public castSingle(castSingle: boolean = true): this {
         return this.clone({ castSingle });
     }
 
-    /** Configures whether empty values are removed before validation. */
+    /**
+     * Configures whether empty values are removed before validation.
+     *
+     * @param stripEmpties Whether to remove empty values from input arrays.
+     * @returns Cloned chain with updated empty-value stripping behavior.
+     */
     public stripEmpties(stripEmpties: boolean = true): this {
         return this.clone({ stripEmpties });
     }
@@ -66,9 +84,10 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     // ========================================
 
     /**
-     * Validates that array elements are unique
-     * @param {string|Function} [pathStringOrComparator] - Property path or comparator
-     * @returns {ArrayChain} Returns this chain for method chaining
+     * Validates that array elements are unique.
+     *
+     * @param pathStringOrComparator Property path or comparator used to compare values.
+     * @returns Cloned chain with a `unique` validator step.
      * @example
      * array([1, 2, 3]).unique() // passes
      * array([1, 2, 1]).unique() // fails
@@ -86,9 +105,10 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     // ========================================
 
     /**
-     * Groups array elements by a property path or value
-     * @param {string} pathString - Path to property for grouping
-     * @returns {ArrayChain} Returns this chain for method chaining
+     * Groups array elements by a property path or value.
+     *
+     * @param pathString Path to the property used for grouping, or `null` to group by item values.
+     * @returns Cloned chain with a `group` transformer step.
      * @example
      * array([{type: 'A', val: 1}, {type: 'B', val: 2}]).group('type')
      */
@@ -100,9 +120,10 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     }
 
     /**
-     * Removes duplicate values from array
-     * @param {string|Function} [pathStringOrComparator] - Property path or comparator function
-     * @returns {ArrayChain} Returns this chain for method chaining
+     * Removes duplicate values from an array.
+     *
+     * @param pathStringOrComparator Property path or comparator used to detect duplicates.
+     * @returns Cloned chain with a `stripDuplicates` transformer step.
      * @example
      * array([1, 2, 2, 3]).stripDuplicates() // [1, 2, 3]
      * array([{id: 1}, {id: 1}]).stripDuplicates('id') // [{id: 1}]

@@ -226,14 +226,10 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         const {
             chainHandler,
             config: {
-                renameKeysArgs, stripExtraKeys, failFast
+                stripExtraKeys, failFast
             }
         } = field;
 
-        // Do any required key renaming
-        if (renameKeysArgs) {
-            tracker.setValue(chainHandler.renameKeys(...renameKeysArgs).value);
-        }
 
         // Strip unknown keys if needed
         if (stripExtraKeys) {

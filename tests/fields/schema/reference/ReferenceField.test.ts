@@ -23,6 +23,16 @@ describe('ReferenceField', () => {
             expect(field.config.defaultOrCallback).toBe(fallback);
         });
 
+        it('stores callback fallback config', () => {
+            const fallback = () => 'derived';
+            const field = new ReferenceField({
+                pathStr: '/user/name',
+                defaultOrCallback: fallback,
+            });
+
+            expect(field.config.defaultOrCallback).toBe(fallback);
+        });
+
         it('createProcessor returns a ReferenceProcessor instance', () => {
             expect(new ReferenceField().createProcessor()).toBeInstanceOf(ReferenceProcessor);
         });

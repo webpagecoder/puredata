@@ -21,8 +21,12 @@ export type ObjectChainCtorParams<C extends ObjectChainConfig = ObjectChainConfi
 
 /** Chain of validators and transformations for object values. */
 class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> extends AnyChain<P> {
-
-    /** Creates an object chain with the supplied configuration. */
+    
+    /**
+     * Creates an object chain with the supplied configuration.
+     *
+     * @param args Initial configuration overrides for the object chain.
+     */
     constructor(args: Partial<P> = {}) {
         super(Object.assign({
             chainHandler: new ObjectHandler(),
@@ -50,7 +54,11 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
     // Processor wiring
     // ========================================
 
-    /** Creates the processor that handles this object chain. */
+    /** 
+     * Creates the processor that handles this object chain. 
+     * 
+     * @returns Processor configured for this object chain.
+     */
     public override createProcessor(): ObjectProcessor {
         return new ObjectProcessor({
             field: this,

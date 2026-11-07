@@ -357,15 +357,7 @@ export const TO_DELIMITED_DEFAULTS: ToDelimitedOptions = {
 /** Validation and transformation methods for string values. */
 class StringHandler extends AnyHandler {
 
-    private _matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> | undefined;
-    private _numberHandler: NumberHandler;
-
-    constructor() {
-        super();
-        this._numberHandler = new NumberHandler();
-    }
-
-    /**
+        /**
      * Configures default matching behavior shared by regex-based validators.
      * @param matchingDefaults Partial matching defaults to merge with per-call options.
      * @param matchingDefaults.ignoreCase Whether to compare case-insensitively when supported.
@@ -379,10 +371,14 @@ class StringHandler extends AnyHandler {
      * No global default is set unless provided here.
      * @param matchingDefaults.stripDelims Delimiters removed before loose matching. Default: ' '.
      */
-    public configMatchingDefaults(matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption>): void {
-        this._matchingDefaults = matchingDefaults;
-    }
+    private _matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> | undefined;
+    private _numberHandler: NumberHandler;
 
+    constructor(matchingDefaults: Partial<GenericMatchOptions & IgnoreCaseOption> = {}) {
+        super();
+        this._matchingDefaults = matchingDefaults;
+        this._numberHandler = new NumberHandler();
+    }
 
 
     // ********************************************

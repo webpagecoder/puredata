@@ -17,7 +17,11 @@ export type EnumFieldCtorParams = FieldCtorParams<EnumFieldConfig>;
 /** A field that restricts values to a configured enumeration. */
 class EnumField extends Field<EnumFieldConfig> {
 
-    /** Creates an enum field from an allowed-value structure. */
+    /**
+     * Creates an enum field from an allowed-value structure.
+     *
+     * @param args Initial configuration overrides for the enum field.
+     */
     constructor(args: Partial<EnumFieldCtorParams> = {}) {
         super(args);
         const {
@@ -32,7 +36,12 @@ class EnumField extends Field<EnumFieldConfig> {
     // Cloning
     // ========================================
 
-    /** Clones the field and recalculates whether the structure is a list. */
+    /**
+     * Clones the field with optional configuration overrides.
+     *
+     * @param args Configuration values to override on the cloned field.
+     * @returns Cloned enum field.
+     */
     public override clone(args: Partial<EnumFieldCtorParams> = {}): this {
         return super.clone(args);
     }
@@ -41,7 +50,11 @@ class EnumField extends Field<EnumFieldConfig> {
     // Processor wiring
     // ========================================
 
-    /** Creates the processor that validates enum values. */
+    /**
+     * Creates the processor that validates enum values.
+     *
+     * @returns Processor configured for this enum field.
+     */
     public override createProcessor(): EnumProcessor {
         return new EnumProcessor({
             field: this,

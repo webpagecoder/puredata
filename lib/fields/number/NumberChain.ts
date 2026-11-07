@@ -18,7 +18,11 @@ export type NumberChainCtorParams = AnyChainCtorParams<NumberChainConfig, Number
 /** Chain of validators and transforms for numeric values. */
 class NumberChain extends AnyChain<NumberChainCtorParams> {
 
-    /** Creates a number chain with the supplied configuration. */
+    /**
+     * Creates a number chain with the supplied configuration.
+     *
+     * @param args Initial configuration overrides for the number chain.
+     */
     public constructor(args: Partial<NumberChainCtorParams> = {}) {
         super(Object.assign({
             chainHandler: new NumberHandler(),
@@ -40,7 +44,11 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
     // Processor wiring
     // ========================================
 
-    /** Creates the processor that handles this number chain. */
+    /**
+     * Creates the processor that handles this number chain.
+     *
+     * @returns Processor configured for this number chain.
+     */
     public override createProcessor(): NumberProcessor {
         return new NumberProcessor({
             field: this,
@@ -51,17 +59,32 @@ class NumberChain extends AnyChain<NumberChainCtorParams> {
     // Configurators
     // ========================================
 
-    /** Configures whether converted numbers must fit the safe integer range. */
+    /**
+     * Configures whether converted numbers must fit the safe integer range.
+     *
+     * @param safe Whether values outside JavaScript's safe integer range are rejected.
+     * @returns Cloned chain with updated safe-integer enforcement.
+     */
     public safe(safe = true) {
         return this.clone({ safe });
     }
 
-    /** Configures whether converted numbers must be finite. */
+    /**
+     * Configures whether converted numbers must be finite.
+     *
+     * @param finite Whether `Infinity` and `-Infinity` are rejected.
+     * @returns Cloned chain with updated finite-number enforcement.
+     */
     public finite(finite = true) {
         return this.clone({ finite });
     }
 
-    /** Configures whether numeric conversion must preserve precision. */
+    /**
+     * Configures whether numeric conversion must preserve precision.
+     *
+     * @param precision Whether string-to-number conversion must preserve exact numeric representation.
+     * @returns Cloned chain with updated precision-preservation enforcement.
+     */
     public precision(precision = true) {
         return this.clone({ precision });
     }

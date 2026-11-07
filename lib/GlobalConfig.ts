@@ -9,6 +9,7 @@ import { NumberHandler } from "./fields/number/NumberHandler.ts";
 import { ObjectHandler } from "./fields/object/ObjectHandler.ts";
 import { StringHandler } from "./fields/string/StringHandler.ts";
 import { PathDelimTypes } from "./Path.ts";
+import { DefaultCalendarText } from "./text/DefaultCalendarText.ts";
 import { DefaultErrorText } from "./text/DefaultErrorText.ts";
 import { Translation } from "./Translation.ts";
 
@@ -27,28 +28,19 @@ type GlobalConfigType = {
     },
     /** Defaults grouped by field type. */
     fields: {
-        /** Settings for unconstrained "any" fields. */
-        any: {
-            /** Handler instance used by any-field chains. */
-            chainHandler: AnyHandler;
-        }
         /** Settings for array fields. */
         array: {
             /** Convert a non-array value into a single-item array. */
             castSingle: boolean;
-            /** Handler instance used by array-field chains. */
-            chainHandler: ArrayHandler;
             /** Remove empty values from arrays. */
             stripEmpties: boolean;
             /** Remove empty values from nested arrays. */
-            stripNestedEmpties: boolean;
+            stripNestedEmpties: boolean; //todo: add stripNestedEmpties to array chain and processor
         };
         /** Settings for boolean fields. */
         boolean: {
             /** Pairs of values that represent true and false, respectively. */
             boolishPairs: [truthy: unknown, falsy: unknown][];
-            /** Handler instance used by boolean-field chains. */
-            chainHandler: BooleanHandler;
             /** Convert recognized boolean-like values to booleans after pipeline runs. */
             postConvert: boolean;
             /** Normalize values before matching them against {@link boolishPairs}. */
@@ -56,9 +48,8 @@ type GlobalConfigType = {
         };
         /** Settings for date fields. */
         date: {
+            /** Text for the calendar. */
             calendarText: Translation;
-            /** Handler instance used by date-field chains. */
-            chainHandler: DateHandler;
             /** Component order used when parsing date strings without an explicit format. */
             order: 'MDY' | 'DMY' | 'YMD';
             /** Output format for date values. */
@@ -70,8 +61,6 @@ type GlobalConfigType = {
         };
         /** Settings for number fields. */
         number: {
-            /** Handler instance used by number-field chains. */
-            chainHandler: NumberHandler;
             /** Require values to be within the safe integer range. */
             safe: boolean;
             /** Reject infinite numeric values. */
@@ -81,8 +70,6 @@ type GlobalConfigType = {
         };
         /** Settings for object fields. */
         object: {
-            /** Handler instance used by object-field chains. */
-            chainHandler: ObjectHandler;
             /** Clone object values before processing them. */
             clone: boolean;
             /** Restrict object values to plain objects. */
@@ -98,8 +85,6 @@ type GlobalConfigType = {
         };
         /** Settings for schema fields. */
         schema: {
-            /** Handler instance used by schema-field chains. */
-            chainHandler: ObjectHandler;
             /** Stop validation after the first failure. */
             failFast: boolean;
             /** Remove keys that are not defined by the schema. */
@@ -107,10 +92,10 @@ type GlobalConfigType = {
         };
         /** Settings for string fields. */
         string: {
-            /** Handler instance used by string-field chains. */
-            chainHandler: StringHandler;
-            /** Trim leading and trailing whitespace. */
-            trim: boolean;
+            /** Delimiters accepted in loose matching. */
+            acceptableDelims: string;
+            /** Delimiter used when normalization is applied. */
+            normalizedDelim: string;
             /** Ignore case when comparing string values. */
             ignoreCase: boolean;
             /** String validation mode. */
@@ -119,6 +104,8 @@ type GlobalConfigType = {
             normalize: boolean;
             /** Delimiter characters to remove from string values. */
             stripDelims: string;
+            /** Trim leading and trailing whitespace. */
+            trim: boolean;
         }
     }
 };
@@ -138,14 +125,9 @@ const GlobalConfig: GlobalConfigType = Object.seal({
         }
     },
     fields: {
-        any: {
-            chainHandler: new AnyHandler()
-        },
         array: {
             castSingle: true,
-            chainHandler: new ArrayHandler(),
             stripEmpties: true,
-            stripNestedEmpties: true, //todo: add stripNestedEmpties to array chain and processor
         },
         boolean: {
             boolishPairs: [
@@ -158,25 +140,21 @@ const GlobalConfig: GlobalConfigType = Object.seal({
                 ['on', 'off'],
             ],
             boolishTransform: (x: unknown) => typeof x === 'string' ? x.toLowerCase() : x,
-            chainHandler: new BooleanHandler(),
             postConvert: false,
         },
         date: {
-            calendarText: new Translation(DefaultErrorText),
-            chainHandler: new DateHandler(),
+            calendarText: new Translation(DefaultCalendarText),
             order: 'MDY',
             outputFormat: 'iso',
             outputTimeMode: 'utc',
             utcOffsetMins: 0
         },
         number: {
-            chainHandler: new NumberHandler(),
             finite: true,
             precision: true,
             safe: true,
         },
         object: {
-            chainHandler: new ObjectHandler(),
             clone: false,
             plainOnly: true,
             maxDepth: null,
@@ -185,12 +163,12 @@ const GlobalConfig: GlobalConfigType = Object.seal({
             stripNestedEmpties: true,
         },
         schema: {
-            chainHandler: new ObjectHandler(),
             failFast: false,
             stripExtraKeys: true
         },
         string: {
-            chainHandler: new StringHandler(),
+            acceptableDelims: ' -_',
+            normalizedDelim: '-',
             ignoreCase: false,
             mode: 'loose',
             normalize: true,

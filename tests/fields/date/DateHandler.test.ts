@@ -22,14 +22,14 @@ describe('DateHandler parsers', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
+		handler = new DateHandler(new Translation(DefaultCalendarText), 0);
 	});
 
 	it('date', () => {
 		runPassTests(handler.date.bind(handler), [
 			{ input: '2024-01', output: compareToDate('2024-01') },
 			{ input: '2024-01-02', output: compareToDate('2024-01-02') },
+			{ input: '2024-02-29T23:59:59Z', output: compareToDate('2024-02-29T23:59:59Z') },
 			{ input: 1704067200, output: compareToDate(1704067200000) },
 			{ input: new Date('2024-01-12T00:00:00Z'), output: compareToDate('2024-01-12T00:00:00Z') },
 			{ input: 'Tuesday, September 2nd, 2025', output: compareToDate('2025-09-02') },
@@ -41,6 +41,7 @@ describe('DateHandler parsers', () => {
 		runFailTests(handler.date.bind(handler), [
 			{ input: '' },
 			{ input: 'not-a-date' },
+			{ input: '2023-02-29' },
 			{ input: '2024-01-02', args: [{ expanded: 'forbidden' }] },
 		]);
 	});
@@ -66,6 +67,8 @@ describe('DateHandler parsers', () => {
 			{ input: 'September 2nd, 2025 5pm', args: [{ order: 'MDY' }], output: compareToDate('2025-09-02T17:00:00Z') },
 			{ input: 'September 2nd, 2025 5:04 pm', args: [{ order: 'MDY' }], output: compareToDate('2025-09-02T17:04:00Z') },
 			{ input: 'September 2nd, 2025 17:04', args: [{ order: 'MDY' }], output: compareToDate('2025-09-02T17:04:00Z') },
+			{ input: 'September 2nd, 2025 12:00 am', args: [{ order: 'MDY' }], output: compareToDate('2025-09-02T00:00:00Z') },
+			{ input: 'September 2nd, 2025 12:00 pm', args: [{ order: 'MDY' }], output: compareToDate('2025-09-02T12:00:00Z') },
 			{ input: 'September 2nd, 2025 5:04:09 pm +05:30', args: [{ order: 'MDY' }], output: compareToDate('2025-09-02T17:04:09+05:30') },
 			{ input: 'September 2nd, 2025 5:04:09 pm UTC', args: [{ order: 'MDY', minPrecision: 'timezone' }], output: compareToDate('2025-09-02T17:04:09Z') },
 			{ input: 'September 2nd, 2025 10:30', args: [{ order: 'MDY', maxPrecision: 'time' }], output: compareToDate('2025-09-02T10:30:00Z') },
@@ -77,6 +80,7 @@ describe('DateHandler parsers', () => {
 			{ input: '2nd September, 2025', args: [{ order: 'MDY' }] },
 			{ input: 'September 31st, 2025', args: [{ order: 'MDY' }] },
 			{ input: 'not a date', args: [{ order: 'MDY' }] },
+			{ input: 'September 2nd, 2025 00:30 am', args: [{ order: 'MDY' }] },
 			{ input: '12/31/2024 10:30', args: [{ order: 'MDY', minPrecision: 'timezone' }] }
 		]);
 	});
@@ -85,6 +89,8 @@ describe('DateHandler parsers', () => {
 	it('iso', () => {
 		runPassTests(handler.iso.bind(handler), [
 			{ input: '2024-01-02', output: compareToDate('2024-01-02') },
+			{ input: '2000-02-29', output: compareToDate('2000-02-29') },
+			{ input: '2024-02-29', output: compareToDate('2024-02-29') },
 			{ input: '20240102', output: compareToDate('2024-01-02') },
 			{ input: '2024-01-02', args: [{ expanded: 'required' }], output: compareToDate('2024-01-02') },
 			{ input: '20240102', args: [{ expanded: 'forbidden' }], output: compareToDate('2024-01-02') },
@@ -97,6 +103,8 @@ describe('DateHandler parsers', () => {
 		runFailTests(handler.iso.bind(handler), [
 			{ input: '20240132' },
 			{ input: '202401-30' },
+			{ input: '1900-02-29' },
+			{ input: '2024-02-30' },
 			{ input: '20240102', args: [{ expanded: 'required' }] },
 			{ input: '2024-01-02T03:04:05Z', args: [{ maxPrecision: 'day' }] },
 			{ input: '2024', args: [{ minPrecision: 'day' }] },
@@ -156,11 +164,16 @@ describe('DateHandler parsers', () => {
 		runPassTests(handler.timestamp.bind(handler), [
 			{ input: 1704067201000, args: [{ isMilliseconds: true }], output: compareToDate('2024-01-01T00:00:01.000Z') },
 			{ input: 1704067201, args: [{ isMilliseconds: false }], output: compareToDate('2024-01-01T00:00:01.000Z') },
+			{ input: 2147483647, args: [{ isMilliseconds: false }], output: compareToDate('2038-01-19T03:14:07.000Z') },
 			{ input: 0, output: compareToDate('1970-01-01') },
 		]);
 
 		runFailTests(handler.timestamp.bind(handler), [
 			{ input: 'not a date' },
+			{ input: '1704067201.5' },
+			{ input: '-1704067201' },
+			{ input: '+1704067201' },
+			{ input: 1704067201.5 },
 		]);
 	});
 });
@@ -171,8 +184,7 @@ describe('DateHandler overrides', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
+		handler = new DateHandler(new Translation(DefaultCalendarText), 0);
 	});
 
 	it('equals', () => {
@@ -207,8 +219,7 @@ describe('DateHandler validators', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
+		handler = new DateHandler(new Translation(DefaultCalendarText), 0);
 	});
 
 	it('after', () => {
@@ -244,6 +255,8 @@ describe('DateHandler validators', () => {
 		runFailTests(handler.between.bind(handler), [
 			{ input: makeOffsetDate('2024-01-17T12:00:00Z'), args: [new Date('2024-01-16T12:00:00Z'), new Date('2024-01-16T12:01:00Z')] },
 			{ input: makeOffsetDate('2024-01-16T12:28:00Z'), args: [new Date('2024-01-16T12:00:00Z'), new Date('2024-01-16T12:27:00Z')] },
+			{ input: makeOffsetDate('2024-01-16T12:28:00Z'), args: ['bad-min-date', new Date('2024-01-16T12:27:00Z')], output: 'bad-min-date', errorKey: 'date/base' },
+			{ input: makeOffsetDate('2024-01-16T12:28:00Z'), args: [new Date('2024-01-16T12:00:00Z'), 'bad-max-date'], output: 'bad-max-date', errorKey: 'date/base' },
 		]);
 	});
 
@@ -262,10 +275,12 @@ describe('DateHandler validators', () => {
 	it('leapYear', () => {
 		runPassTests(handler.leapYear.bind(handler), [
 			{ input: makeOffsetDate('2024-01-15'), args: [] },
+			{ input: makeOffsetDate('2000-01-16'), args: [] },
 			{ input: makeOffsetDate('2028-01-16'), args: [] },
 		]);
 
 		runFailTests(handler.leapYear.bind(handler), [
+			{ input: makeOffsetDate('1900-01-16'), args: [] },
 			{ input: makeOffsetDate('2023-01-15'), args: [] },
 			{ input: makeOffsetDate('2021-01-16'), args: [] },
 		]);
@@ -300,11 +315,13 @@ describe('DateHandler validators', () => {
 		runPassTests(handler.minAge.bind(handler), [
 			{ input: makeOffsetDate('1982-01-15'), args: [44] },
 			{ input: makeOffsetDate('2024-01-17T00:00:02Z'), args: [2] },
+			{ input: makeOffsetDate('2004-02-29'), args: [21, new Date('2025-03-01T00:00:00Z')] },
 		]);
 
 		runFailTests(handler.minAge.bind(handler), [
 			{ input: makeOffsetDate('1982-01-15'), args: [54] },
 			{ input: makeOffsetDate('2024-01-17T00:00:02Z'), args: [21] },
+			{ input: makeOffsetDate('2004-02-29'), args: [21, new Date('2025-02-28T23:59:59Z')] },
 		]);
 	});
 
@@ -317,6 +334,7 @@ describe('DateHandler validators', () => {
 		runFailTests(handler.sameDay.bind(handler), [
 			{ input: makeOffsetDate('2024-01-15T12:01:00Z'), args: [new Date('2024-01-16T05:00:00Z')] },
 			{ input: makeOffsetDate('2024-01-16T00:00:00Z'), args: [new Date('2024-01-17T05:00Z')] },
+			{ input: makeOffsetDate('2024-01-16T00:00:00Z'), args: ['not-a-date'], output: 'not-a-date', errorKey: 'date/base' },
 		]);
 	});
 
@@ -336,11 +354,13 @@ describe('DateHandler validators', () => {
 		runPassTests(handler.sameWeek.bind(handler), [
 			{ input: makeOffsetDate('2026-08-25'), args: [new Date('2026-08-24')] },
 			{ input: makeOffsetDate('2026-08-23'), args: [new Date('2026-08-17')] },
+			{ input: makeOffsetDate('2026-08-23'), args: [new Date('2026-08-29'), 0] },
 		]);
 
 		runFailTests(handler.sameWeek.bind(handler), [
 			{ input: makeOffsetDate('2026-08-24'), args: [new Date('2026-08-31')] },
 			{ input: makeOffsetDate('2027-08-23'), args: [new Date('2026-08-23')] },
+			{ input: makeOffsetDate('2026-08-23'), args: [new Date('2026-08-29'), 1] },
 		]);
 	});
 
@@ -403,11 +423,74 @@ describe('DateHandler validators', () => {
 			{ input: makeOffsetDate('2024-01-19'), args: [1, new Date('2024-01-17')] },
 			{ input: makeOffsetDate('2024-01-15'), args: [0, new Date('2024-01-16')] },
 			{ input: makeOffsetDate('2024-12-31'), args: [10, new Date('2025-10-09')] },
+			{ input: makeOffsetDate('2024-12-31'), args: [10, 'bad-reference'], output: 'bad-reference', errorKey: 'date/base' },
 		]);
 	});
 
 });
 
+describe('DateHandler default UTC offset behavior', () => {
+	let handler: DateHandler;
+
+	beforeEach(() => {
+		handler = new DateHandler(new Translation(DefaultCalendarText), 330);
+	});
+
+	it('applies configured offset when timezone is omitted in ISO input', () => {
+		const result = handler.iso('2024-01-15T12:00');
+		expect(result.pass).toBe(true);
+		const parsed = result.value as OffsetDate;
+		expect(parsed.localDate.toISOString()).toBe('2024-01-15T12:00:00.000Z');
+		expect(parsed.offsetDate.toISOString()).toBe('2024-01-15T06:30:00.000Z');
+		expect(parsed.offsetMinutes).toBe(330);
+	});
+
+	it('prefers explicit timezone from input over configured default offset', () => {
+		const result = handler.iso('2024-01-15T12:00+02:00');
+		expect(result.pass).toBe(true);
+		const parsed = result.value as OffsetDate;
+		expect(parsed.localDate.toISOString()).toBe('2024-01-15T12:00:00.000Z');
+		expect(parsed.offsetDate.toISOString()).toBe('2024-01-15T10:00:00.000Z');
+		expect(parsed.offsetMinutes).toBe(120);
+	});
+
+	it('uses configured offset when parsing timestamps', () => {
+		const timestampSeconds = Math.floor(new Date('2024-01-15T12:00:00.000Z').getTime() / 1000);
+		const result = handler.timestamp(timestampSeconds, { isMilliseconds: false });
+		expect(result.pass).toBe(true);
+		const parsed = result.value as OffsetDate;
+		expect(parsed.localDate.toISOString()).toBe('2024-01-15T12:00:00.000Z');
+		expect(parsed.offsetDate.toISOString()).toBe('2024-01-15T06:30:00.000Z');
+		expect(parsed.offsetMinutes).toBe(330);
+	});
+
+	it('uses configured offset when parsing human input with no timezone', () => {
+		const result = handler.human('September 2nd, 2025 17:04', { order: 'MDY' });
+		expect(result.pass).toBe(true);
+		const parsed = result.value as OffsetDate;
+		expect(parsed.localDate.toISOString()).toBe('2025-09-02T17:04:00.000Z');
+		expect(parsed.offsetDate.toISOString()).toBe('2025-09-02T11:34:00.000Z');
+		expect(parsed.offsetMinutes).toBe(330);
+	});
+
+	it('uses configured offset when parsing ISO week input with no timezone', () => {
+		const result = handler.isoWeek('2024-W12-3T01:00');
+		expect(result.pass).toBe(true);
+		const parsed = result.value as OffsetDate;
+		expect(parsed.localDate.toISOString()).toBe('2024-03-20T01:00:00.000Z');
+		expect(parsed.offsetDate.toISOString()).toBe('2024-03-19T19:30:00.000Z');
+		expect(parsed.offsetMinutes).toBe(330);
+	});
+
+	it('uses configured offset when parsing ISO ordinal input with no timezone', () => {
+		const result = handler.isoOrdinal('2024-123T01:00');
+		expect(result.pass).toBe(true);
+		const parsed = result.value as OffsetDate;
+		expect(parsed.localDate.toISOString()).toBe('2024-05-02T01:00:00.000Z');
+		expect(parsed.offsetDate.toISOString()).toBe('2024-05-01T19:30:00.000Z');
+		expect(parsed.offsetMinutes).toBe(330);
+	});
+});
 
 
 
@@ -416,8 +499,7 @@ describe('DateHandler formatter', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
+		handler = new DateHandler(new Translation(DefaultCalendarText), 0);
 	});
 
 	it('toFormat', () => {
@@ -430,6 +512,7 @@ describe('DateHandler formatter', () => {
 			{ input: makeOffsetDate('2024-01-15T12:34:56.789Z'), args: ['h:mm a z'], output: (val: unknown) => val === '12:34 pm +0000' },
 			{ input: makeOffsetDate('2024-01-15T12:34:56.789Z'), args: ['[YYYY]-MM-DD'], output: (val: unknown) => val === 'YYYY-01-15' },
 			{ input: makeOffsetDate('2024-01-15T12:00:00Z'), args: ['timestamp'], output: (val: unknown) => typeof val === 'number' && val === new Date('2024-01-15T12:00:00Z').getTime() },
+			{ input: makeOffsetDate('2024-01-15T12:00:00Z'), args: ['instance'], output: (val: unknown) => val instanceof Date && (val as Date).toISOString() === '2024-01-15T12:00:00.000Z' },
 			{ input: new OffsetDate(new Date('2024-01-15T12:00:00Z'), 330), args: ['HH:mm Z', 'local'], output: (val: unknown) => val === '12:00 +05:30' },
 
 		]);
@@ -445,8 +528,7 @@ describe('DateHandler mutators', () => {
 	let handler: DateHandler;
 
 	beforeEach(() => {
-		handler = new DateHandler();
-		handler.configDateConverter(new Translation(DefaultCalendarText));
+		handler = new DateHandler(new Translation(DefaultCalendarText), 0);
 	});
 
 	it('addDays', () => {
@@ -454,6 +536,7 @@ describe('DateHandler mutators', () => {
 			{ input: makeOffsetDate('2026-08-25'), args: [2], output: compareToDate('2026-08-27') },
 			{ input: makeOffsetDate('2026-08-25'), args: [-2], output: compareToDate('2026-08-23') },
 			{ input: makeOffsetDate('2024-02-28'), args: [2], output: compareToDate('2024-03-01') },
+			{ input: makeOffsetDate('2024-02-29'), args: [1], output: compareToDate('2024-03-01') },
 		]);
 	});
 
@@ -511,6 +594,7 @@ describe('DateHandler mutators', () => {
 		runPassTests(handler.toEndOfMonth.bind(handler), [
 			{ input: makeOffsetDate('2024-08-25'), output: compareToDate('2024-08-31') },
 			{ input: makeOffsetDate('2024-08-25T23:59:59.999Z'), output: compareToDate('2024-08-31T23:59:59.999Z') },
+			{ input: makeOffsetDate('2023-02-10'), output: compareToDate('2023-02-28') },
 			{ input: makeOffsetDate('2024-02-28', 300), output: compareToDate('2024-02-29', 300) },
 		]);
 	});

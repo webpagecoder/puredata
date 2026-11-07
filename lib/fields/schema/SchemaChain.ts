@@ -1,14 +1,10 @@
 'use strict';
 
-import { FieldFactory } from '../FieldFactory.ts';
-import { AnyChain } from '../any/AnyChain.ts';
-import { ArrayChain } from '../array/ArrayChain.ts';
-import { Field } from '../Field.ts';
-import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object/ObjectChain.ts';
-import { ObjectHandler } from '../object/ObjectHandler.ts';
-import { SchemaProcessor } from './SchemaProcessor.ts';
 import { Utils } from '../../Utils.ts';
-import { GlobalConfig } from '../../GlobalConfig.ts';
+import { Field } from '../Field.ts';
+import { FieldFactory } from '../FieldFactory.ts';
+import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object/ObjectChain.ts';
+import { SchemaProcessor } from './SchemaProcessor.ts';
 
 /** Object describing fields in a schema. */
 export type Schema = {
@@ -22,11 +18,8 @@ export type SchemaFields = {
 
 /** Configuration for a schema chain. */
 export type SchemaChainConfig = ObjectChainConfig & {
-    anyChain: AnyChain,
-    arrayChain: ArrayChain,
     failFast: boolean;
     fieldFactory: FieldFactory;
-    renameKeysArgs: Parameters<ObjectHandler['renameKeys']> | null;
     schemaFields: SchemaFields;
     stripExtraKeys: boolean;
 };
@@ -51,7 +44,6 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         const {
             fieldFactory,
             failFast = false,
-            renameKeysArgs = null,
             schema = {},
             stripExtraKeys = true,
         } = args;
@@ -65,7 +57,6 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         config.plainOnly = true;
         config.failFast = failFast;
         config.fieldFactory = fieldFactory;
-        config.renameKeysArgs = renameKeysArgs;
         config.stripExtraKeys = stripExtraKeys;
         config.schemaFields = this._processSchema(schema) || {};
     }
@@ -74,12 +65,20 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
     // Cloning
     // ========================================
 
-    /** Clones this chain and optionally replaces its schema. */
+    /**
+     * Clones this chain and optionally replaces its schema.
+     *
+     * @param args Configuration overrides for the cloned schema chain.
+     * @returns Cloned schema chain with preserved or replaced schema fields.
+     */
     public override clone(args: Partial<SchemaChainCtorParams> = {}): this {
         const clone = super.clone(args);
-        const { schema = null } = args;
+        const { schema } = args;
         if (schema) {
-            clone.config.schemaFields = this._processSchema(schema);
+            clone.config.schemaFields = this._processSchema(schema || {});
+        }
+        else {
+            clone.config.schemaFields = Object.assign({}, this.config.schemaFields);
         }
         return clone;
     }
@@ -88,7 +87,11 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
     // Processor wiring
     // ========================================
 
-    /** Creates the processor that compiles and validates this schema. */
+    /**
+     * Creates the processor that compiles and validates this schema.
+     *
+     * @returns Processor configured for this schema chain.
+     */
     public override createProcessor(): SchemaProcessor {
         return new SchemaProcessor({
             field: this,
@@ -99,7 +102,12 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
     // Schema processing
     // ========================================
 
-    /** Converts each schema entry into a field or nested schema chain. */
+    /**
+     * Converts each schema entry into a field or nested schema chain.
+     *
+     * @param schema Raw schema object to transform into chain fields.
+     * @returns Processed schema-field map used by the chain processor.
+     */
     private _processSchema(schema: Schema): SchemaFields {
         const schemaFields: SchemaFields = {};
         for (const key of Object.keys(schema)) {
@@ -142,3 +150,4 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
 }
 
 export { SchemaChain };
+

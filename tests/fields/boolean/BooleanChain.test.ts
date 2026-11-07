@@ -12,6 +12,8 @@ describe('BooleanChain', () => {
             expect(Array.isArray(chain.config.boolishPairs)).toBe(true);
             expect(chain.config.boolishPairs.length).toBeGreaterThan(0);
             expect(typeof chain.config.boolishTransform).toBe('function');
+            expect(chain.config.boolishTransform('YES')).toBe('yes');
+            expect(chain.config.boolishTransform(1)).toBe(1);
         });
 
         it('applies provided constructor config overrides', () => {
@@ -50,9 +52,41 @@ describe('BooleanChain', () => {
             expect(configured.config.boolishTransform).toBe(transform);
             expect(configured.config.postConvert).toBe(true);
         });
+
+        it('boolishPairs replaces configured pairs without mutating the source', () => {
+            const chain = new BooleanChain({ boolishPairs: [[1, 0]] });
+            const configured = chain.boolishPairs([['yes', 'no']]);
+
+            expect(chain.config.boolishPairs).toEqual([[1, 0]]);
+            expect(configured.config.boolishPairs).toEqual([['yes', 'no']]);
+        });
+
+        it('postConvert defaults to true when called without args', () => {
+            const chain = new BooleanChain({ postConvert: false });
+            const configured = chain.postConvert();
+
+            expect(chain.config.postConvert).toBe(false);
+            expect(configured.config.postConvert).toBe(true);
+        });
     });
 
     describe('pipeline steps', () => {
+        it('truthy/falsy/invert clone without mutating the source', () => {
+            const chain = new BooleanChain();
+
+            const truthyChain = chain.truthy();
+            expect(chain.pipeline).toHaveLength(0);
+            expect(truthyChain.pipeline).toHaveLength(1);
+
+            const falsyChain = chain.falsy();
+            expect(chain.pipeline).toHaveLength(0);
+            expect(falsyChain.pipeline).toHaveLength(1);
+
+            const invertChain = chain.invert();
+            expect(chain.pipeline).toHaveLength(0);
+            expect(invertChain.pipeline).toHaveLength(1);
+        });
+
         it('truthy resolves truthy values from boolishPairs', () => {
             const chain = new BooleanChain({ boolishPairs: [[1, 0], ['yes', 'no']] });
             const withStep = chain.truthy();

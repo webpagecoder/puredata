@@ -5,7 +5,12 @@ import { HandlerResult } from '../HandlerResult.ts';
 import { Field, FieldConfig } from '../Field.ts';
 import { AnyProcessor } from './AnyProcessor.ts';
 
-/** Function and argument source stored for one chain step. */
+/**
+ * Function and argument source stored for one chain step.
+ *
+ * @property fn Handler function to execute for the step.
+ * @property argsResolver Static or dynamic argument resolver for the step.
+ */
 export type PipelineStep = {
     fn: (value: unknown, ...args: unknown[]) => HandlerResult;
     argsResolver: null | ((...args: unknown[]) => unknown[]);
@@ -34,7 +39,11 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
     private _chainHandler: P['chainHandler'];
     private _pipeline: PipelineStep[];
 
-    /** Creates a chain from its configuration and exposes handler steps through a proxy. */
+    /**
+     * Creates a chain from its configuration and exposes handler steps through a proxy.
+     *
+     * @param args Initial configuration overrides for the chain.
+     */
     public constructor(args: Partial<P> = {}) {
         super(args);
 
@@ -72,14 +81,25 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
     // Processor wiring
     // ========================================
 
-    /** Creates the processor that executes this chain. */
+    /**
+     * Creates the processor that executes this chain.
+     *
+     * @returns Processor configured for this chain.
+     */
     public override createProcessor(): AnyProcessor {
         return new AnyProcessor({
             field: this,
         });
     }
 
-    /** Proxy trap that maps unknown handler method calls to chain steps. */
+    /**
+     * Proxy trap that maps unknown handler method calls to chain steps.
+     *
+     * @param target Chain instance being proxied.
+     * @param key Property key being accessed.
+     * @param receiver Proxy receiver instance.
+     * @returns Existing property value or a function that appends a handler call to the pipeline.
+     */
     public get(target: this, key: keyof P['chainHandler'], receiver: this): unknown {
         if (key in target) {
             return Reflect.get(target, key, receiver);
@@ -129,7 +149,11 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         return clone;
     }
 
-    /** Returns a clone with all configured chain steps removed. */
+    /**
+     * Returns a clone with all configured chain steps removed.
+     *
+     * @returns Cloned chain with an empty pipeline.
+     */
     public clearPipeline(): this {
         const clone = this.clone();
         clone._pipeline = [];
@@ -166,31 +190,52 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
     // Configurators
     // ========================================
 
-    /** Returns a chain configured with values treated as empty. */
+    /**
+     * Returns a chain configured with values treated as empty.
+     *
+     * @param values Values treated as empty by empty/notEmpty checks.
+     * @returns Cloned chain with updated empty values.
+     */
     public empties(values: unknown[]): this {
         return this.clone({ empties: values } as Partial<P>);
     }
 
-    /** Adds a validation step requiring an empty value. */
+    /**
+     * Adds a validation step requiring an empty value.
+     *
+     * @returns Cloned chain with an `empty` validator step.
+     */
     public empty(): this {
         return this.appendToPipeline('empty', () => {
             return [this.config.empties];
         });
     }
 
-    /** Adds a validation step requiring a non-empty value. */
+    /**
+     * Adds a validation step requiring a non-empty value.
+     *
+     * @returns Cloned chain with a `notEmpty` validator step.
+     */
     public notEmpty(): this {
         return this.appendToPipeline('notEmpty', () => {
             return [this.config.empties];
         });
     }
 
-    /** Returns a Field whose value cannot be changed by user input. */
+    /**
+     * Returns a Field whose value cannot be changed by user input.
+     *
+     * @returns Cloned chain with mutability disabled.
+     */
     public immutable(): this {
         return this.clone({ mutable: false } as Partial<P>);
     }
 
-    /** Returns a Field whose value can be changed by user input. */
+    /**
+     * Returns a Field whose value can be changed by user input.
+     *
+     * @returns Cloned chain with mutability enabled.
+     */
     public mutable() {
         return this.clone({ mutable: true } as Partial<P>);
     }

@@ -31,4 +31,26 @@ describe('PointerField', () => {
             expect(new PointerField().createProcessor()).toBeInstanceOf(PointerProcessor);
         });
     });
+
+    describe('cloning', () => {
+        it('clone applies overrides without mutating source config', () => {
+            const source = new PointerField({
+                fieldPath: new Path('/source'),
+                nestMinDepth: 1,
+                nestMaxDepth: 2,
+            });
+
+            const clone = source.clone({
+                fieldPath: new Path('/clone'),
+                nestMinDepth: 3,
+            });
+
+            expect(source.config.fieldPath.toString({ self: '.', separator: '/', up: '..' })).toBe('/source');
+            expect(source.config.nestMinDepth).toBe(1);
+            expect(source.config.nestMaxDepth).toBe(2);
+            expect(clone.config.fieldPath.toString({ self: '.', separator: '/', up: '..' })).toBe('/clone');
+            expect(clone.config.nestMinDepth).toBe(3);
+            expect(clone.config.nestMaxDepth).toBe(2);
+        });
+    });
 });
