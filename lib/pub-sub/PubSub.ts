@@ -44,10 +44,30 @@ class PubSub {
         return node;
     }
 
-    /** Gets a node by key, or `null` if no node is registered with that key. */
+    /** 
+     * Gets a node by key, returning null if it doesn't exist.
+     *
+     * @param key Unique key for the node.
+     * @returns The existing node or null if it doesn't exist.
+     */
     public getNode(key: unknown): Node | null {
         const { _nodes: nodes } = this;
         return nodes.get(key) || null;
+    }
+
+    /**
+     * Gets a node by key, creating it if it doesn't exist.
+     *
+     * @param key Unique key for the node.
+     * @returns The existing or newly created node.
+     */
+    public getOrCreateNode(key: unknown): Node {
+        const { _nodes: nodes } = this;
+        let node = nodes.get(key);
+        if (!node) {
+            node = this.createNode(key);
+        }
+        return node;
     }
 
     /**
@@ -103,7 +123,9 @@ class PubSub {
         }
 
         for (const node of this._cachedExecutionOrder) {
-            node.callback(context);
+            if(!node.callback(context)) {
+                break;
+            }
         }
     }
 }

@@ -93,7 +93,7 @@ describe('BooleanChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([[1, 'yes']]);
+            expect(step.argsOrCallback!()).toEqual([[1, 'yes']]);
         });
 
         it('falsy resolves falsy values from boolishPairs', () => {
@@ -102,7 +102,7 @@ describe('BooleanChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([[0, 'no']]);
+            expect(step.argsOrCallback!()).toEqual([[0, 'no']]);
         });
 
         it('invert resolves full boolishPairs', () => {
@@ -111,7 +111,7 @@ describe('BooleanChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([pairs]);
+            expect(step.argsOrCallback!()).toEqual([pairs]);
         });
     });
 });

@@ -146,7 +146,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
         this.assertEmptyPipeline('human');
         return this
             .clone({ skipGenericParse: true })
-            .appendToPipeline('human', () => {
+            .addToPipeline('human', () => {
                 return [Object.assign({ order: this.config.order }, options)];
             });
     }
@@ -165,7 +165,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public iso(options: IsoParseOptions = {}): this {
         this.assertEmptyPipeline('iso');
-        return this.clone({ skipGenericParse: true }).appendToPipeline('iso', [options]);
+        return this.clone({ skipGenericParse: true }).addToPipeline('iso', [options]);
     }
 
     /**
@@ -182,7 +182,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public isoOrdinal(options: IsoOrdinalParseOptions = {}): this {
         this.assertEmptyPipeline('isoOrdinal');
-        return this.clone({ skipGenericParse: true }).appendToPipeline('isoOrdinal', [options]);
+        return this.clone({ skipGenericParse: true }).addToPipeline('isoOrdinal', [options]);
     }
 
     /**
@@ -199,7 +199,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public isoWeek(options: IsoWeekParseOptions = {}): this {
         this.assertEmptyPipeline('isoWeek');
-        return this.clone({ skipGenericParse: true }).appendToPipeline('isoWeek', [options]);
+        return this.clone({ skipGenericParse: true }).addToPipeline('isoWeek', [options]);
     }
 
     /**
@@ -214,7 +214,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      */
     public timestamp(isMilliseconds: boolean = true): this {
         this.assertEmptyPipeline('timestamp');
-        return this.clone({ skipGenericParse: true }).appendToPipeline('timestamp', [isMilliseconds]);
+        return this.clone({ skipGenericParse: true }).addToPipeline('timestamp', [isMilliseconds]);
     }
 
     /**
@@ -225,7 +225,7 @@ class DateChain extends AnyChain<DateChainCtorParams> {
      * date.today() // Must be today's date
      */
     public today(): this {
-        return this.appendToPipeline('today', () => {
+        return this.addToPipeline('today', () => {
             const now = new Date();
             now.setUTCMinutes(now.getUTCMinutes() + this.config.utcOffsetMins);
             return [now];

@@ -123,7 +123,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * // With boolish: accepts 'yes', 1, 'true', etc.
      */
     public override truthy(): this {
-        return this.appendToPipeline('truthy', () => {
+        return this.addToPipeline('truthy', () => {
             return [this.config.boolishPairs.map(([truthy,]) => truthy)];
         });
     }
@@ -138,7 +138,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * // With boolish: accepts 'no', 0, 'false', etc.
      */
     public override falsy(): this {
-        return this.appendToPipeline('falsy', () => {
+        return this.addToPipeline('falsy', () => {
             return [this.config.boolishPairs.map(([, falsy]) => falsy)];
         });
     }
@@ -158,7 +158,7 @@ class BooleanChain extends AnyChain<BooleanChainCtorParams> {
      * // With boolish: 'yes' -> 'no', 1 -> 0, etc.
      */
     public invert(): this {
-        return this.appendToPipeline('invert', () => {
+        return this.addToPipeline('invert', () => {
             return [this.config.boolishPairs];
         });
     }

@@ -25,7 +25,7 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
         const {
             chainHandler,
             config: {
-                clone,
+                cloneValue,
                 plainOnly,
                 maxDepth,
                 maxKeyCount,
@@ -50,7 +50,8 @@ class ObjectProcessor<C extends ObjectChain = ObjectChain> extends AnyProcessor<
             }
         }
 
-        if (clone) {
+        const shouldClone = cloneValue || (this.field.config as { clone?: boolean }).clone === true;
+        if (shouldClone) {
             tracker.setValue(Utils.clone(value));
         }
 

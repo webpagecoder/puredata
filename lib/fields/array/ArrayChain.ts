@@ -10,6 +10,7 @@ type SortComparator = (a: unknown, b: unknown) => -1 | 0 | 1;
 /** Configuration options for array chains. */
 export type ArrayChainConfig = AnyChainConfig & {
     castSingle: boolean;
+    cloneValue: boolean;
     stripEmpties: boolean;
 };
 
@@ -28,14 +29,16 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         super(Object.assign({
             chainHandler: new ArrayHandler(),
         }, args));
-        
+
         const {
             castSingle = true,
+            cloneValue = false,
             stripEmpties = true,
         } = args;
 
         const { config } = this;
         config.castSingle = castSingle;
+        config.cloneValue = cloneValue;
         config.stripEmpties = stripEmpties;
     }
 
@@ -69,6 +72,16 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
     }
 
     /**
+     * Configures whether object values are cloned before validation.
+     *
+     * @param cloneValue Whether to clone the object.
+     * @returns A cloned chain with the updated setting.
+     */
+    public cloneValue(cloneValue = true) {
+        return this.clone({ cloneValue });
+    }
+
+    /**
      * Configures whether empty values are removed before validation.
      *
      * @param stripEmpties Whether to remove empty values from input arrays.
@@ -94,10 +107,9 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
      */
     public unique(pathStringOrComparator?: string | SortComparator): this {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
-            //todo: check this out...create
             ? new Path(pathStringOrComparator, this.config.pathDelims)
             : pathStringOrComparator;
-        return this.appendToPipeline('unique', [pathOrComparator]);
+        return this.addToPipeline('unique', [pathOrComparator]);
     }
 
     // ========================================
@@ -116,7 +128,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         const path = typeof pathString === 'string'
             ? new Path(pathString, this.config.pathDelims)
             : null;
-        return this.appendToPipeline('group', [path]);
+        return this.addToPipeline('group', [path]);
     }
 
     /**
@@ -132,7 +144,7 @@ class ArrayChain extends AnyChain<ArrayChainCtorParams> {
         const pathOrComparator = typeof pathStringOrComparator === 'string'
             ? new Path(pathStringOrComparator, this.config.pathDelims)
             : pathStringOrComparator;
-        return this.appendToPipeline('stripDuplicates', [pathOrComparator]);
+        return this.addToPipeline('stripDuplicates', [pathOrComparator]);
     }
 
 

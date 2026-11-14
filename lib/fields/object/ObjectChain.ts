@@ -7,7 +7,7 @@ import { GlobalConfig } from '../../GlobalConfig.ts';
 
 /** Configuration options for object chains. */
 export type ObjectChainConfig = AnyChainConfig & {
-    clone: boolean;
+    cloneValue: boolean;
     plainOnly: boolean;
     maxDepth: number | null;
     maxKeyCount: number | null;
@@ -33,7 +33,7 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
         }, args));
 
         const {
-            clone = false,
+            cloneValue = false,
             plainOnly = true,
             maxDepth = null,
             maxKeyCount = null,
@@ -42,7 +42,7 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
         } = args;
 
         const { config } = this;
-        config.clone = clone;
+        config.cloneValue = cloneValue;
         config.plainOnly = plainOnly;
         config.maxDepth = maxDepth;
         config.maxKeyCount = maxKeyCount;
@@ -73,11 +73,11 @@ class ObjectChain<P extends ObjectChainCtorParams = ObjectChainCtorParams> exten
     /**
      * Configures whether object values are cloned before validation.
      *
-     * @param clone Whether to clone the object.
+     * @param cloneValue Whether to clone the object.
      * @returns A cloned chain with the updated setting.
      */
-    public cloneVal(clone = true) {
-        return this.clone({ clone } as Partial<P>);
+    public cloneValue(cloneValue = true) {
+        return this.clone({ cloneValue } as Partial<P>);
     }
 
     /**

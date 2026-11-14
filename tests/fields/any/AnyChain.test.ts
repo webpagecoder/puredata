@@ -25,7 +25,7 @@ describe('AnyChain', () => {
 
         it('applies explicit constructor args for handler, pipeline, empties, and mutability', () => {
             const handler = new AnyHandler();
-            const seedStep = new AnyChain().appendToPipeline('defined').pipeline[0];
+            const seedStep = new AnyChain().addToPipeline('defined').pipeline[0];
             const chain = new AnyChain({
                 chainHandler: handler,
                 pipeline: [seedStep],
@@ -42,35 +42,35 @@ describe('AnyChain', () => {
     });
 
     describe('pipeline mechanics', () => {
-        it('throws when appendToPipeline receives a non-handler method name', () => {
+        it('throws when addToPipeline receives a non-handler method name', () => {
             const chain = new AnyChain();
-            const addUnknownStep = (): AnyChain => chain.appendToPipeline('missingMethod' as keyof AnyHandler);
+            const addUnknownStep = (): AnyChain => chain.addToPipeline('missingMethod' as keyof AnyHandler);
             expect(addUnknownStep).toThrow("Method 'missingMethod'(...) not found in chain handler");
         });
 
-        it('appendToPipeline appends a step using static argument arrays', () => {
+        it('addToPipeline appends a step using static argument arrays', () => {
             const chain = new AnyChain();
-            const withStep = chain.appendToPipeline('equals', ['x']);
+            const withStep = chain.addToPipeline('equals', ['x']);
             const step = withStep.pipeline[0];
 
             expect(chain.pipeline).toHaveLength(0);
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual(['x']);
+            expect(step.argsOrCallback!()).toEqual(['x']);
         });
 
-        it('appendToPipeline stores null resolver when no args are provided', () => {
-            const withStep = new AnyChain().appendToPipeline('defined');
+        it('addToPipeline stores null resolver when no args are provided', () => {
+            const withStep = new AnyChain().addToPipeline('defined');
             const step = withStep.pipeline[0];
-            expect(step.argsResolver).toBeNull();
+            expect(step.argsOrCallback).toBeNull();
         });
 
-        it('appendToPipeline binds callback resolvers to the chain context', () => {
+        it('addToPipeline binds callback resolvers to the chain context', () => {
             const chain = new AnyChain().empties([1, 2, 3]);
-            const withStep = chain.appendToPipeline('empty', function (this: AnyChain) {
+            const withStep = chain.addToPipeline('empty', function (this: AnyChain) {
                 return [this.config.empties];
             });
             const step = withStep.pipeline[0];
-            expect(step.argsResolver!()).toEqual([[1, 2, 3]]);
+            expect(step.argsOrCallback!()).toEqual([[1, 2, 3]]);
         });
 
         it('proxy fallback maps unknown handler methods to appended pipeline steps', () => {
@@ -80,11 +80,11 @@ describe('AnyChain', () => {
 
             expect(chain.pipeline).toHaveLength(0);
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual(['x']);
+            expect(step.argsOrCallback!()).toEqual(['x']);
         });
 
         it('clearPipeline removes steps on the clone only', () => {
-            const chain = new AnyChain().appendToPipeline('defined').appendToPipeline('nullish');
+            const chain = new AnyChain().addToPipeline('defined').addToPipeline('nullish');
             const cleared = chain.clearPipeline();
 
             expect(chain.pipeline).toHaveLength(2);
@@ -125,7 +125,7 @@ describe('AnyChain', () => {
             expect(chain.pipeline).toHaveLength(0);
             expect(emptyChain.pipeline).toHaveLength(1);
             expect(emptyStep).toBeDefined();
-            expect(emptyStep.argsResolver!()).toEqual([[1]]);
+            expect(emptyStep.argsOrCallback!()).toEqual([[1]]);
         });
 
         it('uses configured empties for empty and notEmpty checks', () => {
@@ -135,8 +135,8 @@ describe('AnyChain', () => {
             const emptyStep = emptyChain.pipeline[0];
             const notEmptyStep = notEmptyChain.pipeline[0];
 
-            expect(emptyStep.argsResolver!()).toEqual([[1, 2, 3]]);
-            expect(notEmptyStep.argsResolver!()).toEqual([[1, 2, 3]]);
+            expect(emptyStep.argsOrCallback!()).toEqual([[1, 2, 3]]);
+            expect(notEmptyStep.argsOrCallback!()).toEqual([[1, 2, 3]]);
         });
 
         it('handles mutability properly', () => {

@@ -38,7 +38,7 @@ export type DeferredProcessorContext = [
 export type ReferenceResolverContext = PubSubContext & {
     deferredReferences: DeferredProcessorContext[];
     rootTracker: ValueTracker;
-    failFast?: boolean;
+    failFast: boolean;
 };
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
@@ -72,7 +72,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         this._referenceResolver = null;
 
         // Create the entire tree before compilation (to establish full path structure)
-        const {schemaFields} = field.config;
+        const { schemaFields } = field.config;
         for (let key of Object.keys(schemaFields)) {
             this.addChild(key, schemaFields[key].createProcessor());
         }
@@ -86,13 +86,10 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
      */
     public override compile(context: SchemaCompilationContext = {}): this {
 
-        //todo: put the rootmost processor into a node too and return that.
-        // SchemaNode should be SchemaNodeProcessor maybe and it should pass through to inner processor
         super.compile(context);
 
         let {
             absolutePath = new Path('/'),
-            absoluteRoot = this,
             referenceResolver,
         } = context;
 
@@ -109,11 +106,10 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
 
         for (const key of Object.keys(children)) {
             const childProcessor = children[key] as Processor;
-            const absoluteSubPath = absolutePath.addSegment(key);
+            const childAbsolutePath = absolutePath.addSegment(key);
 
             const resolvedChildProcessor = childProcessor.compile({
-                absolutePath: absoluteSubPath,
-                absoluteRoot,
+                absolutePath: childAbsolutePath,
                 referenceResolver
             });
 
@@ -130,9 +126,8 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
                 _references[key] = resolvedChildProcessor;
                 this.removeChild(key);
 
-                const subNodeId = absoluteSubPath.toString();
-                const subNode = referenceResolver.getNode(subNodeId) ||
-                    referenceResolver.createNode(subNodeId);
+                const subNodeId = childAbsolutePath.toString();
+                const subNode = referenceResolver.getOrCreateNode(subNodeId);
 
                 subNode.setCallback((context): boolean => {
                     const {
@@ -140,48 +135,87 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
                         rootTracker
                     } = context as ReferenceResolverContext;
 
-                    const subTracker = rootTracker.resolvePath(absoluteSubPath.toRelative()) as ValueTracker;
+                    const subTracker = rootTracker.resolvePath<ValueTracker>(childAbsolutePath.toRelative());
 
-                    if (subTracker) {
-                        resolvedChildProcessor.process(subTracker);
+                    if (!subTracker) {
+                        rootTracker.addError('schema/referenceNotFound', { //todo: add these error message checks throughout schema processor for missing refs
+                            path: childAbsolutePath.toRelative()
+                        });
+                        return false;
+                    }
+
+                    resolvedChildProcessor.process(subTracker);
+
+                    // Fail fast if needed
+                    if (subTracker.fail && failFast) {
+                        return false;
                     }
                     return true;
+
                 });
 
                 for (const reference of references) {
-                    const absolutePublisherPathStr = absoluteSubPath.parent().move(reference.config.path).toString();
-                    const pubNode = referenceResolver.getNode(absolutePublisherPathStr) ||
-                        referenceResolver.createNode(absolutePublisherPathStr);
+                    const absolutePublisherPathStr = childAbsolutePath.parent().move(reference.config.path).toString();
+                    const pubNode = referenceResolver.getOrCreateNode(absolutePublisherPathStr);
                     referenceResolver.linkNodes(pubNode, subNode);
                 }
             }
         }
-        
+
         return this;
     }
 
     /** Finds reference fields used by a processor and its pipeline. */
     private _getReferencesWithinProcessor(processor: Processor): Set<ReferenceField> {
         const { field } = processor;
+
         if (field instanceof ReferenceField) {
+            // If the field itself is a reference, we don't need to check its pipeline, just return it
             return new Set([field]);
         }
+
         const references = new Set<ReferenceField>();
+
         const { defaultValue } = field.config;
         if (defaultValue instanceof ReferenceField) {
+            // If the default value is a reference, we need to include it in the references set
             references.add(defaultValue);
         }
 
         if (processor instanceof AnyProcessor) {
-            for (const step of (field as AnyChain).pipeline || []) {
-                for (const arg of (processor as AnyProcessor).resolveStepArgs(step.argsResolver)) {
-                    if (arg instanceof ReferenceField) {
-                        references.add(arg);
+            // We have a chained processor, so we need to check its pipeline for references
+            for (const { argsOrCallback } of (field as AnyChain).pipeline) {
+                if (argsOrCallback) {
+                    for (const arg of (processor as AnyProcessor).resolveStepArgs(argsOrCallback)) {
+                        if (arg instanceof ReferenceField) {
+                            // If the argument is a reference, we need to include it in the references set
+                            references.add(arg);
+                        }
                     }
                 }
             }
         }
         return references;
+    }
+
+    public override preProcess(tracker: ValueTracker): void {
+        const {
+            field: {
+                chainHandler,
+                config: {
+                    schemaFields,
+                    stripExtraKeys
+                }
+            },
+        } = this;
+        if (stripExtraKeys && Utils.isPlainObject(tracker.value)) {
+            tracker.setValue(chainHandler.stripKeys(
+                tracker.value as object,
+                Object.keys(schemaFields)
+            ).value);
+        }
+
+        super.preProcess(tracker);
     }
 
     /** Processes schema fields and then resolves deferred work at the root. */
@@ -191,6 +225,8 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
             tracker.setValue(defaultValue);
             return;
         }
+
+        // Preprocess 
         this.preProcess(tracker);
         if (tracker.fail) {
             return;
@@ -215,7 +251,11 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
         }
 
         const {
-            field,
+            field: {
+                config: {
+                    failFast
+                }
+            },
             children,
             _conditionals,
             _nests,
@@ -223,51 +263,44 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
             _referenceResolver,
         } = this;
 
-        const {
-            chainHandler,
-            config: {
-                stripExtraKeys, failFast
-            }
-        } = field;
-
-
-        // Strip unknown keys if needed
-        if (stripExtraKeys) {
-            tracker.setValue(chainHandler.stripKeys(
-                tracker.value as object,
-                Object.keys(field.config.schemaFields)
-            ).value);
-        }
-
-        this.executePipeline(tracker);
-        //todo: check if error and exit here?
-
         const value = tracker.value as Record<string, any>;
 
-        for (const key of Object.keys(children)) {
-            const processor = children[key] as Processor;
-            const childTracker = tracker.createChild(processor.field, key, value[key]);
-            processor.process(childTracker, state);
-        }
-
-
+        // Defer conditional processing
         for (const key of Object.keys(_conditionals)) {
             deferredConditionals.push([key, _conditionals[key], tracker]);
         }
 
+        // Defer nested schema processing
         for (const key of Object.keys(_nests)) {
             deferredNests.push([key, _nests[key], tracker]);
         }
 
+        // Defer reference processing, but create ValueTrackers ahead of time
         for (const key of Object.keys(_references)) {
             tracker.createChild(_references[key].field, key, value[key]);
         }
 
+        // Process the regular schema first 
+        for (const key of Object.keys(children)) {
+            const processor = children[key] as Processor;
+            const childTracker = tracker.createChild(processor.field, key, value[key]);
+            processor.process(childTracker, state);
+
+            // Fail fast if needed
+            if (childTracker.fail && failFast) {
+                return;
+            }
+        }
+
         if (_referenceResolver) {
-            // We are in the root of the schema
+            // We are in the root of the schema, execute reference processors
+            _referenceResolver.execute({
+                deferredReferences,
+                rootTracker: tracker,
+                failFast
+            });
 
-            _referenceResolver.execute({ deferredReferences, rootTracker: tracker, failFast });
-
+            // Execute conditional processors
             if (deferredConditionals.length > 0) {
                 for (const [key, processor, parentTracker] of deferredConditionals) {
                     const childTracker = parentTracker.createChild(processor.field, key);
@@ -280,6 +313,7 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
                 }
             }
 
+            // Execute nest processors
             if (deferredNests.length > 0) {
                 if (tracker.nestDepth == null) {
                     // The tracker that contains nests is at level 0
@@ -309,6 +343,9 @@ class SchemaProcessor extends NodeMixin(BoundObjectProcessor) {
             }
 
         }
+
+        // Execute schema pipeline
+        this.executePipeline(tracker);
 
         // No post-processing is needed for schema processors.
     }

@@ -53,12 +53,12 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         }
 
         const { config } = this;
-        config.clone = true;
+        config.cloneValue = true;
         config.plainOnly = true;
         config.failFast = failFast;
         config.fieldFactory = fieldFactory;
         config.stripExtraKeys = stripExtraKeys;
-        config.schemaFields = this._processSchema(schema) || {};
+        config.schemaFields = this._processSchema(schema);
     }
 
     // ========================================
@@ -75,7 +75,7 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         const clone = super.clone(args);
         const { schema } = args;
         if (schema) {
-            clone.config.schemaFields = this._processSchema(schema || {});
+            clone.config.schemaFields = this._processSchema(schema);
         }
         else {
             clone.config.schemaFields = Object.assign({}, this.config.schemaFields);

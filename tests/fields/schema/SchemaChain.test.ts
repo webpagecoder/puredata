@@ -22,7 +22,7 @@ describe('SchemaChain', () => {
                 },
             });
 
-            expect(chain.config.clone).toBe(true);
+            expect(chain.config.cloneValue).toBe(true);
             expect(chain.config.plainOnly).toBe(true);
             expect(chain.config.failFast).toBe(false);
             expect(chain.config.stripExtraKeys).toBe(true);

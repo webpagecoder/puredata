@@ -65,13 +65,16 @@ class NumberProcessor extends AnyProcessor<NumberChain> {
             return;
         }
 
-        if (
-            precision && valueType === 'string' &&
-            String(num) !== (value as string) &&
-            String(num) !== (value as string).replace(/\.0+$/, '')
-        ) {
-            tracker.addError('number/base');
-            return;
+        if (precision && valueType === 'string') {
+            const numToString = String(num);
+
+            if (
+                numToString !== (value as string) && 
+                numToString !== (value as string).replace(/^0*\./, '0.').replace(/\.0+$/, '')
+            ) {
+                tracker.addError('number/base');
+                return;
+            }
         }
 
         tracker.setValue(num);

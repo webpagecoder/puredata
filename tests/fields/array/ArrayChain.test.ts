@@ -10,16 +10,19 @@ describe('ArrayChain', () => {
             const chain = new ArrayChain();
 
             expect(chain.config.castSingle).toBe(true);
+            expect(chain.config.cloneValue).toBe(false);
             expect(chain.config.stripEmpties).toBe(true);
         });
 
         it('applies provided constructor config overrides', () => {
             const chain = new ArrayChain({
                 castSingle: false,
+                cloneValue: true,
                 stripEmpties: false,
             });
 
             expect(chain.config.castSingle).toBe(false);
+            expect(chain.config.cloneValue).toBe(true);
             expect(chain.config.stripEmpties).toBe(false);
         });
 
@@ -29,14 +32,29 @@ describe('ArrayChain', () => {
     });
 
     describe('configurators', () => {
-        it('castSingle and stripEmpties clone without mutating the source', () => {
+        it('castSingle, cloneValue, and stripEmpties clone without mutating the source', () => {
             const chain = new ArrayChain();
-            const configured = chain.castSingle(false).stripEmpties(false);
+            const configured = chain
+                .castSingle(false)
+                .cloneValue(true)
+                .stripEmpties(false);
 
             expect(chain.config.castSingle).toBe(true);
+            expect(chain.config.cloneValue).toBe(false);
             expect(chain.config.stripEmpties).toBe(true);
             expect(configured.config.castSingle).toBe(false);
+            expect(configured.config.cloneValue).toBe(true);
             expect(configured.config.stripEmpties).toBe(false);
+        });
+
+        it('cloneValue defaults to true when called without args', () => {
+            const chain = new ArrayChain({ cloneValue: false });
+            const configured = chain.cloneValue();
+
+            expect(chain.config.cloneValue).toBe(false);
+            expect(configured.config.cloneValue).toBe(true);
+            expect(configured.config.castSingle).toBe(chain.config.castSingle);
+            expect(configured.config.stripEmpties).toBe(chain.config.stripEmpties);
         });
     });
 
@@ -69,7 +87,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()[0]).toBeInstanceOf(Path);
+            expect(step.argsOrCallback!()[0]).toBeInstanceOf(Path);
         });
 
         it('unique stores comparator callbacks without wrapping as paths', () => {
@@ -77,7 +95,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([comparator]);
+            expect(step.argsOrCallback!()).toEqual([comparator]);
         });
 
         it('unique stores undefined when called without args', () => {
@@ -85,7 +103,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([undefined]);
+            expect(step.argsOrCallback!()).toEqual([undefined]);
         });
 
         it('group stores a path selector when given a string', () => {
@@ -93,7 +111,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()[0]).toBeInstanceOf(Path);
+            expect(step.argsOrCallback!()[0]).toBeInstanceOf(Path);
         });
 
         it('group stores a null path when given null', () => {
@@ -101,7 +119,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([null]);
+            expect(step.argsOrCallback!()).toEqual([null]);
         });
 
         it('stripDuplicates stores a path selector when given a string', () => {
@@ -109,7 +127,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()[0]).toBeInstanceOf(Path);
+            expect(step.argsOrCallback!()[0]).toBeInstanceOf(Path);
         });
 
         it('stripDuplicates stores comparator callbacks without wrapping as paths', () => {
@@ -117,7 +135,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([comparator]);
+            expect(step.argsOrCallback!()).toEqual([comparator]);
         });
 
         it('stripDuplicates stores undefined when called without args', () => {
@@ -125,7 +143,7 @@ describe('ArrayChain', () => {
             const step = withStep.pipeline[0];
 
             expect(withStep.pipeline).toHaveLength(1);
-            expect(step.argsResolver!()).toEqual([undefined]);
+            expect(step.argsOrCallback!()).toEqual([undefined]);
         });
     });
 });

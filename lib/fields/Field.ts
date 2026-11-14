@@ -152,7 +152,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
     /** Returns a field with the supplied default value. */
     public default(defaultValue: unknown): this {
-        return this.clone({ defaultValue } as Partial<P>);
+        return this.clone({ defaultValue, presence: 'optional' } as Partial<P>);
     }
 
     /** Returns a field with custom error-message overrides. */

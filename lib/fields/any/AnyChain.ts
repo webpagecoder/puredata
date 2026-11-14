@@ -9,17 +9,19 @@ import { AnyProcessor } from './AnyProcessor.ts';
  * Function and argument source stored for one chain step.
  *
  * @property fn Handler function to execute for the step.
- * @property argsResolver Static or dynamic argument resolver for the step.
+ * @property argsOrCallback Static or dynamic argument resolver for the step.
  */
 export type PipelineStep = {
     fn: (value: unknown, ...args: unknown[]) => HandlerResult;
-    argsResolver: null | ((...args: unknown[]) => unknown[]);
+    argsOrCallback: null | unknown[] | ((this: Field) => unknown[]);
 };
+
 
 /** Configuration shared by any-value chains. */
 export type AnyChainConfig =
     FieldConfig & {
         empties: unknown[];
+        failOnFirstError: boolean;
         mutable: boolean;
     };
 
@@ -50,6 +52,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         const {
             chainHandler = new AnyHandler(),
             empties = [null, undefined, ''],
+            failOnFirstError = false,
             mutable = true,
             pipeline = [],
         } = args;
@@ -58,6 +61,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         this._pipeline = pipeline;
 
         this.config.empties = empties;
+        this.config.failOnFirstError = failOnFirstError;
         this.config.mutable = mutable;
 
         return new Proxy(this, this as ProxyHandler<this>);
@@ -104,7 +108,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
         if (key in target) {
             return Reflect.get(target, key, receiver);
         }
-        return (...args: unknown[]): this => this.appendToPipeline(key, args);
+        return (...args: unknown[]): this => this.addToPipeline(key, args);
     }
 
     // ========================================
@@ -119,9 +123,9 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
      * @returns A cloned chain with the step appended.
      * @throws {@link Error} If the handler does not implement the method.
      */
-    public appendToPipeline(
+    public addToPipeline(
         fnKey: keyof P['chainHandler'],
-        argsOrCallback?: unknown[] | ((...args: unknown[]) => unknown[])
+        argsOrCallback?: unknown[] | ((this: Field) => unknown[])
     ): this {
         const { _chainHandler } = this;
         const fn = _chainHandler[fnKey];
@@ -129,21 +133,21 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
             throw new Error(`Method '${String(fnKey)}'(...) not found in chain handler`);
         }
 
-        let argsResolver;
+        let finalArgsOrCallback;
         if (typeof argsOrCallback === 'function') {
-            argsResolver = argsOrCallback.bind(this);
+            finalArgsOrCallback = argsOrCallback.bind(this);
         }
         else if (Array.isArray(argsOrCallback)) {
-            argsResolver = () => argsOrCallback;
+            finalArgsOrCallback = () => argsOrCallback;
         }
         else {
-            argsResolver = null;
+            finalArgsOrCallback = null;
         }
 
         const clone = this.clone();
         clone._pipeline.push({
             fn: fn.bind(_chainHandler),
-            argsResolver
+            argsOrCallback: finalArgsOrCallback
         });
 
         return clone;
@@ -177,10 +181,12 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
 
         const {
             empties = this.config.empties,
+            failOnFirstError = this.config.failOnFirstError,
             mutable = this.config.mutable,
         } = args;
 
         clone.config.empties = empties;
+        clone.config.failOnFirstError = failOnFirstError;
         clone.config.mutable = mutable;
 
         return clone;
@@ -206,7 +212,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
      * @returns Cloned chain with an `empty` validator step.
      */
     public empty(): this {
-        return this.appendToPipeline('empty', () => {
+        return this.addToPipeline('empty', () => {
             return [this.config.empties];
         });
     }
@@ -217,7 +223,7 @@ class AnyChain<P extends AnyChainCtorParams = AnyChainCtorParams> extends Field<
      * @returns Cloned chain with a `notEmpty` validator step.
      */
     public notEmpty(): this {
-        return this.appendToPipeline('notEmpty', () => {
+        return this.addToPipeline('notEmpty', () => {
             return [this.config.empties];
         });
     }

@@ -1,5 +1,9 @@
 'use strict';
 
+//todo: need to take valueref stuff out of here...let schema deal w it
+//todo: failfast
+//todo: how schema create anychain and arraychain
+
 import { Field } from './Field.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { ReferenceProcessor } from './schema/reference/ReferenceProcessor.ts';

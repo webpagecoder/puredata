@@ -3,29 +3,9 @@
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams } from '../Processor.ts';
 import { ReferenceField } from '../schema/reference/ReferenceField.ts';
 import { ValueTracker } from '../../tracker/ValueTracker.ts';
-import { Field } from '../Field.ts';
 import { HandlerResult } from '../HandlerResult.ts';
-import { AnyChain } from './AnyChain.ts';
+import { AnyChain, PipelineStep } from './AnyChain.ts';
 import { ReferenceProcessor } from '../schema/reference/ReferenceProcessor.ts';
-
-/** Error identifier and formatting arguments produced by a pipeline step. */
-export type PipelineError = {
-    key: string;
-    args: Record<string, unknown>;
-};
-
-/** Value and errors returned by a pipeline step. */
-export type PipelineResult = {
-    value: unknown;
-    fail: boolean;
-    errors: PipelineError[];
-};
-
-/** Handler function and optional arguments for one chain step. */
-export type PipelineStep = {
-    fn: (value: unknown, ...args: unknown[]) => PipelineResult;
-    args?: unknown[] | ((this: Field) => unknown[]);
-};
 
 /** Constructor options for an any-value processor. */
 export type AnyProcessorCtorParams<C extends AnyChain = AnyChain> = ProcessorCtorParams<C>;
@@ -66,7 +46,7 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
     }
 
     /** Resolves static or callback-provided arguments for a pipeline step. */
-    public resolveStepArgs(args: PipelineStep['args']): unknown[] {
+    public resolveStepArgs(args: PipelineStep['argsOrCallback']): unknown[] {
         if (typeof args === 'function') {
             return args.call(this.field);
         }
@@ -75,14 +55,14 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
     /** Runs each configured chain step against the tracker's current value. */
     public executePipeline(tracker: ValueTracker): void {
-        const pipeline = this.field.pipeline || [];
+        const { pipeline, config: { failOnFirstError } } = this.field;
 
         for (const step of pipeline) {
-            let { fn, argsResolver } = step;
+            let { fn, argsOrCallback } = step;
             const finalArgs: unknown[] = [];
 
-            if (argsResolver) {
-                for (const arg of argsResolver()) {
+            if (argsOrCallback) {
+                for (const arg of this.resolveStepArgs(argsOrCallback)) {
                     if (arg instanceof ReferenceField) {
                         const refValueTracker = tracker.parent.resolvePath(arg.config.path);
                         finalArgs.push(refValueTracker ? refValueTracker.value : undefined);
@@ -100,9 +80,8 @@ class AnyProcessor<C extends AnyChain = AnyChain> extends Processor<C> {
 
             this._copyResultToTracker(tracker, result);
 
-            if (tracker.fail) {
-                //todo: check fail on first error
-                // return;
+            if (tracker.fail && failOnFirstError) {
+                return;
             }
         }
     }

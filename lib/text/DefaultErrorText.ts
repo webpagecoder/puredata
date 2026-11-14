@@ -77,6 +77,8 @@ const DefaultErrorText: Record<string, string> = {
     'date/weekday': 'Must be a weekday (received day index: {dayOfWeek})',
     'date/weekend': 'Must be a weekend (received day index: {dayOfWeek})',
     'date/within': 'Must be within the last {daysDiff} days, current difference: {actualDiff} days',
+
+    'enum/allowedValues': 'Must be one of the allowed values: {allowedValues}',
     
     'number/base': 'Must be a number',
     'number/approx': 'Must be approximately equal to {comparison} (tolerance: {tolerance})',
@@ -135,6 +137,8 @@ const DefaultErrorText: Record<string, string> = {
     'object/someOfPaths': 'Must contain at least one of these paths: {paths}',
     'object/tooComplex': 'Object is too complex (max depth: {maxDepth}, max keys: {maxKeyCount})',
     'object/xOfPaths': 'Must contain exactly {count} of these paths: {paths}',
+
+    'schema/referenceNotFound': 'Reference not found: {path}',
     
     'string/base': 'Must be a string',
     'string/alpha': 'Must contain only letters',

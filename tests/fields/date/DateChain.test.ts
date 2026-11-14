@@ -59,7 +59,7 @@ describe('DateChain', () => {
             });
             
             const step = withHuman.pipeline[0];
-            const args = step.argsResolver!();
+            const args = step.argsOrCallback!();
 
             expect(withHuman.config.skipGenericParse).toBe(true);
             expect(withHuman.pipeline).toHaveLength(1);
@@ -78,11 +78,11 @@ describe('DateChain', () => {
             expect(isoWeek.config.skipGenericParse).toBe(true);
             expect(timestamp.config.skipGenericParse).toBe(true);
             expect(timestampDefault.config.skipGenericParse).toBe(true);
-            expect(iso.pipeline[0].argsResolver!()).toEqual([{ expanded: 'optional' }]);
-            expect(isoOrdinal.pipeline[0].argsResolver!()).toEqual([{ expanded: 'optional' }]);
-            expect(isoWeek.pipeline[0].argsResolver!()).toEqual([{ expanded: 'optional' }]);
-            expect(timestamp.pipeline[0].argsResolver!()).toEqual([false]);
-            expect(timestampDefault.pipeline[0].argsResolver!()).toEqual([true]);
+            expect(iso.pipeline[0].argsOrCallback!()).toEqual([{ expanded: 'optional' }]);
+            expect(isoOrdinal.pipeline[0].argsOrCallback!()).toEqual([{ expanded: 'optional' }]);
+            expect(isoWeek.pipeline[0].argsOrCallback!()).toEqual([{ expanded: 'optional' }]);
+            expect(timestamp.pipeline[0].argsOrCallback!()).toEqual([false]);
+            expect(timestampDefault.pipeline[0].argsOrCallback!()).toEqual([true]);
         });
 
         it('parser methods forward precision and expanded parse options', () => {
@@ -106,22 +106,22 @@ describe('DateChain', () => {
                 expanded: 'optional',
             });
 
-            expect(human.pipeline[0].argsResolver!()).toEqual([{
+            expect(human.pipeline[0].argsOrCallback!()).toEqual([{
                 order: 'DMY',
                 minPrecision: 'date',
                 maxPrecision: 'time',
             }]);
-            expect(iso.pipeline[0].argsResolver!()).toEqual([{
+            expect(iso.pipeline[0].argsOrCallback!()).toEqual([{
                 minPrecision: 'month',
                 maxPrecision: 'timezone',
                 expanded: 'required',
             }]);
-            expect(isoOrdinal.pipeline[0].argsResolver!()).toEqual([{
+            expect(isoOrdinal.pipeline[0].argsOrCallback!()).toEqual([{
                 minPrecision: 'dayOfYear',
                 maxPrecision: 'timezone',
                 expanded: 'forbidden',
             }]);
-            expect(isoWeek.pipeline[0].argsResolver!()).toEqual([{
+            expect(isoWeek.pipeline[0].argsOrCallback!()).toEqual([{
                 minPrecision: 'week',
                 maxPrecision: 'timezone',
                 expanded: 'optional',
@@ -131,7 +131,7 @@ describe('DateChain', () => {
         it('today appends a step whose resolver returns a Date instance', () => {
             const withToday = new DateChain().today();
             const step = withToday.pipeline[0];
-            const args = step.argsResolver!();
+            const args = step.argsOrCallback!();
 
             expect(withToday.pipeline).toHaveLength(1);
             expect(args).toHaveLength(1);
@@ -143,7 +143,7 @@ describe('DateChain', () => {
             const withToday = new DateChain({ utcOffsetMins: offsetMins }).today();
             const step = withToday.pipeline[0];
             const before = Date.now();
-            const [resolvedDate] = step.argsResolver!() as [Date];
+            const [resolvedDate] = step.argsOrCallback!() as [Date];
             const after = Date.now();
 
             expect(resolvedDate).toBeInstanceOf(Date);

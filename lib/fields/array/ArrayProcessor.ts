@@ -14,18 +14,19 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> 
             return;
         }
 
-        const { chainHandler, config: { castSingle, empties, stripEmpties } } = this.field;
+        const { chainHandler, config: { castSingle, cloneValue, empties, stripEmpties } } = this.field;
 
-        const { value } = tracker;
-
-        if (!Array.isArray(value)) {
-            if (castSingle && value !== undefined) {
-                tracker.setValue([value]);
+        if (!Array.isArray(tracker.value)) {
+            if (castSingle && tracker.value !== undefined) {
+                tracker.setValue([tracker.value]);
             }
             else {
                 tracker.addError('array/base');
                 return;
             }
+        }
+        else if (cloneValue) {
+            tracker.setValue(this._deepCloneArray(tracker.value as unknown[]));
         }
 
         if (stripEmpties) {
@@ -33,6 +34,21 @@ class ArrayProcessor<C extends ArrayChain = ArrayChain> extends AnyProcessor<C> 
         }
 
     }
+
+    private _deepCloneArray(arr: unknown[]): unknown[] {
+        const cloned = [];
+        for(let i = 0, max = arr.length; i < max; i++) {
+            const item = arr[i];
+            if (Array.isArray(item)) {
+                cloned[i] = this._deepCloneArray(item);
+            }
+            else {
+                cloned[i] = item;
+            }
+        }
+        return cloned;
+    }
+
 }
 
 export { ArrayProcessor };

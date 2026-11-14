@@ -29,7 +29,7 @@ export type ErrorData = {
  *
  * Child trackers represent nested values and are managed by {@link NodeMixin}.
  */
-class ValueTracker extends NodeMixin<ValueTracker>(Object) {
+class ValueTracker extends NodeMixin(Object) {
 
     /** Value supplied to this tracker before any child values are composed. */
     private _rawValue: unknown;
@@ -48,6 +48,12 @@ class ValueTracker extends NodeMixin<ValueTracker>(Object) {
 
     /** Path identifying this tracker's value. */
     public path: Path;
+
+    /** Parent tracker, if this tracker is a child. */
+    declare parent: ValueTracker;
+
+    /** Child trackers for nested values, indexed by key. */
+    declare children: Record<string, ValueTracker>;
 
     /**
      * Creates a tracker for a field and initializes its value.
@@ -79,7 +85,7 @@ class ValueTracker extends NodeMixin<ValueTracker>(Object) {
         const child = new ValueTracker(field);
         child.path = this.path.addSegment(key);
         child.setValue(value);
-        this.children[key] = child;
+        this.addChild(key, child);
         return child;
     }
 
@@ -96,12 +102,12 @@ class ValueTracker extends NodeMixin<ValueTracker>(Object) {
         const { children } = this;
         if (!Utils.isPlainObject(value)) {
             for (const key of Object.keys(children)) {
-                children[key].setValue(undefined);
+                (children as Record<string, ValueTracker>)[key].setValue(undefined);
             }
         }
         else {
             for (const key of Object.keys(children)) {
-                children[key].setValue((value as Record<PropertyKey, unknown>)[key]);
+                (children as Record<string, ValueTracker>)[key].setValue((value as Record<string, unknown>)[key]);
             }
         }
     }
@@ -114,7 +120,7 @@ class ValueTracker extends NodeMixin<ValueTracker>(Object) {
             return this._rawValue !== undefined;
         }
         for (const key of keys) {
-            if (children[key].hasValue) {
+            if ((children as Record<string, ValueTracker>)[key].hasValue) {
                 return true;
             }
         }

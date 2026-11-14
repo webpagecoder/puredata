@@ -15,14 +15,14 @@ const SYM_IS_NODE = Symbol('isNode');
  * @param BaseClass Base class to extend.
  * @returns A class that stores a tree of nodes.
  */
-export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(BaseClass: TBase) => {
+export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TBase) => {
 
     return class NodeMixinClass extends BaseClass {
         /** Parent node; a root node refers to itself. */
         public parent: NodeMixinClass;
 
         /** Child nodes and values indexed by key. */
-        public children: Record<string, T | NodeMixinClass>;
+        public children: Record<string, unknown>;
 
         /** Initializes the parent link and an empty child collection. */
         public constructor(...args: any[]) {
@@ -40,7 +40,7 @@ export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(
          * @param key Key under which to store the child.
          * @param value Child node or value to store.
          */
-        public addChild(key: string, value: T) {
+        public addChild(key: string, value: unknown) {
             if ((value as any)[SYM_IS_NODE]) {
                 (value as NodeMixinClass).parent = this;
             }
@@ -67,10 +67,10 @@ export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(
          * @param path Path string or parsed path to resolve.
          * @returns The resolved node or value, or `null` if the path cannot be resolved.
          */
-        public resolvePath(path: Path | string): unknown {
+        public resolvePath<T = NodeMixinClass>(path: Path | string): T | null {
             path = new Path(path);
             if (path.isSelf) {
-                return this;
+                return this as unknown as T;
             }
 
             let node: NodeMixinClass;
@@ -100,7 +100,7 @@ export const NodeMixin = <T = unknown, TBase extends Constructor = Constructor>(
                 }
                 node = child;
             }
-            return node;
+            return node as unknown as T;
         }
 
         /** Gets the root node of this tree. */
