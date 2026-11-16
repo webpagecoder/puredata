@@ -5,6 +5,7 @@ import { Utils } from '../Utils.ts';
 import { Field } from '../fields/Field.ts';
 import { NodeMixin } from '../NodeMixin.ts';
 import { ErrorCollection } from './ErrorCollection.ts';
+import { NodeTree } from '../NodeTree.ts';
 
 /** Details for a validation error recorded by a value tracker. */
 export type ErrorData = {
@@ -27,9 +28,9 @@ export type ErrorData = {
 /**
  * Tracks a field's value, its place in a value tree, and validation errors.
  *
- * Child trackers represent nested values and are managed by {@link NodeMixin}.
+ * Child trackers represent nested values and are managed by {@link NodeTree}.
  */
-class ValueTracker extends NodeMixin(Object) {
+class ValueTracker extends NodeTree<ValueTracker> {
 
     /** Value supplied to this tracker before any child values are composed. */
     private _rawValue: unknown;
@@ -85,7 +86,7 @@ class ValueTracker extends NodeMixin(Object) {
         const child = new ValueTracker(field);
         child.path = this.path.addSegment(key);
         child.setValue(value);
-        this.addChild(key, child);
+        this.setChild(key, child);
         return child;
     }
 
@@ -249,7 +250,7 @@ class ValueTracker extends NodeMixin(Object) {
         clone.parent = this.parent;
 
         for (const key of Object.keys(this.children)) {
-            clone.addChild(key, (this.children[key] as this).cloneWithoutErrors());
+            clone.setChild(key, (this.children[key] as this).cloneWithoutErrors());
         }
 
         clone.setValue(this._rawValue);

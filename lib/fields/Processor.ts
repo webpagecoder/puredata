@@ -56,7 +56,7 @@ abstract class Processor<F extends Field = Field> {
      * @param tracker Tracker whose value is processed.
      * @param state Optional state shared with nested processor calls.
      */
-    public abstract process(tracker: ValueTracker, state?: State): void;
+   public abstract process(tracker: ValueTracker, state?: State): void;
 
     /** Applies required/forbidden checks and any configured default value. */
     public preProcess(tracker: ValueTracker): void {

@@ -1,26 +1,23 @@
 'use strict';
 
 import { Utils } from '../../Utils.ts';
-import { Field } from '../Field.ts';
 import { FieldFactory } from '../FieldFactory.ts';
 import { ObjectChain, ObjectChainConfig, ObjectChainCtorParams } from '../object/ObjectChain.ts';
 import { SchemaProcessor } from './SchemaProcessor.ts';
+import { FieldNode } from '../FieldNode.ts';
+import { NodeTree } from '../../NodeTree.ts';
+import { Field } from '../Field.ts';
 
 /** Object describing fields in a schema. */
 export type Schema = {
-    [key: string]: unknown;
-};
-
-/** Schema keys mapped to their compiled field definitions. */
-export type SchemaFields = {
-    [key: string]: Field;
+    [key: string]: Schema | Field | unknown;
 };
 
 /** Configuration for a schema chain. */
 export type SchemaChainConfig = ObjectChainConfig & {
     failFast: boolean;
     fieldFactory: FieldFactory;
-    schemaFields: SchemaFields;
+    fieldTree: NodeTree<Field>;
     stripExtraKeys: boolean;
 };
 
@@ -28,6 +25,7 @@ export type SchemaChainConfig = ObjectChainConfig & {
 export type SchemaChainCtorParams = ObjectChainCtorParams<SchemaChainConfig> & {
     schema?: Schema;
 };
+
 
 /** Field chain that validates an object against a nested schema. */
 class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
@@ -58,7 +56,8 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         config.failFast = failFast;
         config.fieldFactory = fieldFactory;
         config.stripExtraKeys = stripExtraKeys;
-        config.schemaFields = this._processSchema(schema);
+        config.fieldTree = new NodeTree<Field>();
+        this._constructSchemaFields(config.fieldTree, schema);
     }
 
     // ========================================
@@ -75,10 +74,10 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
         const clone = super.clone(args);
         const { schema } = args;
         if (schema) {
-            clone.config.schemaFields = this._processSchema(schema);
+            this._constructSchemaFields(clone.config.fieldTree, schema);
         }
         else {
-            clone.config.schemaFields = Object.assign({}, this.config.schemaFields);
+            clone.config.fieldTree = Object.assign({}, this.config.fieldTree);//todo: get rid of this 
         }
         return clone;
     }
@@ -105,23 +104,21 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
     /**
      * Converts each schema entry into a field or nested schema chain.
      *
+     * @param fieldTree The parent schema to add the processed fields to.
      * @param schema Raw schema object to transform into chain fields.
-     * @returns Processed schema-field map used by the chain processor.
      */
-    private _processSchema(schema: Schema): SchemaFields {
-        const schemaFields: SchemaFields = {};
+    private _constructSchemaFields(fieldTree: NodeTree<Field>, schema: Schema): void {
         for (const key of Object.keys(schema)) {
-            const value = schema[key];
-            if (Utils.isPlainObject(value)) {
-                schemaFields[key] = this.clone({
-                    schema: value as Schema,
-                });
+            const field = schema[key];
+            if (Utils.isPlainObject(field)) {
+                const nestedFields = new NodeTree<Field>();
+                fieldTree.setChild(key, nestedFields);
+                this._constructSchemaFields(nestedFields, field as Schema);
             }
             else {
-                schemaFields[key] = this.config.fieldFactory.coerce(value);
+                fieldTree.setChild(key, this.config.fieldFactory.coerce(field));
             }
         }
-        return schemaFields;
     }
 
     // ========================================

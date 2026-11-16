@@ -5,8 +5,6 @@ import { Path } from './Path.ts';
 /** A constructible class accepted as the base of a mixin. */
 export type Constructor = new (...args: any[]) => any;
 
-const SYM_IS_NODE = Symbol('isNode');
-
 /**
  * Adds parent and child relationships and path-based lookup to a class.
  *
@@ -15,21 +13,20 @@ const SYM_IS_NODE = Symbol('isNode');
  * @param BaseClass Base class to extend.
  * @returns A class that stores a tree of nodes.
  */
-export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TBase) => {
+export const NodeMixin = <T extends Constructor = Constructor>(BaseClass: T) => {
 
     return class NodeMixinClass extends BaseClass {
         /** Parent node; a root node refers to itself. */
         public parent: NodeMixinClass;
 
         /** Child nodes and values indexed by key. */
-        public children: Record<string, unknown>;
+        public children: Record<string, NodeMixinClass | InstanceType<T>>;
 
         /** Initializes the parent link and an empty child collection. */
         public constructor(...args: any[]) {
             super(...args);
             this.parent = this;
             this.children = {};
-            (this as any)[SYM_IS_NODE] = true;
         }
 
         /**
@@ -40,9 +37,9 @@ export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TB
          * @param key Key under which to store the child.
          * @param value Child node or value to store.
          */
-        public addChild(key: string, value: unknown) {
-            if ((value as any)[SYM_IS_NODE]) {
-                (value as NodeMixinClass).parent = this;
+        public setChild(key: string, value: NodeMixinClass | InstanceType<T>): void {
+            if (value instanceof NodeMixinClass) {
+                value.parent = this;
             }
             this.children[key] = value;
         }
@@ -54,9 +51,8 @@ export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TB
          */
         public removeChild(key: string) {
             const child = this.children[key];
-            if (child && (child as any)[SYM_IS_NODE]) {
-                const childNode = child as unknown as NodeMixinClass;
-                (child as unknown as NodeMixinClass).parent = childNode;
+            if (child instanceof NodeMixinClass) {
+                child.parent = child;
             }
             delete this.children[key];
         }
@@ -67,10 +63,10 @@ export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TB
          * @param path Path string or parsed path to resolve.
          * @returns The resolved node or value, or `null` if the path cannot be resolved.
          */
-        public resolvePath<T = NodeMixinClass>(path: Path | string): T | null {
+        public resolvePath(path: Path | string): NodeMixinClass | InstanceType<T> | null {
             path = new Path(path);
             if (path.isSelf) {
-                return this as unknown as T;
+                return this;
             }
 
             let node: NodeMixinClass;
@@ -93,14 +89,17 @@ export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TB
             }
 
             // Dive into path keys
-            for (const key of path.keys) {
-                const child = (node as any)[SYM_IS_NODE] && node.children[key];
-                if (child === undefined) {
+            const { keys } = path;
+            for (let i = 0, max = keys.length - 1; i < max; ++i) {
+                const child = node.children[keys[i]];
+                if (child === undefined || !(child instanceof NodeMixinClass)) {
                     return null;
                 }
-                node = child;
             }
-            return node as unknown as T;
+
+            const finalChild = node.children[keys[keys.length - 1]];
+
+            return finalChild === undefined ? null : finalChild;
         }
 
         /** Gets the root node of this tree. */
@@ -109,8 +108,9 @@ export const NodeMixin = <TBase extends Constructor = Constructor>(BaseClass: TB
             do {
                 node = node.parent;
             }
-            while (node && (node as any)[SYM_IS_NODE] && node.parent !== node);
+            while (node && node.parent !== node);
             return node;
         }
     }
+
 };

@@ -26,8 +26,8 @@ describe('SchemaChain', () => {
             expect(chain.config.plainOnly).toBe(true);
             expect(chain.config.failFast).toBe(false);
             expect(chain.config.stripExtraKeys).toBe(true);
-            expect(chain.config.schemaFields.name).toBeInstanceOf(AnyChain);
-            expect(chain.config.schemaFields.nested).toBeInstanceOf(SchemaChain);
+            expect(chain.config.fieldTree.name).toBeInstanceOf(AnyChain);
+            expect(chain.config.fieldTree.nested).toBeInstanceOf(SchemaChain);
         });
 
         it('createProcessor returns a SchemaProcessor instance', () => {
@@ -49,8 +49,8 @@ describe('SchemaChain', () => {
                 schema: { b: 2 },
             });
 
-            expect(Object.keys(chain.config.schemaFields)).toEqual(['a']);
-            expect(Object.keys(clone.config.schemaFields)).toEqual(['b']);
+            expect(Object.keys(chain.config.fieldTree)).toEqual(['a']);
+            expect(Object.keys(clone.config.fieldTree)).toEqual(['b']);
         });
 
         it('clone can replace schema with an empty object', () => {
@@ -62,8 +62,8 @@ describe('SchemaChain', () => {
                 schema: {},
             });
 
-            expect(Object.keys(chain.config.schemaFields)).toEqual(['a']);
-            expect(Object.keys(clone.config.schemaFields)).toEqual([]);
+            expect(Object.keys(chain.config.fieldTree)).toEqual(['a']);
+            expect(Object.keys(clone.config.fieldTree)).toEqual([]);
         });
 
         it('cloning configurators preserves existing schemaFields in both source and clone', () => {
@@ -78,10 +78,10 @@ describe('SchemaChain', () => {
             });
             const configured = chain.failFast(true).stripExtraKeys(false);
 
-            expect(Object.keys(chain.config.schemaFields).sort()).toEqual(['name', 'profile']);
-            expect(Object.keys(configured.config.schemaFields).sort()).toEqual(['name', 'profile']);
-            expect(chain.config.schemaFields.profile).toBeInstanceOf(SchemaChain);
-            expect(configured.config.schemaFields.profile).toBeInstanceOf(SchemaChain);
+            expect(Object.keys(chain.config.fieldTree).sort()).toEqual(['name', 'profile']);
+            expect(Object.keys(configured.config.fieldTree).sort()).toEqual(['name', 'profile']);
+            expect(chain.config.fieldTree.profile).toBeInstanceOf(SchemaChain);
+            expect(configured.config.fieldTree.profile).toBeInstanceOf(SchemaChain);
             expect(chain.config.failFast).toBe(false);
             expect(configured.config.failFast).toBe(true);
         });

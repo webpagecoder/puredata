@@ -33,7 +33,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
 
     /** Configuration used to process values for this field. */
     public config: ConfigFromParams<P>;
-    
+
     private _cachedProcessor: Processor | null;
 
     /** Creates a field with the supplied configuration and defaults. */
@@ -146,7 +146,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
     // ========================================
 
     /** Returns a field configured to convert values automatically when possible. */
-    public autoConvert(autoConvert:GlobalConfig['general']['autoConvert'] = 'normal'): this {
+    public autoConvert(autoConvert: GlobalConfig['general']['autoConvert'] = 'normal'): this {
         return this.clone({ autoConvert } as Partial<P>);
     }
 
