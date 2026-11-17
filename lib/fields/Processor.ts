@@ -22,7 +22,8 @@ export type ProcessorCompilationContext = Record<string, unknown>;
 /** Base class for processing and validating values for a field. */
 abstract class Processor<F extends Field = Field> {
 
-    private static id: number = 0
+    private static id: number = 0;
+    private _deferred: boolean;
 
     /** Field definition processed by this processor. */
     public field: F;
@@ -36,7 +37,7 @@ abstract class Processor<F extends Field = Field> {
 
         this._id = ++Processor.id;
         this._defaultValueReferenceProcessor = null;
-
+        this._deferred = false;
         this.field = field;
     }
 
@@ -45,9 +46,17 @@ abstract class Processor<F extends Field = Field> {
         return this._id;
     }
 
+    public get deferred() {
+        return this._deferred;
+    }
+
     /** Compiles this processor; subclasses may prepare state for execution. */
     public compile(context?: ProcessorCompilationContext): Processor {
         return this;
+    }
+
+    public defer(deferrred = true) {
+        this._deferred = deferrred;
     }
 
     /**
