@@ -1,6 +1,6 @@
 'use strict';
 
-import { NodeMixin } from '../../../NodeMixin.ts';
+import { NodeChildMixin } from '../../../NodeChildMixin.ts';
 import { Path } from '../../../Path.ts';
 import { ValueTracker } from '../../../tracker/ValueTracker.ts';
 import { Processor, ProcessorCompilationContext, ProcessorCtorParams, State } from '../../Processor.ts';
@@ -12,19 +12,24 @@ export type PointerProcessorCompilationContext = ProcessorCompilationContext & {
     absolutePath: Path;
 }
 
+export type PointerProcessorCtorParams = ProcessorCtorParams<PointerField> & {
+    parent: unknown;
+}
+
 class BoundPointerProcessor extends Processor<PointerField> {
     override process(tracker: ValueTracker, state: State): void { }
 }
 
 /** Resolves field pointers and processes recursive schema nesting. */
-class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
+class PointerProcessor extends NodeChildMixin(BoundPointerProcessor) {
 
     /** Referenced schema processor when the pointer represents a recursive nest. */
     private _nestedSchemaProcessor: SchemaProcessor | null;
 
     /** Creates a pointer processor for a pointer field. */
-    public constructor(args: ProcessorCtorParams<PointerField>) {
+    public constructor(args: PointerProcessorCtorParams) {
         super(args);
+        this.parent = args.parent;
         this._nestedSchemaProcessor = null;
     }
 
@@ -39,10 +44,6 @@ class PointerProcessor extends NodeMixin(BoundPointerProcessor) {
         const { absolutePath } = context;
         const { fieldPath } = this.field.config;
 
-        if (fieldPath.isAbsolute) {
-            throw new Error('At key ' + absolutePath + ' - field reference path must be relative (not absolute) and not cross conditional boundaries: ' + fieldPath);
-        }
-        
         const referencedProcessor = this.parent.resolvePath(fieldPath);
         if (!referencedProcessor) {
             throw new Error('At key ' + absolutePath + ' - unable to resolve referenced field path: ' + fieldPath);

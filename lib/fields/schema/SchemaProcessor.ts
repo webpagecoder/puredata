@@ -25,12 +25,6 @@ export type SchemaProcessorCtorParams = AnyProcessorCtorParams<SchemaChain>;
 export type SchemaCompilationContext = ProcessorCompilationContext & {
     // parent?: SchemaProcessor;
     absolutePath?: Path;
-    referenceResolver?: PubSub;
-    regularProcessors?: Processor[];
-    conditionals?: ConditionalProcessor[];
-    nests?: PointerProcessor[];
-    references?: Processor[];
-    subSchemas?: SchemaProcessor[];
 };
 
 /** Deferred processing entry for a child processor. */
@@ -46,6 +40,13 @@ export type ReferenceResolverContext = PubSubContext & {
     rootTracker: ValueTracker;
     failFast: boolean;
 };
+
+export type DeferredProcessorCollection = {
+    references: Processor[],
+    subSchemas: SchemaProcessor[],
+    conditionals: ConditionalProcessor[],
+    nests: PointerProcessor[]
+}
 
 class BoundObjectProcessor extends ObjectProcessor<SchemaChain> { }
 
@@ -81,7 +82,9 @@ class SchemaProcessor extends BoundObjectProcessor {
                 this._constructSchemaProcessors(nestedSchema, field);
             }
             else {
-                processorTree.setChild(key, field.createProcessor());
+                processorTree.setChild(key, field.createProcessor({
+                    parent: this,
+                }));
             }
         }
     }
@@ -96,45 +99,39 @@ class SchemaProcessor extends BoundObjectProcessor {
 
         super.compile();
 
-        // Reset the processor collections
-        context.regularProcessors = [];
-        context.conditionals = [];
-        context.nests = [];
-        context.references = [];
-        context.subSchemas = [];
+        const deferredProcessors: DeferredProcessorCollection = {
+            references: [],
+            subSchemas: [],
+            conditionals: [],
+            nests: []
+        };
 
         // Sort and compile all diff types of processors in tree
-        this._compileChildProcessors(this._fullTree, context);
+        this._compileChildProcessors(this._fullTree, context, deferredProcessors);
 
         //Register all the deferred processors in order
-        for (const processor of context.regularProcessors) {
-            this._deferredProcessors.push(processor);
-        }
-        for (const processor of context.references) {
-            this._deferredProcessors.push(processor);
-        }
-        for (const processor of context.subSchemas) {
-            this._deferredProcessors.push(processor);
-        }
-        for (const processor of context.conditionals) {
-            this._deferredProcessors.push(processor);
-        }
-        for (const processor of context.nests) {
-            this._deferredProcessors.push(processor);
-        }
+        this._deferredProcessors = [
+            ...deferredProcessors.references,
+            ...deferredProcessors.subSchemas,
+            ...deferredProcessors.conditionals,
+            ...deferredProcessors.nests,
+        ]
 
         return this;
     }
 
-    private _compileChildProcessors(processorTree: NodeTree<Processor>, context: SchemaCompilationContext): void {
+    private _compileChildProcessors(
+        processorTree: NodeTree<Processor>,
+        context: SchemaCompilationContext,
+        deferredProcessors: DeferredProcessorCollection
+    ): void {
+        const { absolutePath = new Path('/') } = context;
         const {
-            absolutePath = new Path('/'),
-            regularProcessors = [],
-            conditionals = [],
-            nests = [],
-            references = [],
-            subSchemas = []
-        } = context;
+            references,
+            subSchemas,
+            conditionals,
+            nests
+        } = deferredProcessors;
 
         for (const key of Object.keys(processorTree.children)) {
             const processor = processorTree.children[key];
@@ -144,12 +141,11 @@ class SchemaProcessor extends BoundObjectProcessor {
             });
 
             if (processor instanceof NodeTree) {
-                this._compileChildProcessors(processor, newContext);
+                this._compileChildProcessors(processor, newContext, deferredProcessors);
             }
             else {
                 const finalProcessor = processor.compile(newContext);
 
-                let referenceSet = this._getReferencesWithinProcessor(processor);
                 if (finalProcessor instanceof ConditionalProcessor) {
                     conditionals.push(finalProcessor);
                     finalProcessor.defer();
@@ -162,47 +158,47 @@ class SchemaProcessor extends BoundObjectProcessor {
                     subSchemas.push(finalProcessor);
                     finalProcessor.defer();
                 }
-                else if (referenceSet.size === 0) {
-                    // Regular non-reference processor, add to the regular processors list
-                    regularProcessors.push(finalProcessor);
-                }
                 else {
-                    references.push(finalProcessor);
-                    finalProcessor.defer();
+                    const referenceSet = this._getReferencesWithinProcessor(processor);
 
-                    const { _referenceResolver } = this;
-                    const subNodeId = childAbsolutePath.toString();
-                    const subNode = _referenceResolver.getOrCreateNode(subNodeId);
+                    if (referenceSet.size > 0) {
+                        references.push(finalProcessor);
+                        finalProcessor.defer();
 
-                    subNode.setCallback((context): boolean => {
-                        const {
-                            failFast,
-                            rootTracker
-                        } = context as ReferenceResolverContext;
+                        const { _referenceResolver } = this;
+                        const subNodeId = childAbsolutePath.toString();
+                        const subNode = _referenceResolver.getOrCreateNode(subNodeId);
 
-                        const subTracker = rootTracker.resolvePath(childAbsolutePath.toRelative()) as ValueTracker | null;
+                        subNode.setCallback((context): boolean => {
+                            const {
+                                failFast,
+                                rootTracker
+                            } = context as ReferenceResolverContext;
 
-                        if (!subTracker) {
-                            rootTracker.addError('schema/referenceNotFound', { //todo: add these error message checks throughout schema processor for missing refs
-                                path: childAbsolutePath.toRelative()
-                            });
-                            return false;
+                            const subscriberTracker = rootTracker.resolvePath(childAbsolutePath.toRelative()) as ValueTracker | null;
+
+                            if (!subscriberTracker) {
+                                rootTracker.addError('schema/referenceNotFound', { //todo: add these error message checks throughout schema processor for missing refs
+                                    path: childAbsolutePath.toRelative()
+                                });
+                                return false;
+                            }
+
+                            finalProcessor.process(subscriberTracker);
+
+                            // Fail fast if needed
+                            if (subscriberTracker.fail && failFast) {
+                                return false;
+                            }
+                            return true;
+
+                        });
+
+                        for (const reference of referenceSet) {
+                            const absolutePublisherPathStr = childAbsolutePath.parent().move(reference.config.path).toString();
+                            const pubNode = _referenceResolver.getOrCreateNode(absolutePublisherPathStr);
+                            _referenceResolver.linkNodes(pubNode, subNode);
                         }
-
-                        finalProcessor.process(subTracker);
-
-                        // Fail fast if needed
-                        if (subTracker.fail && failFast) {
-                            return false;
-                        }
-                        return true;
-
-                    });
-
-                    for (const reference of referenceSet) {
-                        const absolutePublisherPathStr = childAbsolutePath.parent().move(reference.config.path).toString();
-                        const pubNode = _referenceResolver.getOrCreateNode(absolutePublisherPathStr);
-                        _referenceResolver.linkNodes(pubNode, subNode);
                     }
                 }
             }
@@ -298,22 +294,20 @@ class SchemaProcessor extends BoundObjectProcessor {
             }
             else if (!processor.deferred) {
                 processor.process(childTracker);
+                if (childTracker.fail && failFast) {
+                    // Fail fast if needed
+                    return;
+                }
             }
             else {
                 deferredTrackers.set(processor, childTracker);
             }
-
-            // Fail fast if needed
-            if (childTracker.fail && failFast) {
-                return;
-            }
         }
-
-        return deferredTrackers;
 
     }
 
     /** Processes schema fields and then resolves deferred work at the root. */
+    //todo is state needed anymore?
     public override process(tracker: ValueTracker, state: State = {}): void {
 
         // If immutable, handle that and exit
@@ -335,61 +329,8 @@ class SchemaProcessor extends BoundObjectProcessor {
             return;
         }
 
-
-
-        // const deferredConditional: DeferredProcessorContext[] = [];
-
-        // let deferredConditionals = state.deferredConditionals as DeferredProcessorContext[] | null;
-        // if (!deferredConditionals) {
-        //     deferredConditionals = [];
-        //     state.deferredConditionals = deferredConditionals;
-        // }
-
-        // let deferredNests = state.deferredNests as DeferredProcessorContext[] | null;
-        // if (!deferredNests) {
-        //     deferredNests = [];
-        //     state.deferredNests = deferredNests;
-        // }
-
-        // let deferredReferences = state.deferredReferences as DeferredProcessorContext[] | null;
-        // if (!deferredReferences) {
-        //     deferredReferences = [];
-        //     state.deferredReferences = deferredReferences;
-        // }
-
-        // const {
-        //     field: {
-        //         config: {
-        //             failFast
-        //         }
-        //     },
-        //     children,
-        //     _conditionals,
-        //     _nests,
-        //     _references,
-        //     _referenceResolver,
-        // } = this;
-
-        // const value = tracker.value as Record<string, any>;
-
-        // // Defer conditional processing
-        // for (const key of Object.keys(_conditionals)) {
-        //     deferredConditionals.push([key, _conditionals[key], tracker]);
-        // }
-
-        // // Defer nested schema processing
-        // for (const key of Object.keys(_nests)) {
-        //     deferredNests.push([key, _nests[key], tracker]);
-        // }
-
-        // // Defer reference processing, but create ValueTrackers ahead of time
-        // for (const key of Object.keys(_references)) {
-        //     tracker.createChild(_references[key].field, key, value[key]);
-        // }
-
-
-
-        const deferredTrackers = new Map<Processor, ValueTracker>()
+        // Process the tree and capture any deferred processors and their trackers
+        const deferredTrackers = new Map<Processor, ValueTracker>();
         this._processTree(this._fullTree, tracker, deferredTrackers);
 
         this._referenceResolver.execute({
@@ -398,45 +339,14 @@ class SchemaProcessor extends BoundObjectProcessor {
             failFast
         });
 
-        for (const [processor, childTracker] of deferredTrackers) {
-            processor.process(childTracker, state);
-            if (childTracker.fail && failFast) {
+        for (const [processor, tracker] of deferredTrackers) {
+            processor.process(tracker);
+            if (tracker.fail && failFast) {
                 return;
             }
         }
 
-        // // Process the regular schema first 
-        // for (const key of Object.keys(children)) {
-        //     const processor = children[key] as Processor;
-        //     const childTracker = tracker.createChild(processor.field, key, value[key]);
-        //     processor.process(childTracker, state);
 
-        //     // Fail fast if needed
-        //     if (childTracker.fail && failFast) {
-        //         return;
-        //     }
-        // }
-
-        // if (_referenceResolver) {
-        //     // We are in the root of the schema, execute reference processors
-        //     _referenceResolver.execute({
-        //         deferredReferences,
-        //         rootTracker: tracker,
-        //         failFast
-        //     });
-
-        //     // Execute conditional processors
-        //     if (deferredConditionals.length > 0) {
-        //         for (const [key, processor, parentTracker] of deferredConditionals) {
-        //             const childTracker = parentTracker.createChild(processor.field, key);
-        //             const rawValue = parentTracker.rawValue;
-        //             const value = Utils.isPlainObject(rawValue)
-        //                 ? (rawValue as Record<PropertyKey, unknown>)[key]
-        //                 : undefined;
-        //             childTracker.setValue(value);
-        //             processor.process(childTracker);
-        //         }
-        //     }
 
         //     // Execute nest processors
         //     if (deferredNests.length > 0) {
@@ -467,7 +377,7 @@ class SchemaProcessor extends BoundObjectProcessor {
         //         }
         //     }
 
-        // }
+        
 
 
     }

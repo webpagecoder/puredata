@@ -20,7 +20,7 @@ class ReferenceProcessor extends Processor<ReferenceField> {
             return;
         }
         
-        const referencedValueTracker = tracker.parent.resolvePath(path);
+        const referencedValueTracker = tracker.parent.resolvePath(path) as ValueTracker;
         let resolvedValue = undefined;
         if (referencedValueTracker) {
             resolvedValue = isCallback

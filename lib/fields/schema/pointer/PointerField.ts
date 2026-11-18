@@ -2,7 +2,7 @@
 
 import { Path } from '../../../Path.ts';
 import { Field, FieldCtorParams, FieldConfig } from '../../Field.ts';
-import { PointerProcessor } from './PointerProcessor.ts';
+import { PointerProcessor, PointerProcessorCtorParams } from './PointerProcessor.ts';
 
 /** Configuration for a pointer to another field in a schema. */
 export type PointerFieldProps = FieldConfig & {
@@ -37,10 +37,8 @@ class PointerField extends Field<PointerFieldProps> {
     // ========================================
 
     /** Creates the processor that resolves this field pointer. */
-    public override createProcessor(): PointerProcessor {
-        return new PointerProcessor({
-            field: this,
-        });
+    public override createProcessor(args: PointerProcessorCtorParams): PointerProcessor {
+        return new PointerProcessor(args);
     }
 
 }

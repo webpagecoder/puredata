@@ -116,7 +116,9 @@ class SchemaChain extends ObjectChain<SchemaChainCtorParams> {
                 this._constructSchemaFields(nestedFields, field as Schema);
             }
             else {
-                fieldTree.setChild(key, this.config.fieldFactory.coerce(field));
+                const coercedField = this.config.fieldFactory.coerce(field);
+
+                fieldTree.setChild(key, coercedField);
             }
         }
     }

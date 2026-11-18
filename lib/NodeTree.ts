@@ -65,7 +65,7 @@ class NodeTree<T = unknown> {
             return this;
         }
 
-        let node: NodeTree<T>;
+        let node: NodeTree<T> | T;
 
         // Determine starting point based on abs/relative positioning
         if (path.isAbsolute) {
@@ -80,22 +80,20 @@ class NodeTree<T = unknown> {
             }
         }
 
-        if (!node) {
+        const { keys } = path;
+        if (!node || keys.length === 0) {
             return null;
         }
 
         // Dive into path keys
-        const { keys } = path;
         for (let i = 0, max = keys.length - 1; i < max; ++i) {
-            const child = node.children[keys[i]];
-            if (!child || !(child as any)[SYM_NODE_TREE]) {
+            node = (node as NodeTree<T>).children[keys[i]];
+            if (!node || !(node as any)[SYM_NODE_TREE]) {
                 return null;
             }
         }
 
-        const finalChild = node.children[keys[keys.length - 1]];
-
-        return finalChild ? finalChild : null;
+        return (node as NodeTree<T>).children[keys[keys.length - 1]] || null;
     }
 
     /** Gets the root node of this tree. */
@@ -108,7 +106,7 @@ class NodeTree<T = unknown> {
         return node;
     }
 
-    public get isANodeTree():boolean {
+    public get isANodeTree(): boolean {
         return (this as any)[SYM_NODE_TREE] === true;
     }
 }
