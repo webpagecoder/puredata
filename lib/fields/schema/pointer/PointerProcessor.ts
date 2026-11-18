@@ -12,10 +12,6 @@ export type PointerProcessorCompilationContext = ProcessorCompilationContext & {
     absolutePath: Path;
 }
 
-export type PointerProcessorCtorParams = ProcessorCtorParams<PointerField> & {
-    parent: unknown;
-}
-
 class BoundPointerProcessor extends Processor<PointerField> {
     override process(tracker: ValueTracker, state: State): void { }
 }
@@ -27,7 +23,7 @@ class PointerProcessor extends NodeChildMixin(BoundPointerProcessor) {
     private _nestedSchemaProcessor: SchemaProcessor | null;
 
     /** Creates a pointer processor for a pointer field. */
-    public constructor(args: PointerProcessorCtorParams) {
+    public constructor(args: ProcessorCtorParams<PointerField>) {
         super(args);
         this.parent = args.parent;
         this._nestedSchemaProcessor = null;

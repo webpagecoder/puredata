@@ -83,6 +83,7 @@ class SchemaProcessor extends BoundObjectProcessor {
             }
             else {
                 processorTree.setChild(key, field.createProcessor({
+                    field,
                     parent: this,
                 }));
             }

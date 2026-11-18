@@ -2,7 +2,7 @@
 
 import { Translation, TranslationStringRecord } from '../Translation.ts';
 import { Presence } from '../Presence.ts';
-import type { Processor } from './Processor.ts';
+import type { Processor, ProcessorCtorParams } from './Processor.ts';
 import { ValueTracker } from '../tracker/ValueTracker.ts';
 import { Path } from '../Path.ts';
 import { PathDelimTypes } from '../Path.ts';
@@ -125,7 +125,7 @@ abstract class Field<P extends FieldCtorParams = FieldCtorParams> {
      * @returns The processor for this field.
      * @throws {@link Error} If the subclass does not implement this method.
      */
-    public createProcessor(): Processor {
+    public createProcessor(args: ProcessorCtorParams<this>): Processor {
         throw new Error('createProcessor() must be implemented in subclass');
     }
 

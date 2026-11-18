@@ -11,6 +11,7 @@ import { ReferenceProcessor } from './schema/reference/ReferenceProcessor.ts';
 /** Constructor options shared by field processors. */
 export type ProcessorCtorParams<F extends Field = Field> = {
     field: F;
+    parent: Processor;
 };
 
 /** State shared between processor steps, when needed. */
